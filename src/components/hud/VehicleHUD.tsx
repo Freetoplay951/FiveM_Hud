@@ -19,8 +19,8 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
   const speedTicks = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300];
   
   // Calculate position for each tick on a 270-degree arc starting from bottom-left
-  const getTickPosition = (speed: number, radius: number) => {
-    const percentage = speed / maxSpeed;
+  const getTickPosition = (tickSpeed: number, radius: number) => {
+    const percentage = tickSpeed / maxSpeed;
     const angle = -225 + (percentage * 270); // Start at -225deg (bottom-left), sweep 270deg
     const radians = (angle * Math.PI) / 180;
     return {
@@ -122,15 +122,15 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
               </defs>
               
               {/* Tick marks and labels */}
-              {speedTicks.map((speed) => {
-                const outerPos = getTickPosition(speed, 44);
-                const innerPos = getTickPosition(speed, 38);
-                const labelPos = getTickPosition(speed, 32);
-                const isMajor = speed % 40 === 0;
-                const isActive = vehicle.speed >= speed;
+              {speedTicks.map((tickSpeed) => {
+                const outerPos = getTickPosition(tickSpeed, 44);
+                const innerPos = getTickPosition(tickSpeed, 38);
+                const labelPos = getTickPosition(tickSpeed, 32);
+                const isMajor = tickSpeed % 40 === 0;
+                const isActive = vehicle.speed >= tickSpeed;
                 
                 return (
-                  <g key={speed}>
+                  <g key={tickSpeed}>
                     {/* Tick line */}
                     <line
                       x1={innerPos.x}
@@ -156,7 +156,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                           opacity: isActive ? 1 : 0.4,
                         }}
                       >
-                        {speed}
+                        {tickSpeed}
                       </text>
                     )}
                   </g>

@@ -124,8 +124,22 @@ export const HUD = () => {
       if (e.key === 'm') error('Fehler!', 'Etwas ist schief gelaufen.');
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isMovingWidgets) {
+          setIsMovingWidgets(false);
+        } else if (editMode) {
+          toggleEditMode();
+        }
+      }
+    };
+
     window.addEventListener('keypress', handleKeyPress);
-    return () => window.removeEventListener('keypress', handleKeyPress);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keypress', handleKeyPress);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [toggleEditMode, success, error]);
 
   const handleCloseEditor = () => {
@@ -156,8 +170,18 @@ export const HUD = () => {
     <div 
       className="fixed inset-0 pointer-events-none overflow-hidden"
     >
-      {/* Notifications */}
-      <NotificationContainer notifications={notifications} onClose={removeNotification} />
+      {/* Notifications - as draggable widget */}
+      {(() => {
+        const widget = getWidget('notifications');
+        if (!widget) return (
+          <NotificationContainer notifications={notifications} onClose={removeNotification} />
+        );
+        return (
+          <HUDWidget id="notifications" position={widget.position} visible={widget.visible} {...widgetProps}>
+            <NotificationContainer notifications={notifications} onClose={removeNotification} isWidget />
+          </HUDWidget>
+        );
+      })()}
 
       {/* Edit Mode Button */}
       <button

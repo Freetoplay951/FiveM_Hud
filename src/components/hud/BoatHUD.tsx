@@ -12,7 +12,6 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
   const speed = vehicle.speed;
   const heading = vehicle.heading || 0;
   const anchor = vehicle.anchor || false;
-  const pitch = vehicle.pitch || 0;
   
   const maxSpeed = 80; // Knots for boats
   const speedPercentage = Math.min(100, (speed / maxSpeed) * 100);
@@ -26,6 +25,21 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
     return directions[Math.round(deg / 45) % 8];
   };
 
+  // Speed ticks for boat - every 10 knots
+  const speedTicks = [0, 10, 20, 30, 40, 50, 60, 70, 80];
+
+  // Calculate position for each tick on a 270-degree arc starting from bottom-left
+  const getTickPosition = (tickSpeed: number, radius: number) => {
+    const percentage = tickSpeed / maxSpeed;
+    const angle = -225 + (percentage * 270); // Start at -225deg (bottom-left), sweep 270deg
+    const radians = (angle * Math.PI) / 180;
+    return {
+      x: 50 + radius * Math.cos(radians),
+      y: 50 + radius * Math.sin(radians),
+      angle: angle + 90,
+    };
+  };
+
   return (
     <AnimatePresence>
       {visible && (
@@ -36,67 +50,52 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
           transition={{ duration: 0.4, ease: "easeOut" }}
           className="flex items-end gap-3"
         >
-          {/* Status Panel */}
-          <div className="flex flex-col gap-2">
-            {/* Anchor Status */}
-            <motion.div 
-              className={cn(
-                "glass-panel rounded-lg px-3 py-2 flex items-center gap-2",
-                anchor && "border border-warning/50"
-              )}
-              animate={{
-                boxShadow: anchor ? '0 0 12px hsl(var(--warning) / 0.4)' : 'none',
-              }}
-            >
-              <Anchor 
-                size={16} 
-                className={anchor ? "text-warning" : "text-muted-foreground"}
-                style={anchor ? { filter: 'drop-shadow(0 0 4px hsl(var(--warning)))' } : {}}
-              />
-              <span className={cn(
-                "text-xs font-medium",
-                anchor ? "text-warning" : "text-muted-foreground"
-              )}>
-                {anchor ? 'ANCHORED' : 'SAILING'}
-              </span>
-            </motion.div>
-            
-            {/* Fuel */}
-            <div className="glass-panel rounded-lg px-3 py-2 flex items-center gap-2">
-              <Fuel 
-                size={14} 
+          {/* Fuel Bar - Vertical on Left (like Car HUD) */}
+          <motion.div 
+            className="flex flex-col items-center gap-1"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="relative w-3 h-24 rounded-full glass-panel overflow-hidden">
+              <motion.div 
                 className={cn(
-                  fuelCritical ? "text-critical critical-pulse" : 
+                  "absolute bottom-0 left-0 right-0 rounded-full",
+                  fuelCritical ? "bg-critical" : fuelWarning ? "bg-warning" : "bg-stamina"
+                )}
+                initial={{ height: 0 }}
+                animate={{ height: `${vehicle.fuel}%` }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  boxShadow: fuelCritical 
+                    ? '0 0 12px hsl(var(--critical)), inset 0 0 8px hsl(var(--critical) / 0.5)' 
+                    : fuelWarning 
+                      ? '0 0 10px hsl(var(--warning))' 
+                      : '0 0 8px hsl(var(--stamina) / 0.6)',
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-0.5">
+              <Fuel 
+                size={10} 
+                className={cn(
+                  fuelCritical ? "text-critical" : 
                   fuelWarning ? "text-warning" : 
                   "text-stamina"
-                )}
+                )} 
               />
-              <div className="flex-1 h-2 rounded-full bg-muted/30 overflow-hidden">
-                <motion.div 
-                  className={cn(
-                    "h-full rounded-full",
-                    fuelCritical ? "bg-critical" : 
-                    fuelWarning ? "bg-warning" : 
-                    "bg-stamina"
-                  )}
-                  animate={{ width: `${vehicle.fuel}%` }}
-                  style={{
-                    boxShadow: `0 0 8px hsl(var(--${fuelCritical ? 'critical' : fuelWarning ? 'warning' : 'stamina'}) / 0.6)`,
-                  }}
-                />
-              </div>
               <span className={cn(
-                "hud-number text-xs min-w-[28px]",
+                "text-[9px] hud-number",
                 fuelCritical ? "text-critical" : 
                 fuelWarning ? "text-warning" : 
-                "text-stamina"
+                "text-muted-foreground"
               )}>
                 {Math.round(vehicle.fuel)}%
               </span>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Main Speedometer */}
+          {/* Main Speedometer - Neon Style */}
           <div className="relative w-44 h-44">
             {/* Glass Background */}
             <div className="absolute inset-0 rounded-full glass-panel overflow-hidden">
@@ -128,37 +127,40 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                 </filter>
               </defs>
               
-              {/* Speed ticks */}
-              {[0, 10, 20, 30, 40, 50, 60, 70, 80].map((s) => {
-                const percentage = s / maxSpeed;
-                const angle = -225 + (percentage * 270);
-                const radians = (angle * Math.PI) / 180;
-                const outerR = 44;
-                const innerR = 38;
-                const labelR = 32;
+              {/* Speed ticks and labels */}
+              {speedTicks.map((s) => {
+                const outerPos = getTickPosition(s, 44);
+                const innerPos = getTickPosition(s, 38);
+                const labelPos = getTickPosition(s, 32);
                 const isMajor = s % 20 === 0;
                 const isActive = speed >= s;
                 
                 return (
                   <g key={s}>
+                    {/* Tick line */}
                     <line
-                      x1={50 + innerR * Math.cos(radians)}
-                      y1={50 + innerR * Math.sin(radians)}
-                      x2={50 + outerR * Math.cos(radians)}
-                      y2={50 + outerR * Math.sin(radians)}
+                      x1={innerPos.x}
+                      y1={innerPos.y}
+                      x2={outerPos.x}
+                      y2={outerPos.y}
                       stroke={isActive ? "hsl(var(--thirst))" : "hsl(var(--muted) / 0.3)"}
                       strokeWidth={isMajor ? 1.5 : 0.8}
                       strokeLinecap="round"
                       style={isActive ? { filter: 'drop-shadow(0 0 2px hsl(var(--thirst)))' } : {}}
                     />
+                    {/* Speed label for major ticks */}
                     {isMajor && (
                       <text
-                        x={50 + labelR * Math.cos(radians)}
-                        y={50 + labelR * Math.sin(radians)}
+                        x={labelPos.x}
+                        y={labelPos.y}
                         textAnchor="middle"
                         dominantBaseline="middle"
                         className="fill-muted-foreground"
-                        style={{ fontSize: '4px', fontFamily: 'Orbitron' }}
+                        style={{ 
+                          fontSize: '4px', 
+                          fontFamily: 'Orbitron, sans-serif',
+                          opacity: isActive ? 1 : 0.4,
+                        }}
                       >
                         {s}
                       </text>
@@ -167,7 +169,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                 );
               })}
               
-              {/* Background arc */}
+              {/* Arc Background */}
               <circle
                 cx="50"
                 cy="50"
@@ -180,7 +182,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                 strokeLinecap="round"
               />
               
-              {/* Progress arc */}
+              {/* Arc Progress with Neon Effect */}
               <motion.circle
                 cx="50"
                 cy="50"
@@ -225,7 +227,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                 {String(Math.round(speed)).padStart(2, '0')}
               </motion.span>
               
-              {/* Heading */}
+              {/* Heading & Anchor Status */}
               <div className="flex items-center gap-2 mt-2">
                 <Navigation 
                   size={12} 
@@ -238,31 +240,12 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                 <span className="hud-number text-sm text-primary">
                   {getCompassDirection(heading)} {Math.round(heading)}°
                 </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Pitch Indicator */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-[8px] text-muted-foreground uppercase">PITCH</span>
-            <div className="glass-panel rounded-lg p-2 w-12 h-20 relative overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Horizon line */}
-                <motion.div 
-                  className="w-8 h-0.5 bg-primary absolute"
-                  animate={{ rotate: pitch }}
-                  style={{
-                    boxShadow: '0 0 6px hsl(var(--primary))',
-                  }}
-                />
-                {/* Center marker */}
-                <div className="w-1.5 h-1.5 rounded-full bg-warning" 
-                  style={{ boxShadow: '0 0 4px hsl(var(--warning))' }}
+                <Anchor 
+                  size={12} 
+                  className={anchor ? "text-warning" : "text-muted-foreground"}
+                  style={anchor ? { filter: 'drop-shadow(0 0 4px hsl(var(--warning)))' } : {}}
                 />
               </div>
-              {/* Degree markers */}
-              <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[6px] text-muted-foreground">+{Math.abs(Math.round(pitch > 0 ? pitch : 0))}°</div>
-              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[6px] text-muted-foreground">-{Math.abs(Math.round(pitch < 0 ? pitch : 0))}°</div>
             </div>
           </div>
         </motion.div>
