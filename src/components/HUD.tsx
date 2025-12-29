@@ -265,11 +265,13 @@ export const HUD = () => {
                     airspeed: 80,
                 }));
 
-            // Demo notifications
-            if (e.key === "h") success("Erfolg!", "Aktion erfolgreich ausgeführt.");
-            if (e.key === "j") error("Fehler!", "Etwas ist schief gelaufen.");
-            if (e.key === "k") warning("Fehler!", "Etwas ist schief gelaufen.");
-            if (e.key === "l") info("Fehler!", "Etwas ist schief gelaufen.");
+            // Demo notifications - only in demo mode, NOT in edit mode
+            if (!editMode) {
+                if (e.key === "h") success("Erfolg!", "Aktion erfolgreich ausgeführt.");
+                if (e.key === "j") error("Fehler!", "Etwas ist schief gelaufen.");
+                if (e.key === "k") warning("Fehler!", "Etwas ist schief gelaufen.");
+                if (e.key === "l") info("Fehler!", "Etwas ist schief gelaufen.");
+            }
         };
 
         window.addEventListener("keypress", handleKeyPress);
