@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
-import { StatusHUD } from './hud/StatusHUD';
+import { Settings } from 'lucide-react';
+import { HUDWidget } from './hud/HUDWidget';
 import { VehicleHUD } from './hud/VehicleHUD';
-import { MoneyHUD } from './hud/MoneyHUD';
-import { VoiceIndicator } from './hud/VoiceIndicator';
-import { LocationHUD } from './hud/LocationHUD';
-import { MinimapFrame } from './hud/MinimapFrame';
+import { EditModeOverlay } from './hud/EditModeOverlay';
+import { NeonStatusWidget } from './hud/widgets/NeonStatusWidget';
+import { NeonMoneyWidget } from './hud/widgets/NeonMoneyWidget';
+import { NeonLocationWidget } from './hud/widgets/NeonLocationWidget';
+import { NeonVoiceWidget } from './hud/widgets/NeonVoiceWidget';
+import { NeonMinimapWidget } from './hud/widgets/NeonMinimapWidget';
+import { ClockWidget } from './hud/widgets/ClockWidget';
+import { CompassWidget } from './hud/widgets/CompassWidget';
+import { useHUDLayout } from '@/hooks/useHUDLayout';
 import { useNuiEvents, isNuiEnvironment } from '@/hooks/useNuiEvents';
 import { HudState, VehicleState, MoneyState, VoiceState, LocationState, PlayerState } from '@/types/hud';
 
-// Demo values for development
+// Demo values
 const DEMO_HUD: HudState = { health: 85, armor: 50, hunger: 70, thirst: 45, stamina: 90 };
 const DEMO_VEHICLE: VehicleState = { inVehicle: true, speed: 127, gear: 4, fuel: 65 };
 const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567 };
-const DEMO_PLAYER: PlayerState = { id: 42, job: 'Polizei', rank: 'Kommissar' };
+const DEMO_PLAYER: PlayerState = { id: 42, job: 'LSPD', rank: 'Chief' };
 const DEMO_VOICE: VoiceState = { active: true, range: 'normal' };
 const DEMO_LOCATION: LocationState = { street: 'Vinewood Boulevard', direction: 'NE', area: 'Vinewood' };
 
@@ -20,10 +26,26 @@ export const HUD = () => {
   const [hudState, setHudState] = useState<HudState>(DEMO_HUD);
   const [vehicleState, setVehicleState] = useState<VehicleState>(DEMO_VEHICLE);
   const [moneyState, setMoneyState] = useState<MoneyState>(DEMO_MONEY);
-  const [playerState, setPlayerState] = useState<PlayerState>(DEMO_PLAYER);
+  const [playerState] = useState<PlayerState>(DEMO_PLAYER);
   const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
   const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
-  const [isDemoMode, setIsDemoMode] = useState(!isNuiEnvironment());
+  const [isDemoMode] = useState(!isNuiEnvironment());
+  const [currentTime, setCurrentTime] = useState('18:24');
+
+  const {
+    widgets,
+    editMode,
+    snapToGrid,
+    showSafezone,
+    gridSize,
+    toggleEditMode,
+    setSnapToGrid,
+    setShowSafezone,
+    updateWidgetPosition,
+    toggleWidgetVisibility,
+    resetLayout,
+    getWidget,
+  } = useHUDLayout();
 
   // NUI Event handlers
   useNuiEvents({
@@ -34,7 +56,7 @@ export const HUD = () => {
     onUpdateLocation: setLocationState,
   });
 
-  // Demo mode simulation
+  // Demo simulation
   useEffect(() => {
     if (!isDemoMode) return;
 
@@ -61,10 +83,16 @@ export const HUD = () => {
     return () => clearInterval(interval);
   }, [isDemoMode]);
 
-  // Demo: Toggle vehicle on keypress
+  // Clock update
   useEffect(() => {
-    if (!isDemoMode) return;
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
+  // Demo key controls
+  useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'v') {
         setVehicleState(prev => ({ ...prev, inVehicle: !prev.inVehicle }));
@@ -75,46 +103,162 @@ export const HUD = () => {
           range: prev.range === 'whisper' ? 'normal' : prev.range === 'normal' ? 'shout' : 'whisper',
         }));
       }
+      if (e.key === 'e') {
+        toggleEditMode();
+      }
     };
 
     window.addEventListener('keypress', handleKeyPress);
     return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [isDemoMode]);
+  }, [toggleEditMode]);
+
+  const widgetProps = {
+    editMode,
+    snapToGrid,
+    gridSize,
+    onPositionChange: updateWidgetPosition,
+    onVisibilityToggle: toggleWidgetVisibility,
+  };
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {/* Edit Mode Button */}
+      <button
+        onClick={toggleEditMode}
+        className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
+        style={{
+          boxShadow: editMode ? '0 0 15px hsl(var(--primary))' : 'none',
+        }}
+      >
+        <Settings 
+          size={18} 
+          className={editMode ? "text-primary" : "text-muted-foreground"}
+          style={editMode ? { filter: 'drop-shadow(0 0 4px hsl(var(--primary)))' } : {}}
+        />
+      </button>
+
       {/* Demo Mode Badge */}
-      {isDemoMode && (
+      {isDemoMode && !editMode && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel rounded-lg px-4 py-2 animate-fade-in-up">
           <span className="text-xs text-primary uppercase tracking-wider hud-text">
-            Demo Mode • Press V to toggle vehicle • Press R to change voice range
+            Demo • V=Vehicle • R=Voice • E=Edit
           </span>
         </div>
       )}
 
-      {/* Top Right - Money & Player Info */}
-      <div className="absolute top-6 right-6">
-        <MoneyHUD money={moneyState} player={playerState} />
-      </div>
+      {/* Status Widgets */}
+      {(['health', 'armor', 'hunger', 'thirst', 'stamina'] as const).map((type) => {
+        const widget = getWidget(type);
+        if (!widget) return null;
+        return (
+          <HUDWidget
+            key={type}
+            id={type}
+            position={widget.position}
+            visible={widget.visible}
+            {...widgetProps}
+          >
+            <NeonStatusWidget
+              type={type}
+              value={hudState[type]}
+              size={widget.size as 'sm' | 'md' | 'lg'}
+            />
+          </HUDWidget>
+        );
+      })}
 
-      {/* Bottom Left - Minimap, Location, Status */}
-      <div className="absolute bottom-6 left-6 flex flex-col gap-3">
-        <MinimapFrame />
-        <LocationHUD location={locationState} />
-        <div className="glass-panel rounded-lg px-3 py-2">
-          <StatusHUD status={hudState} />
-        </div>
-      </div>
+      {/* Money Widget */}
+      {(() => {
+        const widget = getWidget('money');
+        if (!widget) return null;
+        return (
+          <HUDWidget id="money" position={widget.position} visible={widget.visible} {...widgetProps}>
+            <NeonMoneyWidget money={moneyState} player={playerState} />
+          </HUDWidget>
+        );
+      })()}
 
-      {/* Bottom Right - Vehicle HUD */}
-      <div className="absolute bottom-6 right-6">
-        <VehicleHUD vehicle={vehicleState} visible={vehicleState.inVehicle} />
-      </div>
+      {/* Clock Widget */}
+      {(() => {
+        const widget = getWidget('clock');
+        if (!widget) return null;
+        return (
+          <HUDWidget id="clock" position={widget.position} visible={widget.visible} {...widgetProps}>
+            <ClockWidget time={currentTime} />
+          </HUDWidget>
+        );
+      })()}
 
-      {/* Bottom Center - Voice Indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-        <VoiceIndicator voice={voiceState} />
-      </div>
+      {/* Location Widget */}
+      {(() => {
+        const widget = getWidget('location');
+        if (!widget) return null;
+        return (
+          <HUDWidget id="location" position={widget.position} visible={widget.visible} {...widgetProps}>
+            <NeonLocationWidget location={locationState} />
+          </HUDWidget>
+        );
+      })()}
+
+      {/* Voice Widget */}
+      {(() => {
+        const widget = getWidget('voice');
+        if (!widget) return null;
+        return (
+          <HUDWidget id="voice" position={widget.position} visible={widget.visible} {...widgetProps}>
+            <NeonVoiceWidget voice={voiceState} />
+          </HUDWidget>
+        );
+      })()}
+
+      {/* Minimap Widget */}
+      {(() => {
+        const widget = getWidget('minimap');
+        if (!widget) return null;
+        return (
+          <HUDWidget id="minimap" position={widget.position} visible={widget.visible} {...widgetProps}>
+            <NeonMinimapWidget direction={locationState.direction} />
+          </HUDWidget>
+        );
+      })()}
+
+      {/* Compass Widget */}
+      {(() => {
+        const widget = getWidget('compass');
+        if (!widget) return null;
+        return (
+          <HUDWidget id="compass" position={widget.position} visible={widget.visible} {...widgetProps}>
+            <CompassWidget direction={locationState.direction} />
+          </HUDWidget>
+        );
+      })()}
+
+      {/* Vehicle Speedometer */}
+      {(() => {
+        const widget = getWidget('speedometer');
+        if (!widget) return null;
+        return (
+          <HUDWidget 
+            id="speedometer" 
+            position={widget.position} 
+            visible={widget.visible && vehicleState.inVehicle} 
+            {...widgetProps}
+          >
+            <VehicleHUD vehicle={vehicleState} visible={vehicleState.inVehicle || editMode} />
+          </HUDWidget>
+        );
+      })()}
+
+      {/* Edit Mode Overlay */}
+      <EditModeOverlay
+        isOpen={editMode}
+        snapToGrid={snapToGrid}
+        showSafezone={showSafezone}
+        onClose={toggleEditMode}
+        onSnapToGridChange={setSnapToGrid}
+        onShowSafezoneChange={setShowSafezone}
+        onReset={resetLayout}
+      />
     </div>
   );
 };
