@@ -5,7 +5,7 @@ import { VehicleHUDFactory } from "./hud/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { StatusWidget } from "./hud/widgets/StatusWidget";
 import { NeonMoneyWidget } from "./hud/widgets/NeonMoneyWidget";
-import { NeonLocationWidget } from "./hud/widgets/NeonLocationWidget";
+
 import { NeonVoiceWidget } from "./hud/widgets/NeonVoiceWidget";
 import { NeonMinimapWidget } from "./hud/widgets/NeonMinimapWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";
@@ -443,21 +443,6 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Location Widget */}
-            {(() => {
-                const widget = getWidget("location");
-                if (!widget) return null;
-                return (
-                    <HUDWidget
-                        id="location"
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        {...widgetProps}>
-                        <NeonLocationWidget location={locationState} />
-                    </HUDWidget>
-                );
-            })()}
 
             {/* Voice Widget */}
             {(() => {
@@ -486,7 +471,7 @@ export const HUD = () => {
                         visible={widget.visible}
                         scale={widget.scale}
                         {...widgetProps}>
-                        <NeonMinimapWidget direction={locationState.direction} />
+                        <NeonMinimapWidget location={locationState} />
                     </HUDWidget>
                 );
             })()}

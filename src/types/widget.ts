@@ -1,6 +1,7 @@
+// Position as percentage of viewport (0-100)
 export interface WidgetPosition {
-  x: number;
-  y: number;
+  xPercent: number;
+  yPercent: number;
 }
 
 export interface WidgetSize {
@@ -28,7 +29,6 @@ export type WidgetType =
   | 'money'
   | 'clock'
   | 'compass'
-  | 'location'
   | 'voice'
   | 'minimap'
   | 'speedometer'
@@ -50,35 +50,34 @@ export interface HUDLayoutState {
 
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
   // Top left - Compass
-  { id: 'compass', type: 'compass', position: { x: 20, y: 20 }, visible: true, scale: 1 },
+  { id: 'compass', type: 'compass', position: { xPercent: 1.5, yPercent: 2 }, visible: true, scale: 1 },
   
   // Top center - Clock
-  { id: 'clock', type: 'clock', position: { x: 640, y: 20 }, visible: true, scale: 1 },
+  { id: 'clock', type: 'clock', position: { xPercent: 48, yPercent: 2 }, visible: true, scale: 1 },
   
   // Top right - Money
-  { id: 'money', type: 'money', position: { x: 1180, y: 20 }, visible: true, scale: 1 },
+  { id: 'money', type: 'money', position: { xPercent: 85, yPercent: 2 }, visible: true, scale: 1 },
   
   // Left middle (slightly upper) - Notifications
-  { id: 'notifications', type: 'notifications', position: { x: 20, y: 200 }, visible: true, scale: 1 },
+  { id: 'notifications', type: 'notifications', position: { xPercent: 1.5, yPercent: 25 }, visible: true, scale: 1 },
   
-  // Bottom left - Location above Minimap
-  { id: 'location', type: 'location', position: { x: 20, y: 560 }, visible: true, scale: 1 },
-  { id: 'minimap', type: 'minimap', position: { x: 20, y: 590 }, visible: true, scale: 1 },
+  // Bottom left - Minimap (Location is inside minimap)
+  { id: 'minimap', type: 'minimap', position: { xPercent: 1.5, yPercent: 72 }, visible: true, scale: 1 },
   
   // Next to minimap - Status icons
-  { id: 'health', type: 'health', position: { x: 220, y: 640 }, visible: true, size: 'md', scale: 1 },
-  { id: 'armor', type: 'armor', position: { x: 280, y: 640 }, visible: true, size: 'md', scale: 1 },
-  { id: 'hunger', type: 'hunger', position: { x: 340, y: 640 }, visible: true, size: 'md', scale: 1 },
-  { id: 'thirst', type: 'thirst', position: { x: 400, y: 640 }, visible: true, size: 'md', scale: 1 },
-  { id: 'stamina', type: 'stamina', position: { x: 460, y: 640 }, visible: true, size: 'md', scale: 1 },
-  { id: 'stress', type: 'stress', position: { x: 520, y: 640 }, visible: false, size: 'md', scale: 1 },
-  { id: 'oxygen', type: 'oxygen', position: { x: 580, y: 640 }, visible: false, size: 'md', scale: 1 },
+  { id: 'health', type: 'health', position: { xPercent: 16, yPercent: 90 }, visible: true, size: 'md', scale: 1 },
+  { id: 'armor', type: 'armor', position: { xPercent: 20, yPercent: 90 }, visible: true, size: 'md', scale: 1 },
+  { id: 'hunger', type: 'hunger', position: { xPercent: 24, yPercent: 90 }, visible: true, size: 'md', scale: 1 },
+  { id: 'thirst', type: 'thirst', position: { xPercent: 28, yPercent: 90 }, visible: true, size: 'md', scale: 1 },
+  { id: 'stamina', type: 'stamina', position: { xPercent: 32, yPercent: 90 }, visible: true, size: 'md', scale: 1 },
+  { id: 'stress', type: 'stress', position: { xPercent: 36, yPercent: 90 }, visible: false, size: 'md', scale: 1 },
+  { id: 'oxygen', type: 'oxygen', position: { xPercent: 40, yPercent: 90 }, visible: false, size: 'md', scale: 1 },
   
   // Voice
-  { id: 'voice', type: 'voice', position: { x: 640, y: 660 }, visible: true, scale: 1 },
+  { id: 'voice', type: 'voice', position: { xPercent: 48, yPercent: 92 }, visible: true, scale: 1 },
   
   // Bottom right - Speedometer
-  { id: 'speedometer', type: 'speedometer', position: { x: 1200, y: 480 }, visible: true, scale: 1 },
+  { id: 'speedometer', type: 'speedometer', position: { xPercent: 78, yPercent: 60 }, visible: true, scale: 1 },
 ];
 
 export const DEFAULT_HUD_STATE: HUDLayoutState = {
