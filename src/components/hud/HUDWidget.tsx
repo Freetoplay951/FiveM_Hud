@@ -23,18 +23,6 @@ interface HUDWidgetProps {
 const MIN_SCALE = 0.3;
 const MAX_SCALE = 5;
 
-// Convert percent to pixels
-const percentToPixel = (xPercent: number, yPercent: number) => ({
-  x: (xPercent / 100) * window.innerWidth,
-  y: (yPercent / 100) * window.innerHeight,
-});
-
-// Convert pixels to percent
-const pixelToPercent = (x: number, y: number): WidgetPosition => ({
-  xPercent: (x / window.innerWidth) * 100,
-  yPercent: (y / window.innerHeight) * 100,
-});
-
 export const HUDWidget = ({
   id,
   children,
@@ -51,6 +39,7 @@ export const HUDWidget = ({
   className,
 }: HUDWidgetProps) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const [elementSize, setElementSize] = useState({ w: 0, h: 0 });
 
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -61,38 +50,67 @@ export const HUDWidget = ({
   const resizeStartPos = useRef({ x: 0, y: 0 });
   const resizeStartScale = useRef(1);
 
-  const getScaledSize = useCallback(() => {
+  // Measure element size
+  useEffect(() => {
     const el = rootRef.current;
-    const baseW = el?.offsetWidth ?? 100;
-    const baseH = el?.offsetHeight ?? 100;
-    return {
-      w: baseW * scale,
-      h: baseH * scale,
+    if (!el) return;
+    
+    const updateSize = () => {
+      setElementSize({
+        w: el.offsetWidth * scale,
+        h: el.offsetHeight * scale,
+      });
     };
+    
+    updateSize();
+    
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(el);
+    
+    return () => resizeObserver.disconnect();
   }, [scale]);
+
+  // Convert center percent to top-left pixel position
+  const centerPercentToTopLeftPixel = useCallback((xPercent: number, yPercent: number) => {
+    const centerX = (xPercent / 100) * window.innerWidth;
+    const centerY = (yPercent / 100) * window.innerHeight;
+    return {
+      x: centerX - elementSize.w / 2,
+      y: centerY - elementSize.h / 2,
+    };
+  }, [elementSize]);
+
+  // Convert top-left pixel to center percent
+  const topLeftPixelToCenterPercent = useCallback((x: number, y: number): WidgetPosition => {
+    const centerX = x + elementSize.w / 2;
+    const centerY = y + elementSize.h / 2;
+    return {
+      xPercent: (centerX / window.innerWidth) * 100,
+      yPercent: (centerY / window.innerHeight) * 100,
+    };
+  }, [elementSize]);
 
   const clampToViewport = useCallback(
     (x: number, y: number) => {
-      const { w, h } = getScaledSize();
-      const maxX = Math.max(0, window.innerWidth - w);
-      const maxY = Math.max(0, window.innerHeight - h);
+      const maxX = Math.max(0, window.innerWidth - elementSize.w);
+      const maxY = Math.max(0, window.innerHeight - elementSize.h);
       return {
         x: Math.max(0, Math.min(maxX, x)),
         y: Math.max(0, Math.min(maxY, y)),
       };
     },
-    [getScaledSize],
+    [elementSize],
   );
 
   // Keep widgets in view when resizing window
   useEffect(() => {
-    if (!editMode) return;
-    const pixelPos = percentToPixel(position.xPercent, position.yPercent);
+    if (!editMode || elementSize.w === 0) return;
+    const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
     const clamped = clampToViewport(pixelPos.x, pixelPos.y);
-    if (clamped.x !== pixelPos.x || clamped.y !== pixelPos.y) {
-      onPositionChange(id, pixelToPercent(clamped.x, clamped.y));
+    if (Math.abs(clamped.x - pixelPos.x) > 1 || Math.abs(clamped.y - pixelPos.y) > 1) {
+      onPositionChange(id, topLeftPixelToCenterPercent(clamped.x, clamped.y));
     }
-  }, [editMode, clampToViewport, id, onPositionChange, position.xPercent, position.yPercent, scale]);
+  }, [editMode, clampToViewport, id, onPositionChange, position.xPercent, position.yPercent, elementSize, centerPercentToTopLeftPixel, topLeftPixelToCenterPercent]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -102,10 +120,10 @@ export const HUDWidget = ({
       e.stopPropagation();
       setIsDragging(true);
       dragStartPos.current = { x: e.clientX, y: e.clientY };
-      const pixelPos = percentToPixel(position.xPercent, position.yPercent);
+      const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
       widgetStartPos.current = { x: pixelPos.x, y: pixelPos.y };
     },
-    [editMode, isResizing, position.xPercent, position.yPercent],
+    [editMode, isResizing, position.xPercent, position.yPercent, centerPercentToTopLeftPixel],
   );
 
   useEffect(() => {
@@ -121,7 +139,7 @@ export const HUDWidget = ({
       }
 
       const clamped = clampToViewport(newX, newY);
-      onPositionChange(id, pixelToPercent(clamped.x, clamped.y));
+      onPositionChange(id, topLeftPixelToCenterPercent(clamped.x, clamped.y));
     };
 
     const handleMouseUp = () => {
@@ -135,7 +153,7 @@ export const HUDWidget = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport]);
+  }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport, topLeftPixelToCenterPercent]);
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     if (!editMode) return;
@@ -163,13 +181,6 @@ export const HUDWidget = ({
       );
 
       onScaleChange(id, Number(nextScale.toFixed(3)));
-
-      // After scaling, ensure we still remain inside the viewport
-      const pixelPos = percentToPixel(position.xPercent, position.yPercent);
-      const clamped = clampToViewport(pixelPos.x, pixelPos.y);
-      if (clamped.x !== pixelPos.x || clamped.y !== pixelPos.y) {
-        onPositionChange(id, pixelToPercent(clamped.x, clamped.y));
-      }
     };
 
     const handleMouseUp = () => {
@@ -183,11 +194,11 @@ export const HUDWidget = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, onScaleChange, id, clampToViewport, position.xPercent, position.yPercent, onPositionChange, scale]);
+  }, [isResizing, onScaleChange, id, scale]);
 
   if (!visible && !editMode) return null;
 
-  const pixelPos = percentToPixel(position.xPercent, position.yPercent);
+  const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
 
   return (
     <motion.div
