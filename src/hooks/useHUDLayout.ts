@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType } from '@/types/widget';
+import { snapPositionToGrid } from '@/lib/snapUtils';
 
 const STORAGE_KEY = 'hud-layout';
 
@@ -69,15 +70,6 @@ export const useHUDLayout = () => {
     setState(prev => ({ ...prev, speedometerType: type }));
   }, []);
 
-  const snapPositionToGrid = useCallback((position: WidgetPosition, gridSize: number): WidgetPosition => {
-    // Convert grid size to percentage (based on approximate viewport)
-    const gridPercent = gridSize / 10; // ~10px = 1% roughly
-    return {
-      xPercent: Math.round(position.xPercent / gridPercent) * gridPercent,
-      yPercent: Math.round(position.yPercent / gridPercent) * gridPercent,
-    };
-  }, []);
-
   const resetLayout = useCallback(() => {
     setState(prev => {
       const widgetsToUse = prev.snapToGrid 
@@ -90,22 +82,28 @@ export const useHUDLayout = () => {
       return {
         ...DEFAULT_HUD_STATE,
         editMode: true,
-        snapToGrid: prev.snapToGrid, // Keep user's snap preference
+        snapToGrid: prev.snapToGrid,
         widgets: widgetsToUse,
       };
     });
-  }, [snapPositionToGrid]);
+  }, []);
 
   const resetWidget = useCallback((id: string) => {
     const defaultWidget = DEFAULT_WIDGETS.find(w => w.id === id);
     if (!defaultWidget) return;
     
-    setState(prev => ({
-      ...prev,
-      widgets: prev.widgets.map(w => 
-        w.id === id ? { ...w, position: defaultWidget.position, scale: defaultWidget.scale ?? 1 } : w
-      ),
-    }));
+    setState(prev => {
+      const newPosition = prev.snapToGrid 
+        ? snapPositionToGrid(defaultWidget.position, prev.gridSize)
+        : defaultWidget.position;
+      
+      return {
+        ...prev,
+        widgets: prev.widgets.map(w => 
+          w.id === id ? { ...w, position: newPosition, scale: defaultWidget.scale ?? 1 } : w
+        ),
+      };
+    });
   }, []);
 
   const getWidget = useCallback((id: string): WidgetConfig | undefined => {
