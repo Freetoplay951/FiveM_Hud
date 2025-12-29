@@ -128,8 +128,18 @@ export const HUD = () => {
     return () => window.removeEventListener('keypress', handleKeyPress);
   }, [toggleEditMode, success, error]);
 
+  const handleCloseEditor = () => {
+    setIsMovingWidgets(false);
+    if (editMode) toggleEditMode();
+  };
+
   const handleToggleMovingWidgets = () => {
-    setIsMovingWidgets(prev => !prev);
+    setIsMovingWidgets((prev) => {
+      const next = !prev;
+      // When enabling move mode, close the modal overlay so it doesn't block dragging
+      if (next && editMode) toggleEditMode();
+      return next;
+    });
   };
 
   const widgetProps = {
@@ -151,16 +161,22 @@ export const HUD = () => {
 
       {/* Edit Mode Button */}
       <button
-        onClick={toggleEditMode}
+        onClick={() => {
+          if (isMovingWidgets) {
+            setIsMovingWidgets(false);
+            return;
+          }
+          toggleEditMode();
+        }}
         className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
         style={{
-          boxShadow: editMode ? '0 0 15px hsl(var(--primary))' : 'none',
+          boxShadow: editMode || isMovingWidgets ? '0 0 15px hsl(var(--primary))' : 'none',
         }}
       >
         <Settings 
           size={18} 
-          className={editMode ? "text-primary" : "text-muted-foreground"}
-          style={editMode ? { filter: 'drop-shadow(0 0 4px hsl(var(--primary)))' } : {}}
+          className={editMode || isMovingWidgets ? "text-primary" : "text-muted-foreground"}
+          style={(editMode || isMovingWidgets) ? { filter: 'drop-shadow(0 0 4px hsl(var(--primary)))' } : {}}
         />
       </button>
 
@@ -280,12 +296,12 @@ export const HUD = () => {
 
       {/* Edit Mode Overlay */}
       <EditModeOverlay
-        isOpen={editMode}
+        isOpen={editMode || isMovingWidgets}
         snapToGrid={snapToGrid}
         showSafezone={showSafezone}
         statusDesign={statusDesign}
         isMovingWidgets={isMovingWidgets}
-        onClose={toggleEditMode}
+        onClose={handleCloseEditor}
         onSnapToGridChange={setSnapToGrid}
         onShowSafezoneChange={setShowSafezone}
         onStatusDesignChange={setStatusDesign}
