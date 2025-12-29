@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType, DEFAULT_SPEEDOMETER_SCALES } from '@/types/widget';
+import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType, DEFAULT_SPEEDOMETER_CONFIGS, DEFAULT_SPEEDOMETER_POSITION, SpeedometerConfig } from '@/types/widget';
 import { snapPositionToGrid } from '@/lib/snapUtils';
 
 const STORAGE_KEY = 'hud-layout';
@@ -70,16 +70,35 @@ export const useHUDLayout = () => {
     setState(prev => ({ ...prev, speedometerType: type }));
   }, []);
 
-  const updateSpeedometerScale = useCallback((type: SpeedometerType, scale: number) => {
+  const updateSpeedometerConfig = useCallback((type: SpeedometerType, config: Partial<SpeedometerConfig>) => {
     setState(prev => ({
       ...prev,
-      speedometerScales: { ...prev.speedometerScales, [type]: scale },
+      speedometerConfigs: {
+        ...prev.speedometerConfigs,
+        [type]: { ...prev.speedometerConfigs[type], ...config },
+      },
     }));
   }, []);
 
-  const getSpeedometerScale = useCallback((type: SpeedometerType): number => {
-    return state.speedometerScales?.[type] ?? 1;
-  }, [state.speedometerScales]);
+  const getSpeedometerConfig = useCallback((type: SpeedometerType): SpeedometerConfig => {
+    return state.speedometerConfigs?.[type] ?? DEFAULT_SPEEDOMETER_CONFIGS[type];
+  }, [state.speedometerConfigs]);
+
+  const resetSpeedometer = useCallback((type: SpeedometerType) => {
+    setState(prev => {
+      const defaultPosition = prev.snapToGrid 
+        ? snapPositionToGrid(DEFAULT_SPEEDOMETER_POSITION, prev.gridSize)
+        : DEFAULT_SPEEDOMETER_POSITION;
+      
+      return {
+        ...prev,
+        speedometerConfigs: {
+          ...prev.speedometerConfigs,
+          [type]: { position: defaultPosition, scale: 1 },
+        },
+      };
+    });
+  }, []);
 
   const resetLayout = useCallback(() => {
     setState(prev => {
@@ -131,8 +150,9 @@ export const useHUDLayout = () => {
     setStatusDesign,
     setHudScale,
     setSpeedometerType,
-    updateSpeedometerScale,
-    getSpeedometerScale,
+    updateSpeedometerConfig,
+    getSpeedometerConfig,
+    resetSpeedometer,
     resetLayout,
     resetWidget,
     getWidget,
