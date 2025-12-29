@@ -1,12 +1,14 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { HUD } from '@/components/HUD';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div 
+      className="min-h-screen w-full"
+      style={{ 
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
+      }}
+    >
+      <HUD />
     </div>
   );
 };
