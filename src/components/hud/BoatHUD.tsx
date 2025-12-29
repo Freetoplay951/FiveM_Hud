@@ -192,32 +192,36 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
               </span>
 
               <motion.span
-                className="hud-number text-4xl text-foreground leading-none"
+                className="hud-number text-4xl text-foreground leading-none tabular-nums"
+                style={{ 
+                  textShadow: "0 0 20px hsl(var(--thirst) / 0.5)",
+                  minWidth: "3ch",
+                  textAlign: "center",
+                }}
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ duration: 0.15 }}
                 key={Math.round(speed)}
-                initial={{ scale: 1.05 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.1 }}
-                style={{ textShadow: "0 0 20px hsl(var(--thirst) / 0.5)" }}
               >
-                {String(Math.round(speed)).padStart(2, "0")}
+                {String(Math.round(speed)).padStart(3, "0")}
               </motion.span>
 
               {/* Heading & Anchor Status */}
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-2 min-w-[100px] justify-center">
                 <Navigation
                   size={12}
-                  className="text-primary"
+                  className="text-primary flex-shrink-0"
                   style={{
                     transform: `rotate(${heading}deg)`,
                     filter: "drop-shadow(0 0 4px hsl(var(--primary)))",
+                    transition: "transform 0.15s ease-out",
                   }}
                 />
-                <span className="hud-number text-sm text-primary">
-                  {getCompassDirection(heading)} {Math.round(heading)}°
+                <span className="hud-number text-sm text-primary tabular-nums min-w-[60px] text-center">
+                  {getCompassDirection(heading)} {String(Math.round(heading)).padStart(3, "0")}°
                 </span>
                 <Anchor
                   size={12}
-                  className={anchor ? "text-warning" : "text-muted-foreground"}
+                  className={cn(anchor ? "text-warning flex-shrink-0" : "text-muted-foreground flex-shrink-0")}
                   style={
                     anchor
                       ? { filter: "drop-shadow(0 0 4px hsl(var(--warning)))" }
@@ -269,7 +273,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
             </div>
             <span
               className={cn(
-                "text-[10px] hud-number",
+                "text-[10px] hud-number tabular-nums min-w-[28px] text-right",
                 fuelCritical
                   ? "text-critical"
                   : fuelWarning
