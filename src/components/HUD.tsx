@@ -1,29 +1,74 @@
-import { useState, useEffect } from 'react';
-import { Settings } from 'lucide-react';
-import { HUDWidget } from './hud/HUDWidget';
-import { VehicleHUDFactory } from './hud/VehicleHUDFactory';
-import { EditModeOverlay } from './hud/EditModeOverlay';
-import { StatusWidget } from './hud/widgets/StatusWidget';
-import { NeonMoneyWidget } from './hud/widgets/NeonMoneyWidget';
-import { NeonLocationWidget } from './hud/widgets/NeonLocationWidget';
-import { NeonVoiceWidget } from './hud/widgets/NeonVoiceWidget';
-import { NeonMinimapWidget } from './hud/widgets/NeonMinimapWidget';
-import { ClockWidget } from './hud/widgets/ClockWidget';
-import { CompassWidget } from './hud/widgets/CompassWidget';
-import { NotificationContainer } from './hud/NotificationContainer';
-import { useHUDLayout } from '@/hooks/useHUDLayout';
-import { useNuiEvents, isNuiEnvironment } from '@/hooks/useNuiEvents';
-import { useNotifications } from '@/hooks/useNotifications';
-import { HudState, VehicleState, MoneyState, VoiceState, LocationState, PlayerState, StatusType } from '@/types/hud';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { Settings } from "lucide-react";
+import { HUDWidget } from "./hud/HUDWidget";
+import { VehicleHUDFactory } from "./hud/VehicleHUDFactory";
+import { EditModeOverlay } from "./hud/EditModeOverlay";
+import { StatusWidget } from "./hud/widgets/StatusWidget";
+import { NeonMoneyWidget } from "./hud/widgets/NeonMoneyWidget";
+import { NeonLocationWidget } from "./hud/widgets/NeonLocationWidget";
+import { NeonVoiceWidget } from "./hud/widgets/NeonVoiceWidget";
+import { NeonMinimapWidget } from "./hud/widgets/NeonMinimapWidget";
+import { ClockWidget } from "./hud/widgets/ClockWidget";
+import { CompassWidget } from "./hud/widgets/CompassWidget";
+import { NotificationContainer } from "./hud/NotificationContainer";
+import { useHUDLayout } from "@/hooks/useHUDLayout";
+import { useNuiEvents, isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { useNotifications } from "@/hooks/useNotifications";
+import {
+  HudState,
+  VehicleState,
+  MoneyState,
+  VoiceState,
+  LocationState,
+  PlayerState,
+  StatusType,
+  NotificationData,
+} from "@/types/hud";
+import { motion } from "framer-motion";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 
 // Demo values
-const DEMO_HUD: HudState = { health: 85, armor: 50, hunger: 70, thirst: 45, stamina: 90, stress: 25, oxygen: 100 };
-const DEMO_VEHICLE: VehicleState = { inVehicle: true, vehicleType: 'car', speed: 127, gear: 4, fuel: 65 };
+const DEMO_HUD: HudState = {
+  health: 85,
+  armor: 50,
+  hunger: 70,
+  thirst: 45,
+  stamina: 90,
+  stress: 25,
+  oxygen: 100,
+};
+const DEMO_VEHICLE: VehicleState = {
+  inVehicle: true,
+  vehicleType: "car",
+  speed: 127,
+  gear: 4,
+  fuel: 65,
+};
 const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567, blackMoney: 5000 };
-const DEMO_PLAYER: PlayerState = { id: 42, job: 'LSPD', rank: 'Chief' };
-const DEMO_VOICE: VoiceState = { active: true, range: 'normal' };
-const DEMO_LOCATION: LocationState = { street: 'Vinewood Boulevard', direction: 'NE', area: 'Vinewood' };
+const DEMO_PLAYER: PlayerState = { id: 42, job: "LSPD", rank: "Chief" };
+const DEMO_VOICE: VoiceState = { active: true, range: "normal" };
+const DEMO_LOCATION: LocationState = {
+  street: "Vinewood Boulevard",
+  direction: "NE",
+  area: "Vinewood",
+};
+
+const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
+  {
+    id: "edit-demo-1",
+    type: "info",
+    title: "Info",
+    message: "Diese Notification ist nur im Edit Mode sichtbar (zum Verschieben).",
+    duration: 0,
+  },
+  {
+    id: "edit-demo-2",
+    type: "warning",
+    title: "Warnung",
+    message: "Zieh mich an die gewünschte Position.",
+    duration: 0,
+  },
+];
 
 export const HUD = () => {
   const [hudState, setHudState] = useState<HudState>(DEMO_HUD);
@@ -33,7 +78,9 @@ export const HUD = () => {
   const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
   const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
   const [isDemoMode] = useState(!isNuiEnvironment());
-  const [currentTime, setCurrentTime] = useState('18:24');
+  const [currentTime, setCurrentTime] = useState("18:24");
+
+  const [editMenuOpen, setEditMenuOpen] = useState(false);
 
   const {
     widgets,
@@ -53,6 +100,20 @@ export const HUD = () => {
 
   const { notifications, removeNotification, success, error } = useNotifications();
 
+  const enterEditMode = () => {
+    if (!editMode) toggleEditMode();
+    setEditMenuOpen(true);
+  };
+
+  const exitEditMode = () => {
+    setEditMenuOpen(false);
+    if (editMode) toggleEditMode();
+  };
+
+  useEffect(() => {
+    if (!editMode) setEditMenuOpen(false);
+  }, [editMode]);
+
   // NUI Event handlers
   useNuiEvents({
     onUpdateHud: setHudState,
@@ -67,35 +128,39 @@ export const HUD = () => {
     if (!isDemoMode) return;
 
     const interval = setInterval(() => {
-      setHudState(prev => ({
+      setHudState((prev) => ({
         ...prev,
         hunger: Math.max(0, prev.hunger - 0.1),
         thirst: Math.max(0, prev.thirst - 0.15),
         stamina: Math.min(100, Math.max(0, prev.stamina + (Math.random() - 0.5) * 5)),
       }));
 
-      setVehicleState(prev => {
+      setVehicleState((prev) => {
         const baseUpdate = {
           ...prev,
           fuel: Math.max(0, prev.fuel - 0.02),
         };
 
-        if (prev.vehicleType === 'car') {
+        if (prev.vehicleType === "car") {
           return {
             ...baseUpdate,
-            speed: prev.inVehicle ? Math.min(280, Math.max(0, prev.speed + (Math.random() - 0.5) * 20)) : 0,
+            speed: prev.inVehicle
+              ? Math.min(280, Math.max(0, prev.speed + (Math.random() - 0.5) * 20))
+              : 0,
           };
         }
 
-        if (prev.vehicleType === 'boat') {
+        if (prev.vehicleType === "boat") {
           return {
             ...baseUpdate,
-            speed: prev.inVehicle ? Math.min(80, Math.max(0, prev.speed + (Math.random() - 0.5) * 10)) : 0,
+            speed: prev.inVehicle
+              ? Math.min(80, Math.max(0, prev.speed + (Math.random() - 0.5) * 10))
+              : 0,
             heading: ((prev.heading || 0) + (Math.random() - 0.5) * 5 + 360) % 360,
           };
         }
 
-        if (prev.vehicleType === 'plane') {
+        if (prev.vehicleType === "plane") {
           return {
             ...baseUpdate,
             airspeed: Math.min(400, Math.max(150, (prev.airspeed || 250) + (Math.random() - 0.5) * 30)),
@@ -107,7 +172,7 @@ export const HUD = () => {
           };
         }
 
-        if (prev.vehicleType === 'helicopter') {
+        if (prev.vehicleType === "helicopter") {
           return {
             ...baseUpdate,
             airspeed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
@@ -124,7 +189,7 @@ export const HUD = () => {
         return baseUpdate;
       });
 
-      setVoiceState(prev => ({
+      setVoiceState((prev) => ({
         ...prev,
         active: Math.random() > 0.3,
       }));
@@ -136,7 +201,12 @@ export const HUD = () => {
   // Clock update
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
+      setCurrentTime(
+        new Date().toLocaleTimeString("de-DE", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      );
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -144,53 +214,64 @@ export const HUD = () => {
   // Demo key controls
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'v') {
-        setVehicleState(prev => ({ ...prev, inVehicle: !prev.inVehicle }));
+      if (e.key === "v") {
+        setVehicleState((prev) => ({ ...prev, inVehicle: !prev.inVehicle }));
       }
-      if (e.key === 'r') {
-        setVoiceState(prev => ({
+      if (e.key === "r") {
+        setVoiceState((prev) => ({
           ...prev,
-          range: prev.range === 'whisper' ? 'normal' : prev.range === 'normal' ? 'shout' : 'whisper',
+          range:
+            prev.range === "whisper"
+              ? "normal"
+              : prev.range === "normal"
+                ? "shout"
+                : "whisper",
         }));
       }
-      if (e.key === 'e') {
-        toggleEditMode();
+      if (e.key === "e") {
+        if (editMode) {
+          exitEditMode();
+        } else {
+          enterEditMode();
+        }
       }
       // Vehicle type switching for demo
-      if (e.key === '1') setVehicleState(prev => ({ ...prev, vehicleType: 'car', gear: 4 }));
-      if (e.key === '2') setVehicleState(prev => ({ 
-        ...prev, 
-        vehicleType: 'plane', 
-        altitude: 500, 
-        pitch: 5, 
-        roll: 0, 
-        heading: 180, 
-        airspeed: 250,
-        landingGear: false,
-        flaps: 0,
-      }));
-      if (e.key === '3') setVehicleState(prev => ({ ...prev, vehicleType: 'boat', heading: 90, anchor: false }));
-      if (e.key === '4') setVehicleState(prev => ({ 
-        ...prev, 
-        vehicleType: 'helicopter', 
-        altitude: 200, 
-        rotorRpm: 95, 
-        verticalSpeed: 5,
-        pitch: 0,
-        roll: 0,
-        heading: 90,
-        airspeed: 80,
-      }));
+      if (e.key === "1") setVehicleState((prev) => ({ ...prev, vehicleType: "car", gear: 4 }));
+      if (e.key === "2")
+        setVehicleState((prev) => ({
+          ...prev,
+          vehicleType: "plane",
+          altitude: 500,
+          pitch: 5,
+          roll: 0,
+          heading: 180,
+          airspeed: 250,
+          landingGear: false,
+          flaps: 0,
+        }));
+      if (e.key === "3") setVehicleState((prev) => ({ ...prev, vehicleType: "boat", heading: 90, anchor: false }));
+      if (e.key === "4")
+        setVehicleState((prev) => ({
+          ...prev,
+          vehicleType: "helicopter",
+          altitude: 200,
+          rotorRpm: 95,
+          verticalSpeed: 5,
+          pitch: 0,
+          roll: 0,
+          heading: 90,
+          airspeed: 80,
+        }));
       // Demo notifications
-      if (e.key === 'n') success('Erfolg!', 'Aktion erfolgreich ausgeführt.');
-      if (e.key === 'm') error('Fehler!', 'Etwas ist schief gelaufen.');
+      if (e.key === "n") success("Erfolg!", "Aktion erfolgreich ausgeführt.");
+      if (e.key === "m") error("Fehler!", "Etwas ist schief gelaufen.");
     };
 
-    window.addEventListener('keypress', handleKeyPress);
+    window.addEventListener("keypress", handleKeyPress);
     return () => {
-      window.removeEventListener('keypress', handleKeyPress);
+      window.removeEventListener("keypress", handleKeyPress);
     };
-  }, [toggleEditMode, success, error]);
+  }, [editMode, success, error]);
 
   const widgetProps = {
     editMode,
@@ -201,7 +282,20 @@ export const HUD = () => {
     onScaleChange: updateWidgetScale,
   };
 
-  const statusTypes: StatusType[] = ['health', 'armor', 'hunger', 'thirst', 'stamina', 'stress', 'oxygen'];
+  const statusTypes: StatusType[] = [
+    "health",
+    "armor",
+    "hunger",
+    "thirst",
+    "stamina",
+    "stress",
+    "oxygen",
+  ];
+
+  const isUsingEditDemoNotifications = editMode && notifications.length === 0;
+  const displayedNotifications = isUsingEditDemoNotifications
+    ? EDIT_MODE_DEMO_NOTIFICATIONS
+    : notifications;
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -213,39 +307,77 @@ export const HUD = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           style={{
-            backgroundImage: 'linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)',
-            backgroundSize: '20px 20px',
+            backgroundImage:
+              "linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
           }}
         />
       )}
 
       {/* Notifications - as draggable widget */}
       {(() => {
-        const widget = getWidget('notifications');
-        if (!widget) return (
-          <NotificationContainer notifications={notifications} onClose={removeNotification} />
-        );
+        const widget = getWidget("notifications");
+        if (!widget)
+          return (
+            <NotificationContainer
+              notifications={displayedNotifications}
+              onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
+            />
+          );
         return (
-          <HUDWidget id="notifications" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
-            <NotificationContainer notifications={notifications} onClose={removeNotification} isWidget />
+          <HUDWidget
+            id="notifications"
+            position={widget.position}
+            visible={widget.visible}
+            scale={widget.scale}
+            {...widgetProps}
+          >
+            <NotificationContainer
+              notifications={displayedNotifications}
+              onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
+              isWidget
+            />
           </HUDWidget>
         );
       })()}
 
-      {/* Edit Mode Button */}
-      <button
-        onClick={toggleEditMode}
-        className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
-        style={{
-          boxShadow: editMode ? '0 0 15px hsl(var(--primary))' : 'none',
+      {/* Edit Mode Button + Menu (Radix Popover) */}
+      <Popover
+        open={editMenuOpen}
+        onOpenChange={(open) => {
+          setEditMenuOpen(open);
+          if (open && !editMode) {
+            enterEditMode();
+          }
         }}
       >
-        <Settings 
-          size={18} 
-          className={editMode ? "text-primary" : "text-muted-foreground"}
-          style={editMode ? { filter: 'drop-shadow(0 0 4px hsl(var(--primary)))' } : {}}
-        />
-      </button>
+        <PopoverTrigger asChild>
+          <button
+            className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
+            style={{
+              boxShadow: editMode ? "0 0 15px hsl(var(--primary))" : "none",
+            }}
+          >
+            <Settings
+              size={18}
+              className={editMode ? "text-primary" : "text-muted-foreground"}
+              style={editMode ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" } : {}}
+            />
+          </button>
+        </PopoverTrigger>
+
+        {/* Menu content */}
+        {editMode && (
+          <EditModeOverlay
+            snapToGrid={snapToGrid}
+            statusDesign={statusDesign}
+            onSnapToGridChange={setSnapToGrid}
+            onStatusDesignChange={setStatusDesign}
+            onReset={resetLayout}
+            onExitEditMode={exitEditMode}
+          />
+        )}
+      </Popover>
 
       {/* Demo Mode Badge */}
       {isDemoMode && !editMode && (
@@ -274,7 +406,7 @@ export const HUD = () => {
               type={type}
               value={value}
               design={statusDesign}
-              size={widget.size as 'sm' | 'md' | 'lg'}
+              size={widget.size as "sm" | "md" | "lg"}
             />
           </HUDWidget>
         );
@@ -282,10 +414,16 @@ export const HUD = () => {
 
       {/* Money Widget */}
       {(() => {
-        const widget = getWidget('money');
+        const widget = getWidget("money");
         if (!widget) return null;
         return (
-          <HUDWidget id="money" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
+          <HUDWidget
+            id="money"
+            position={widget.position}
+            visible={widget.visible}
+            scale={widget.scale}
+            {...widgetProps}
+          >
             <NeonMoneyWidget money={moneyState} player={playerState} />
           </HUDWidget>
         );
@@ -293,10 +431,16 @@ export const HUD = () => {
 
       {/* Clock Widget */}
       {(() => {
-        const widget = getWidget('clock');
+        const widget = getWidget("clock");
         if (!widget) return null;
         return (
-          <HUDWidget id="clock" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
+          <HUDWidget
+            id="clock"
+            position={widget.position}
+            visible={widget.visible}
+            scale={widget.scale}
+            {...widgetProps}
+          >
             <ClockWidget time={currentTime} />
           </HUDWidget>
         );
@@ -304,10 +448,16 @@ export const HUD = () => {
 
       {/* Location Widget */}
       {(() => {
-        const widget = getWidget('location');
+        const widget = getWidget("location");
         if (!widget) return null;
         return (
-          <HUDWidget id="location" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
+          <HUDWidget
+            id="location"
+            position={widget.position}
+            visible={widget.visible}
+            scale={widget.scale}
+            {...widgetProps}
+          >
             <NeonLocationWidget location={locationState} />
           </HUDWidget>
         );
@@ -315,10 +465,16 @@ export const HUD = () => {
 
       {/* Voice Widget */}
       {(() => {
-        const widget = getWidget('voice');
+        const widget = getWidget("voice");
         if (!widget) return null;
         return (
-          <HUDWidget id="voice" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
+          <HUDWidget
+            id="voice"
+            position={widget.position}
+            visible={widget.visible}
+            scale={widget.scale}
+            {...widgetProps}
+          >
             <NeonVoiceWidget voice={voiceState} />
           </HUDWidget>
         );
@@ -326,10 +482,16 @@ export const HUD = () => {
 
       {/* Minimap Widget */}
       {(() => {
-        const widget = getWidget('minimap');
+        const widget = getWidget("minimap");
         if (!widget) return null;
         return (
-          <HUDWidget id="minimap" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
+          <HUDWidget
+            id="minimap"
+            position={widget.position}
+            visible={widget.visible}
+            scale={widget.scale}
+            {...widgetProps}
+          >
             <NeonMinimapWidget direction={locationState.direction} />
           </HUDWidget>
         );
@@ -337,10 +499,16 @@ export const HUD = () => {
 
       {/* Compass Widget */}
       {(() => {
-        const widget = getWidget('compass');
+        const widget = getWidget("compass");
         if (!widget) return null;
         return (
-          <HUDWidget id="compass" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
+          <HUDWidget
+            id="compass"
+            position={widget.position}
+            visible={widget.visible}
+            scale={widget.scale}
+            {...widgetProps}
+          >
             <CompassWidget direction={locationState.direction} />
           </HUDWidget>
         );
@@ -348,31 +516,23 @@ export const HUD = () => {
 
       {/* Vehicle Speedometer */}
       {(() => {
-        const widget = getWidget('speedometer');
+        const widget = getWidget("speedometer");
         if (!widget) return null;
         return (
-          <HUDWidget 
-            id="speedometer" 
-            position={widget.position} 
-            visible={widget.visible && vehicleState.inVehicle} 
+          <HUDWidget
+            id="speedometer"
+            position={widget.position}
+            visible={widget.visible && vehicleState.inVehicle}
             scale={widget.scale}
             {...widgetProps}
           >
-            <VehicleHUDFactory vehicle={vehicleState} visible={vehicleState.inVehicle || editMode} />
+            <VehicleHUDFactory
+              vehicle={vehicleState}
+              visible={vehicleState.inVehicle || editMode}
+            />
           </HUDWidget>
         );
       })()}
-
-      {/* Edit Mode Overlay */}
-      <EditModeOverlay
-        isOpen={editMode}
-        snapToGrid={snapToGrid}
-        statusDesign={statusDesign}
-        onClose={toggleEditMode}
-        onSnapToGridChange={setSnapToGrid}
-        onStatusDesignChange={setStatusDesign}
-        onReset={resetLayout}
-      />
     </div>
   );
 };
