@@ -11,7 +11,6 @@ interface VehicleHUDProps {
 export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
   const maxSpeed = 280;
   const speedPercentage = Math.min(100, (vehicle.speed / maxSpeed) * 100);
-  const fuelPercentage = vehicle.fuel;
   
   const fuelWarning = vehicle.fuel <= 25;
   const fuelCritical = vehicle.fuel <= 10;
@@ -27,20 +26,20 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
           className="flex items-center justify-center"
         >
           {/* Speedometer Circle */}
-          <div className="relative w-36 h-36">
+          <div className="relative w-32 h-32">
             {/* Glass Background */}
             <div className="absolute inset-0 rounded-full glass-panel overflow-hidden">
               {/* Subtle glow effect */}
               <div 
-                className="absolute inset-0 rounded-full opacity-20"
+                className="absolute inset-0 rounded-full opacity-15"
                 style={{
                   background: `conic-gradient(from 135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) ${speedPercentage * 0.75}%, transparent ${speedPercentage * 0.75}%)`,
-                  filter: 'blur(10px)',
+                  filter: 'blur(12px)',
                 }}
               />
             </div>
             
-            {/* SVG Arcs */}
+            {/* SVG Arc */}
             <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
               <defs>
                 <linearGradient id="speedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -48,74 +47,35 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                   <stop offset="60%" stopColor="hsl(var(--stamina))" />
                   <stop offset="100%" stopColor="hsl(var(--critical))" />
                 </linearGradient>
-                <linearGradient id="fuelGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor={fuelCritical ? "hsl(var(--critical))" : fuelWarning ? "hsl(var(--warning))" : "hsl(var(--stamina))"} />
-                  <stop offset="100%" stopColor={fuelCritical ? "hsl(var(--critical))" : fuelWarning ? "hsl(var(--warning))" : "hsl(var(--primary))"} />
-                </linearGradient>
               </defs>
               
-              {/* Outer Speed Arc - Background */}
+              {/* Speed Arc - Background */}
               <circle
                 cx="50"
                 cy="50"
                 r="44"
                 fill="none"
-                stroke="hsl(var(--muted) / 0.2)"
-                strokeWidth="5"
+                stroke="hsl(var(--muted) / 0.15)"
+                strokeWidth="4"
                 strokeDasharray="207 69"
                 strokeLinecap="round"
               />
               
-              {/* Outer Speed Arc - Progress */}
+              {/* Speed Arc - Progress */}
               <motion.circle
                 cx="50"
                 cy="50"
                 r="44"
                 fill="none"
                 stroke="url(#speedGradient)"
-                strokeWidth="5"
+                strokeWidth="4"
                 strokeDasharray={`${speedPercentage * 2.07} 276`}
                 strokeLinecap="round"
                 initial={{ strokeDasharray: "0 276" }}
                 animate={{ strokeDasharray: `${speedPercentage * 2.07} 276` }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
                 style={{
-                  filter: 'drop-shadow(0 0 4px hsl(var(--primary) / 0.5))',
-                }}
-              />
-              
-              {/* Inner Fuel Arc - Background */}
-              <circle
-                cx="50"
-                cy="50"
-                r="36"
-                fill="none"
-                stroke="hsl(var(--muted) / 0.15)"
-                strokeWidth="3"
-                strokeDasharray="170 56"
-                strokeLinecap="round"
-              />
-              
-              {/* Inner Fuel Arc - Progress */}
-              <motion.circle
-                cx="50"
-                cy="50"
-                r="36"
-                fill="none"
-                stroke="url(#fuelGradient)"
-                strokeWidth="3"
-                strokeDasharray={`${fuelPercentage * 1.7} 226`}
-                strokeLinecap="round"
-                initial={{ strokeDasharray: "0 226" }}
-                animate={{ strokeDasharray: `${fuelPercentage * 1.7} 226` }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className={cn(fuelCritical && "critical-pulse")}
-                style={{
-                  filter: fuelCritical 
-                    ? 'drop-shadow(0 0 6px hsl(var(--critical)))' 
-                    : fuelWarning 
-                      ? 'drop-shadow(0 0 4px hsl(var(--warning)))' 
-                      : 'drop-shadow(0 0 3px hsl(var(--stamina) / 0.4))',
+                  filter: 'drop-shadow(0 0 6px hsl(var(--primary) / 0.6))',
                 }}
               />
             </svg>
@@ -124,7 +84,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               {/* Speed */}
               <motion.span 
-                className="hud-number text-3xl text-foreground leading-none"
+                className="hud-number text-2xl text-foreground leading-none"
                 key={Math.round(vehicle.speed)}
                 initial={{ scale: 1.1 }}
                 animate={{ scale: 1 }}
@@ -132,33 +92,31 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
               >
                 {Math.round(vehicle.speed)}
               </motion.span>
-              <span className="text-[9px] text-muted-foreground uppercase tracking-widest">
+              <span className="text-[8px] text-muted-foreground uppercase tracking-widest">
                 km/h
               </span>
               
               {/* Divider */}
-              <div className="w-8 h-px bg-muted/30 my-1.5" />
+              <div className="w-6 h-px bg-border/30 my-1" />
               
               {/* Gear */}
-              <div className="flex items-center gap-1.5">
-                <span className="hud-number text-xl text-primary leading-none">
-                  {vehicle.gear === 0 ? 'R' : vehicle.gear}
-                </span>
-              </div>
+              <span className="hud-number text-lg text-primary leading-none">
+                {vehicle.gear === 0 ? 'R' : vehicle.gear}
+              </span>
               
-              {/* Fuel percentage - small */}
-              <div className="flex items-center gap-1 mt-1">
+              {/* Fuel */}
+              <div className="flex items-center gap-1 mt-0.5">
                 <Fuel 
-                  size={10} 
+                  size={9} 
                   className={cn(
                     "transition-colors",
-                    fuelCritical ? "text-critical" : 
-                    fuelWarning ? "text-warning" : 
+                    fuelCritical ? "text-critical critical-pulse" : 
+                    fuelWarning ? "text-warning warning-pulse" : 
                     "text-muted-foreground"
                   )} 
                 />
                 <span className={cn(
-                  "text-[10px] hud-number",
+                  "text-[9px] hud-number",
                   fuelCritical ? "text-critical" : 
                   fuelWarning ? "text-warning" : 
                   "text-muted-foreground"

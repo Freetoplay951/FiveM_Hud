@@ -20,6 +20,12 @@ export interface MoneyState {
   blackMoney?: number;
 }
 
+export interface PlayerState {
+  id: number;
+  job: string;
+  rank: string;
+}
+
 export interface VoiceState {
   active: boolean;
   range: 'whisper' | 'normal' | 'shout';
