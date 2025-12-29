@@ -8,12 +8,12 @@ interface EditModeOverlayProps {
   snapToGrid: boolean;
   showSafezone: boolean;
   statusDesign: StatusDesign;
-  hudScale: number;
+  isMovingWidgets: boolean;
   onClose: () => void;
   onSnapToGridChange: (value: boolean) => void;
   onShowSafezoneChange: (value: boolean) => void;
   onStatusDesignChange: (design: StatusDesign) => void;
-  onHudScaleChange: (scale: number) => void;
+  onToggleMovingWidgets: () => void;
   onReset: () => void;
 }
 
@@ -30,12 +30,12 @@ export const EditModeOverlay = ({
   snapToGrid,
   showSafezone,
   statusDesign,
-  hudScale,
+  isMovingWidgets,
   onClose,
   onSnapToGridChange,
   onShowSafezoneChange,
   onStatusDesignChange,
-  onHudScaleChange,
+  onToggleMovingWidgets,
   onReset,
 }: EditModeOverlayProps) => {
   return (
@@ -142,23 +142,6 @@ export const EditModeOverlay = ({
               </div>
             </div>
 
-            {/* HUD Scale */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-foreground mb-3">HUD Größe: {Math.round(hudScale * 100)}%</h3>
-              <input
-                type="range"
-                min="0.75"
-                max="1.5"
-                step="0.05"
-                value={hudScale}
-                onChange={(e) => onHudScaleChange(parseFloat(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${((hudScale - 0.75) / 0.75) * 100}%, hsl(var(--muted) / 0.3) ${((hudScale - 0.75) / 0.75) * 100}%, hsl(var(--muted) / 0.3) 100%)`,
-                }}
-              />
-            </div>
-            
             {/* Options */}
             <div className="space-y-3 mb-6">
               <ToggleOption
@@ -178,11 +161,24 @@ export const EditModeOverlay = ({
             {/* Actions */}
             <div className="flex flex-col gap-2">
               <button
-                onClick={onClose}
-                className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+                onClick={onToggleMovingWidgets}
+                className={cn(
+                  "w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2",
+                  isMovingWidgets 
+                    ? "bg-stamina text-stamina-foreground" 
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                )}
                 style={{
-                  boxShadow: '0 0 20px hsl(var(--primary) / 0.3)',
+                  boxShadow: isMovingWidgets 
+                    ? '0 0 20px hsl(var(--stamina) / 0.5)' 
+                    : '0 0 20px hsl(var(--primary) / 0.3)',
                 }}
+              >
+                {isMovingWidgets ? 'Verschieben beenden' : 'Widgets verschieben'}
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full py-2 rounded-lg glass-panel text-foreground hover:bg-muted/20 transition-colors"
               >
                 Bearbeitung beenden
               </button>

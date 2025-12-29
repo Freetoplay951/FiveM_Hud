@@ -34,6 +34,8 @@ export const HUD = () => {
   const [isDemoMode] = useState(!isNuiEnvironment());
   const [currentTime, setCurrentTime] = useState('18:24');
 
+  const [isMovingWidgets, setIsMovingWidgets] = useState(false);
+
   const {
     widgets,
     editMode,
@@ -41,12 +43,10 @@ export const HUD = () => {
     showSafezone,
     gridSize,
     statusDesign,
-    hudScale,
     toggleEditMode,
     setSnapToGrid,
     setShowSafezone,
     setStatusDesign,
-    setHudScale,
     updateWidgetPosition,
     toggleWidgetVisibility,
     resetLayout,
@@ -128,8 +128,12 @@ export const HUD = () => {
     return () => window.removeEventListener('keypress', handleKeyPress);
   }, [toggleEditMode, success, error]);
 
+  const handleToggleMovingWidgets = () => {
+    setIsMovingWidgets(prev => !prev);
+  };
+
   const widgetProps = {
-    editMode,
+    editMode: isMovingWidgets,
     snapToGrid,
     gridSize,
     onPositionChange: updateWidgetPosition,
@@ -141,7 +145,6 @@ export const HUD = () => {
   return (
     <div 
       className="fixed inset-0 pointer-events-none overflow-hidden"
-      style={{ transform: `scale(${hudScale})`, transformOrigin: 'top left' }}
     >
       {/* Notifications */}
       <NotificationContainer notifications={notifications} onClose={removeNotification} />
@@ -281,12 +284,12 @@ export const HUD = () => {
         snapToGrid={snapToGrid}
         showSafezone={showSafezone}
         statusDesign={statusDesign}
-        hudScale={hudScale}
+        isMovingWidgets={isMovingWidgets}
         onClose={toggleEditMode}
         onSnapToGridChange={setSnapToGrid}
         onShowSafezoneChange={setShowSafezone}
         onStatusDesignChange={setStatusDesign}
-        onHudScaleChange={setHudScale}
+        onToggleMovingWidgets={handleToggleMovingWidgets}
         onReset={resetLayout}
       />
     </div>
