@@ -25,7 +25,7 @@ export const NeonMoneyWidget = ({ money, player }: NeonMoneyWidgetProps) => {
       {/* Player Info Row */}
       {player && (
         <div className="glass-panel rounded-lg px-3 py-1.5 flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground">#</span>
+          <span className="text-[10px] text-muted-foreground">ID</span>
           <span 
             className="hud-number text-xs text-foreground"
             style={{ textShadow: '0 0 6px hsl(var(--foreground) / 0.3)' }}

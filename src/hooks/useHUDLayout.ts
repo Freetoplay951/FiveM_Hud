@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_WIDGETS } from '@/types/widget';
+import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, StatusDesign } from '@/types/widget';
 
 const STORAGE_KEY = 'hud-layout';
 
@@ -8,24 +8,14 @@ export const useHUDLayout = () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Merge with defaults to handle new properties
+        return { ...DEFAULT_HUD_STATE, ...parsed };
       } catch {
-        return {
-          widgets: DEFAULT_WIDGETS,
-          editMode: false,
-          snapToGrid: true,
-          showSafezone: false,
-          gridSize: 20,
-        };
+        return DEFAULT_HUD_STATE;
       }
     }
-    return {
-      widgets: DEFAULT_WIDGETS,
-      editMode: false,
-      snapToGrid: true,
-      showSafezone: false,
-      gridSize: 20,
-    };
+    return DEFAULT_HUD_STATE;
   });
 
   useEffect(() => {
@@ -62,13 +52,18 @@ export const useHUDLayout = () => {
     }));
   }, []);
 
+  const setStatusDesign = useCallback((design: StatusDesign) => {
+    setState(prev => ({ ...prev, statusDesign: design }));
+  }, []);
+
+  const setHudScale = useCallback((scale: number) => {
+    setState(prev => ({ ...prev, hudScale: scale }));
+  }, []);
+
   const resetLayout = useCallback(() => {
     setState({
-      widgets: DEFAULT_WIDGETS,
+      ...DEFAULT_HUD_STATE,
       editMode: true,
-      snapToGrid: true,
-      showSafezone: false,
-      gridSize: 20,
     });
   }, []);
 
@@ -83,6 +78,8 @@ export const useHUDLayout = () => {
     setShowSafezone,
     updateWidgetPosition,
     toggleWidgetVisibility,
+    setStatusDesign,
+    setHudScale,
     resetLayout,
     getWidget,
   };

@@ -58,6 +58,12 @@
     --black-money: 280 70% 55%;
     --black-money-glow: 280 80% 65%;
 
+    /* Stress & Oxygen */
+    --stress: 320 70% 55%;
+    --stress-glow: 320 80% 65%;
+    --oxygen: 195 100% 50%;
+    --oxygen-glow: 195 100% 60%;
+
     /* Voice Colors */
     --voice-whisper: 210 80% 50%;
     --voice-normal: 145 70% 50%;

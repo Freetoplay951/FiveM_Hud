@@ -1,24 +1,41 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, RotateCcw, Grid3X3, Square, Eye, X } from 'lucide-react';
+import { Settings, RotateCcw, Grid3X3, Square, X, Circle, BarChart3, AlignVerticalSpaceAround, Minus, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StatusDesign } from '@/types/widget';
 
 interface EditModeOverlayProps {
   isOpen: boolean;
   snapToGrid: boolean;
   showSafezone: boolean;
+  statusDesign: StatusDesign;
+  hudScale: number;
   onClose: () => void;
   onSnapToGridChange: (value: boolean) => void;
   onShowSafezoneChange: (value: boolean) => void;
+  onStatusDesignChange: (design: StatusDesign) => void;
+  onHudScaleChange: (scale: number) => void;
   onReset: () => void;
 }
+
+const DESIGN_OPTIONS: { design: StatusDesign; icon: React.ElementType; label: string }[] = [
+  { design: 'circular', icon: Circle, label: 'Kreis' },
+  { design: 'bar', icon: BarChart3, label: 'Balken' },
+  { design: 'vertical', icon: AlignVerticalSpaceAround, label: 'Vertikal' },
+  { design: 'minimal', icon: Minus, label: 'Minimal' },
+  { design: 'arc', icon: Activity, label: 'Bogen' },
+];
 
 export const EditModeOverlay = ({
   isOpen,
   snapToGrid,
   showSafezone,
+  statusDesign,
+  hudScale,
   onClose,
   onSnapToGridChange,
   onShowSafezoneChange,
+  onStatusDesignChange,
+  onHudScaleChange,
   onReset,
 }: EditModeOverlayProps) => {
   return (
@@ -60,7 +77,7 @@ export const EditModeOverlay = ({
           
           {/* Edit Mode Dialog */}
           <motion.div
-            className="relative glass-panel rounded-2xl p-6 max-w-md w-full mx-4"
+            className="relative glass-panel rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
@@ -88,21 +105,71 @@ export const EditModeOverlay = ({
             
             {/* Description */}
             <p className="text-sm text-muted-foreground mb-6">
-              Drag, hide or resize any HUD component. To move around, simply click and drag; 
-              to hide, click the eye icon.
+              Ziehe, verstecke oder ändere HUD-Komponenten. Klicke und ziehe zum Verschieben.
             </p>
+            
+            {/* Status Design Selection */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-foreground mb-3">Status-Widget Design</h3>
+              <div className="grid grid-cols-5 gap-2">
+                {DESIGN_OPTIONS.map(({ design, icon: Icon, label }) => (
+                  <button
+                    key={design}
+                    onClick={() => onStatusDesignChange(design)}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 p-3 rounded-lg transition-all",
+                      statusDesign === design 
+                        ? "glass-panel border-primary/50" 
+                        : "hover:bg-muted/20"
+                    )}
+                    style={statusDesign === design ? {
+                      boxShadow: '0 0 15px hsl(var(--primary) / 0.3)',
+                    } : {}}
+                  >
+                    <Icon 
+                      size={20} 
+                      className={statusDesign === design ? "text-primary" : "text-muted-foreground"}
+                      style={statusDesign === design ? { filter: 'drop-shadow(0 0 4px hsl(var(--primary)))' } : {}}
+                    />
+                    <span className={cn(
+                      "text-[10px]",
+                      statusDesign === design ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* HUD Scale */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-foreground mb-3">HUD Größe: {Math.round(hudScale * 100)}%</h3>
+              <input
+                type="range"
+                min="0.75"
+                max="1.5"
+                step="0.05"
+                value={hudScale}
+                onChange={(e) => onHudScaleChange(parseFloat(e.target.value))}
+                className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${((hudScale - 0.75) / 0.75) * 100}%, hsl(var(--muted) / 0.3) ${((hudScale - 0.75) / 0.75) * 100}%, hsl(var(--muted) / 0.3) 100%)`,
+                }}
+              />
+            </div>
             
             {/* Options */}
             <div className="space-y-3 mb-6">
               <ToggleOption
                 icon={Grid3X3}
-                label="Snap to grid"
+                label="Am Raster ausrichten"
                 checked={snapToGrid}
                 onChange={onSnapToGridChange}
               />
               <ToggleOption
                 icon={Square}
-                label="Show safezone"
+                label="Safezone anzeigen"
                 checked={showSafezone}
                 onChange={onShowSafezoneChange}
               />
@@ -117,14 +184,14 @@ export const EditModeOverlay = ({
                   boxShadow: '0 0 20px hsl(var(--primary) / 0.3)',
                 }}
               >
-                Finish Editing
+                Bearbeitung beenden
               </button>
               <button
                 onClick={onReset}
                 className="w-full py-2 rounded-lg glass-panel text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
               >
                 <RotateCcw size={14} />
-                Reset Layout
+                Layout zurücksetzen
               </button>
             </div>
           </motion.div>

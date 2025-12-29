@@ -1,23 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { HUDWidget } from './hud/HUDWidget';
-import { VehicleHUD } from './hud/VehicleHUD';
+import { VehicleHUDFactory } from './hud/VehicleHUDFactory';
 import { EditModeOverlay } from './hud/EditModeOverlay';
-import { NeonStatusWidget } from './hud/widgets/NeonStatusWidget';
+import { StatusWidget } from './hud/widgets/StatusWidget';
 import { NeonMoneyWidget } from './hud/widgets/NeonMoneyWidget';
 import { NeonLocationWidget } from './hud/widgets/NeonLocationWidget';
 import { NeonVoiceWidget } from './hud/widgets/NeonVoiceWidget';
 import { NeonMinimapWidget } from './hud/widgets/NeonMinimapWidget';
 import { ClockWidget } from './hud/widgets/ClockWidget';
 import { CompassWidget } from './hud/widgets/CompassWidget';
+import { NotificationContainer } from './hud/NotificationContainer';
 import { useHUDLayout } from '@/hooks/useHUDLayout';
 import { useNuiEvents, isNuiEnvironment } from '@/hooks/useNuiEvents';
-import { HudState, VehicleState, MoneyState, VoiceState, LocationState, PlayerState } from '@/types/hud';
+import { useNotifications } from '@/hooks/useNotifications';
+import { HudState, VehicleState, MoneyState, VoiceState, LocationState, PlayerState, StatusType } from '@/types/hud';
 
 // Demo values
-const DEMO_HUD: HudState = { health: 85, armor: 50, hunger: 70, thirst: 45, stamina: 90 };
-const DEMO_VEHICLE: VehicleState = { inVehicle: true, speed: 127, gear: 4, fuel: 65 };
-const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567 };
+const DEMO_HUD: HudState = { health: 85, armor: 50, hunger: 70, thirst: 45, stamina: 90, stress: 25, oxygen: 100 };
+const DEMO_VEHICLE: VehicleState = { inVehicle: true, vehicleType: 'car', speed: 127, gear: 4, fuel: 65 };
+const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567, blackMoney: 5000 };
 const DEMO_PLAYER: PlayerState = { id: 42, job: 'LSPD', rank: 'Chief' };
 const DEMO_VOICE: VoiceState = { active: true, range: 'normal' };
 const DEMO_LOCATION: LocationState = { street: 'Vinewood Boulevard', direction: 'NE', area: 'Vinewood' };
@@ -38,14 +40,20 @@ export const HUD = () => {
     snapToGrid,
     showSafezone,
     gridSize,
+    statusDesign,
+    hudScale,
     toggleEditMode,
     setSnapToGrid,
     setShowSafezone,
+    setStatusDesign,
+    setHudScale,
     updateWidgetPosition,
     toggleWidgetVisibility,
     resetLayout,
     getWidget,
   } = useHUDLayout();
+
+  const { notifications, removeNotification, success, error, warning, info } = useNotifications();
 
   // NUI Event handlers
   useNuiEvents({
@@ -106,11 +114,19 @@ export const HUD = () => {
       if (e.key === 'e') {
         toggleEditMode();
       }
+      // Vehicle type switching for demo
+      if (e.key === '1') setVehicleState(prev => ({ ...prev, vehicleType: 'car' }));
+      if (e.key === '2') setVehicleState(prev => ({ ...prev, vehicleType: 'plane', altitude: 500, pitch: 5, roll: 0, heading: 180, airspeed: 250 }));
+      if (e.key === '3') setVehicleState(prev => ({ ...prev, vehicleType: 'boat', heading: 90, anchor: false }));
+      if (e.key === '4') setVehicleState(prev => ({ ...prev, vehicleType: 'helicopter', altitude: 200, rotorRpm: 95, verticalSpeed: 5 }));
+      // Demo notifications
+      if (e.key === 'n') success('Erfolg!', 'Aktion erfolgreich ausgeführt.');
+      if (e.key === 'm') error('Fehler!', 'Etwas ist schief gelaufen.');
     };
 
     window.addEventListener('keypress', handleKeyPress);
     return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [toggleEditMode]);
+  }, [toggleEditMode, success, error]);
 
   const widgetProps = {
     editMode,
@@ -120,8 +136,16 @@ export const HUD = () => {
     onVisibilityToggle: toggleWidgetVisibility,
   };
 
+  const statusTypes: StatusType[] = ['health', 'armor', 'hunger', 'thirst', 'stamina', 'stress', 'oxygen'];
+
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+    <div 
+      className="fixed inset-0 pointer-events-none overflow-hidden"
+      style={{ transform: `scale(${hudScale})`, transformOrigin: 'top left' }}
+    >
+      {/* Notifications */}
+      <NotificationContainer notifications={notifications} onClose={removeNotification} />
+
       {/* Edit Mode Button */}
       <button
         onClick={toggleEditMode}
@@ -141,15 +165,16 @@ export const HUD = () => {
       {isDemoMode && !editMode && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel rounded-lg px-4 py-2 animate-fade-in-up">
           <span className="text-xs text-primary uppercase tracking-wider hud-text">
-            Demo • V=Vehicle • R=Voice • E=Edit
+            Demo • V=Vehicle • 1-4=Type • R=Voice • E=Edit • N/M=Notify
           </span>
         </div>
       )}
 
       {/* Status Widgets */}
-      {(['health', 'armor', 'hunger', 'thirst', 'stamina'] as const).map((type) => {
+      {statusTypes.map((type) => {
         const widget = getWidget(type);
         if (!widget) return null;
+        const value = hudState[type as keyof HudState] ?? 100;
         return (
           <HUDWidget
             key={type}
@@ -158,9 +183,10 @@ export const HUD = () => {
             visible={widget.visible}
             {...widgetProps}
           >
-            <NeonStatusWidget
+            <StatusWidget
               type={type}
-              value={hudState[type]}
+              value={value}
+              design={statusDesign}
               size={widget.size as 'sm' | 'md' | 'lg'}
             />
           </HUDWidget>
@@ -244,7 +270,7 @@ export const HUD = () => {
             visible={widget.visible && vehicleState.inVehicle} 
             {...widgetProps}
           >
-            <VehicleHUD vehicle={vehicleState} visible={vehicleState.inVehicle || editMode} />
+            <VehicleHUDFactory vehicle={vehicleState} visible={vehicleState.inVehicle || editMode} />
           </HUDWidget>
         );
       })()}
@@ -254,9 +280,13 @@ export const HUD = () => {
         isOpen={editMode}
         snapToGrid={snapToGrid}
         showSafezone={showSafezone}
+        statusDesign={statusDesign}
+        hudScale={hudScale}
         onClose={toggleEditMode}
         onSnapToGridChange={setSnapToGrid}
         onShowSafezoneChange={setShowSafezone}
+        onStatusDesignChange={setStatusDesign}
+        onHudScaleChange={setHudScale}
         onReset={resetLayout}
       />
     </div>

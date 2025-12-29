@@ -17,6 +17,8 @@ export type WidgetType =
   | 'hunger'
   | 'thirst'
   | 'stamina'
+  | 'stress'
+  | 'oxygen'
   | 'money'
   | 'clock'
   | 'compass'
@@ -25,12 +27,16 @@ export type WidgetType =
   | 'minimap'
   | 'speedometer';
 
+export type StatusDesign = 'circular' | 'bar' | 'vertical' | 'minimal' | 'arc';
+
 export interface HUDLayoutState {
   widgets: WidgetConfig[];
   editMode: boolean;
   snapToGrid: boolean;
   showSafezone: boolean;
   gridSize: number;
+  statusDesign: StatusDesign;
+  hudScale: number;
 }
 
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
@@ -40,6 +46,8 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: 'hunger', type: 'hunger', position: { x: 340, y: 660 }, visible: true, size: 'md' },
   { id: 'thirst', type: 'thirst', position: { x: 400, y: 660 }, visible: true, size: 'md' },
   { id: 'stamina', type: 'stamina', position: { x: 460, y: 660 }, visible: true, size: 'md' },
+  { id: 'stress', type: 'stress', position: { x: 520, y: 660 }, visible: false, size: 'md' },
+  { id: 'oxygen', type: 'oxygen', position: { x: 580, y: 660 }, visible: false, size: 'md' },
   
   // Top right corner - Money & Clock
   { id: 'money', type: 'money', position: { x: 1180, y: 20 }, visible: true },
@@ -58,3 +66,13 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   // Top center - Compass
   { id: 'compass', type: 'compass', position: { x: 640, y: 20 }, visible: true },
 ];
+
+export const DEFAULT_HUD_STATE: HUDLayoutState = {
+  widgets: DEFAULT_WIDGETS,
+  editMode: false,
+  snapToGrid: true,
+  showSafezone: false,
+  gridSize: 20,
+  statusDesign: 'circular',
+  hudScale: 1,
+};
