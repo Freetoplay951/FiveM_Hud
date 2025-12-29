@@ -69,12 +69,32 @@ export const useHUDLayout = () => {
     setState(prev => ({ ...prev, speedometerType: type }));
   }, []);
 
-  const resetLayout = useCallback(() => {
-    setState({
-      ...DEFAULT_HUD_STATE,
-      editMode: true,
-    });
+  const snapPositionToGrid = useCallback((position: WidgetPosition, gridSize: number): WidgetPosition => {
+    // Convert grid size to percentage (based on approximate viewport)
+    const gridPercent = gridSize / 10; // ~10px = 1% roughly
+    return {
+      xPercent: Math.round(position.xPercent / gridPercent) * gridPercent,
+      yPercent: Math.round(position.yPercent / gridPercent) * gridPercent,
+    };
   }, []);
+
+  const resetLayout = useCallback(() => {
+    setState(prev => {
+      const widgetsToUse = prev.snapToGrid 
+        ? DEFAULT_WIDGETS.map(w => ({
+            ...w,
+            position: snapPositionToGrid(w.position, prev.gridSize),
+          }))
+        : DEFAULT_WIDGETS;
+      
+      return {
+        ...DEFAULT_HUD_STATE,
+        editMode: true,
+        snapToGrid: prev.snapToGrid, // Keep user's snap preference
+        widgets: widgetsToUse,
+      };
+    });
+  }, [snapPositionToGrid]);
 
   const resetWidget = useCallback((id: string) => {
     const defaultWidget = DEFAULT_WIDGETS.find(w => w.id === id);
