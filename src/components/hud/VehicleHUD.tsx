@@ -11,9 +11,6 @@ interface VehicleHUDProps {
 export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
     const maxSpeed = 300;
 
-    /* =======================
-     SVG / ARC CONFIG
-  ======================= */
     const svgCenter = 50;
     const svgRadius = 44;
 
@@ -29,10 +26,8 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
     const fuelWarning = vehicle.fuel <= 25;
     const fuelCritical = vehicle.fuel <= 10;
 
-    // Speed tick marks (every 20 km/h)
     const speedTicks = [0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300];
 
-    // Calculate position for each tick on a 270-degree arc starting from bottom-left
     const getTickPosition = (tickSpeed: number, radius: number) => {
         const percentage = tickSpeed / maxSpeed;
         const angle = startAngle + percentage * sweepAngle;
@@ -52,58 +47,11 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="flex items-end gap-3">
-                    {/* Fuel Bar - Vertical on Left */}
-                    <motion.div
-                        className="flex flex-col items-center gap-1"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}>
-                        <div className="relative w-3 h-24 rounded-full glass-panel overflow-hidden">
-                            {/* Fuel Fill */}
-                            <motion.div
-                                className={cn(
-                                    "absolute bottom-0 left-0 right-0 rounded-full",
-                                    fuelCritical ? "bg-critical" : fuelWarning ? "bg-warning" : "bg-stamina"
-                                )}
-                                initial={{ height: 0 }}
-                                animate={{ height: `${vehicle.fuel}%` }}
-                                transition={{ duration: 0.3 }}
-                                style={{
-                                    boxShadow: fuelCritical
-                                        ? "0 0 12px hsl(var(--critical)), inset 0 0 8px hsl(var(--critical) / 0.5)"
-                                        : fuelWarning
-                                        ? "0 0 10px hsl(var(--warning))"
-                                        : "0 0 8px hsl(var(--stamina) / 0.6)",
-                                }}
-                            />
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                            <Fuel
-                                size={10}
-                                className={cn(
-                                    fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-stamina"
-                                )}
-                            />
-                            <span
-                                className={cn(
-                                    "text-[9px] hud-number",
-                                    fuelCritical
-                                        ? "text-critical"
-                                        : fuelWarning
-                                        ? "text-warning"
-                                        : "text-muted-foreground"
-                                )}>
-                                {Math.round(vehicle.fuel)}L
-                            </span>
-                        </div>
-                    </motion.div>
-
+                    className="flex flex-col items-center">
                     {/* Speedometer Circle */}
                     <div className="relative w-44 h-44">
                         {/* Glass Background */}
                         <div className="absolute inset-0 rounded-full glass-panel overflow-hidden">
-                            {/* Neon glow effect */}
                             <div
                                 className="absolute inset-0 rounded-full"
                                 style={{
@@ -173,7 +121,6 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
 
                                 return (
                                     <g key={tickSpeed}>
-                                        {/* Tick line */}
                                         <line
                                             x1={innerPos.x}
                                             y1={innerPos.y}
@@ -190,7 +137,6 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                                                     : {}
                                             }
                                         />
-                                        {/* Speed label for major ticks */}
                                         {isMajor && (
                                             <text
                                                 x={labelPos.x}
@@ -245,10 +191,8 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
 
                         {/* Center Content */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
-                            {/* KM/H Label */}
                             <span className="text-[8px] text-muted-foreground uppercase tracking-wider mb-1">KM/H</span>
 
-                            {/* Speed Number */}
                             <motion.span
                                 className="hud-number text-4xl text-foreground leading-none"
                                 key={Math.round(vehicle.speed)}
@@ -261,13 +205,10 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
 
                             {/* Gear & Engine Status */}
                             <div className="flex items-center gap-3 mt-2">
-                                {/* Engine Temp Icon */}
                                 <Thermometer
                                     size={12}
                                     className="text-muted-foreground"
                                 />
-
-                                {/* Gear */}
                                 <div className="flex items-center gap-1">
                                     <span className="text-[10px] text-muted-foreground">GEAR</span>
                                     <span
@@ -276,21 +217,52 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                                         {vehicle.gear === 0 ? "R" : vehicle.gear}
                                     </span>
                                 </div>
-
-                                {/* Fuel Icon */}
-                                <Fuel
+                                <Thermometer
                                     size={12}
-                                    className={cn(
-                                        fuelCritical
-                                            ? "text-critical critical-pulse"
-                                            : fuelWarning
-                                            ? "text-warning warning-pulse"
-                                            : "text-muted-foreground"
-                                    )}
+                                    className="text-muted-foreground opacity-0"
                                 />
                             </div>
                         </div>
                     </div>
+
+                    {/* Fuel Bar - Horizontal below speedometer */}
+                    <motion.div
+                        className="flex items-center gap-2 mt-2"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}>
+                        <Fuel
+                            size={12}
+                            className={cn(
+                                fuelCritical ? "text-critical critical-pulse" : fuelWarning ? "text-warning warning-pulse" : "text-stamina"
+                            )}
+                        />
+                        <div className="relative w-24 h-2 rounded-full glass-panel overflow-hidden">
+                            <motion.div
+                                className={cn(
+                                    "absolute top-0 left-0 bottom-0 rounded-full",
+                                    fuelCritical ? "bg-critical" : fuelWarning ? "bg-warning" : "bg-stamina"
+                                )}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${vehicle.fuel}%` }}
+                                transition={{ duration: 0.3 }}
+                                style={{
+                                    boxShadow: fuelCritical
+                                        ? "0 0 12px hsl(var(--critical)), inset 0 0 8px hsl(var(--critical) / 0.5)"
+                                        : fuelWarning
+                                        ? "0 0 10px hsl(var(--warning))"
+                                        : "0 0 8px hsl(var(--stamina) / 0.6)",
+                                }}
+                            />
+                        </div>
+                        <span
+                            className={cn(
+                                "text-[10px] hud-number",
+                                fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-muted-foreground"
+                            )}>
+                            {Math.round(vehicle.fuel)}%
+                        </span>
+                    </motion.div>
                 </motion.div>
             )}
         </AnimatePresence>
