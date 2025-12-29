@@ -1,10 +1,13 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType, DEFAULT_SPEEDOMETER_CONFIGS, DEFAULT_SPEEDOMETER_POSITION, SpeedometerConfig } from '@/types/widget';
 import { snapPositionToGrid } from '@/lib/snapUtils';
+import { resolveStatusWidgetOverlaps } from '@/lib/overlapUtils';
 
 const STORAGE_KEY = 'hud-layout';
 
 export const useHUDLayout = () => {
+  const hasResolvedOverlaps = useRef(false);
+  
   const [state, setState] = useState<HUDLayoutState>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -18,6 +21,30 @@ export const useHUDLayout = () => {
     }
     return DEFAULT_HUD_STATE;
   });
+
+  // Resolve overlaps on initial load (only once)
+  useEffect(() => {
+    if (hasResolvedOverlaps.current) return;
+    hasResolvedOverlaps.current = true;
+    
+    // Wait for DOM to be ready so we have accurate viewport dimensions
+    const timer = setTimeout(() => {
+      setState(prev => {
+        const resolvedWidgets = resolveStatusWidgetOverlaps(prev.widgets);
+        // Only update if something changed
+        const hasChanges = resolvedWidgets.some((w, i) => 
+          w.position.xPercent !== prev.widgets[i]?.position.xPercent ||
+          w.position.yPercent !== prev.widgets[i]?.position.yPercent
+        );
+        if (hasChanges) {
+          return { ...prev, widgets: resolvedWidgets };
+        }
+        return prev;
+      });
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
