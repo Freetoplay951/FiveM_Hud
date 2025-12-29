@@ -42,39 +42,73 @@ export const EditModeOverlay = ({
     <AnimatePresence>
       {isOpen && (
         isMovingWidgets ? (
-          // Compact toolbar (no full-screen overlay) so widgets remain draggable
-          <motion.div
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-          >
-            <div
-              className="glass-panel rounded-xl px-4 py-2 flex items-center gap-3 pointer-events-auto"
-              style={{ boxShadow: '0 0 24px hsl(var(--primary) / 0.25)' }}
+          // Compact toolbar with grid background so widgets remain draggable
+          <>
+            {/* Grid background when moving widgets */}
+            {snapToGrid && (
+              <motion.div
+                className="fixed inset-0 z-40 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  backgroundImage: 'linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)',
+                  backgroundSize: '20px 20px',
+                }}
+              />
+            )}
+            {/* Safezone indicator when moving widgets */}
+            {showSafezone && (
+              <motion.div 
+                className="fixed border-2 border-dashed border-warning/50 rounded-lg pointer-events-none z-40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  left: '5%',
+                  right: '5%',
+                  top: '5%',
+                  bottom: '5%',
+                }}
+              >
+                <span className="absolute top-2 left-2 text-[10px] text-warning uppercase">
+                  Safe Zone
+                </span>
+              </motion.div>
+            )}
+            <motion.div
+              className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
             >
-              <span className="text-xs text-muted-foreground">
-                Verschieben aktiv • Änderungen werden lokal gespeichert
-              </span>
-
-              <div className="h-5 w-px bg-border/40" />
-
-              <button
-                onClick={onToggleMovingWidgets}
-                className="px-3 py-1 rounded-lg bg-stamina text-stamina-foreground text-xs font-medium hover:opacity-90 transition-opacity"
-                style={{ boxShadow: '0 0 16px hsl(var(--stamina) / 0.45)' }}
+              <div
+                className="glass-panel rounded-xl px-4 py-2 flex items-center gap-3 pointer-events-auto"
+                style={{ boxShadow: '0 0 24px hsl(var(--primary) / 0.25)' }}
               >
-                Speichern
-              </button>
+                <span className="text-xs text-muted-foreground">
+                  Verschieben aktiv • Änderungen werden lokal gespeichert
+                </span>
 
-              <button
-                onClick={onClose}
-                className="px-3 py-1 rounded-lg hover:bg-muted/20 transition-colors text-xs text-foreground"
-              >
-                Schließen
-              </button>
-            </div>
-          </motion.div>
+                <div className="h-5 w-px bg-border/40" />
+
+                <button
+                  onClick={onToggleMovingWidgets}
+                  className="px-3 py-1 rounded-lg bg-stamina text-stamina-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+                  style={{ boxShadow: '0 0 16px hsl(var(--stamina) / 0.45)' }}
+                >
+                  Speichern
+                </button>
+
+                <button
+                  onClick={onClose}
+                  className="px-3 py-1 rounded-lg hover:bg-muted/20 transition-colors text-xs text-foreground"
+                >
+                  Schließen
+                </button>
+              </div>
+            </motion.div>
+          </>
         ) : (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center pointer-events-auto"

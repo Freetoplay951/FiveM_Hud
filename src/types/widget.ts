@@ -25,7 +25,8 @@ export type WidgetType =
   | 'location'
   | 'voice'
   | 'minimap'
-  | 'speedometer';
+  | 'speedometer'
+  | 'notifications';
 
 export type StatusDesign = 'circular' | 'bar' | 'vertical' | 'minimal' | 'arc';
 
@@ -65,6 +66,9 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   
   // Top center - Compass
   { id: 'compass', type: 'compass', position: { x: 640, y: 20 }, visible: true },
+  
+  // Notifications - top right
+  { id: 'notifications', type: 'notifications', position: { x: 1180, y: 80 }, visible: true },
 ];
 
 export const DEFAULT_HUD_STATE: HUDLayoutState = {
