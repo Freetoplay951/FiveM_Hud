@@ -63,7 +63,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                     rotate: -roll,
                     y: pitch * 0.5 
                   }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
                   style={{ transformOrigin: "50px 50px" }}
                 >
                   <rect x="-50" y="-50" width="200" height="100" fill="url(#skyGradient)" />
@@ -101,7 +101,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                   points="0,-36 -3,-42 3,-42"
                   fill="hsl(var(--warning))"
                   animate={{ rotate: roll }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
                   style={{ transformOrigin: "0 0" }}
                   filter="url(#planeNeonGlow)"
                 />
@@ -119,31 +119,29 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             </svg>
             
             {/* Speed overlay left */}
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 min-w-[36px]">
-              <span className="text-[6px] text-muted-foreground block">KTS</span>
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 w-[40px]">
+              <span className="text-[6px] text-muted-foreground block text-center">KTS</span>
               <motion.span 
                 className="hud-number text-[10px] text-stamina tabular-nums block text-center"
-                style={{ textShadow: '0 0 6px hsl(var(--stamina) / 0.6)' }}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 0.1 }}
-                key={Math.round(airspeed)}
+                style={{ textShadow: '0 0 6px hsl(var(--stamina) / 0.6)', fontVariantNumeric: 'tabular-nums' }}
+                animate={{ opacity: 1 }}
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
               >
                 {String(Math.round(airspeed)).padStart(3, "0")}
               </motion.span>
             </div>
             
             {/* Altitude overlay right */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 min-w-[40px]">
-              <span className="text-[6px] text-muted-foreground block">ALT</span>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 w-[44px]">
+              <span className="text-[6px] text-muted-foreground block text-center">ALT</span>
               <motion.span 
                 className={cn(
                   "hud-number text-[10px] tabular-nums block text-center",
                   lowAltitude ? "text-warning" : "text-armor"
                 )}
-                style={{ textShadow: `0 0 6px hsl(var(--${lowAltitude ? 'warning' : 'armor'}) / 0.6)` }}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 0.1 }}
-                key={Math.round(altitude)}
+                style={{ textShadow: `0 0 6px hsl(var(--${lowAltitude ? 'warning' : 'armor'}) / 0.6)`, fontVariantNumeric: 'tabular-nums' }}
+                animate={{ opacity: 1 }}
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
               >
                 {String(Math.round(altitude)).padStart(4, "0")}
               </motion.span>
@@ -151,14 +149,13 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             
             {/* Heading bottom */}
             <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-              <div className="glass-panel rounded px-2 py-0.5 flex items-center gap-1 min-w-[48px] justify-center">
+              <div className="glass-panel rounded px-2 py-0.5 flex items-center gap-1 w-[56px] justify-center">
                 <Plane size={10} className="text-primary flex-shrink-0" style={{ filter: 'drop-shadow(0 0 3px hsl(var(--primary)))' }} />
                 <motion.span 
                   className="hud-number text-[10px] text-primary tabular-nums" 
-                  style={{ textShadow: '0 0 6px hsl(var(--primary) / 0.6)' }}
-                  animate={{ scale: [1, 1.02, 1] }}
-                  transition={{ duration: 0.1 }}
-                  key={Math.round(heading)}
+                  style={{ textShadow: '0 0 6px hsl(var(--primary) / 0.6)', fontVariantNumeric: 'tabular-nums' }}
+                  animate={{ opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 100, damping: 15 }}
                 >
                   {String(Math.round(heading)).padStart(3, "0")}°
                 </motion.span>
@@ -195,21 +192,20 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             </div>
             
             {/* Flaps */}
-            <div className="glass-panel rounded px-2 py-1 flex items-center gap-1.5 min-w-[60px]">
+            <div className="glass-panel rounded px-2 py-1 flex items-center gap-1.5 w-[64px]">
               <span className="text-[8px] text-muted-foreground">FLAPS</span>
               <motion.span 
-                className="hud-number text-[10px] text-primary tabular-nums min-w-[24px] text-right"
-                style={{ textShadow: '0 0 6px hsl(var(--primary) / 0.5)' }}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 0.1 }}
-                key={flaps}
+                className="hud-number text-[10px] text-primary tabular-nums w-[28px] text-right"
+                style={{ textShadow: '0 0 6px hsl(var(--primary) / 0.5)', fontVariantNumeric: 'tabular-nums' }}
+                animate={{ opacity: 1 }}
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
               >
                 {flaps}%
               </motion.span>
             </div>
             
             {/* Fuel */}
-            <div className="glass-panel rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]">
+            <div className="glass-panel rounded px-2 py-1 flex items-center gap-1.5 w-[56px]">
               <Fuel 
                 size={10} 
                 className={cn(
@@ -224,17 +220,17 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
               />
               <motion.span 
                 className={cn(
-                  "hud-number text-[10px] tabular-nums min-w-[28px] text-right",
+                  "hud-number text-[10px] tabular-nums w-[32px] text-right",
                   fuelCritical ? "text-critical" : 
                   fuelWarning ? "text-warning" : 
                   "text-stamina"
                 )}
                 style={{
                   textShadow: `0 0 6px hsl(var(--${fuelCritical ? 'critical' : fuelWarning ? 'warning' : 'stamina'}) / 0.5)`,
+                  fontVariantNumeric: 'tabular-nums',
                 }}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 0.1 }}
-                key={Math.round(vehicle.fuel)}
+                animate={{ opacity: 1 }}
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
               >
                 {Math.round(vehicle.fuel)}%
               </motion.span>

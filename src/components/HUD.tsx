@@ -88,13 +88,16 @@ export const HUD = () => {
     snapToGrid,
     gridSize,
     statusDesign,
+    speedometerType,
     toggleEditMode,
     setSnapToGrid,
     setStatusDesign,
+    setSpeedometerType,
     updateWidgetPosition,
     updateWidgetScale,
     toggleWidgetVisibility,
     resetLayout,
+    resetWidget,
     getWidget,
   } = useHUDLayout();
 
@@ -280,6 +283,7 @@ export const HUD = () => {
     onPositionChange: updateWidgetPosition,
     onVisibilityToggle: toggleWidgetVisibility,
     onScaleChange: updateWidgetScale,
+    onReset: resetWidget,
   };
 
   const statusTypes: StatusType[] = [
@@ -371,8 +375,10 @@ export const HUD = () => {
           <EditModeOverlay
             snapToGrid={snapToGrid}
             statusDesign={statusDesign}
+            speedometerType={speedometerType}
             onSnapToGridChange={setSnapToGrid}
             onStatusDesignChange={setStatusDesign}
+            onSpeedometerTypeChange={setSpeedometerType}
             onReset={resetLayout}
             onExitEditMode={exitEditMode}
           />
@@ -527,7 +533,7 @@ export const HUD = () => {
             {...widgetProps}
           >
             <VehicleHUDFactory
-              vehicle={vehicleState}
+              vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
               visible={vehicleState.inVehicle || editMode}
             />
           </HUDWidget>
