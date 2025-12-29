@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, GripVertical } from 'lucide-react';
+import { Eye, EyeOff, GripVertical, Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetPosition } from '@/types/widget';
 
@@ -12,8 +12,10 @@ interface HUDWidgetProps {
   editMode: boolean;
   snapToGrid: boolean;
   gridSize: number;
+  scale?: number;
   onPositionChange: (id: string, position: WidgetPosition) => void;
   onVisibilityToggle: (id: string) => void;
+  onScaleChange?: (id: string, scale: number) => void;
   className?: string;
 }
 
@@ -25,8 +27,10 @@ export const HUDWidget = ({
   editMode,
   snapToGrid,
   gridSize,
+  scale = 1,
   onPositionChange,
   onVisibilityToggle,
+  onScaleChange,
   className,
 }: HUDWidgetProps) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -74,6 +78,20 @@ export const HUDWidget = ({
     };
   }, [isDragging, snapToGrid, gridSize, id, onPositionChange]);
 
+  const handleScaleUp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onScaleChange) {
+      onScaleChange(id, Math.min(2, scale + 0.1));
+    }
+  };
+
+  const handleScaleDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onScaleChange) {
+      onScaleChange(id, Math.max(0.5, scale - 0.1));
+    }
+  };
+
   if (!visible && !editMode) return null;
 
   return (
@@ -89,6 +107,8 @@ export const HUDWidget = ({
       style={{
         left: position.x,
         top: position.y,
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
       }}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ 
@@ -100,24 +120,46 @@ export const HUDWidget = ({
     >
       {/* Edit Mode Controls */}
       {editMode && (
-        <div className="absolute -top-6 left-0 right-0 flex items-center justify-between gap-1">
+        <div className="absolute -top-7 left-0 right-0 flex items-center justify-between gap-1">
           <div className="flex items-center gap-1 glass-panel rounded px-1 py-0.5">
             <GripVertical size={10} className="text-muted-foreground" />
             <span className="text-[8px] text-muted-foreground uppercase">{id}</span>
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onVisibilityToggle(id);
-            }}
-            className="glass-panel rounded p-1 hover:bg-primary/20 transition-colors"
-          >
-            {visible ? (
-              <Eye size={10} className="text-primary" />
-            ) : (
-              <EyeOff size={10} className="text-muted-foreground" />
+          <div className="flex items-center gap-0.5">
+            {/* Scale Controls */}
+            {onScaleChange && (
+              <div className="flex items-center gap-0.5 mr-1">
+                <button
+                  onClick={handleScaleDown}
+                  className="glass-panel rounded p-0.5 hover:bg-primary/20 transition-colors"
+                >
+                  <Minus size={8} className="text-muted-foreground" />
+                </button>
+                <span className="text-[7px] text-muted-foreground w-6 text-center">
+                  {Math.round(scale * 100)}%
+                </span>
+                <button
+                  onClick={handleScaleUp}
+                  className="glass-panel rounded p-0.5 hover:bg-primary/20 transition-colors"
+                >
+                  <Plus size={8} className="text-muted-foreground" />
+                </button>
+              </div>
             )}
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onVisibilityToggle(id);
+              }}
+              className="glass-panel rounded p-1 hover:bg-primary/20 transition-colors"
+            >
+              {visible ? (
+                <Eye size={10} className="text-primary" />
+              ) : (
+                <EyeOff size={10} className="text-muted-foreground" />
+              )}
+            </button>
+          </div>
         </div>
       )}
       
