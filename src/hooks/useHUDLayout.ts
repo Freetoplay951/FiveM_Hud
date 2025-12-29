@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType } from '@/types/widget';
+import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType, DEFAULT_SPEEDOMETER_SCALES } from '@/types/widget';
 import { snapPositionToGrid } from '@/lib/snapUtils';
 
 const STORAGE_KEY = 'hud-layout';
@@ -70,6 +70,17 @@ export const useHUDLayout = () => {
     setState(prev => ({ ...prev, speedometerType: type }));
   }, []);
 
+  const updateSpeedometerScale = useCallback((type: SpeedometerType, scale: number) => {
+    setState(prev => ({
+      ...prev,
+      speedometerScales: { ...prev.speedometerScales, [type]: scale },
+    }));
+  }, []);
+
+  const getSpeedometerScale = useCallback((type: SpeedometerType): number => {
+    return state.speedometerScales?.[type] ?? 1;
+  }, [state.speedometerScales]);
+
   const resetLayout = useCallback(() => {
     setState(prev => {
       const widgetsToUse = prev.snapToGrid 
@@ -120,6 +131,8 @@ export const useHUDLayout = () => {
     setStatusDesign,
     setHudScale,
     setSpeedometerType,
+    updateSpeedometerScale,
+    getSpeedometerScale,
     resetLayout,
     resetWidget,
     getWidget,

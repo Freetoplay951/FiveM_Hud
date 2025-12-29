@@ -38,6 +38,20 @@ export type StatusDesign = 'circular' | 'bar' | 'vertical' | 'minimal' | 'arc';
 
 export type SpeedometerType = 'car' | 'plane' | 'boat' | 'helicopter';
 
+export interface SpeedometerScales {
+  car: number;
+  plane: number;
+  boat: number;
+  helicopter: number;
+}
+
+export const DEFAULT_SPEEDOMETER_SCALES: SpeedometerScales = {
+  car: 1,
+  plane: 1,
+  boat: 1,
+  helicopter: 1,
+};
+
 export interface HUDLayoutState {
   widgets: WidgetConfig[];
   editMode: boolean;
@@ -46,6 +60,7 @@ export interface HUDLayoutState {
   statusDesign: StatusDesign;
   hudScale: number;
   speedometerType: SpeedometerType;
+  speedometerScales: SpeedometerScales;
 }
 
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
@@ -88,4 +103,5 @@ export const DEFAULT_HUD_STATE: HUDLayoutState = {
   statusDesign: 'circular',
   hudScale: 1,
   speedometerType: 'car',
+  speedometerScales: DEFAULT_SPEEDOMETER_SCALES,
 };
