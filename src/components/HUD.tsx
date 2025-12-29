@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { StatusHUD } from './hud/StatusHUD';
 import { VehicleHUD } from './hud/VehicleHUD';
 import { MoneyHUD } from './hud/MoneyHUD';
@@ -6,12 +6,13 @@ import { VoiceIndicator } from './hud/VoiceIndicator';
 import { LocationHUD } from './hud/LocationHUD';
 import { MinimapFrame } from './hud/MinimapFrame';
 import { useNuiEvents, isNuiEnvironment } from '@/hooks/useNuiEvents';
-import { HudState, VehicleState, MoneyState, VoiceState, LocationState } from '@/types/hud';
+import { HudState, VehicleState, MoneyState, VoiceState, LocationState, PlayerState } from '@/types/hud';
 
 // Demo values for development
 const DEMO_HUD: HudState = { health: 85, armor: 50, hunger: 70, thirst: 45, stamina: 90 };
 const DEMO_VEHICLE: VehicleState = { inVehicle: true, speed: 127, gear: 4, fuel: 65 };
-const DEMO_MONEY: MoneyState = { cash: 12580, bank: 158420, blackMoney: 5200 };
+const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567 };
+const DEMO_PLAYER: PlayerState = { id: 42, job: 'Polizei', rank: 'Kommissar' };
 const DEMO_VOICE: VoiceState = { active: true, range: 'normal' };
 const DEMO_LOCATION: LocationState = { street: 'Vinewood Boulevard', direction: 'NE', area: 'Vinewood' };
 
@@ -19,6 +20,7 @@ export const HUD = () => {
   const [hudState, setHudState] = useState<HudState>(DEMO_HUD);
   const [vehicleState, setVehicleState] = useState<VehicleState>(DEMO_VEHICLE);
   const [moneyState, setMoneyState] = useState<MoneyState>(DEMO_MONEY);
+  const [playerState, setPlayerState] = useState<PlayerState>(DEMO_PLAYER);
   const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
   const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
   const [isDemoMode, setIsDemoMode] = useState(!isNuiEnvironment());
@@ -37,7 +39,6 @@ export const HUD = () => {
     if (!isDemoMode) return;
 
     const interval = setInterval(() => {
-      // Simulate changing values
       setHudState(prev => ({
         ...prev,
         hunger: Math.max(0, prev.hunger - 0.1),
@@ -60,7 +61,7 @@ export const HUD = () => {
     return () => clearInterval(interval);
   }, [isDemoMode]);
 
-  // Demo: Toggle vehicle on keypress (for testing)
+  // Demo: Toggle vehicle on keypress
   useEffect(() => {
     if (!isDemoMode) return;
 
@@ -91,20 +92,15 @@ export const HUD = () => {
         </div>
       )}
 
-      {/* Top Right - Money */}
+      {/* Top Right - Money & Player Info */}
       <div className="absolute top-6 right-6">
-        <MoneyHUD money={moneyState} />
+        <MoneyHUD money={moneyState} player={playerState} />
       </div>
 
       {/* Bottom Left - Minimap, Location, Status */}
       <div className="absolute bottom-6 left-6 flex flex-col gap-3">
-        {/* Minimap Frame */}
         <MinimapFrame />
-        
-        {/* Location */}
         <LocationHUD location={locationState} />
-        
-        {/* Status Indicators */}
         <div className="glass-panel rounded-lg px-3 py-2">
           <StatusHUD status={hudState} />
         </div>
