@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from "react";
-import { motion } from "framer-motion";
 import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WidgetPosition } from "@/types/widget";
@@ -43,6 +42,10 @@ export const HUDWidget = ({
 
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  
+  // Local position state for smooth dragging (no lag)
+  const [localPosition, setLocalPosition] = useState<{ x: number; y: number } | null>(null);
+  const [localScale, setLocalScale] = useState<number | null>(null);
 
   const dragStartPos = useRef({ x: 0, y: 0 });
   const widgetStartPos = useRef({ x: 0, y: 0 });
@@ -50,15 +53,17 @@ export const HUDWidget = ({
   const resizeStartPos = useRef({ x: 0, y: 0 });
   const resizeStartScale = useRef(1);
 
-  // Measure element size
+  // Measure element size (use base size without scale for calculations)
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
     
     const updateSize = () => {
+      // Get the base size (without scale applied)
+      const currentScale = localScale ?? scale;
       setElementSize({
-        w: el.offsetWidth * scale,
-        h: el.offsetHeight * scale,
+        w: el.offsetWidth * currentScale,
+        h: el.offsetHeight * currentScale,
       });
     };
     
@@ -68,7 +73,7 @@ export const HUDWidget = ({
     resizeObserver.observe(el);
     
     return () => resizeObserver.disconnect();
-  }, [scale]);
+  }, [scale, localScale]);
 
   // Convert center percent to top-left pixel position
   const centerPercentToTopLeftPixel = useCallback((xPercent: number, yPercent: number) => {
@@ -104,13 +109,13 @@ export const HUDWidget = ({
 
   // Keep widgets in view when resizing window
   useEffect(() => {
-    if (!editMode || elementSize.w === 0) return;
+    if (!editMode || elementSize.w === 0 || isDragging || isResizing) return;
     const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
     const clamped = clampToViewport(pixelPos.x, pixelPos.y);
     if (Math.abs(clamped.x - pixelPos.x) > 1 || Math.abs(clamped.y - pixelPos.y) > 1) {
       onPositionChange(id, topLeftPixelToCenterPercent(clamped.x, clamped.y));
     }
-  }, [editMode, clampToViewport, id, onPositionChange, position.xPercent, position.yPercent, elementSize, centerPercentToTopLeftPixel, topLeftPixelToCenterPercent]);
+  }, [editMode, clampToViewport, id, onPositionChange, position.xPercent, position.yPercent, elementSize, centerPercentToTopLeftPixel, topLeftPixelToCenterPercent, isDragging, isResizing]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -122,6 +127,7 @@ export const HUDWidget = ({
       dragStartPos.current = { x: e.clientX, y: e.clientY };
       const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
       widgetStartPos.current = { x: pixelPos.x, y: pixelPos.y };
+      setLocalPosition({ x: pixelPos.x, y: pixelPos.y });
     },
     [editMode, isResizing, position.xPercent, position.yPercent, centerPercentToTopLeftPixel],
   );
@@ -139,10 +145,16 @@ export const HUDWidget = ({
       }
 
       const clamped = clampToViewport(newX, newY);
-      onPositionChange(id, topLeftPixelToCenterPercent(clamped.x, clamped.y));
+      // Update local position immediately (no React state batching delay)
+      setLocalPosition({ x: clamped.x, y: clamped.y });
     };
 
     const handleMouseUp = () => {
+      // Commit the final position to parent state
+      if (localPosition) {
+        onPositionChange(id, topLeftPixelToCenterPercent(localPosition.x, localPosition.y));
+      }
+      setLocalPosition(null);
       setIsDragging(false);
     };
 
@@ -153,7 +165,7 @@ export const HUDWidget = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport, topLeftPixelToCenterPercent]);
+  }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport, topLeftPixelToCenterPercent, localPosition]);
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     if (!editMode) return;
@@ -164,6 +176,7 @@ export const HUDWidget = ({
     setIsResizing(true);
     resizeStartPos.current = { x: e.clientX, y: e.clientY };
     resizeStartScale.current = scale;
+    setLocalScale(scale);
   };
 
   useEffect(() => {
@@ -180,10 +193,16 @@ export const HUDWidget = ({
         Math.min(MAX_SCALE, resizeStartScale.current + delta / 200),
       );
 
-      onScaleChange(id, Number(nextScale.toFixed(3)));
+      // Update local scale immediately (no lag)
+      setLocalScale(Number(nextScale.toFixed(3)));
     };
 
     const handleMouseUp = () => {
+      // Commit the final scale to parent state
+      if (localScale !== null) {
+        onScaleChange(id, localScale);
+      }
+      setLocalScale(null);
       setIsResizing(false);
     };
 
@@ -194,14 +213,16 @@ export const HUDWidget = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, onScaleChange, id, scale]);
+  }, [isResizing, onScaleChange, id, localScale]);
 
   if (!visible && !editMode) return null;
 
-  const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
+  // Use local position during drag, otherwise calculate from props
+  const displayPosition = localPosition ?? centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
+  const displayScale = localScale ?? scale;
 
   return (
-    <motion.div
+    <div
       ref={rootRef}
       className={cn(
         "absolute pointer-events-auto select-none",
@@ -209,19 +230,17 @@ export const HUDWidget = ({
         editMode && "ring-2 ring-primary/50 ring-dashed rounded-lg",
         (isDragging || isResizing) && "ring-primary z-50",
         !visible && editMode && "opacity-40",
+        // Only animate opacity when not dragging/resizing
+        !isDragging && !isResizing && "transition-opacity duration-200",
         className,
       )}
       style={{
-        left: pixelPos.x,
-        top: pixelPos.y,
-        scale,
+        left: displayPosition.x,
+        top: displayPosition.y,
+        transform: `scale(${displayScale})`,
         transformOrigin: "top left",
-      }}
-      initial={{ opacity: 0 }}
-      animate={{
         opacity: visible || editMode ? 1 : 0,
       }}
-      transition={{ duration: 0.2 }}
       onMouseDown={handleMouseDown}
     >
       {/* Edit Mode Controls */}
@@ -231,7 +250,7 @@ export const HUDWidget = ({
             <GripVertical size={10} className="text-muted-foreground" />
             <span className="text-[8px] text-muted-foreground uppercase">{id}</span>
             <span className="text-[8px] text-muted-foreground ml-1">
-              {Math.round(scale * 100)}%
+              {Math.round(displayScale * 100)}%
             </span>
           </div>
 
@@ -283,6 +302,6 @@ export const HUDWidget = ({
           <MoveDiagonal size={12} className="text-muted-foreground" />
         </button>
       )}
-    </motion.div>
+    </div>
   );
 };
