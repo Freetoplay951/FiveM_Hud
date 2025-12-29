@@ -23,6 +23,18 @@ interface HUDWidgetProps {
 const MIN_SCALE = 0.3;
 const MAX_SCALE = 5;
 
+// Convert percent to pixels
+const percentToPixel = (xPercent: number, yPercent: number) => ({
+  x: (xPercent / 100) * window.innerWidth,
+  y: (yPercent / 100) * window.innerHeight,
+});
+
+// Convert pixels to percent
+const pixelToPercent = (x: number, y: number): WidgetPosition => ({
+  xPercent: (x / window.innerWidth) * 100,
+  yPercent: (y / window.innerHeight) * 100,
+});
+
 export const HUDWidget = ({
   id,
   children,
@@ -72,14 +84,15 @@ export const HUDWidget = ({
     [getScaledSize],
   );
 
-  // Keep widgets in view (important when switching vehicle HUD types / sizes)
+  // Keep widgets in view when resizing window
   useEffect(() => {
     if (!editMode) return;
-    const clamped = clampToViewport(position.x, position.y);
-    if (clamped.x !== position.x || clamped.y !== position.y) {
-      onPositionChange(id, clamped);
+    const pixelPos = percentToPixel(position.xPercent, position.yPercent);
+    const clamped = clampToViewport(pixelPos.x, pixelPos.y);
+    if (clamped.x !== pixelPos.x || clamped.y !== pixelPos.y) {
+      onPositionChange(id, pixelToPercent(clamped.x, clamped.y));
     }
-  }, [editMode, clampToViewport, id, onPositionChange, position.x, position.y, scale]);
+  }, [editMode, clampToViewport, id, onPositionChange, position.xPercent, position.yPercent, scale]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -89,9 +102,10 @@ export const HUDWidget = ({
       e.stopPropagation();
       setIsDragging(true);
       dragStartPos.current = { x: e.clientX, y: e.clientY };
-      widgetStartPos.current = { x: position.x, y: position.y };
+      const pixelPos = percentToPixel(position.xPercent, position.yPercent);
+      widgetStartPos.current = { x: pixelPos.x, y: pixelPos.y };
     },
-    [editMode, isResizing, position.x, position.y],
+    [editMode, isResizing, position.xPercent, position.yPercent],
   );
 
   useEffect(() => {
@@ -107,7 +121,7 @@ export const HUDWidget = ({
       }
 
       const clamped = clampToViewport(newX, newY);
-      onPositionChange(id, clamped);
+      onPositionChange(id, pixelToPercent(clamped.x, clamped.y));
     };
 
     const handleMouseUp = () => {
@@ -151,9 +165,10 @@ export const HUDWidget = ({
       onScaleChange(id, Number(nextScale.toFixed(3)));
 
       // After scaling, ensure we still remain inside the viewport
-      const clamped = clampToViewport(position.x, position.y);
-      if (clamped.x !== position.x || clamped.y !== position.y) {
-        onPositionChange(id, clamped);
+      const pixelPos = percentToPixel(position.xPercent, position.yPercent);
+      const clamped = clampToViewport(pixelPos.x, pixelPos.y);
+      if (clamped.x !== pixelPos.x || clamped.y !== pixelPos.y) {
+        onPositionChange(id, pixelToPercent(clamped.x, clamped.y));
       }
     };
 
@@ -168,9 +183,11 @@ export const HUDWidget = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, onScaleChange, id, clampToViewport, position.x, position.y, onPositionChange, scale]);
+  }, [isResizing, onScaleChange, id, clampToViewport, position.xPercent, position.yPercent, onPositionChange, scale]);
 
   if (!visible && !editMode) return null;
+
+  const pixelPos = percentToPixel(position.xPercent, position.yPercent);
 
   return (
     <motion.div
@@ -184,8 +201,8 @@ export const HUDWidget = ({
         className,
       )}
       style={{
-        left: position.x,
-        top: position.y,
+        left: pixelPos.x,
+        top: pixelPos.y,
         scale,
         transformOrigin: "top left",
       }}
