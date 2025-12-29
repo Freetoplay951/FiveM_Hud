@@ -15,530 +15,516 @@ import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
 import {
-  HudState,
-  VehicleState,
-  MoneyState,
-  VoiceState,
-  LocationState,
-  PlayerState,
-  StatusType,
-  NotificationData,
+    HudState,
+    VehicleState,
+    MoneyState,
+    VoiceState,
+    LocationState,
+    PlayerState,
+    StatusType,
+    NotificationData,
 } from "@/types/hud";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 
 // Demo values
 const DEMO_HUD: HudState = {
-  health: 85,
-  armor: 50,
-  hunger: 70,
-  thirst: 45,
-  stamina: 90,
-  stress: 25,
-  oxygen: 100,
+    health: 85,
+    armor: 50,
+    hunger: 70,
+    thirst: 45,
+    stamina: 90,
+    stress: 25,
+    oxygen: 100,
 };
 const DEMO_VEHICLE: VehicleState = {
-  inVehicle: true,
-  vehicleType: "car",
-  speed: 127,
-  gear: 4,
-  fuel: 65,
+    inVehicle: true,
+    vehicleType: "car",
+    speed: 127,
+    gear: 4,
+    fuel: 65,
 };
 const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567, blackMoney: 5000 };
 const DEMO_PLAYER: PlayerState = { id: 42, job: "LSPD", rank: "Chief" };
 const DEMO_VOICE: VoiceState = { active: true, range: "normal" };
 const DEMO_LOCATION: LocationState = {
-  street: "Vinewood Boulevard",
-  direction: "NE",
-  area: "Vinewood",
+    street: "Vinewood Boulevard",
+    direction: "NE",
+    area: "Vinewood",
 };
 
 const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
-  {
-    id: "edit-demo-1",
-    type: "info",
-    title: "Info",
-    message: "Diese Notification ist nur im Edit Mode sichtbar (zum Verschieben).",
-    duration: 0,
-  },
-  {
-    id: "edit-demo-2",
-    type: "warning",
-    title: "Warnung",
-    message: "Zieh mich an die gewünschte Position.",
-    duration: 0,
-  },
+    {
+        id: "edit-demo-1",
+        type: "info",
+        title: "Info",
+        message: "Diese Notification ist nur im Edit Mode sichtbar (zum Verschieben).",
+        duration: 0,
+    },
+    {
+        id: "edit-demo-2",
+        type: "warning",
+        title: "Warnung",
+        message: "Zieh mich an die gewünschte Position.",
+        duration: 0,
+    },
 ];
 
 export const HUD = () => {
-  const [hudState, setHudState] = useState<HudState>(DEMO_HUD);
-  const [vehicleState, setVehicleState] = useState<VehicleState>(DEMO_VEHICLE);
-  const [moneyState, setMoneyState] = useState<MoneyState>(DEMO_MONEY);
-  const [playerState] = useState<PlayerState>(DEMO_PLAYER);
-  const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
-  const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
-  const [isDemoMode] = useState(!isNuiEnvironment());
-  const [currentTime, setCurrentTime] = useState("18:24");
+    const [hudState, setHudState] = useState<HudState>(DEMO_HUD);
+    const [vehicleState, setVehicleState] = useState<VehicleState>(DEMO_VEHICLE);
+    const [moneyState, setMoneyState] = useState<MoneyState>(DEMO_MONEY);
+    const [playerState] = useState<PlayerState>(DEMO_PLAYER);
+    const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
+    const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
+    const [isDemoMode] = useState(!isNuiEnvironment());
+    const [currentTime, setCurrentTime] = useState("18:24");
 
-  const [editMenuOpen, setEditMenuOpen] = useState(false);
+    const [editMenuOpen, setEditMenuOpen] = useState(false);
 
-  const {
-    widgets,
-    editMode,
-    snapToGrid,
-    gridSize,
-    statusDesign,
-    speedometerType,
-    toggleEditMode,
-    setSnapToGrid,
-    setStatusDesign,
-    setSpeedometerType,
-    updateWidgetPosition,
-    updateWidgetScale,
-    toggleWidgetVisibility,
-    resetLayout,
-    resetWidget,
-    getWidget,
-  } = useHUDLayout();
+    const {
+        widgets,
+        editMode,
+        snapToGrid,
+        gridSize,
+        statusDesign,
+        speedometerType,
+        toggleEditMode,
+        setSnapToGrid,
+        setStatusDesign,
+        setSpeedometerType,
+        updateWidgetPosition,
+        updateWidgetScale,
+        toggleWidgetVisibility,
+        resetLayout,
+        resetWidget,
+        getWidget,
+    } = useHUDLayout();
 
-  const { notifications, removeNotification, success, error } = useNotifications();
+    const { notifications, removeNotification, success, error, warning, info } = useNotifications();
 
-  const enterEditMode = () => {
-    if (!editMode) toggleEditMode();
-    setEditMenuOpen(true);
-  };
+    const enterEditMode = () => {
+        if (!editMode) toggleEditMode();
+        setEditMenuOpen(true);
+    };
 
-  const exitEditMode = () => {
-    setEditMenuOpen(false);
-    if (editMode) toggleEditMode();
-  };
+    const exitEditMode = () => {
+        setEditMenuOpen(false);
+        if (editMode) toggleEditMode();
+    };
 
-  useEffect(() => {
-    if (!editMode) setEditMenuOpen(false);
-  }, [editMode]);
+    useEffect(() => {
+        if (!editMode) setEditMenuOpen(false);
+    }, [editMode]);
 
-  // NUI Event handlers
-  useNuiEvents({
-    onUpdateHud: setHudState,
-    onUpdateVehicle: setVehicleState,
-    onUpdateMoney: setMoneyState,
-    onUpdateVoice: setVoiceState,
-    onUpdateLocation: setLocationState,
-  });
+    // NUI Event handlers
+    useNuiEvents({
+        onUpdateHud: setHudState,
+        onUpdateVehicle: setVehicleState,
+        onUpdateMoney: setMoneyState,
+        onUpdateVoice: setVoiceState,
+        onUpdateLocation: setLocationState,
+    });
 
-  // Demo simulation with animated plane/heli values
-  useEffect(() => {
-    if (!isDemoMode) return;
+    // Demo simulation with animated plane/heli values
+    useEffect(() => {
+        if (!isDemoMode) return;
 
-    const interval = setInterval(() => {
-      setHudState((prev) => ({
-        ...prev,
-        hunger: Math.max(0, prev.hunger - 0.1),
-        thirst: Math.max(0, prev.thirst - 0.15),
-        stamina: Math.min(100, Math.max(0, prev.stamina + (Math.random() - 0.5) * 5)),
-      }));
+        const interval = setInterval(() => {
+            setHudState((prev) => ({
+                ...prev,
+                hunger: Math.max(0, prev.hunger - 0.1),
+                thirst: Math.max(0, prev.thirst - 0.15),
+                stamina: Math.min(100, Math.max(0, prev.stamina + (Math.random() - 0.5) * 5)),
+            }));
 
-      setVehicleState((prev) => {
-        const baseUpdate = {
-          ...prev,
-          fuel: Math.max(0, prev.fuel - 0.02),
+            setVehicleState((prev) => {
+                const baseUpdate = {
+                    ...prev,
+                    fuel: Math.max(0, prev.fuel - 0.02),
+                };
+
+                if (prev.vehicleType === "car") {
+                    return {
+                        ...baseUpdate,
+                        speed: prev.inVehicle ? Math.min(280, Math.max(0, prev.speed + (Math.random() - 0.5) * 20)) : 0,
+                    };
+                }
+
+                if (prev.vehicleType === "boat") {
+                    return {
+                        ...baseUpdate,
+                        speed: prev.inVehicle ? Math.min(80, Math.max(0, prev.speed + (Math.random() - 0.5) * 10)) : 0,
+                        heading: ((prev.heading || 0) + (Math.random() - 0.5) * 5 + 360) % 360,
+                    };
+                }
+
+                if (prev.vehicleType === "plane") {
+                    return {
+                        ...baseUpdate,
+                        airspeed: Math.min(400, Math.max(150, (prev.airspeed || 250) + (Math.random() - 0.5) * 30)),
+                        altitude: Math.min(2000, Math.max(100, (prev.altitude || 500) + (Math.random() - 0.5) * 50)),
+                        pitch: Math.max(-30, Math.min(30, (prev.pitch || 0) + (Math.random() - 0.5) * 5)),
+                        roll: Math.max(-45, Math.min(45, (prev.roll || 0) + (Math.random() - 0.5) * 8)),
+                        heading: ((prev.heading || 180) + (Math.random() - 0.5) * 3 + 360) % 360,
+                        speed: Math.min(400, Math.max(150, (prev.airspeed || 250) + (Math.random() - 0.5) * 30)),
+                    };
+                }
+
+                if (prev.vehicleType === "helicopter") {
+                    return {
+                        ...baseUpdate,
+                        airspeed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
+                        altitude: Math.min(1000, Math.max(10, (prev.altitude || 200) + (Math.random() - 0.5) * 30)),
+                        pitch: Math.max(-20, Math.min(20, (prev.pitch || 0) + (Math.random() - 0.5) * 4)),
+                        roll: Math.max(-30, Math.min(30, (prev.roll || 0) + (Math.random() - 0.5) * 6)),
+                        heading: ((prev.heading || 90) + (Math.random() - 0.5) * 5 + 360) % 360,
+                        verticalSpeed: Math.max(
+                            -20,
+                            Math.min(20, (prev.verticalSpeed || 5) + (Math.random() - 0.5) * 8)
+                        ),
+                        rotorRpm: Math.min(100, Math.max(70, (prev.rotorRpm || 95) + (Math.random() - 0.5) * 5)),
+                        speed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
+                    };
+                }
+
+                return baseUpdate;
+            });
+
+            setVoiceState((prev) => ({
+                ...prev,
+                active: Math.random() > 0.3,
+            }));
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, [isDemoMode]);
+
+    // Clock update
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(
+                new Date().toLocaleTimeString("de-DE", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                })
+            );
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Demo key controls
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if (e.key === "v") {
+                setVehicleState((prev) => ({ ...prev, inVehicle: !prev.inVehicle }));
+            }
+            if (e.key === "r") {
+                setVoiceState((prev) => ({
+                    ...prev,
+                    range: prev.range === "whisper" ? "normal" : prev.range === "normal" ? "shout" : "whisper",
+                }));
+            }
+            if (e.key === "e") {
+                if (editMode) {
+                    exitEditMode();
+                } else {
+                    enterEditMode();
+                }
+            }
+            // Vehicle type switching for demo
+            if (e.key === "1") setVehicleState((prev) => ({ ...prev, vehicleType: "car", gear: 4 }));
+            if (e.key === "2")
+                setVehicleState((prev) => ({
+                    ...prev,
+                    vehicleType: "plane",
+                    altitude: 500,
+                    pitch: 5,
+                    roll: 0,
+                    heading: 180,
+                    airspeed: 250,
+                    landingGear: false,
+                    flaps: 0,
+                }));
+            if (e.key === "3")
+                setVehicleState((prev) => ({ ...prev, vehicleType: "boat", heading: 90, anchor: false }));
+            if (e.key === "4")
+                setVehicleState((prev) => ({
+                    ...prev,
+                    vehicleType: "helicopter",
+                    altitude: 200,
+                    rotorRpm: 95,
+                    verticalSpeed: 5,
+                    pitch: 0,
+                    roll: 0,
+                    heading: 90,
+                    airspeed: 80,
+                }));
+
+            // Demo notifications
+            if (e.key === "h") success("Erfolg!", "Aktion erfolgreich ausgeführt.");
+            if (e.key === "j") error("Fehler!", "Etwas ist schief gelaufen.");
+            if (e.key === "k") warning("Fehler!", "Etwas ist schief gelaufen.");
+            if (e.key === "l") info("Fehler!", "Etwas ist schief gelaufen.");
         };
 
-        if (prev.vehicleType === "car") {
-          return {
-            ...baseUpdate,
-            speed: prev.inVehicle
-              ? Math.min(280, Math.max(0, prev.speed + (Math.random() - 0.5) * 20))
-              : 0,
-          };
-        }
+        window.addEventListener("keypress", handleKeyPress);
+        return () => {
+            window.removeEventListener("keypress", handleKeyPress);
+        };
+    }, [editMode, success, error, warning, info]);
 
-        if (prev.vehicleType === "boat") {
-          return {
-            ...baseUpdate,
-            speed: prev.inVehicle
-              ? Math.min(80, Math.max(0, prev.speed + (Math.random() - 0.5) * 10))
-              : 0,
-            heading: ((prev.heading || 0) + (Math.random() - 0.5) * 5 + 360) % 360,
-          };
-        }
-
-        if (prev.vehicleType === "plane") {
-          return {
-            ...baseUpdate,
-            airspeed: Math.min(400, Math.max(150, (prev.airspeed || 250) + (Math.random() - 0.5) * 30)),
-            altitude: Math.min(2000, Math.max(100, (prev.altitude || 500) + (Math.random() - 0.5) * 50)),
-            pitch: Math.max(-30, Math.min(30, (prev.pitch || 0) + (Math.random() - 0.5) * 5)),
-            roll: Math.max(-45, Math.min(45, (prev.roll || 0) + (Math.random() - 0.5) * 8)),
-            heading: ((prev.heading || 180) + (Math.random() - 0.5) * 3 + 360) % 360,
-            speed: Math.min(400, Math.max(150, (prev.airspeed || 250) + (Math.random() - 0.5) * 30)),
-          };
-        }
-
-        if (prev.vehicleType === "helicopter") {
-          return {
-            ...baseUpdate,
-            airspeed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
-            altitude: Math.min(1000, Math.max(10, (prev.altitude || 200) + (Math.random() - 0.5) * 30)),
-            pitch: Math.max(-20, Math.min(20, (prev.pitch || 0) + (Math.random() - 0.5) * 4)),
-            roll: Math.max(-30, Math.min(30, (prev.roll || 0) + (Math.random() - 0.5) * 6)),
-            heading: ((prev.heading || 90) + (Math.random() - 0.5) * 5 + 360) % 360,
-            verticalSpeed: Math.max(-20, Math.min(20, (prev.verticalSpeed || 5) + (Math.random() - 0.5) * 8)),
-            rotorRpm: Math.min(100, Math.max(70, (prev.rotorRpm || 95) + (Math.random() - 0.5) * 5)),
-            speed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
-          };
-        }
-
-        return baseUpdate;
-      });
-
-      setVoiceState((prev) => ({
-        ...prev,
-        active: Math.random() > 0.3,
-      }));
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [isDemoMode]);
-
-  // Clock update
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(
-        new Date().toLocaleTimeString("de-DE", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      );
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Demo key controls
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === "v") {
-        setVehicleState((prev) => ({ ...prev, inVehicle: !prev.inVehicle }));
-      }
-      if (e.key === "r") {
-        setVoiceState((prev) => ({
-          ...prev,
-          range:
-            prev.range === "whisper"
-              ? "normal"
-              : prev.range === "normal"
-                ? "shout"
-                : "whisper",
-        }));
-      }
-      if (e.key === "e") {
-        if (editMode) {
-          exitEditMode();
-        } else {
-          enterEditMode();
-        }
-      }
-      // Vehicle type switching for demo
-      if (e.key === "1") setVehicleState((prev) => ({ ...prev, vehicleType: "car", gear: 4 }));
-      if (e.key === "2")
-        setVehicleState((prev) => ({
-          ...prev,
-          vehicleType: "plane",
-          altitude: 500,
-          pitch: 5,
-          roll: 0,
-          heading: 180,
-          airspeed: 250,
-          landingGear: false,
-          flaps: 0,
-        }));
-      if (e.key === "3") setVehicleState((prev) => ({ ...prev, vehicleType: "boat", heading: 90, anchor: false }));
-      if (e.key === "4")
-        setVehicleState((prev) => ({
-          ...prev,
-          vehicleType: "helicopter",
-          altitude: 200,
-          rotorRpm: 95,
-          verticalSpeed: 5,
-          pitch: 0,
-          roll: 0,
-          heading: 90,
-          airspeed: 80,
-        }));
-      // Demo notifications
-      if (e.key === "n") success("Erfolg!", "Aktion erfolgreich ausgeführt.");
-      if (e.key === "m") error("Fehler!", "Etwas ist schief gelaufen.");
+    const widgetProps = {
+        editMode,
+        snapToGrid,
+        gridSize,
+        onPositionChange: updateWidgetPosition,
+        onVisibilityToggle: toggleWidgetVisibility,
+        onScaleChange: updateWidgetScale,
+        onReset: resetWidget,
     };
 
-    window.addEventListener("keypress", handleKeyPress);
-    return () => {
-      window.removeEventListener("keypress", handleKeyPress);
-    };
-  }, [editMode, success, error]);
+    const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
 
-  const widgetProps = {
-    editMode,
-    snapToGrid,
-    gridSize,
-    onPositionChange: updateWidgetPosition,
-    onVisibilityToggle: toggleWidgetVisibility,
-    onScaleChange: updateWidgetScale,
-    onReset: resetWidget,
-  };
+    const isUsingEditDemoNotifications = editMode && notifications.length === 0;
+    const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
-  const statusTypes: StatusType[] = [
-    "health",
-    "armor",
-    "hunger",
-    "thirst",
-    "stamina",
-    "stress",
-    "oxygen",
-  ];
+    return (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            {/* Grid overlay when in edit mode */}
+            {editMode && snapToGrid && (
+                <motion.div
+                    className="fixed inset-0 z-30 pointer-events-none"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        backgroundImage:
+                            "linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)",
+                        backgroundSize: "20px 20px",
+                    }}
+                />
+            )}
 
-  const isUsingEditDemoNotifications = editMode && notifications.length === 0;
-  const displayedNotifications = isUsingEditDemoNotifications
-    ? EDIT_MODE_DEMO_NOTIFICATIONS
-    : notifications;
+            {/* Notifications - as draggable widget */}
+            {(() => {
+                const widget = getWidget("notifications");
+                if (!widget)
+                    return (
+                        <NotificationContainer
+                            notifications={displayedNotifications}
+                            onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
+                        />
+                    );
+                return (
+                    <HUDWidget
+                        id="notifications"
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <NotificationContainer
+                            notifications={displayedNotifications}
+                            onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
+                            isWidget
+                        />
+                    </HUDWidget>
+                );
+            })()}
 
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {/* Grid overlay when in edit mode */}
-      {editMode && snapToGrid && (
-        <motion.div
-          className="fixed inset-0 z-30 pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          style={{
-            backgroundImage:
-              "linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-      )}
+            {/* Edit Mode Button + Menu (Radix Popover) */}
+            <Popover
+                open={editMenuOpen}
+                onOpenChange={(open) => {
+                    setEditMenuOpen(open);
+                    if (open && !editMode) {
+                        enterEditMode();
+                    }
+                }}>
+                <PopoverTrigger asChild>
+                    <button
+                        className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
+                        style={{
+                            boxShadow: editMode ? "0 0 15px hsl(var(--primary))" : "none",
+                        }}>
+                        <Settings
+                            size={18}
+                            className={editMode ? "text-primary" : "text-muted-foreground"}
+                            style={editMode ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" } : {}}
+                        />
+                    </button>
+                </PopoverTrigger>
 
-      {/* Notifications - as draggable widget */}
-      {(() => {
-        const widget = getWidget("notifications");
-        if (!widget)
-          return (
-            <NotificationContainer
-              notifications={displayedNotifications}
-              onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
-            />
-          );
-        return (
-          <HUDWidget
-            id="notifications"
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <NotificationContainer
-              notifications={displayedNotifications}
-              onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
-              isWidget
-            />
-          </HUDWidget>
-        );
-      })()}
+                {/* Menu content */}
+                {editMode && (
+                    <EditModeOverlay
+                        snapToGrid={snapToGrid}
+                        statusDesign={statusDesign}
+                        speedometerType={speedometerType}
+                        onSnapToGridChange={setSnapToGrid}
+                        onStatusDesignChange={setStatusDesign}
+                        onSpeedometerTypeChange={setSpeedometerType}
+                        onReset={resetLayout}
+                        onExitEditMode={exitEditMode}
+                    />
+                )}
+            </Popover>
 
-      {/* Edit Mode Button + Menu (Radix Popover) */}
-      <Popover
-        open={editMenuOpen}
-        onOpenChange={(open) => {
-          setEditMenuOpen(open);
-          if (open && !editMode) {
-            enterEditMode();
-          }
-        }}
-      >
-        <PopoverTrigger asChild>
-          <button
-            className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
-            style={{
-              boxShadow: editMode ? "0 0 15px hsl(var(--primary))" : "none",
-            }}
-          >
-            <Settings
-              size={18}
-              className={editMode ? "text-primary" : "text-muted-foreground"}
-              style={editMode ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" } : {}}
-            />
-          </button>
-        </PopoverTrigger>
+            {/* Demo Mode Badge */}
+            {isDemoMode && !editMode && (
+                <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="glass-panel bg-red-500/80 rounded-lg px-4 py-2 animate-fade-in-up pointer-events-auto">
+                        Demo Modus
+                        <span className="flex flex-col text-xs text-white uppercase tracking-wider hud-text pl-4">
+                            <span>Vehicle: V (Typ: 1︱2︱3︱4)</span>
+                            <span>Voice: R</span>
+                            <span>Edit: E</span>
+                            <span>Notify: H︱J︱K︱L</span>
+                        </span>
+                    </div>
+                </div>
+            )}
 
-        {/* Menu content */}
-        {editMode && (
-          <EditModeOverlay
-            snapToGrid={snapToGrid}
-            statusDesign={statusDesign}
-            speedometerType={speedometerType}
-            onSnapToGridChange={setSnapToGrid}
-            onStatusDesignChange={setStatusDesign}
-            onSpeedometerTypeChange={setSpeedometerType}
-            onReset={resetLayout}
-            onExitEditMode={exitEditMode}
-          />
-        )}
-      </Popover>
+            {/* Status Widgets */}
+            {statusTypes.map((type) => {
+                const widget = getWidget(type);
+                if (!widget) return null;
+                const value = hudState[type as keyof HudState] ?? 100;
+                return (
+                    <HUDWidget
+                        key={type}
+                        id={type}
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <StatusWidget
+                            type={type}
+                            value={value}
+                            design={statusDesign}
+                            size={widget.size as "sm" | "md" | "lg"}
+                        />
+                    </HUDWidget>
+                );
+            })}
 
-      {/* Demo Mode Badge */}
-      {isDemoMode && !editMode && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 glass-panel rounded-lg px-4 py-2 animate-fade-in-up">
-          <span className="text-xs text-primary uppercase tracking-wider hud-text">
-            Demo • V=Vehicle • 1-4=Type • R=Voice • E=Edit • N/M=Notify
-          </span>
+            {/* Money Widget */}
+            {(() => {
+                const widget = getWidget("money");
+                if (!widget) return null;
+                return (
+                    <HUDWidget
+                        id="money"
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <NeonMoneyWidget
+                            money={moneyState}
+                            player={playerState}
+                        />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Clock Widget */}
+            {(() => {
+                const widget = getWidget("clock");
+                if (!widget) return null;
+                return (
+                    <HUDWidget
+                        id="clock"
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <ClockWidget time={currentTime} />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Location Widget */}
+            {(() => {
+                const widget = getWidget("location");
+                if (!widget) return null;
+                return (
+                    <HUDWidget
+                        id="location"
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <NeonLocationWidget location={locationState} />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Voice Widget */}
+            {(() => {
+                const widget = getWidget("voice");
+                if (!widget) return null;
+                return (
+                    <HUDWidget
+                        id="voice"
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <NeonVoiceWidget voice={voiceState} />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Minimap Widget */}
+            {(() => {
+                const widget = getWidget("minimap");
+                if (!widget) return null;
+                return (
+                    <HUDWidget
+                        id="minimap"
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <NeonMinimapWidget direction={locationState.direction} />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Compass Widget */}
+            {(() => {
+                const widget = getWidget("compass");
+                if (!widget) return null;
+                return (
+                    <HUDWidget
+                        id="compass"
+                        position={widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <CompassWidget direction={locationState.direction} />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Vehicle Speedometer */}
+            {(() => {
+                const widget = getWidget("speedometer");
+                if (!widget) return null;
+                return (
+                    <HUDWidget
+                        id="speedometer"
+                        position={widget.position}
+                        visible={widget.visible && vehicleState.inVehicle}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <VehicleHUDFactory
+                            vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
+                            visible={vehicleState.inVehicle || editMode}
+                        />
+                    </HUDWidget>
+                );
+            })()}
         </div>
-      )}
-
-      {/* Status Widgets */}
-      {statusTypes.map((type) => {
-        const widget = getWidget(type);
-        if (!widget) return null;
-        const value = hudState[type as keyof HudState] ?? 100;
-        return (
-          <HUDWidget
-            key={type}
-            id={type}
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <StatusWidget
-              type={type}
-              value={value}
-              design={statusDesign}
-              size={widget.size as "sm" | "md" | "lg"}
-            />
-          </HUDWidget>
-        );
-      })}
-
-      {/* Money Widget */}
-      {(() => {
-        const widget = getWidget("money");
-        if (!widget) return null;
-        return (
-          <HUDWidget
-            id="money"
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <NeonMoneyWidget money={moneyState} player={playerState} />
-          </HUDWidget>
-        );
-      })()}
-
-      {/* Clock Widget */}
-      {(() => {
-        const widget = getWidget("clock");
-        if (!widget) return null;
-        return (
-          <HUDWidget
-            id="clock"
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <ClockWidget time={currentTime} />
-          </HUDWidget>
-        );
-      })()}
-
-      {/* Location Widget */}
-      {(() => {
-        const widget = getWidget("location");
-        if (!widget) return null;
-        return (
-          <HUDWidget
-            id="location"
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <NeonLocationWidget location={locationState} />
-          </HUDWidget>
-        );
-      })()}
-
-      {/* Voice Widget */}
-      {(() => {
-        const widget = getWidget("voice");
-        if (!widget) return null;
-        return (
-          <HUDWidget
-            id="voice"
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <NeonVoiceWidget voice={voiceState} />
-          </HUDWidget>
-        );
-      })()}
-
-      {/* Minimap Widget */}
-      {(() => {
-        const widget = getWidget("minimap");
-        if (!widget) return null;
-        return (
-          <HUDWidget
-            id="minimap"
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <NeonMinimapWidget direction={locationState.direction} />
-          </HUDWidget>
-        );
-      })()}
-
-      {/* Compass Widget */}
-      {(() => {
-        const widget = getWidget("compass");
-        if (!widget) return null;
-        return (
-          <HUDWidget
-            id="compass"
-            position={widget.position}
-            visible={widget.visible}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <CompassWidget direction={locationState.direction} />
-          </HUDWidget>
-        );
-      })()}
-
-      {/* Vehicle Speedometer */}
-      {(() => {
-        const widget = getWidget("speedometer");
-        if (!widget) return null;
-        return (
-          <HUDWidget
-            id="speedometer"
-            position={widget.position}
-            visible={widget.visible && vehicleState.inVehicle}
-            scale={widget.scale}
-            {...widgetProps}
-          >
-            <VehicleHUDFactory
-              vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
-              visible={vehicleState.inVehicle || editMode}
-            />
-          </HUDWidget>
-        );
-      })()}
-    </div>
-  );
+    );
 };
