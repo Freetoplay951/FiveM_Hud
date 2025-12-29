@@ -51,14 +51,14 @@ export interface SpeedometerConfigs {
     helicopter: SpeedometerConfig;
 }
 
-// Position 85% from left, 85% from top (so it doesn't clip outside viewport)
-export const DEFAULT_SPEEDOMETER_POSITION: WidgetPosition = { xPercent: 85, yPercent: 85 };
+// Default speedometer config used for all vehicle types
+const DEFAULT_SPEEDO_POS: WidgetPosition = { xPercent: 85, yPercent: 85 };
 
 export const DEFAULT_SPEEDOMETER_CONFIGS: SpeedometerConfigs = {
-    car: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
-    plane: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
-    boat: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
-    helicopter: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
+    car: { position: DEFAULT_SPEEDO_POS, scale: 1 },
+    plane: { position: DEFAULT_SPEEDO_POS, scale: 1 },
+    boat: { position: DEFAULT_SPEEDO_POS, scale: 1 },
+    helicopter: { position: DEFAULT_SPEEDO_POS, scale: 1 },
 };
 
 export interface HUDLayoutState {

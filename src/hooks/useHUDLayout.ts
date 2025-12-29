@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType, DEFAULT_SPEEDOMETER_CONFIGS, DEFAULT_SPEEDOMETER_POSITION, SpeedometerConfig } from '@/types/widget';
+import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType, DEFAULT_SPEEDOMETER_CONFIGS, SpeedometerConfig } from '@/types/widget';
 import { snapPositionToGrid } from '@/lib/snapUtils';
 import { resolveStatusWidgetOverlaps } from '@/lib/overlapUtils';
 
@@ -124,9 +124,10 @@ export const useHUDLayout = () => {
 
   const resetSpeedometer = useCallback((type: SpeedometerType) => {
     setState(prev => {
+      const defaultConfig = DEFAULT_SPEEDOMETER_CONFIGS[type];
       const defaultPosition = prev.snapToGrid 
-        ? snapPositionToGrid(DEFAULT_SPEEDOMETER_POSITION, prev.gridSize)
-        : DEFAULT_SPEEDOMETER_POSITION;
+        ? snapPositionToGrid(defaultConfig.position, prev.gridSize)
+        : defaultConfig.position;
       
       return {
         ...prev,

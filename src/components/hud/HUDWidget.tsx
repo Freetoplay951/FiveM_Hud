@@ -238,15 +238,19 @@ export const HUDWidget = ({
     if (!onScaleChange) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Calculate the desired new size based on mouse position relative to widget top-left
-      const newWidth = e.clientX - resizeStartPixelPos.current.x;
-      const newHeight = e.clientY - resizeStartPixelPos.current.y;
+      // Calculate how far the mouse has moved from the starting resize position
+      const deltaX = e.clientX - resizeStartPos.current.x;
+      const deltaY = e.clientY - resizeStartPos.current.y;
       
       // Get the base size (size at scale 1.0)
       const baseWidth = resizeStartElementSize.current.w / resizeStartScale.current;
       const baseHeight = resizeStartElementSize.current.h / resizeStartScale.current;
       
-      // Calculate scale based on the larger dimension to maintain proportions
+      // Calculate new size based on delta (only grow in the direction of the drag)
+      const newWidth = resizeStartElementSize.current.w + deltaX;
+      const newHeight = resizeStartElementSize.current.h + deltaY;
+      
+      // Calculate scale based on desired size vs base size
       const scaleX = baseWidth > 0 ? newWidth / baseWidth : resizeStartScale.current;
       const scaleY = baseHeight > 0 ? newHeight / baseHeight : resizeStartScale.current;
       
