@@ -22,7 +22,7 @@ export const useHUDLayout = () => {
     return DEFAULT_HUD_STATE;
   });
 
-  // Resolve overlaps on initial load (only once)
+  // Resolve overlaps and clamp to viewport on initial load (only once)
   useEffect(() => {
     if (hasResolvedOverlaps.current) return;
     hasResolvedOverlaps.current = true;
@@ -44,6 +44,17 @@ export const useHUDLayout = () => {
     }, 100);
     
     return () => clearTimeout(timer);
+  }, []);
+
+  // Listen to window resize to recalculate positions
+  useEffect(() => {
+    const handleResize = () => {
+      // Force a re-render when window resizes - widgets will recalculate their positions
+      setState(prev => ({ ...prev }));
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {

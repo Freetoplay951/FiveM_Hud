@@ -53,18 +53,54 @@ export const HUDWidget = ({
   const resizeStartPos = useRef({ x: 0, y: 0 });
   const resizeStartScale = useRef(1);
 
+  // Estimated base sizes for widgets when not visible (fallback)
+  const WIDGET_BASE_SIZES: Record<string, { width: number; height: number }> = {
+    health: { width: 48, height: 48 },
+    armor: { width: 48, height: 48 },
+    hunger: { width: 48, height: 48 },
+    thirst: { width: 48, height: 48 },
+    stamina: { width: 48, height: 48 },
+    stress: { width: 48, height: 48 },
+    oxygen: { width: 48, height: 48 },
+    money: { width: 180, height: 80 },
+    clock: { width: 100, height: 40 },
+    compass: { width: 80, height: 80 },
+    voice: { width: 120, height: 50 },
+    minimap: { width: 200, height: 200 },
+    notifications: { width: 280, height: 150 },
+    speedometer: { width: 200, height: 200 },
+  };
+
   // Measure element size (use base size without scale for calculations)
   useEffect(() => {
     const el = rootRef.current;
-    if (!el) return;
+    const currentScale = localScale ?? scale;
+    
+    if (!el) {
+      // If element is not rendered (e.g., not visible), use estimated size
+      const baseSize = WIDGET_BASE_SIZES[id] || { width: 50, height: 50 };
+      setElementSize({
+        w: baseSize.width * currentScale,
+        h: baseSize.height * currentScale,
+      });
+      return;
+    }
     
     const updateSize = () => {
-      // Get the base size (without scale applied)
-      const currentScale = localScale ?? scale;
-      setElementSize({
-        w: el.offsetWidth * currentScale,
-        h: el.offsetHeight * currentScale,
-      });
+      const cs = localScale ?? scale;
+      // If element has zero size, use fallback
+      if (el.offsetWidth === 0 || el.offsetHeight === 0) {
+        const baseSize = WIDGET_BASE_SIZES[id] || { width: 50, height: 50 };
+        setElementSize({
+          w: baseSize.width * cs,
+          h: baseSize.height * cs,
+        });
+      } else {
+        setElementSize({
+          w: el.offsetWidth * cs,
+          h: el.offsetHeight * cs,
+        });
+      }
     };
     
     updateSize();
@@ -73,7 +109,7 @@ export const HUDWidget = ({
     resizeObserver.observe(el);
     
     return () => resizeObserver.disconnect();
-  }, [scale, localScale]);
+  }, [scale, localScale, id, visible]);
 
   // Convert center percent to top-left pixel position
   const centerPercentToTopLeftPixel = useCallback((xPercent: number, yPercent: number) => {
@@ -185,21 +221,39 @@ export const HUDWidget = ({
     setIsResizing(true);
     resizeStartPos.current = { x: e.clientX, y: e.clientY };
     resizeStartScale.current = scale;
+    // Store current element size and position for calculating new scale
+    resizeStartElementSize.current = { w: elementSize.w, h: elementSize.h };
+    // Store the top-left pixel position of the widget
+    const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
+    resizeStartPixelPos.current = { x: pixelPos.x, y: pixelPos.y };
     setLocalScale(scale);
   };
+
+  // Store resize start element size for calculating scale from mouse position
+  const resizeStartElementSize = useRef({ w: 0, h: 0 });
+  const resizeStartPixelPos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!isResizing) return;
     if (!onScaleChange) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const dx = e.clientX - resizeStartPos.current.x;
-      const dy = e.clientY - resizeStartPos.current.y;
-      const delta = (dx + dy) / 2;
-
+      // Calculate the desired new size based on mouse position relative to widget top-left
+      const newWidth = e.clientX - resizeStartPixelPos.current.x;
+      const newHeight = e.clientY - resizeStartPixelPos.current.y;
+      
+      // Get the base size (size at scale 1.0)
+      const baseWidth = resizeStartElementSize.current.w / resizeStartScale.current;
+      const baseHeight = resizeStartElementSize.current.h / resizeStartScale.current;
+      
+      // Calculate scale based on the larger dimension to maintain proportions
+      const scaleX = baseWidth > 0 ? newWidth / baseWidth : resizeStartScale.current;
+      const scaleY = baseHeight > 0 ? newHeight / baseHeight : resizeStartScale.current;
+      
+      // Use the average of both dimensions for proportional scaling
       const nextScale = Math.max(
         MIN_SCALE,
-        Math.min(MAX_SCALE, resizeStartScale.current + delta / 200),
+        Math.min(MAX_SCALE, (scaleX + scaleY) / 2),
       );
 
       // Update local scale immediately (no lag)

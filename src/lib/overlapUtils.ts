@@ -73,8 +73,9 @@ export const resolveStatusWidgetOverlaps = (widgets: WidgetConfig[]): WidgetConf
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
   const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 1080;
   
-  // Separate status widgets from others
-  const statusWidgets = widgets.filter(w => statusTypes.includes(w.type) && w.visible);
+  // Separate status widgets from others - include ALL status widgets, not just visible ones
+  // This ensures positions are calculated correctly even for hidden widgets
+  const statusWidgets = widgets.filter(w => statusTypes.includes(w.type));
   const otherWidgets = widgets.filter(w => !statusTypes.includes(w.type));
   
   if (statusWidgets.length <= 1) {
