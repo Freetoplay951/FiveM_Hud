@@ -89,13 +89,14 @@ export const HUD = () => {
         gridSize,
         statusDesign,
         speedometerType,
-        speedometerScales,
+        speedometerConfigs,
         toggleEditMode,
         setSnapToGrid,
         setStatusDesign,
         setSpeedometerType,
-        updateSpeedometerScale,
-        getSpeedometerScale,
+        updateSpeedometerConfig,
+        getSpeedometerConfig,
+        resetSpeedometer,
         updateWidgetPosition,
         updateWidgetScale,
         toggleWidgetVisibility,
@@ -500,24 +501,28 @@ export const HUD = () => {
                 const widget = getWidget("speedometer");
                 if (!widget) return null;
                 
-                // Use the scale for the currently active speedometer type
-                const activeType = editMode ? speedometerType : vehicleState.vehicleType;
-                const currentScale = getSpeedometerScale(activeType as any) ?? 1;
+                // Use the config for the currently active speedometer type
+                const activeType = (editMode ? speedometerType : vehicleState.vehicleType) as 'car' | 'plane' | 'boat' | 'helicopter';
+                const currentConfig = getSpeedometerConfig(activeType);
                 
                 return (
                     <HUDWidget
-                        id="speedometer"
-                        position={widget.position}
-                        visible={widget.visible && vehicleState.inVehicle}
-                        scale={currentScale}
-                        {...widgetProps}
-                        onScaleChange={(id, scale) => {
-                            // Update the scale for the active speedometer type
-                            updateSpeedometerScale(activeType as any, scale);
+                        id={`speedometer-${activeType}`}
+                        position={currentConfig.position}
+                        visible={widget.visible && (vehicleState.inVehicle || editMode)}
+                        scale={currentConfig.scale}
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={(id, position) => {
+                            updateSpeedometerConfig(activeType, { position });
                         }}
-                        onReset={(id) => {
-                            // Reset just the current speedometer type scale
-                            updateSpeedometerScale(activeType as any, 1);
+                        onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
+                        onScaleChange={(id, scale) => {
+                            updateSpeedometerConfig(activeType, { scale });
+                        }}
+                        onReset={() => {
+                            resetSpeedometer(activeType);
                         }}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
