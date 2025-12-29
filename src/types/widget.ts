@@ -51,13 +51,14 @@ export interface SpeedometerConfigs {
     helicopter: SpeedometerConfig;
 }
 
-export const DEFAULT_SPEEDOMETER_POSITION: WidgetPosition = { xPercent: 100, yPercent: 100 };
+// Position 85% from left, 85% from top (so it doesn't clip outside viewport)
+export const DEFAULT_SPEEDOMETER_POSITION: WidgetPosition = { xPercent: 85, yPercent: 85 };
 
 export const DEFAULT_SPEEDOMETER_CONFIGS: SpeedometerConfigs = {
-    car: { position: { ...DEFAULT_SPEEDOMETER_POSITION }, scale: 1 },
-    plane: { position: { ...DEFAULT_SPEEDOMETER_POSITION }, scale: 1 },
-    boat: { position: { ...DEFAULT_SPEEDOMETER_POSITION }, scale: 1 },
-    helicopter: { position: { ...DEFAULT_SPEEDOMETER_POSITION }, scale: 1 },
+    car: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
+    plane: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
+    boat: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
+    helicopter: { position: { xPercent: 85, yPercent: 85 }, scale: 1 },
 };
 
 export interface HUDLayoutState {
@@ -71,10 +72,13 @@ export interface HUDLayoutState {
     speedometerConfigs: SpeedometerConfigs;
 }
 
-let current = 14;
-const next = function () {
-    const value = current;
-    current = current + 4;
+// Status icons positioned horizontally next to minimap
+// Minimap takes ~12% width, so status icons start at ~15%
+let statusX = 15;
+const statusSpacing = 3.5;
+const nextStatus = function () {
+    const value = statusX;
+    statusX = statusX + statusSpacing;
     return value;
 };
 
@@ -94,20 +98,20 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
     // Bottom left - Minimap (Location is inside minimap)
     { id: "minimap", type: "minimap", position: { xPercent: 0, yPercent: 100 }, visible: true, scale: 1 },
 
-    // Next to minimap - Status icons
+    // Next to minimap - Status icons in a horizontal row (yPercent: 96 keeps them near bottom)
     {
         id: "health",
         type: "health",
-        position: { xPercent: next(), yPercent: 100 },
+        position: { xPercent: nextStatus(), yPercent: 96 },
         visible: true,
         size: "md",
         scale: 1,
     },
-    { id: "armor", type: "armor", position: { xPercent: next(), yPercent: 100 }, visible: true, size: "md", scale: 1 },
+    { id: "armor", type: "armor", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, size: "md", scale: 1 },
     {
         id: "hunger",
         type: "hunger",
-        position: { xPercent: next(), yPercent: 100 },
+        position: { xPercent: nextStatus(), yPercent: 96 },
         visible: true,
         size: "md",
         scale: 1,
@@ -115,7 +119,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
     {
         id: "thirst",
         type: "thirst",
-        position: { xPercent: next(), yPercent: 100 },
+        position: { xPercent: nextStatus(), yPercent: 96 },
         visible: true,
         size: "md",
         scale: 1,
@@ -123,7 +127,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
     {
         id: "stamina",
         type: "stamina",
-        position: { xPercent: next(), yPercent: 100 },
+        position: { xPercent: nextStatus(), yPercent: 96 },
         visible: true,
         size: "md",
         scale: 1,
@@ -131,7 +135,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
     {
         id: "stress",
         type: "stress",
-        position: { xPercent: next(), yPercent: 100 },
+        position: { xPercent: nextStatus(), yPercent: 96 },
         visible: false,
         size: "md",
         scale: 1,
@@ -139,7 +143,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
     {
         id: "oxygen",
         type: "oxygen",
-        position: { xPercent: next(), yPercent: 100 },
+        position: { xPercent: nextStatus(), yPercent: 96 },
         visible: false,
         size: "md",
         scale: 1,
@@ -155,7 +159,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
 export const DEFAULT_HUD_STATE: HUDLayoutState = {
     widgets: DEFAULT_WIDGETS,
     editMode: false,
-    snapToGrid: true,
+    snapToGrid: false,  // Grid disabled by default
     gridSize: 20,
     statusDesign: "circular",
     hudScale: 1,

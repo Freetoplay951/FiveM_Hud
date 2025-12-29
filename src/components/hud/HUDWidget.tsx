@@ -132,6 +132,9 @@ export const HUDWidget = ({
     [editMode, isResizing, position.xPercent, position.yPercent, centerPercentToTopLeftPixel],
   );
 
+  // Use refs for mousemove to avoid re-rendering on every pixel
+  const localPositionRef = useRef<{ x: number; y: number } | null>(null);
+
   useEffect(() => {
     if (!isDragging) return;
 
@@ -145,15 +148,21 @@ export const HUDWidget = ({
       }
 
       const clamped = clampToViewport(newX, newY);
-      // Update local position immediately (no React state batching delay)
-      setLocalPosition({ x: clamped.x, y: clamped.y });
+      // Update ref immediately (no re-render)
+      localPositionRef.current = { x: clamped.x, y: clamped.y };
+      // Apply directly to DOM for zero-lag dragging
+      if (rootRef.current) {
+        rootRef.current.style.left = `${clamped.x}px`;
+        rootRef.current.style.top = `${clamped.y}px`;
+      }
     };
 
     const handleMouseUp = () => {
       // Commit the final position to parent state
-      if (localPosition) {
-        onPositionChange(id, topLeftPixelToCenterPercent(localPosition.x, localPosition.y));
+      if (localPositionRef.current) {
+        onPositionChange(id, topLeftPixelToCenterPercent(localPositionRef.current.x, localPositionRef.current.y));
       }
+      localPositionRef.current = null;
       setLocalPosition(null);
       setIsDragging(false);
     };
@@ -165,7 +174,7 @@ export const HUDWidget = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport, topLeftPixelToCenterPercent, localPosition]);
+  }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport, topLeftPixelToCenterPercent]);
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     if (!editMode) return;
