@@ -337,30 +337,27 @@ export const HUD = () => {
             })()}
 
             {/* Edit Mode Button + Menu (Radix Popover) */}
-            <Popover
-                open={editMenuOpen}
-                onOpenChange={(open) => {
-                    setEditMenuOpen(open);
-                    if (open && !editMode) {
-                        enterEditMode();
-                    }
-                }}>
-                <PopoverTrigger asChild>
-                    <button
-                        className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
-                        style={{
-                            boxShadow: editMode ? "0 0 15px hsl(var(--primary))" : "none",
-                        }}>
-                        <Settings
-                            size={18}
-                            className={editMode ? "text-primary" : "text-muted-foreground"}
-                            style={editMode ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" } : {}}
-                        />
-                    </button>
-                </PopoverTrigger>
+            {editMode && (
+                <Popover
+                    open={editMenuOpen}
+                    onOpenChange={(open) => {
+                        setEditMenuOpen(open);
+                    }}>
+                    <PopoverTrigger asChild>
+                        <button
+                            className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
+                            style={{
+                                boxShadow: "0 0 15px hsl(var(--primary))",
+                            }}>
+                            <Settings
+                                size={18}
+                                className={"text-primary"}
+                                style={{ filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }}
+                            />
+                        </button>
+                    </PopoverTrigger>
 
-                {/* Menu content */}
-                {editMode && (
+                    {/* Menu content */}
                     <EditModeOverlay
                         snapToGrid={snapToGrid}
                         statusDesign={statusDesign}
@@ -371,8 +368,8 @@ export const HUD = () => {
                         onReset={resetLayout}
                         onExitEditMode={exitEditMode}
                     />
-                )}
-            </Popover>
+                </Popover>
+            )}
 
             {/* Demo Mode Badge */}
             {isDemoMode && !editMode && (
@@ -447,7 +444,6 @@ export const HUD = () => {
                 );
             })()}
 
-
             {/* Voice Widget */}
             {(() => {
                 const widget = getWidget("voice");
@@ -500,11 +496,15 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("speedometer");
                 if (!widget) return null;
-                
+
                 // Use the config for the currently active speedometer type
-                const activeType = (editMode ? speedometerType : vehicleState.vehicleType) as 'car' | 'plane' | 'boat' | 'helicopter';
+                const activeType = (editMode ? speedometerType : vehicleState.vehicleType) as
+                    | "car"
+                    | "plane"
+                    | "boat"
+                    | "helicopter";
                 const currentConfig = getSpeedometerConfig(activeType);
-                
+
                 return (
                     <HUDWidget
                         id={`speedometer-${activeType}`}
