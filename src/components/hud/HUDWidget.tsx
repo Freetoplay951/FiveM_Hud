@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, ReactNode } from 'react';
+import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -36,50 +36,43 @@ export const HUDWidget = ({
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!editMode) return;
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
     dragStartPos.current = { x: e.clientX, y: e.clientY };
-    widgetStartPos.current = { ...position };
-  }, [editMode, position]);
+    widgetStartPos.current = { x: position.x, y: position.y };
+  }, [editMode, position.x, position.y]);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  useEffect(() => {
     if (!isDragging) return;
-    
-    let newX = widgetStartPos.current.x + (e.clientX - dragStartPos.current.x);
-    let newY = widgetStartPos.current.y + (e.clientY - dragStartPos.current.y);
-    
-    if (snapToGrid) {
-      newX = Math.round(newX / gridSize) * gridSize;
-      newY = Math.round(newY / gridSize) * gridSize;
-    }
-    
-    // Clamp to viewport
-    newX = Math.max(0, Math.min(window.innerWidth - 100, newX));
-    newY = Math.max(0, Math.min(window.innerHeight - 100, newY));
-    
-    onPositionChange(id, { x: newX, y: newY });
-  }, [isDragging, snapToGrid, gridSize, id, onPositionChange]);
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+    const handleMouseMove = (e: MouseEvent) => {
+      let newX = widgetStartPos.current.x + (e.clientX - dragStartPos.current.x);
+      let newY = widgetStartPos.current.y + (e.clientY - dragStartPos.current.y);
+      
+      if (snapToGrid) {
+        newX = Math.round(newX / gridSize) * gridSize;
+        newY = Math.round(newY / gridSize) * gridSize;
+      }
+      
+      // Clamp to viewport
+      newX = Math.max(0, Math.min(window.innerWidth - 100, newX));
+      newY = Math.max(0, Math.min(window.innerHeight - 100, newY));
+      
+      onPositionChange(id, { x: newX, y: newY });
+    };
 
-  // Add global mouse listeners when dragging
-  useState(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  });
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
 
-  // Effect for global listeners
-  if (isDragging) {
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-  }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, snapToGrid, gridSize, id, onPositionChange]);
 
   if (!visible && !editMode) return null;
 
