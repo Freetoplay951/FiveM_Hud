@@ -1,13 +1,15 @@
-import { RotateCcw, Grid3X3, Circle, BarChart3, AlignVerticalSpaceAround, Minus, Activity } from "lucide-react";
+import { RotateCcw, Grid3X3, Circle, BarChart3, AlignVerticalSpaceAround, Minus, Activity, Car, Plane, Ship, Fan } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { StatusDesign } from "@/types/widget";
+import { StatusDesign, SpeedometerType } from "@/types/widget";
 import { PopoverContent } from "@/components/ui/popover";
 
 interface EditModeOverlayProps {
   snapToGrid: boolean;
   statusDesign: StatusDesign;
+  speedometerType: SpeedometerType;
   onSnapToGridChange: (value: boolean) => void;
   onStatusDesignChange: (design: StatusDesign) => void;
+  onSpeedometerTypeChange: (type: SpeedometerType) => void;
   onReset: () => void;
   onExitEditMode: () => void;
 }
@@ -20,11 +22,20 @@ const DESIGN_OPTIONS: { design: StatusDesign; icon: React.ElementType; label: st
   { design: "arc", icon: Activity, label: "Bogen" },
 ];
 
+const SPEEDOMETER_OPTIONS: { type: SpeedometerType; icon: React.ElementType; label: string }[] = [
+  { type: "car", icon: Car, label: "Auto" },
+  { type: "plane", icon: Plane, label: "Flugzeug" },
+  { type: "boat", icon: Ship, label: "Boot" },
+  { type: "helicopter", icon: Fan, label: "Heli" },
+];
+
 export const EditModeOverlay = ({
   snapToGrid,
   statusDesign,
+  speedometerType,
   onSnapToGridChange,
   onStatusDesignChange,
+  onSpeedometerTypeChange,
   onReset,
   onExitEditMode,
 }: EditModeOverlayProps) => {
@@ -78,6 +89,46 @@ export const EditModeOverlay = ({
                 className={cn(
                   "text-[10px]",
                   statusDesign === design ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                {label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Speedometer Type */}
+      <div className="mb-4">
+        <h3 className="text-xs font-medium text-foreground mb-2">Speedometer Typ</h3>
+        <div className="grid grid-cols-4 gap-2">
+          {SPEEDOMETER_OPTIONS.map(({ type, icon: Icon, label }) => (
+            <button
+              key={type}
+              onClick={() => onSpeedometerTypeChange(type)}
+              className={cn(
+                "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
+                speedometerType === type ? "glass-panel border-primary/50" : "hover:bg-muted/20",
+              )}
+              style={
+                speedometerType === type
+                  ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" }
+                  : {}
+              }
+            >
+              <Icon
+                size={18}
+                className={speedometerType === type ? "text-primary" : "text-muted-foreground"}
+                style={
+                  speedometerType === type
+                    ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }
+                    : {}
+                }
+              />
+              <span
+                className={cn(
+                  "text-[10px]",
+                  speedometerType === type ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 {label}

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, GripVertical, MoveDiagonal } from "lucide-react";
+import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WidgetPosition } from "@/types/widget";
 
@@ -16,6 +16,7 @@ interface HUDWidgetProps {
   onPositionChange: (id: string, position: WidgetPosition) => void;
   onVisibilityToggle: (id: string) => void;
   onScaleChange?: (id: string, scale: number) => void;
+  onReset?: (id: string) => void;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export const HUDWidget = ({
   onPositionChange,
   onVisibilityToggle,
   onScaleChange,
+  onReset,
   className,
 }: HUDWidgetProps) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -205,19 +207,33 @@ export const HUDWidget = ({
             </span>
           </div>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onVisibilityToggle(id);
-            }}
-            className="glass-panel rounded p-1 hover:bg-muted/20 transition-colors"
-          >
-            {visible ? (
-              <Eye size={10} className="text-primary" />
-            ) : (
-              <EyeOff size={10} className="text-muted-foreground" />
+          <div className="flex items-center gap-1">
+            {onReset && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReset(id);
+                }}
+                className="glass-panel rounded p-1 hover:bg-muted/20 transition-colors"
+                title="Position & Größe zurücksetzen"
+              >
+                <RotateCcw size={10} className="text-muted-foreground hover:text-warning" />
+              </button>
             )}
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onVisibilityToggle(id);
+              }}
+              className="glass-panel rounded p-1 hover:bg-muted/20 transition-colors"
+            >
+              {visible ? (
+                <Eye size={10} className="text-primary" />
+              ) : (
+                <EyeOff size={10} className="text-muted-foreground" />
+              )}
+            </button>
+          </div>
         </div>
       )}
 

@@ -36,6 +36,8 @@ export type WidgetType =
 
 export type StatusDesign = 'circular' | 'bar' | 'vertical' | 'minimal' | 'arc';
 
+export type SpeedometerType = 'car' | 'plane' | 'boat' | 'helicopter';
+
 export interface HUDLayoutState {
   widgets: WidgetConfig[];
   editMode: boolean;
@@ -43,37 +45,40 @@ export interface HUDLayoutState {
   gridSize: number;
   statusDesign: StatusDesign;
   hudScale: number;
+  speedometerType: SpeedometerType;
 }
 
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
-  // Bottom left - Status bar (horizontal)
-  { id: 'health', type: 'health', position: { x: 220, y: 660 }, visible: true, size: 'md', scale: 1 },
-  { id: 'armor', type: 'armor', position: { x: 280, y: 660 }, visible: true, size: 'md', scale: 1 },
-  { id: 'hunger', type: 'hunger', position: { x: 340, y: 660 }, visible: true, size: 'md', scale: 1 },
-  { id: 'thirst', type: 'thirst', position: { x: 400, y: 660 }, visible: true, size: 'md', scale: 1 },
-  { id: 'stamina', type: 'stamina', position: { x: 460, y: 660 }, visible: true, size: 'md', scale: 1 },
-  { id: 'stress', type: 'stress', position: { x: 520, y: 660 }, visible: false, size: 'md', scale: 1 },
-  { id: 'oxygen', type: 'oxygen', position: { x: 580, y: 660 }, visible: false, size: 'md', scale: 1 },
+  // Top left - Compass
+  { id: 'compass', type: 'compass', position: { x: 20, y: 20 }, visible: true, scale: 1 },
   
-  // Top right corner - Money & Clock
+  // Top center - Clock
+  { id: 'clock', type: 'clock', position: { x: 640, y: 20 }, visible: true, scale: 1 },
+  
+  // Top right - Money
   { id: 'money', type: 'money', position: { x: 1180, y: 20 }, visible: true, scale: 1 },
-  { id: 'clock', type: 'clock', position: { x: 1380, y: 20 }, visible: true, scale: 1 },
   
-  // Bottom left - above minimap
-  { id: 'location', type: 'location', position: { x: 20, y: 580 }, visible: true, scale: 1 },
-  { id: 'minimap', type: 'minimap', position: { x: 20, y: 610 }, visible: true, scale: 1 },
+  // Left middle (slightly upper) - Notifications
+  { id: 'notifications', type: 'notifications', position: { x: 20, y: 200 }, visible: true, scale: 1 },
   
-  // Center bottom - Voice
+  // Bottom left - Location above Minimap
+  { id: 'location', type: 'location', position: { x: 20, y: 560 }, visible: true, scale: 1 },
+  { id: 'minimap', type: 'minimap', position: { x: 20, y: 590 }, visible: true, scale: 1 },
+  
+  // Next to minimap - Status icons
+  { id: 'health', type: 'health', position: { x: 220, y: 640 }, visible: true, size: 'md', scale: 1 },
+  { id: 'armor', type: 'armor', position: { x: 280, y: 640 }, visible: true, size: 'md', scale: 1 },
+  { id: 'hunger', type: 'hunger', position: { x: 340, y: 640 }, visible: true, size: 'md', scale: 1 },
+  { id: 'thirst', type: 'thirst', position: { x: 400, y: 640 }, visible: true, size: 'md', scale: 1 },
+  { id: 'stamina', type: 'stamina', position: { x: 460, y: 640 }, visible: true, size: 'md', scale: 1 },
+  { id: 'stress', type: 'stress', position: { x: 520, y: 640 }, visible: false, size: 'md', scale: 1 },
+  { id: 'oxygen', type: 'oxygen', position: { x: 580, y: 640 }, visible: false, size: 'md', scale: 1 },
+  
+  // Voice
   { id: 'voice', type: 'voice', position: { x: 640, y: 660 }, visible: true, scale: 1 },
   
-  // Bottom right - Vehicle
+  // Bottom right - Speedometer
   { id: 'speedometer', type: 'speedometer', position: { x: 1200, y: 480 }, visible: true, scale: 1 },
-  
-  // Top center - Compass
-  { id: 'compass', type: 'compass', position: { x: 640, y: 20 }, visible: true, scale: 1 },
-  
-  // Notifications - top right
-  { id: 'notifications', type: 'notifications', position: { x: 1180, y: 80 }, visible: true, scale: 1 },
 ];
 
 export const DEFAULT_HUD_STATE: HUDLayoutState = {
@@ -83,4 +88,5 @@ export const DEFAULT_HUD_STATE: HUDLayoutState = {
   gridSize: 20,
   statusDesign: 'circular',
   hudScale: 1,
+  speedometerType: 'car',
 };

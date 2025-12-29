@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, StatusDesign } from '@/types/widget';
+import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType } from '@/types/widget';
 
 const STORAGE_KEY = 'hud-layout';
 
@@ -65,11 +65,27 @@ export const useHUDLayout = () => {
     setState(prev => ({ ...prev, hudScale: scale }));
   }, []);
 
+  const setSpeedometerType = useCallback((type: SpeedometerType) => {
+    setState(prev => ({ ...prev, speedometerType: type }));
+  }, []);
+
   const resetLayout = useCallback(() => {
     setState({
       ...DEFAULT_HUD_STATE,
       editMode: true,
     });
+  }, []);
+
+  const resetWidget = useCallback((id: string) => {
+    const defaultWidget = DEFAULT_WIDGETS.find(w => w.id === id);
+    if (!defaultWidget) return;
+    
+    setState(prev => ({
+      ...prev,
+      widgets: prev.widgets.map(w => 
+        w.id === id ? { ...w, position: defaultWidget.position, scale: defaultWidget.scale ?? 1 } : w
+      ),
+    }));
   }, []);
 
   const getWidget = useCallback((id: string): WidgetConfig | undefined => {
@@ -85,7 +101,9 @@ export const useHUDLayout = () => {
     toggleWidgetVisibility,
     setStatusDesign,
     setHudScale,
+    setSpeedometerType,
     resetLayout,
+    resetWidget,
     getWidget,
   };
 };
