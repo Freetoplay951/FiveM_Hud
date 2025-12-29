@@ -15,6 +15,7 @@ import { useHUDLayout } from '@/hooks/useHUDLayout';
 import { useNuiEvents, isNuiEnvironment } from '@/hooks/useNuiEvents';
 import { useNotifications } from '@/hooks/useNotifications';
 import { HudState, VehicleState, MoneyState, VoiceState, LocationState, PlayerState, StatusType } from '@/types/hud';
+import { motion } from 'framer-motion';
 
 // Demo values
 const DEMO_HUD: HudState = { health: 85, armor: 50, hunger: 70, thirst: 45, stamina: 90, stress: 25, oxygen: 100 };
@@ -34,26 +35,23 @@ export const HUD = () => {
   const [isDemoMode] = useState(!isNuiEnvironment());
   const [currentTime, setCurrentTime] = useState('18:24');
 
-  const [isMovingWidgets, setIsMovingWidgets] = useState(false);
-
   const {
     widgets,
     editMode,
     snapToGrid,
-    showSafezone,
     gridSize,
     statusDesign,
     toggleEditMode,
     setSnapToGrid,
-    setShowSafezone,
     setStatusDesign,
     updateWidgetPosition,
+    updateWidgetScale,
     toggleWidgetVisibility,
     resetLayout,
     getWidget,
   } = useHUDLayout();
 
-  const { notifications, removeNotification, success, error, warning, info } = useNotifications();
+  const { notifications, removeNotification, success, error } = useNotifications();
 
   // NUI Event handlers
   useNuiEvents({
@@ -64,7 +62,7 @@ export const HUD = () => {
     onUpdateLocation: setLocationState,
   });
 
-  // Demo simulation
+  // Demo simulation with animated plane/heli values
   useEffect(() => {
     if (!isDemoMode) return;
 
@@ -76,11 +74,55 @@ export const HUD = () => {
         stamina: Math.min(100, Math.max(0, prev.stamina + (Math.random() - 0.5) * 5)),
       }));
 
-      setVehicleState(prev => ({
-        ...prev,
-        speed: prev.inVehicle ? Math.min(280, Math.max(0, prev.speed + (Math.random() - 0.5) * 20)) : 0,
-        fuel: Math.max(0, prev.fuel - 0.02),
-      }));
+      setVehicleState(prev => {
+        const baseUpdate = {
+          ...prev,
+          fuel: Math.max(0, prev.fuel - 0.02),
+        };
+
+        if (prev.vehicleType === 'car') {
+          return {
+            ...baseUpdate,
+            speed: prev.inVehicle ? Math.min(280, Math.max(0, prev.speed + (Math.random() - 0.5) * 20)) : 0,
+          };
+        }
+
+        if (prev.vehicleType === 'boat') {
+          return {
+            ...baseUpdate,
+            speed: prev.inVehicle ? Math.min(80, Math.max(0, prev.speed + (Math.random() - 0.5) * 10)) : 0,
+            heading: ((prev.heading || 0) + (Math.random() - 0.5) * 5 + 360) % 360,
+          };
+        }
+
+        if (prev.vehicleType === 'plane') {
+          return {
+            ...baseUpdate,
+            airspeed: Math.min(400, Math.max(150, (prev.airspeed || 250) + (Math.random() - 0.5) * 30)),
+            altitude: Math.min(2000, Math.max(100, (prev.altitude || 500) + (Math.random() - 0.5) * 50)),
+            pitch: Math.max(-30, Math.min(30, (prev.pitch || 0) + (Math.random() - 0.5) * 5)),
+            roll: Math.max(-45, Math.min(45, (prev.roll || 0) + (Math.random() - 0.5) * 8)),
+            heading: ((prev.heading || 180) + (Math.random() - 0.5) * 3 + 360) % 360,
+            speed: Math.min(400, Math.max(150, (prev.airspeed || 250) + (Math.random() - 0.5) * 30)),
+          };
+        }
+
+        if (prev.vehicleType === 'helicopter') {
+          return {
+            ...baseUpdate,
+            airspeed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
+            altitude: Math.min(1000, Math.max(10, (prev.altitude || 200) + (Math.random() - 0.5) * 30)),
+            pitch: Math.max(-20, Math.min(20, (prev.pitch || 0) + (Math.random() - 0.5) * 4)),
+            roll: Math.max(-30, Math.min(30, (prev.roll || 0) + (Math.random() - 0.5) * 6)),
+            heading: ((prev.heading || 90) + (Math.random() - 0.5) * 5 + 360) % 360,
+            verticalSpeed: Math.max(-20, Math.min(20, (prev.verticalSpeed || 5) + (Math.random() - 0.5) * 8)),
+            rotorRpm: Math.min(100, Math.max(70, (prev.rotorRpm || 95) + (Math.random() - 0.5) * 5)),
+            speed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
+          };
+        }
+
+        return baseUpdate;
+      });
 
       setVoiceState(prev => ({
         ...prev,
@@ -115,61 +157,68 @@ export const HUD = () => {
         toggleEditMode();
       }
       // Vehicle type switching for demo
-      if (e.key === '1') setVehicleState(prev => ({ ...prev, vehicleType: 'car' }));
-      if (e.key === '2') setVehicleState(prev => ({ ...prev, vehicleType: 'plane', altitude: 500, pitch: 5, roll: 0, heading: 180, airspeed: 250 }));
+      if (e.key === '1') setVehicleState(prev => ({ ...prev, vehicleType: 'car', gear: 4 }));
+      if (e.key === '2') setVehicleState(prev => ({ 
+        ...prev, 
+        vehicleType: 'plane', 
+        altitude: 500, 
+        pitch: 5, 
+        roll: 0, 
+        heading: 180, 
+        airspeed: 250,
+        landingGear: false,
+        flaps: 0,
+      }));
       if (e.key === '3') setVehicleState(prev => ({ ...prev, vehicleType: 'boat', heading: 90, anchor: false }));
-      if (e.key === '4') setVehicleState(prev => ({ ...prev, vehicleType: 'helicopter', altitude: 200, rotorRpm: 95, verticalSpeed: 5 }));
+      if (e.key === '4') setVehicleState(prev => ({ 
+        ...prev, 
+        vehicleType: 'helicopter', 
+        altitude: 200, 
+        rotorRpm: 95, 
+        verticalSpeed: 5,
+        pitch: 0,
+        roll: 0,
+        heading: 90,
+        airspeed: 80,
+      }));
       // Demo notifications
       if (e.key === 'n') success('Erfolg!', 'Aktion erfolgreich ausgeführt.');
       if (e.key === 'm') error('Fehler!', 'Etwas ist schief gelaufen.');
     };
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (isMovingWidgets) {
-          setIsMovingWidgets(false);
-        } else if (editMode) {
-          toggleEditMode();
-        }
-      }
-    };
-
     window.addEventListener('keypress', handleKeyPress);
-    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keypress', handleKeyPress);
-      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [toggleEditMode, success, error]);
 
-  const handleCloseEditor = () => {
-    setIsMovingWidgets(false);
-    if (editMode) toggleEditMode();
-  };
-
-  const handleToggleMovingWidgets = () => {
-    setIsMovingWidgets((prev) => {
-      const next = !prev;
-      // When enabling move mode, close the modal overlay so it doesn't block dragging
-      if (next && editMode) toggleEditMode();
-      return next;
-    });
-  };
-
   const widgetProps = {
-    editMode: isMovingWidgets,
+    editMode,
     snapToGrid,
     gridSize,
     onPositionChange: updateWidgetPosition,
     onVisibilityToggle: toggleWidgetVisibility,
+    onScaleChange: updateWidgetScale,
   };
 
   const statusTypes: StatusType[] = ['health', 'armor', 'hunger', 'thirst', 'stamina', 'stress', 'oxygen'];
 
   return (
-    <div 
-      className="fixed inset-0 pointer-events-none overflow-hidden"
-    >
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {/* Grid overlay when in edit mode */}
+      {editMode && snapToGrid && (
+        <motion.div
+          className="fixed inset-0 z-30 pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            backgroundImage: 'linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
+          }}
+        />
+      )}
+
       {/* Notifications - as draggable widget */}
       {(() => {
         const widget = getWidget('notifications');
@@ -177,7 +226,7 @@ export const HUD = () => {
           <NotificationContainer notifications={notifications} onClose={removeNotification} />
         );
         return (
-          <HUDWidget id="notifications" position={widget.position} visible={widget.visible} {...widgetProps}>
+          <HUDWidget id="notifications" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
             <NotificationContainer notifications={notifications} onClose={removeNotification} isWidget />
           </HUDWidget>
         );
@@ -185,22 +234,16 @@ export const HUD = () => {
 
       {/* Edit Mode Button */}
       <button
-        onClick={() => {
-          if (isMovingWidgets) {
-            setIsMovingWidgets(false);
-            return;
-          }
-          toggleEditMode();
-        }}
+        onClick={toggleEditMode}
         className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
         style={{
-          boxShadow: editMode || isMovingWidgets ? '0 0 15px hsl(var(--primary))' : 'none',
+          boxShadow: editMode ? '0 0 15px hsl(var(--primary))' : 'none',
         }}
       >
         <Settings 
           size={18} 
-          className={editMode || isMovingWidgets ? "text-primary" : "text-muted-foreground"}
-          style={(editMode || isMovingWidgets) ? { filter: 'drop-shadow(0 0 4px hsl(var(--primary)))' } : {}}
+          className={editMode ? "text-primary" : "text-muted-foreground"}
+          style={editMode ? { filter: 'drop-shadow(0 0 4px hsl(var(--primary)))' } : {}}
         />
       </button>
 
@@ -224,6 +267,7 @@ export const HUD = () => {
             id={type}
             position={widget.position}
             visible={widget.visible}
+            scale={widget.scale}
             {...widgetProps}
           >
             <StatusWidget
@@ -241,7 +285,7 @@ export const HUD = () => {
         const widget = getWidget('money');
         if (!widget) return null;
         return (
-          <HUDWidget id="money" position={widget.position} visible={widget.visible} {...widgetProps}>
+          <HUDWidget id="money" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
             <NeonMoneyWidget money={moneyState} player={playerState} />
           </HUDWidget>
         );
@@ -252,7 +296,7 @@ export const HUD = () => {
         const widget = getWidget('clock');
         if (!widget) return null;
         return (
-          <HUDWidget id="clock" position={widget.position} visible={widget.visible} {...widgetProps}>
+          <HUDWidget id="clock" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
             <ClockWidget time={currentTime} />
           </HUDWidget>
         );
@@ -263,7 +307,7 @@ export const HUD = () => {
         const widget = getWidget('location');
         if (!widget) return null;
         return (
-          <HUDWidget id="location" position={widget.position} visible={widget.visible} {...widgetProps}>
+          <HUDWidget id="location" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
             <NeonLocationWidget location={locationState} />
           </HUDWidget>
         );
@@ -274,7 +318,7 @@ export const HUD = () => {
         const widget = getWidget('voice');
         if (!widget) return null;
         return (
-          <HUDWidget id="voice" position={widget.position} visible={widget.visible} {...widgetProps}>
+          <HUDWidget id="voice" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
             <NeonVoiceWidget voice={voiceState} />
           </HUDWidget>
         );
@@ -285,7 +329,7 @@ export const HUD = () => {
         const widget = getWidget('minimap');
         if (!widget) return null;
         return (
-          <HUDWidget id="minimap" position={widget.position} visible={widget.visible} {...widgetProps}>
+          <HUDWidget id="minimap" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
             <NeonMinimapWidget direction={locationState.direction} />
           </HUDWidget>
         );
@@ -296,7 +340,7 @@ export const HUD = () => {
         const widget = getWidget('compass');
         if (!widget) return null;
         return (
-          <HUDWidget id="compass" position={widget.position} visible={widget.visible} {...widgetProps}>
+          <HUDWidget id="compass" position={widget.position} visible={widget.visible} scale={widget.scale} {...widgetProps}>
             <CompassWidget direction={locationState.direction} />
           </HUDWidget>
         );
@@ -311,6 +355,7 @@ export const HUD = () => {
             id="speedometer" 
             position={widget.position} 
             visible={widget.visible && vehicleState.inVehicle} 
+            scale={widget.scale}
             {...widgetProps}
           >
             <VehicleHUDFactory vehicle={vehicleState} visible={vehicleState.inVehicle || editMode} />
@@ -320,16 +365,12 @@ export const HUD = () => {
 
       {/* Edit Mode Overlay */}
       <EditModeOverlay
-        isOpen={editMode || isMovingWidgets}
+        isOpen={editMode}
         snapToGrid={snapToGrid}
-        showSafezone={showSafezone}
         statusDesign={statusDesign}
-        isMovingWidgets={isMovingWidgets}
-        onClose={handleCloseEditor}
+        onClose={toggleEditMode}
         onSnapToGridChange={setSnapToGrid}
-        onShowSafezoneChange={setShowSafezone}
         onStatusDesignChange={setStatusDesign}
-        onToggleMovingWidgets={handleToggleMovingWidgets}
         onReset={resetLayout}
       />
     </div>

@@ -30,15 +30,20 @@ export const useHUDLayout = () => {
     setState(prev => ({ ...prev, snapToGrid: snap }));
   }, []);
 
-  const setShowSafezone = useCallback((show: boolean) => {
-    setState(prev => ({ ...prev, showSafezone: show }));
-  }, []);
-
   const updateWidgetPosition = useCallback((id: string, position: WidgetPosition) => {
     setState(prev => ({
       ...prev,
       widgets: prev.widgets.map(w => 
         w.id === id ? { ...w, position } : w
+      ),
+    }));
+  }, []);
+
+  const updateWidgetScale = useCallback((id: string, scale: number) => {
+    setState(prev => ({
+      ...prev,
+      widgets: prev.widgets.map(w => 
+        w.id === id ? { ...w, scale } : w
       ),
     }));
   }, []);
@@ -75,8 +80,8 @@ export const useHUDLayout = () => {
     ...state,
     toggleEditMode,
     setSnapToGrid,
-    setShowSafezone,
     updateWidgetPosition,
+    updateWidgetScale,
     toggleWidgetVisibility,
     setStatusDesign,
     setHudScale,
