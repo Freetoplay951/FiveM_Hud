@@ -35,8 +35,13 @@ AddEventHandler('onClientResourceStart', function(resourceName)
         -- Radar Zoom auf Standard
         SetRadarZoom(0)
         
+        -- Minimap Shape aus Config anwenden
+        if Config.MinimapShape then
+            SetMinimapShapeInternal(Config.MinimapShape)
+        end
+        
         if Config.Debug then
-            print('[HUD] Minimap initialized and enabled')
+            print('[HUD] Minimap initialized and enabled with shape: ' .. (Config.MinimapShape or 'square'))
         end
     else
         DisplayRadar(false)
