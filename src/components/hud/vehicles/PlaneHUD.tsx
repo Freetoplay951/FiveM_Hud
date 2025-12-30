@@ -119,7 +119,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             </svg>
             
             {/* Speed overlay left */}
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 w-[40px]">
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/85 backdrop-blur-sm border border-white/20 rounded px-1.5 py-0.5 w-[40px]">
               <span className="text-[6px] text-muted-foreground block text-center">KTS</span>
               <motion.span 
                 className="hud-number text-[10px] text-stamina tabular-nums block text-center"
@@ -132,7 +132,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             </div>
             
             {/* Altitude overlay right */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 w-[44px]">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/85 backdrop-blur-sm border border-white/20 rounded px-1.5 py-0.5 w-[44px]">
               <span className="text-[6px] text-muted-foreground block text-center">ALT</span>
               <motion.span 
                 className={cn(
@@ -149,7 +149,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             
             {/* Heading bottom */}
             <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-              <div className="glass-panel rounded px-2 py-0.5 flex items-center gap-1 w-[56px] justify-center">
+              <div className="bg-background/85 backdrop-blur-sm border border-white/20 rounded px-2 py-0.5 flex items-center gap-1 w-[56px] justify-center">
                 <Plane size={10} className="text-primary flex-shrink-0" style={{ filter: 'drop-shadow(0 0 3px hsl(var(--primary)))' }} />
                 <motion.span 
                   className="hud-number text-[10px] text-primary tabular-nums" 
@@ -173,8 +173,8 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             {/* Landing Gear */}
             <div 
               className={cn(
-                "glass-panel rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]",
-                !landingGear && "border border-critical/50"
+                "bg-background/85 backdrop-blur-sm border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]",
+                !landingGear && "border-critical/50"
               )}
             >
               <div 
@@ -192,7 +192,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             </div>
             
             {/* Flaps */}
-            <div className="glass-panel rounded px-2 py-1 flex items-center gap-1.5 w-[64px]">
+            <div className="bg-background/85 backdrop-blur-sm border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[64px]">
               <span className="text-[8px] text-muted-foreground">FLAPS</span>
               <motion.span 
                 className="hud-number text-[10px] text-primary tabular-nums w-[28px] text-right"
@@ -205,7 +205,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
             </div>
             
             {/* Fuel */}
-            <div className="glass-panel rounded px-2 py-1 flex items-center gap-1.5 w-[56px]">
+            <div className="bg-background/85 backdrop-blur-sm border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[56px]">
               <Fuel 
                 size={10} 
                 className={cn(

@@ -185,12 +185,15 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
 
                         {/* Center */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
-                            <span className="text-[8px] text-muted-foreground uppercase tracking-wider mb-1">
+                            {/* Dark backdrop for better text readability */}
+                            <div className="absolute inset-[25%] rounded-full bg-background/80 backdrop-blur-sm" />
+                            
+                            <span className="relative text-[8px] text-muted-foreground uppercase tracking-wider mb-1">
                                 KNOTS
                             </span>
 
                             <motion.span
-                                className="hud-number text-4xl text-foreground leading-none tabular-nums"
+                                className="relative hud-number text-4xl text-foreground leading-none tabular-nums"
                                 style={{
                                     textShadow: "0 0 20px hsl(var(--thirst) / 0.5)",
                                     minWidth: "3ch",
@@ -203,7 +206,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                             </motion.span>
 
                             {/* Heading & Anchor Status */}
-                            <div className="flex items-center gap-2 mt-2 min-w-[100px] justify-center">
+                            <div className="relative flex items-center gap-2 mt-2 min-w-[100px] justify-center">
                                 <Navigation
                                     size={12}
                                     className="text-primary flex-shrink-0"

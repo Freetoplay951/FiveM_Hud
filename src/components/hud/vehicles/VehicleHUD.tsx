@@ -191,10 +191,13 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
 
                         {/* Center Content */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
-                            <span className="text-[8px] text-muted-foreground uppercase tracking-wider mb-1">KM/H</span>
+                            {/* Dark backdrop for better text readability */}
+                            <div className="absolute inset-[25%] rounded-full bg-background/80 backdrop-blur-sm" />
+                            
+                            <span className="relative text-[8px] text-muted-foreground uppercase tracking-wider mb-1">KM/H</span>
 
                             <motion.span
-                                className="hud-number text-4xl text-foreground leading-none"
+                                className="relative hud-number text-4xl text-foreground leading-none"
                                 key={Math.round(vehicle.speed)}
                                 initial={{ scale: 1.05 }}
                                 animate={{ scale: 1 }}
@@ -204,7 +207,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                             </motion.span>
 
                             {/* Gear & Engine Status */}
-                            <div className="flex items-center gap-3 mt-2">
+                            <div className="relative flex items-center gap-3 mt-2">
                                 <Thermometer
                                     size={12}
                                     className="text-muted-foreground"
