@@ -12,10 +12,11 @@ const MAX_VISIBLE_NOTIFICATIONS = 4;
 const NOTIFICATION_GAP = 8; // Gap between notifications
 
 export const NotificationContainer = ({ notifications, onClose, isWidget = false }: NotificationContainerProps) => {
-    const orderedNotifications = [...notifications].reverse().slice(0, MAX_VISIBLE_NOTIFICATIONS);
+    // Keep original order (oldest first), newest at bottom - so widget position stays stable
+    const orderedNotifications = [...notifications].slice(-MAX_VISIBLE_NOTIFICATIONS);
 
     // When used as a widget, render notifications in a simple flex column
-    // so the HUDWidget can properly measure and position the container
+    // Notifications grow downward from the widget's set position
     if (isWidget) {
         return (
             <div className="flex flex-col gap-2 pointer-events-auto min-w-[280px]">
@@ -25,9 +26,9 @@ export const NotificationContainer = ({ notifications, onClose, isWidget = false
                             key={notification.id}
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 100 }}
+                            exit={{ opacity: 0, x: 100, height: 0, marginBottom: 0 }}
                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            style={{ zIndex: orderedNotifications.length - index }}>
+                            style={{ zIndex: MAX_VISIBLE_NOTIFICATIONS - index }}>
                             <NeonNotification
                                 notification={notification}
                                 onClose={onClose}
