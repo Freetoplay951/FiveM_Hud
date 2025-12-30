@@ -244,7 +244,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                     )}
                     style={{
                         background: canRespawn 
-                            ? "linear-gradient(135deg, hsl(var(--muted) / 0.3) 0%, hsl(var(--muted) / 0.1) 100%)"
+                            ? "linear-gradient(135deg, hsl(var(--foreground) / 0.1) 0%, hsl(var(--foreground) / 0.03) 100%)"
                             : "hsl(var(--muted) / 0.1)",
                         clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))"
                     }}
@@ -254,7 +254,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                         className="absolute inset-0 pointer-events-none"
                         style={{
                             background: canRespawn
-                                ? "linear-gradient(135deg, hsl(var(--foreground) / 0.4) 0%, hsl(var(--foreground) / 0.1) 100%)"
+                                ? "linear-gradient(135deg, hsl(var(--foreground) / 0.5) 0%, hsl(var(--foreground) / 0.15) 100%)"
                                 : "hsl(var(--muted) / 0.2)",
                             clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
                             WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
@@ -263,6 +263,17 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                             padding: "1px"
                         }}
                     />
+                    {/* Glow effect */}
+                    {canRespawn && (
+                        <motion.div 
+                            className="absolute inset-0 pointer-events-none"
+                            animate={{ opacity: [0.2, 0.4, 0.2] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            style={{
+                                background: "radial-gradient(ellipse at center, hsl(var(--foreground) / 0.1) 0%, transparent 70%)"
+                            }}
+                        />
+                    )}
                     <RotateCcw size={18} className="relative z-10" />
                     <div className="relative z-10 text-left">
                         <div className="text-sm font-bold tracking-wider" style={{ fontFamily: "Orbitron, sans-serif" }}>RESPAWN</div>
@@ -272,20 +283,32 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                 </motion.button>
             </div>
 
-            {/* Sync Position Button - smaller, subtle */}
+            {/* Sync Position Button - same style but smaller/subtle accent */}
             <motion.button
                 onClick={handleSyncPosition}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="relative flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-all overflow-hidden"
                 style={{
-                    background: "hsl(var(--muted) / 0.1)",
-                    border: "1px solid hsl(var(--muted) / 0.2)"
+                    background: "linear-gradient(135deg, hsl(var(--muted) / 0.15) 0%, hsl(var(--muted) / 0.05) 100%)",
+                    clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))"
                 }}
             >
-                <RefreshCw size={12} />
-                <span className="text-[10px] tracking-wider uppercase">Position synchronisieren</span>
-                <span className="px-1.5 py-0.5 bg-background/40 rounded text-[9px] font-bold">F5</span>
+                {/* Border frame */}
+                <div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background: "linear-gradient(135deg, hsl(var(--muted) / 0.4) 0%, hsl(var(--muted) / 0.15) 100%)",
+                        clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                        WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                        WebkitMaskComposite: "xor",
+                        maskComposite: "exclude",
+                        padding: "1px"
+                    }}
+                />
+                <RefreshCw size={14} className="relative z-10" />
+                <span className="relative z-10 text-[10px] tracking-wider uppercase font-medium" style={{ fontFamily: "Orbitron, sans-serif" }}>Position synchronisieren</span>
+                <span className="relative z-10 px-1.5 py-0.5 bg-background/40 rounded text-[9px] font-bold border border-muted/30">F5</span>
             </motion.button>
         </motion.div>
     );
