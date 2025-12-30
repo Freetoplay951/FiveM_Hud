@@ -41,7 +41,7 @@ export const NeonMinimapWidget = ({ location, shape = "square" }: NeonMinimapWid
             </div>
 
             {/* Minimap Container */}
-            <div className={cn("relative", isRound ? "w-40 h-40" : "w-44 h-36")}>
+            <div className={cn("relative", isRound ? "w-44 h-44" : "w-44 h-36")}>
                 {/* 
                     In FiveM/NUI: This is just a decorative frame - the actual GTA radar 
                     renders BEHIND this element. We make it completely transparent in the center.
