@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { HUDWidget } from "./hud/HUDWidget";
 import { VehicleHUDFactory } from "./hud/vehicles/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
@@ -362,8 +363,8 @@ export const HUD = () => {
                 />
             )}
 
-            {/* Notifications - as draggable widget, not hideable */}
-            {(() => {
+            {/* Notifications - as draggable widget, not hideable, hidden when dead */}
+            {!deathState.isDead && (() => {
                 const widget = getWidget("notifications");
                 if (!widget)
                     return (
@@ -434,19 +435,40 @@ export const HUD = () => {
             {isDemoMode && !editMode && (
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
                     <div className="bg-destructive/80 backdrop-blur-sm border border-destructive/50 rounded-lg px-4 py-2 animate-fade-in-up pointer-events-auto">
-                        Demo Modus
-                        <span className="flex flex-col text-xs text-destructive-foreground uppercase tracking-wider hud-text pl-4">
-                            <span>Vehicle: V (Typ: 1︱2︱3︱4)</span>
-                            <span>Voice: R</span>
-                            <span>Edit: E</span>
-                            <span>Notify: H︱J︱K︱L</span>
-                        </span>
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <span className="text-destructive-foreground font-semibold">Demo Modus</span>
+                                <span className="flex flex-col text-xs text-destructive-foreground/80 uppercase tracking-wider hud-text">
+                                    <span>Vehicle: V (Typ: 1︱2︱3︱4)</span>
+                                    <span>Voice: R | Edit: E</span>
+                                    <span>Notify: H︱J︱K︱L</span>
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setDeathState(prev => ({
+                                    ...prev,
+                                    isDead: !prev.isDead,
+                                    respawnTimer: 14,
+                                    waitTimer: 59,
+                                    canCallHelp: true,
+                                    canRespawn: false,
+                                }))}
+                                className={cn(
+                                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                                    deathState.isDead 
+                                        ? "bg-critical/80 text-white border border-critical" 
+                                        : "bg-background/30 text-destructive-foreground/80 border border-destructive-foreground/30 hover:bg-background/50"
+                                )}
+                            >
+                                {deathState.isDead ? "Revive (D)" : "Death (D)"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Status Widgets */}
-            {statusTypes.map((type) => {
+            {/* Status Widgets - hidden when dead */}
+            {!deathState.isDead && statusTypes.map((type) => {
                 const widget = getWidget(type);
                 if (!widget) return null;
                 const value = hudState[type as keyof HudState] ?? 100;
@@ -467,8 +489,8 @@ export const HUD = () => {
                 );
             })}
 
-            {/* Money Widget */}
-            {(() => {
+            {/* Money Widget - hidden when dead */}
+            {!deathState.isDead && (() => {
                 const widget = getWidget("money");
                 if (!widget) return null;
                 return (
@@ -486,8 +508,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Clock Widget */}
-            {(() => {
+            {/* Clock Widget - hidden when dead */}
+            {!deathState.isDead && (() => {
                 const widget = getWidget("clock");
                 if (!widget) return null;
                 return (
@@ -502,8 +524,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Voice Widget */}
-            {(() => {
+            {/* Voice Widget - hidden when dead */}
+            {!deathState.isDead && (() => {
                 const widget = getWidget("voice");
                 if (!widget) return null;
                 return (
@@ -518,8 +540,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Minimap Widget */}
-            {(() => {
+            {/* Minimap Widget - hidden when dead */}
+            {!deathState.isDead && (() => {
                 const widget = getWidget("minimap");
                 if (!widget) return null;
                 return (
@@ -534,8 +556,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Compass Widget */}
-            {(() => {
+            {/* Compass Widget - hidden when dead */}
+            {!deathState.isDead && (() => {
                 const widget = getWidget("compass");
                 if (!widget) return null;
                 return (
@@ -550,8 +572,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Vehicle Speedometer */}
-            {(() => {
+            {/* Vehicle Speedometer - hidden when dead */}
+            {!deathState.isDead && (() => {
                 const widget = getWidget("speedometer");
                 if (!widget) return null;
 
