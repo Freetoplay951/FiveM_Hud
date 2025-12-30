@@ -1,47 +1,62 @@
 -- Notification System
+-- Sendet Benachrichtigungen an das HUD
 
--- Notification senden
-function SendNotification(type, title, message, duration)
+-- ============================================================================
+-- CORE NOTIFICATION FUNCTION
+-- ============================================================================
+
+function SendNotification(notificationType, title, message, duration)
     SendNUI('notify', {
-        type = type or 'info',
+        type = notificationType or 'info',
         title = title or '',
         message = message or '',
         duration = duration or 5000
     })
 end
 
--- Events für Notifications
-RegisterNetEvent('hud:notify')
-AddEventHandler('hud:notify', function(type, title, message, duration)
-    SendNotification(type, title, message, duration)
+-- ============================================================================
+-- EVENTS
+-- ============================================================================
+
+-- Haupt-Notification Event
+RegisterNetEvent('hud:notify', function(notificationType, title, message, duration)
+    SendNotification(notificationType, title, message, duration)
 end)
 
--- Kurz-Events
-RegisterNetEvent('hud:success')
-AddEventHandler('hud:success', function(title, message, duration)
+-- Kurzform Events
+RegisterNetEvent('hud:success', function(title, message, duration)
     SendNotification('success', title, message, duration)
 end)
 
-RegisterNetEvent('hud:error')
-AddEventHandler('hud:error', function(title, message, duration)
+RegisterNetEvent('hud:error', function(title, message, duration)
     SendNotification('error', title, message, duration)
 end)
 
-RegisterNetEvent('hud:warning')
-AddEventHandler('hud:warning', function(title, message, duration)
+RegisterNetEvent('hud:warning', function(title, message, duration)
     SendNotification('warning', title, message, duration)
 end)
 
-RegisterNetEvent('hud:info')
-AddEventHandler('hud:info', function(title, message, duration)
+RegisterNetEvent('hud:info', function(title, message, duration)
     SendNotification('info', title, message, duration)
 end)
 
--- Exports für andere Resourcen
-exports('notify', function(type, title, message, duration)
-    SendNotification(type, title, message, duration)
+-- Objekt-basiertes Event (für komplexere Notifications)
+RegisterNetEvent('hud:notification', function(data)
+    if type(data) == 'table' then
+        SendNotification(data.type, data.title, data.message, data.duration)
+    end
 end)
 
+-- ============================================================================
+-- EXPORTS
+-- ============================================================================
+
+-- Haupt Export
+exports('notify', function(notificationType, title, message, duration)
+    SendNotification(notificationType, title, message, duration)
+end)
+
+-- Kurzform Exports
 exports('success', function(title, message, duration)
     SendNotification('success', title, message, duration)
 end)
@@ -58,7 +73,68 @@ exports('info', function(title, message, duration)
     SendNotification('info', title, message, duration)
 end)
 
--- Beispiel-Nutzung in anderen Resourcen:
--- exports['neon-hud']:notify('success', 'Erfolg!', 'Aktion ausgeführt', 5000)
--- exports['neon-hud']:success('Titel', 'Nachricht')
--- TriggerClientEvent('hud:success', source, 'Titel', 'Nachricht')
+-- Objekt Export
+exports('showNotification', function(data)
+    if type(data) == 'table' then
+        SendNotification(data.type, data.title, data.message, data.duration)
+    elseif type(data) == 'string' then
+        SendNotification('info', '', data, 5000)
+    end
+end)
+
+-- ============================================================================
+-- NUI CALLBACKS
+-- ============================================================================
+
+RegisterNUICallback('dismissNotification', function(data, cb)
+    -- Optional: Event triggern wenn Notification geschlossen wird
+    if data.id then
+        TriggerEvent('hud:notificationDismissed', data.id)
+    end
+    cb({ success = true })
+end)
+
+-- ============================================================================
+-- NATIVE NOTIFICATION OVERRIDE (Optional)
+-- ============================================================================
+
+-- Überschreibt native GTA Notifications wenn gewünscht
+if Config and Config.OverrideNativeNotifications then
+    -- Blockiert native Notifications
+    CreateThread(function()
+        while true do
+            ThefeedPause()
+            Wait(0)
+        end
+    end)
+end
+
+--[[
+============================================================================
+USAGE EXAMPLES
+============================================================================
+
+-- Von anderen Client-Scripts:
+exports['neon-hud']:notify('success', 'Erfolg!', 'Aktion wurde ausgeführt', 5000)
+exports['neon-hud']:success('Titel', 'Nachricht')
+exports['neon-hud']:error('Fehler', 'Etwas ist schief gelaufen')
+exports['neon-hud']:warning('Warnung', 'Achtung!')
+exports['neon-hud']:info('Info', 'Hier ist eine Information')
+
+-- Objekt-basiert:
+exports['neon-hud']:showNotification({
+    type = 'success',
+    title = 'Erfolg',
+    message = 'Aktion erfolgreich',
+    duration = 3000
+})
+
+-- Einfache Nachricht:
+exports['neon-hud']:showNotification('Dies ist eine einfache Nachricht')
+
+-- Von Server-Scripts:
+TriggerClientEvent('hud:notify', source, 'success', 'Titel', 'Nachricht', 5000)
+TriggerClientEvent('hud:success', source, 'Titel', 'Nachricht')
+
+============================================================================
+]]

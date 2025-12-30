@@ -1,39 +1,76 @@
+-- Main HUD Client Script
+-- Handles HUD visibility, framework detection, and core functionality
+
+-- ============================================================================
+-- VARIABLES
+-- ============================================================================
+
 local isHudVisible = true
 local isEditMode = false
 local Framework = nil
+local FrameworkObject = nil
 local VoiceResource = nil
+local isPlayerLoaded = false
 
--- Resource Detection Helper
-function IsResourceStarted(resourceName)
+-- ============================================================================
+-- UTILITY FUNCTIONS
+-- ============================================================================
+
+-- Prüft ob eine Resource gestartet ist
+local function IsResourceStarted(resourceName)
     local state = GetResourceState(resourceName)
     return state == 'started' or state == 'starting'
 end
 
--- Framework Detection
-CreateThread(function()
+-- NUI Message senden
+function SendNUI(action, data)
+    SendNUIMessage({
+        action = action,
+        data = data
+    })
+end
+
+-- ============================================================================
+-- FRAMEWORK DETECTION
+-- ============================================================================
+
+local function DetectFramework()
     if Config.Framework == 'auto' then
         if IsResourceStarted('es_extended') then
             Framework = 'esx'
-            ESX = exports['es_extended']:getSharedObject()
+            -- ESX Object holen
+            while FrameworkObject == nil do
+                TriggerEvent('esx:getSharedObject', function(obj) FrameworkObject = obj end)
+                if FrameworkObject == nil then
+                    FrameworkObject = exports['es_extended']:getSharedObject()
+                end
+                Wait(100)
+            end
         elseif IsResourceStarted('qb-core') then
             Framework = 'qb'
-            QBCore = exports['qb-core']:GetCoreObject()
+            FrameworkObject = exports['qb-core']:GetCoreObject()
         end
     elseif Config.Framework == 'esx' then
         Framework = 'esx'
-        ESX = exports['es_extended']:getSharedObject()
+        while FrameworkObject == nil do
+            TriggerEvent('esx:getSharedObject', function(obj) FrameworkObject = obj end)
+            if FrameworkObject == nil then
+                FrameworkObject = exports['es_extended']:getSharedObject()
+            end
+            Wait(100)
+        end
     elseif Config.Framework == 'qb' then
         Framework = 'qb'
-        QBCore = exports['qb-core']:GetCoreObject()
+        FrameworkObject = exports['qb-core']:GetCoreObject()
     end
     
     if Config.Debug then
         print('[HUD] Framework detected: ' .. (Framework or 'none'))
     end
-end)
+end
 
--- Voice Resource Detection
-CreateThread(function()
+-- Voice Resource erkennen
+local function DetectVoiceResource()
     if Config.VoiceResource == 'auto' then
         if IsResourceStarted('pma-voice') then
             VoiceResource = 'pma-voice'
@@ -41,6 +78,8 @@ CreateThread(function()
             VoiceResource = 'saltychat'
         elseif IsResourceStarted('mumble-voip') then
             VoiceResource = 'mumble-voip'
+        elseif IsResourceStarted('tokovoip') then
+            VoiceResource = 'tokovoip'
         end
     elseif Config.VoiceResource ~= 'none' and IsResourceStarted(Config.VoiceResource) then
         VoiceResource = Config.VoiceResource
@@ -49,42 +88,50 @@ CreateThread(function()
     if Config.Debug then
         print('[HUD] Voice resource detected: ' .. (VoiceResource or 'none'))
     end
-end)
-
--- NUI senden
-function SendNUI(action, data)
-    SendNUIMessage({
-        action = action,
-        data = data
-    })
 end
 
--- HUD ein/ausblenden
+-- ============================================================================
+-- HUD VISIBILITY
+-- ============================================================================
+
 function SetHudVisible(visible)
     isHudVisible = visible
-    SendNUIMessage({
-        action = 'setVisible',
-        data = visible
-    })
+    SendNUI('setVisible', visible)
 end
 
--- Initiale HUD Anzeige beim Ressourcenstart
-CreateThread(function()
-    -- Kurz warten bis NUI geladen ist
+-- ============================================================================
+-- INITIALIZATION
+-- ============================================================================
+
+-- Resource Start Event
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then
+        return
+    end
+    
+    -- Framework und Voice erkennen
+    DetectFramework()
+    DetectVoiceResource()
+    
+    -- Kurz warten bis NUI geladen
     Wait(500)
     
-    -- HUD standardmäßig anzeigen
+    -- HUD anzeigen
     SetHudVisible(true)
     
     -- Initiale Daten senden
-    local playerPed = PlayerPedId()
-    local coords = GetEntityCoords(playerPed)
-    local heading = GetEntityHeading(playerPed)
+    local ped = PlayerPedId()
+    local coords = GetEntityCoords(ped)
+    local heading = GetEntityHeading(ped)
     
-    -- Initiale Status-Werte
+    -- Status
+    local health = GetEntityHealth(ped)
+    local maxHealth = GetEntityMaxHealth(ped)
+    local healthPercent = math.floor(((health - 100) / (maxHealth - 100)) * 100)
+    
     SendNUI('updateHud', {
-        health = GetEntityHealth(playerPed) - 100,
-        armor = GetPedArmour(playerPed),
+        health = math.max(0, math.min(100, healthPercent)),
+        armor = GetPedArmour(ped),
         hunger = 100,
         thirst = 100,
         stamina = 100,
@@ -92,7 +139,7 @@ CreateThread(function()
         oxygen = 100
     })
     
-    -- Initiale Location
+    -- Location
     local streetHash, crossingHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
     local streetName = GetStreetNameFromHashKey(streetHash)
     local zone = GetNameOfZone(coords.x, coords.y, coords.z)
@@ -100,63 +147,86 @@ CreateThread(function()
     
     SendNUI('updateLocation', {
         street = streetName,
-        area = zoneName,
+        area = zoneName ~= "NULL" and zoneName or zone,
         heading = heading
     })
     
-    -- Initiale Voice
+    -- Voice Initial
     SendNUI('updateVoice', {
         active = false,
         range = 'normal'
     })
     
+    isPlayerLoaded = true
+    
     if Config.Debug then
-        print('[HUD] Initial data sent')
+        print('[HUD] Initialized successfully')
     end
 end)
 
--- Edit Mode Toggle
+-- ESX Player Loaded Event
+if IsResourceStarted('es_extended') then
+    RegisterNetEvent('esx:playerLoaded', function(xPlayer)
+        isPlayerLoaded = true
+        if Config.Debug then
+            print('[HUD] ESX Player loaded')
+        end
+    end)
+end
+
+-- QB-Core Player Loaded Event
+if IsResourceStarted('qb-core') then
+    RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+        isPlayerLoaded = true
+        if Config.Debug then
+            print('[HUD] QBCore Player loaded')
+        end
+    end)
+end
+
+-- ============================================================================
+-- EDIT MODE
+-- ============================================================================
+
 RegisterCommand('hudedit', function()
     isEditMode = not isEditMode
     SetNuiFocus(isEditMode, isEditMode)
     SendNUI('toggleEditMode', isEditMode)
+    
+    if Config.Debug then
+        print('[HUD] Edit mode: ' .. tostring(isEditMode))
+    end
 end, false)
 
-RegisterKeyMapping('hudedit', 'HUD Edit Mode', 'keyboard', Config.EditModeKey)
+-- Key Mapping für Edit Mode
+RegisterKeyMapping('hudedit', 'HUD Edit Mode', 'keyboard', Config.EditModeKey or 'F7')
 
--- NUI Callbacks
+-- NUI Callback: Edit Mode schließen
 RegisterNUICallback('closeEditMode', function(data, cb)
     isEditMode = false
     SetNuiFocus(false, false)
-    cb('ok')
+    cb({ success = true })
 end)
 
+-- NUI Callback: Layout speichern
 RegisterNUICallback('saveLayout', function(data, cb)
-    -- Layout wird im Browser gespeichert (localStorage)
-    -- Optional: Hier zum Server senden für persistente Speicherung
+    -- Layout wird im Browser localStorage gespeichert
+    -- Optional: Server-seitige Speicherung hier implementieren
     if Config.Debug then
         print('[HUD] Layout saved')
     end
-    cb('ok')
+    cb({ success = true })
 end)
 
--- Geld Updates
-CreateThread(function()
-    while true do
-        Wait(Config.StatusUpdateInterval)
-        
-        if isHudVisible and Framework then
-            local money = GetPlayerMoney()
-            if money then
-                SendNUI('updateMoney', money)
-            end
-        end
-    end
-end)
+-- ============================================================================
+-- MONEY UPDATES
+-- ============================================================================
 
-function GetPlayerMoney()
-    if Framework == 'esx' then
-        local playerData = ESX.GetPlayerData()
+local function GetPlayerMoney()
+    if not isPlayerLoaded then return nil end
+    
+    if Framework == 'esx' and FrameworkObject then
+        local playerData = FrameworkObject.GetPlayerData()
         if playerData and playerData.accounts then
             local cash = 0
             local bank = 0
@@ -172,14 +242,10 @@ function GetPlayerMoney()
                 end
             end
             
-            return {
-                cash = cash,
-                bank = bank,
-                blackMoney = black
-            }
+            return { cash = cash, bank = bank, blackMoney = black }
         end
-    elseif Framework == 'qb' then
-        local PlayerData = QBCore.Functions.GetPlayerData()
+    elseif Framework == 'qb' and FrameworkObject then
+        local PlayerData = FrameworkObject.Functions.GetPlayerData()
         if PlayerData and PlayerData.money then
             return {
                 cash = PlayerData.money.cash or 0,
@@ -192,15 +258,32 @@ function GetPlayerMoney()
     return nil
 end
 
--- Location Updates
+-- Geld Update Loop
 CreateThread(function()
     while true do
-        Wait(Config.LocationUpdateInterval)
+        Wait(Config.StatusUpdateInterval or 500)
+        
+        if isHudVisible and isPlayerLoaded and Framework then
+            local money = GetPlayerMoney()
+            if money then
+                SendNUI('updateMoney', money)
+            end
+        end
+    end
+end)
+
+-- ============================================================================
+-- LOCATION UPDATES
+-- ============================================================================
+
+CreateThread(function()
+    while true do
+        Wait(Config.LocationUpdateInterval or 1000)
         
         if isHudVisible then
-            local playerPed = PlayerPedId()
-            local coords = GetEntityCoords(playerPed)
-            local heading = GetEntityHeading(playerPed)
+            local ped = PlayerPedId()
+            local coords = GetEntityCoords(ped)
+            local heading = GetEntityHeading(ped)
             
             local streetHash, crossingHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
             local streetName = GetStreetNameFromHashKey(streetHash)
@@ -212,70 +295,98 @@ CreateThread(function()
             SendNUI('updateLocation', {
                 street = streetName,
                 crossing = crossingName ~= '' and crossingName or nil,
-                area = zoneName,
+                area = zoneName ~= "NULL" and zoneName or zone,
                 heading = heading
             })
         end
     end
 end)
 
--- Voice Updates (dynamisch basierend auf erkannter Voice Resource)
+-- ============================================================================
+-- VOICE UPDATES
+-- ============================================================================
+
 CreateThread(function()
-    -- Warten bis Voice Resource erkannt wurde
+    -- Warten bis Voice Resource erkannt
     Wait(2000)
     
     while true do
         Wait(200)
         
-        if isHudVisible and VoiceResource then
-            local talking = false
-            local range = 'normal'
+        if isHudVisible then
+            local isTalking = NetworkIsPlayerTalking(PlayerId())
+            local voiceRange = 'normal'
             
             if VoiceResource == 'pma-voice' then
-                -- pma-voice verwendet NetworkIsPlayerTalking
-                talking = NetworkIsPlayerTalking(PlayerId())
-                
-                -- Voice Mode über Export holen (falls verfügbar)
+                -- pma-voice Mode holen
                 local success, mode = pcall(function()
                     return exports['pma-voice']:getVoiceMode()
                 end)
                 
                 if success and mode then
                     if mode == 1 then
-                        range = 'whisper'
+                        voiceRange = 'whisper'
+                    elseif mode == 2 then
+                        voiceRange = 'normal'
                     elseif mode == 3 then
-                        range = 'shout'
+                        voiceRange = 'shout'
                     end
                 end
-                
             elseif VoiceResource == 'saltychat' then
-                talking = NetworkIsPlayerTalking(PlayerId())
-                -- SaltyChat hat andere Voice Modes
-                
-            elseif VoiceResource == 'mumble-voip' then
-                talking = NetworkIsPlayerTalking(PlayerId())
+                -- SaltyChat Radio Talking
+                local success, radioTalking = pcall(function()
+                    return exports['saltychat']:GetRadioChannel() ~= ""
+                end)
+                if success and radioTalking then
+                    voiceRange = 'radio'
+                end
             end
             
             SendNUI('updateVoice', {
-                active = talking,
-                range = range
-            })
-        elseif isHudVisible and not VoiceResource then
-            -- Kein Voice Resource, aber trotzdem Talking-Status senden
-            SendNUI('updateVoice', {
-                active = NetworkIsPlayerTalking(PlayerId()),
-                range = 'normal'
+                active = isTalking,
+                range = voiceRange
             })
         end
     end
 end)
 
--- Player Info Updates
+-- ============================================================================
+-- PLAYER INFO UPDATES
+-- ============================================================================
+
+local function GetPlayerInfo()
+    if not isPlayerLoaded then return nil end
+    
+    local serverId = GetPlayerServerId(PlayerId())
+    
+    if Framework == 'esx' and FrameworkObject then
+        local playerData = FrameworkObject.GetPlayerData()
+        if playerData then
+            return {
+                id = serverId,
+                job = playerData.job and playerData.job.label or 'Arbeitslos',
+                rank = playerData.job and playerData.job.grade_label or ''
+            }
+        end
+    elseif Framework == 'qb' and FrameworkObject then
+        local PlayerData = FrameworkObject.Functions.GetPlayerData()
+        if PlayerData then
+            return {
+                id = serverId,
+                job = PlayerData.job and PlayerData.job.label or 'Arbeitslos',
+                rank = PlayerData.job and PlayerData.job.grade and PlayerData.job.grade.name or ''
+            }
+        end
+    end
+    
+    return { id = serverId, job = 'Arbeitslos', rank = '' }
+end
+
 CreateThread(function()
     while true do
         Wait(5000)
         
-        if isHudVisible and Framework then
+        if isHudVisible and isPlayerLoaded and Framework then
             local playerInfo = GetPlayerInfo()
             if playerInfo then
                 SendNUI('updatePlayer', playerInfo)
@@ -284,35 +395,10 @@ CreateThread(function()
     end
 end)
 
-function GetPlayerInfo()
-    if Framework == 'esx' then
-        local playerData = ESX.GetPlayerData()
-        if playerData then
-            return {
-                id = GetPlayerServerId(PlayerId()),
-                job = playerData.job and playerData.job.label or 'Arbeitslos',
-                rank = playerData.job and playerData.job.grade_label or ''
-            }
-        end
-    elseif Framework == 'qb' then
-        local PlayerData = QBCore.Functions.GetPlayerData()
-        if PlayerData then
-            return {
-                id = GetPlayerServerId(PlayerId()),
-                job = PlayerData.job and PlayerData.job.label or 'Arbeitslos',
-                rank = PlayerData.job and PlayerData.job.grade and PlayerData.job.grade.name or ''
-            }
-        end
-    end
-    
-    return {
-        id = GetPlayerServerId(PlayerId()),
-        job = 'Arbeitslos',
-        rank = ''
-    }
-end
+-- ============================================================================
+-- EXPORTS
+-- ============================================================================
 
--- Exports für andere Resourcen
 exports('showHud', function()
     SetHudVisible(true)
 end)
@@ -321,6 +407,62 @@ exports('hideHud', function()
     SetHudVisible(false)
 end)
 
+exports('toggleHud', function()
+    isHudVisible = not isHudVisible
+    SetHudVisible(isHudVisible)
+    return isHudVisible
+end)
+
 exports('isHudVisible', function()
     return isHudVisible
 end)
+
+exports('isEditMode', function()
+    return isEditMode
+end)
+
+exports('getFramework', function()
+    return Framework
+end)
+
+exports('getVoiceResource', function()
+    return VoiceResource
+end)
+
+-- ============================================================================
+-- EVENTS
+-- ============================================================================
+
+-- HUD ein/ausblenden über Event
+RegisterNetEvent('hud:toggle', function(visible)
+    if visible ~= nil then
+        SetHudVisible(visible)
+    else
+        exports[GetCurrentResourceName()]:toggleHud()
+    end
+end)
+
+-- Edit Mode über Event
+RegisterNetEvent('hud:editMode', function(enabled)
+    isEditMode = enabled
+    SetNuiFocus(isEditMode, isEditMode)
+    SendNUI('toggleEditMode', isEditMode)
+end)
+
+-- ============================================================================
+-- COMMANDS (Debug)
+-- ============================================================================
+
+if Config.Debug then
+    RegisterCommand('hud_toggle', function()
+        local visible = exports[GetCurrentResourceName()]:toggleHud()
+        print('[HUD] Visible: ' .. tostring(visible))
+    end, false)
+    
+    RegisterCommand('hud_info', function()
+        print('[HUD] Framework: ' .. (Framework or 'none'))
+        print('[HUD] Voice: ' .. (VoiceResource or 'none'))
+        print('[HUD] Visible: ' .. tostring(isHudVisible))
+        print('[HUD] Player Loaded: ' .. tostring(isPlayerLoaded))
+    end, false)
+end
