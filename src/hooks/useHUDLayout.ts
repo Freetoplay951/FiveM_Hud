@@ -1,5 +1,16 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { HUDLayoutState, WidgetConfig, WidgetPosition, DEFAULT_HUD_STATE, DEFAULT_WIDGETS, StatusDesign, SpeedometerType, DEFAULT_SPEEDOMETER_CONFIGS, SpeedometerConfig } from '@/types/widget';
+import { useState, useCallback, useEffect } from 'react';
+import {
+  HUDLayoutState,
+  WidgetConfig,
+  WidgetPosition,
+  DEFAULT_HUD_STATE,
+  DEFAULT_WIDGETS,
+  StatusDesign,
+  SpeedometerType,
+  DEFAULT_SPEEDOMETER_CONFIGS,
+  SpeedometerConfig,
+  SpeedometerConfigs,
+} from '@/types/widget';
 import { snapPositionToGrid } from '@/lib/snapUtils';
 import { resolveStatusWidgetOverlaps } from '@/lib/overlapUtils';
 
@@ -12,60 +23,52 @@ const clampPosition = (pos: WidgetPosition): WidgetPosition => ({
 });
 
 // Clampt alle Widget-Positionen
-const clampAllWidgets = (widgets: WidgetConfig[]): WidgetConfig[] => 
-  widgets.map(w => ({
+const clampAllWidgets = (widgets: WidgetConfig[]): WidgetConfig[] =>
+  widgets.map((w) => ({
     ...w,
     position: clampPosition(w.position),
   }));
 
+const clampSpeedometerConfigs = (configs: SpeedometerConfigs): SpeedometerConfigs => ({
+  car: { ...configs.car, position: clampPosition(configs.car.position) },
+  plane: { ...configs.plane, position: clampPosition(configs.plane.position) },
+  boat: { ...configs.boat, position: clampPosition(configs.boat.position) },
+  helicopter: { ...configs.helicopter, position: clampPosition(configs.helicopter.position) },
+});
+
+const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {
+  const next: HUDLayoutState = {
+    ...DEFAULT_HUD_STATE,
+    ...raw,
+  };
+
+  next.widgets = clampAllWidgets(resolveStatusWidgetOverlaps(next.widgets ?? DEFAULT_WIDGETS));
+  next.speedometerConfigs = clampSpeedometerConfigs(
+    (next.speedometerConfigs ?? DEFAULT_SPEEDOMETER_CONFIGS) as SpeedometerConfigs
+  );
+
+  return next;
+};
+
 export const useHUDLayout = () => {
-  const hasResolvedOverlaps = useRef(false);
-  
   const [state, setState] = useState<HUDLayoutState>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Merge with defaults to handle new properties and clamp positions
-        const merged = { ...DEFAULT_HUD_STATE, ...parsed };
-        merged.widgets = clampAllWidgets(merged.widgets);
-        return merged;
+        return normalizeState(parsed);
       } catch {
-        return DEFAULT_HUD_STATE;
+        return normalizeState(DEFAULT_HUD_STATE);
       }
     }
-    return DEFAULT_HUD_STATE;
+    return normalizeState(DEFAULT_HUD_STATE);
   });
-
-  // Resolve overlaps and clamp to viewport on initial load (only once)
-  useEffect(() => {
-    if (hasResolvedOverlaps.current) return;
-    hasResolvedOverlaps.current = true;
-    
-    // Wait for DOM to be ready so we have accurate viewport dimensions
-    const timer = setTimeout(() => {
-      setState(prev => {
-        const resolvedWidgets = clampAllWidgets(resolveStatusWidgetOverlaps(prev.widgets));
-        // Only update if something changed
-        const hasChanges = resolvedWidgets.some((w, i) => 
-          w.position.xPercent !== prev.widgets[i]?.position.xPercent ||
-          w.position.yPercent !== prev.widgets[i]?.position.yPercent
-        );
-        if (hasChanges) {
-          return { ...prev, widgets: resolvedWidgets };
-        }
-        return prev;
-      });
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   // Listen to window resize to recalculate positions
   useEffect(() => {
     const handleResize = () => {
       // Force a re-render when window resizes - widgets will recalculate their positions
-      setState(prev => ({ ...prev }));
+      setState((prev) => ({ ...prev }));
     };
 
     window.addEventListener('resize', handleResize);
@@ -87,11 +90,9 @@ export const useHUDLayout = () => {
   const updateWidgetPosition = useCallback((id: string, position: WidgetPosition) => {
     // Clampe Position beim Update um Überlappungen am Rand zu vermeiden
     const clampedPosition = clampPosition(position);
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      widgets: prev.widgets.map(w => 
-        w.id === id ? { ...w, position: clampedPosition } : w
-      ),
+      widgets: prev.widgets.map((w) => (w.id === id ? { ...w, position: clampedPosition } : w)),
     }));
   }, []);
 
