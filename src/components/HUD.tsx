@@ -91,6 +91,7 @@ export const HUD = () => {
     const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
     const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
     const [deathState, setDeathState] = useState<DeathState>(DEMO_DEATH);
+    const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false); // For edit mode preview
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
     const [isDemoMode] = useState(!isNuiEnvironment());
 
@@ -303,8 +304,8 @@ export const HUD = () => {
                 if (e.key === "l") info("Info", "Hier ist eine Information.");
             }
 
-            // Demo death toggle
-            if (e.key === "d") {
+            // Demo death toggle - only when NOT in edit mode
+            if (e.key === "d" && !editMode) {
                 setDeathState((prev) => {
                     if (prev.isDead) {
                         return { ...prev, isDead: false };
@@ -418,10 +419,12 @@ export const HUD = () => {
                     {/* Menu content */}
                     <EditModeOverlay
                         snapToGrid={snapToGrid}
+                        showDeathScreen={showDeathScreenPreview}
                         statusDesign={statusDesign}
                         speedometerType={speedometerType}
                         minimapShape={minimapShape}
                         onSnapToGridChange={setSnapToGrid}
+                        onShowDeathScreenChange={setShowDeathScreenPreview}
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={setMinimapShape}
@@ -617,8 +620,8 @@ export const HUD = () => {
                 const widget = getWidget("deathscreen");
                 if (!widget) return null;
                 
-                // Show death screen when dead OR in edit mode (to position it)
-                const showDeathScreen = deathState.isDead || editMode;
+                // Show death screen when dead OR in edit mode with preview enabled
+                const showDeathScreen = deathState.isDead || (editMode && showDeathScreenPreview);
                 
                 return (
                     <HUDWidget
