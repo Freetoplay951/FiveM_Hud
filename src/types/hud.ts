@@ -58,6 +58,7 @@ export interface LocationState {
   street: string;
   direction: string;
   area?: string;
+  heading?: number;
 }
 
 export type StatusType = 'health' | 'armor' | 'hunger' | 'thirst' | 'stamina' | 'stress' | 'oxygen';

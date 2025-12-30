@@ -51,6 +51,7 @@ const DEMO_LOCATION: LocationState = {
     street: "Vinewood Boulevard",
     direction: "NE",
     area: "Vinewood",
+    heading: 45,
 };
 
 const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
@@ -198,6 +199,18 @@ export const HUD = () => {
                 ...prev,
                 active: Math.random() > 0.3,
             }));
+
+            // Animate compass heading and direction
+            setLocationState((prev) => {
+                const newHeading = ((prev.heading || 0) + (Math.random() - 0.4) * 8 + 360) % 360;
+                const DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+                const directionIndex = Math.round(newHeading / 45) % 8;
+                return {
+                    ...prev,
+                    heading: newHeading,
+                    direction: DIRECTIONS[directionIndex],
+                };
+            });
         }, 500);
 
         return () => clearInterval(interval);
@@ -475,7 +488,7 @@ export const HUD = () => {
                         visible={widget.visible}
                         scale={widget.scale}
                         {...widgetProps}>
-                        <CompassWidget direction={locationState.direction} />
+                        <CompassWidget direction={locationState.direction} heading={locationState.heading} />
                     </HUDWidget>
                 );
             })()}
