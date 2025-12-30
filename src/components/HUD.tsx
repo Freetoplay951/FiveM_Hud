@@ -70,36 +70,26 @@ const DEMO_DEATH: DeathState = {
     message: "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
 };
 
-// Demo Chat State
+// Demo Chat State (leer in Production - wird von FiveM befüllt)
 const DEMO_CHAT: ChatState = {
     isOpen: true,
-    messages: [
-        { id: "1", type: "system", message: "Willkommen auf dem Server!", timestamp: "12:00" },
-        { id: "2", type: "normal", sender: "Max Müller", message: "Hey, wie geht's?", timestamp: "12:01" },
-        { id: "3", type: "action", sender: "Anna Schmidt", message: "*winkt freundlich*", timestamp: "12:02" },
-        { id: "4", type: "ooc", sender: "Tom", message: "((Bin gleich back))", timestamp: "12:03" },
-        { id: "5", type: "whisper", sender: "Lisa", message: "*flüstert* Hast du das gesehen?", timestamp: "12:04" },
-        { id: "6", type: "shout", sender: "Polizist", message: "STEHEN BLEIBEN!", timestamp: "12:05" },
-        { id: "7", type: "radio", sender: "Dispatch", message: "[FUNK] Einheit 5, bitte kommen.", timestamp: "12:06" },
-    ],
-    unreadCount: 3,
+    isInputActive: false,
+    isVisible: true,
+    messages: [],
+    unreadCount: 0,
 };
 
-// Demo Team Chat State (Staff only)
+// Demo Team Chat State (leer in Production - wird von FiveM befüllt)
 const DEMO_TEAM_CHAT: TeamChatState = {
     isOpen: true,
+    isInputActive: false,
+    isVisible: true,
     hasAccess: true,
     teamType: "admin",
     teamName: "Team-Chat",
-    messages: [
-        { id: "1", sender: "Owner Max", rank: "Owner", message: "Willkommen im Team-Chat!", timestamp: "11:45", isImportant: true },
-        { id: "2", sender: "Admin Lisa", rank: "Admin", message: "Neuer Spieler braucht Hilfe am Flughafen.", timestamp: "11:46" },
-        { id: "3", sender: "Mod Tom", rank: "Moderator", message: "Bin unterwegs, kümmere mich drum.", timestamp: "11:50" },
-        { id: "4", sender: "Supporter Anna", rank: "Supporter", message: "Hat jemand Zeit für ein Ticket?", timestamp: "11:51" },
-        { id: "5", sender: "Admin Lisa", rank: "Admin", message: "Ich kann übernehmen.", timestamp: "11:55" },
-    ],
-    unreadCount: 2,
-    onlineMembers: 5,
+    messages: [],
+    unreadCount: 0,
+    onlineMembers: 0,
     isAdmin: true,
 };
 

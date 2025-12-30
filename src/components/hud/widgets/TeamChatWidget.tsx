@@ -27,18 +27,23 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
   const inputRef = useRef<HTMLInputElement>(null);
 
   const teamColor = TEAM_COLORS[teamChat.teamType] || TEAM_COLORS.default;
+  
+  // Bestimme ob Chat sichtbar sein soll
+  const isVisible = teamChat.isVisible ?? true;
+  const isInputActive = teamChat.isInputActive ?? isOpen;
+  const hasMessages = teamChat.messages.length > 0;
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [teamChat.messages]);
 
-  // Focus input when chat opens
+  // Focus input when chat opens with input active
   useEffect(() => {
-    if (isOpen && inputRef.current) {
+    if (isInputActive && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isOpen]);
+  }, [isInputActive]);
 
   const handleSend = () => {
     if (inputValue.trim() && onSendMessage) {
@@ -78,133 +83,145 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
     );
   }
 
+  // Wenn nicht sichtbar und keine Eingabe aktiv, ausblenden
+  if (!isVisible && !isInputActive && !hasMessages) {
+    return null;
+  }
+
   const TeamIcon = teamColor.icon;
 
   return (
-    <motion.div
-      className={cn(
-        "rounded-lg overflow-hidden flex flex-col border",
-        teamColor.border,
-        "bg-background/80 backdrop-blur-md"
-      )}
-      style={{
-        width: '320px',
-        height: '280px',
-      }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-    >
-      {/* Header */}
-      <div className={cn(
-        "flex items-center justify-between px-3 py-2 border-b",
-        teamColor.border,
-        teamColor.bg
-      )}>
-      <div className="flex items-center gap-2">
-          <TeamIcon size={14} className={teamColor.text} />
-          <span className={cn("text-xs font-medium uppercase tracking-wider", teamColor.text)}>
-            {teamChat.teamName}
-          </span>
-          {teamChat.isAdmin && (
-            <Shield size={10} className="text-warning" />
+    <AnimatePresence>
+      {(isVisible || isInputActive || hasMessages) && (
+        <motion.div
+          className={cn(
+            "rounded-lg overflow-hidden flex flex-col border",
+            teamColor.border,
+            "bg-background/80 backdrop-blur-md"
           )}
-          {teamChat.unreadCount > 0 && (
-            <span className={cn("px-1.5 py-0.5 text-[10px] rounded-full", teamColor.bg, teamColor.text)}>
-              {teamChat.unreadCount}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-[10px] text-muted-foreground">
-            {teamChat.onlineMembers} online
-          </span>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-1 rounded hover:bg-background/50 transition-colors ml-1"
-            >
-              <X size={12} className="text-muted-foreground" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-        <AnimatePresence initial={false}>
-          {teamChat.messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              className="text-xs leading-relaxed"
-            >
-              {/* Timestamp */}
-              <span className="text-[10px] text-muted-foreground/50 mr-1.5">
-                {msg.timestamp}
+          style={{
+            width: '320px',
+            height: '280px',
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: isVisible || isInputActive ? 1 : 0.3, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Header */}
+          <div className={cn(
+            "flex items-center justify-between px-3 py-2 border-b",
+            teamColor.border,
+            teamColor.bg
+          )}>
+          <div className="flex items-center gap-2">
+              <TeamIcon size={14} className={teamColor.text} />
+              <span className={cn("text-xs font-medium uppercase tracking-wider", teamColor.text)}>
+                {teamChat.teamName}
               </span>
-              
-              {/* Rank Badge */}
-              {msg.rank && (
-                <span className={cn(
-                  "text-[9px] px-1 py-0.5 rounded mr-1",
-                  teamColor.bg,
-                  teamColor.text
-                )}>
-                  {msg.rank}
+              {teamChat.isAdmin && (
+                <Shield size={10} className="text-warning" />
+              )}
+              {teamChat.unreadCount > 0 && (
+                <span className={cn("px-1.5 py-0.5 text-[10px] rounded-full", teamColor.bg, teamColor.text)}>
+                  {teamChat.unreadCount}
                 </span>
               )}
-              
-              {/* Sender */}
-              <span className={cn("font-medium mr-1", teamColor.text)}>
-                {msg.sender}:
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">
+                {teamChat.onlineMembers} online
               </span>
-              
-              {/* Message */}
-              <span className={cn(
-                "text-foreground",
-                msg.isImportant && "font-semibold text-warning"
-              )}>
-                {msg.message}
-              </span>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-        <div ref={messagesEndRef} />
-      </div>
+              {onClose && isInputActive && (
+                <button
+                  onClick={onClose}
+                  className="p-1 rounded hover:bg-background/50 transition-colors ml-1"
+                >
+                  <X size={12} className="text-muted-foreground" />
+                </button>
+              )}
+            </div>
+          </div>
 
-      {/* Input */}
-      <div className={cn("px-3 py-2 border-t", teamColor.border, "bg-background/40")}>
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Team-Nachricht..."
-            className={cn(
-              "flex-1 bg-background/30 border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors",
-              teamColor.border,
-              `focus:${teamColor.border}`
-            )}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!inputValue.trim()}
-            className={cn(
-              "p-1.5 rounded transition-colors",
-              inputValue.trim()
-                ? cn(teamColor.bg, teamColor.text, "hover:opacity-80")
-                : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
-            )}
-          >
-            <Send size={12} />
-          </button>
-        </div>
-      </div>
-    </motion.div>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+            <AnimatePresence initial={false}>
+              {teamChat.messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="text-xs leading-relaxed"
+                >
+                  {/* Timestamp */}
+                  <span className="text-[10px] text-muted-foreground/50 mr-1.5">
+                    {msg.timestamp}
+                  </span>
+                  
+                  {/* Rank Badge */}
+                  {msg.rank && (
+                    <span className={cn(
+                      "text-[9px] px-1 py-0.5 rounded mr-1",
+                      teamColor.bg,
+                      teamColor.text
+                    )}>
+                      {msg.rank}
+                    </span>
+                  )}
+                  
+                  {/* Sender */}
+                  <span className={cn("font-medium mr-1", teamColor.text)}>
+                    {msg.sender}:
+                  </span>
+                  
+                  {/* Message */}
+                  <span className={cn(
+                    "text-foreground",
+                    msg.isImportant && "font-semibold text-warning"
+                  )}>
+                    {msg.message}
+                  </span>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input - nur anzeigen wenn Eingabe aktiv */}
+          {isInputActive && (
+            <div className={cn("px-3 py-2 border-t", teamColor.border, "bg-background/40")}>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Team-Nachricht..."
+                  className={cn(
+                    "flex-1 bg-background/30 border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors",
+                    teamColor.border,
+                    `focus:${teamColor.border}`
+                  )}
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!inputValue.trim()}
+                  className={cn(
+                    "p-1.5 rounded transition-colors",
+                    inputValue.trim()
+                      ? cn(teamColor.bg, teamColor.text, "hover:opacity-80")
+                      : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
+                  )}
+                >
+                  <Send size={12} />
+                </button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

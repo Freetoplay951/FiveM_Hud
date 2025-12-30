@@ -5,6 +5,10 @@ Config.StatusUpdateInterval = 500      -- Wie oft Status-Werte aktualisiert werd
 Config.VehicleUpdateInterval = 100     -- Wie oft Fahrzeug-Daten aktualisiert werden
 Config.LocationUpdateInterval = 1000   -- Wie oft Location aktualisiert wird
 
+-- Chat Einstellungen
+Config.ChatFadeTime = 10               -- Sekunden bis Chat ausblendet (bei Inaktivität)
+Config.ChatMaxMessages = 50            -- Maximale Anzahl Nachrichten im Verlauf
+
 -- Status Einstellungen
 Config.EnableHunger = true
 Config.EnableThirst = true
@@ -20,6 +24,42 @@ Config.TeamChatKey = 'Y'               -- Taste für Team-Chat
 -- Voice (für pma-voice / mumble-voip / saltychat)
 -- 'auto' = automatische Erkennung, 'none' = deaktiviert
 Config.VoiceResource = 'auto'
+
+-- ============================================================================
+-- VOICE RANGE KONFIGURATION
+-- ============================================================================
+-- Hier kannst du die Voice-Ranges für verschiedene Voice-Systeme konfigurieren.
+-- Jede Range benötigt:
+--   - bars: Anzahl der Balken (1-3)
+--   - color: Farbe (muted-foreground, warning, critical, primary, etc.)
+--   - label: Anzeigename im HUD
+--
+-- Die Ranges werden automatisch erkannt und können für verschiedene
+-- Voice-Systeme unterschiedlich sein (pma-voice, saltychat, etc.)
+-- ============================================================================
+
+Config.VoiceRanges = {
+    -- Standard Ranges (pma-voice, mumble-voip)
+    whisper = { bars = 1, color = "muted-foreground", label = "Flüstern" },
+    normal = { bars = 2, color = "warning", label = "Normal" },
+    shout = { bars = 3, color = "critical", label = "Schreien" },
+    
+    -- SaltyChat Ranges (numerische Werte werden als String gesendet)
+    ["1"] = { bars = 1, color = "muted-foreground", label = "Flüstern" },
+    ["2"] = { bars = 2, color = "warning", label = "Normal" },
+    ["3"] = { bars = 3, color = "critical", label = "Schreien" },
+    
+    -- SaltyChat Range-Namen (falls andere Bezeichnungen verwendet werden)
+    whisper_range = { bars = 1, color = "muted-foreground", label = "Flüstern" },
+    normal_range = { bars = 2, color = "warning", label = "Normal" },
+    shouting = { bars = 3, color = "critical", label = "Schreien" },
+    megaphone = { bars = 3, color = "primary", label = "Megafon" },
+    
+    -- TokoVOIP Ranges
+    short = { bars = 1, color = "muted-foreground", label = "Kurz" },
+    medium = { bars = 2, color = "warning", label = "Mittel" },
+    long = { bars = 3, color = "critical", label = "Weit" },
+}
 
 -- Geld (für esx/qb)
 Config.Framework = 'auto'              -- 'esx', 'qb', oder 'auto' für automatische Erkennung
