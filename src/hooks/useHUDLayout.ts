@@ -5,6 +5,19 @@ import { resolveStatusWidgetOverlaps } from '@/lib/overlapUtils';
 
 const STORAGE_KEY = 'hud-layout';
 
+// Clampt Positionen in den sichtbaren Bereich (2-98% um Rand-Überlappungen zu vermeiden)
+const clampPosition = (pos: WidgetPosition): WidgetPosition => ({
+  xPercent: Math.max(2, Math.min(98, pos.xPercent)),
+  yPercent: Math.max(2, Math.min(98, pos.yPercent)),
+});
+
+// Clampt alle Widget-Positionen
+const clampAllWidgets = (widgets: WidgetConfig[]): WidgetConfig[] => 
+  widgets.map(w => ({
+    ...w,
+    position: clampPosition(w.position),
+  }));
+
 export const useHUDLayout = () => {
   const hasResolvedOverlaps = useRef(false);
   
@@ -13,8 +26,10 @@ export const useHUDLayout = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Merge with defaults to handle new properties
-        return { ...DEFAULT_HUD_STATE, ...parsed };
+        // Merge with defaults to handle new properties and clamp positions
+        const merged = { ...DEFAULT_HUD_STATE, ...parsed };
+        merged.widgets = clampAllWidgets(merged.widgets);
+        return merged;
       } catch {
         return DEFAULT_HUD_STATE;
       }
@@ -30,7 +45,7 @@ export const useHUDLayout = () => {
     // Wait for DOM to be ready so we have accurate viewport dimensions
     const timer = setTimeout(() => {
       setState(prev => {
-        const resolvedWidgets = resolveStatusWidgetOverlaps(prev.widgets);
+        const resolvedWidgets = clampAllWidgets(resolveStatusWidgetOverlaps(prev.widgets));
         // Only update if something changed
         const hasChanges = resolvedWidgets.some((w, i) => 
           w.position.xPercent !== prev.widgets[i]?.position.xPercent ||
@@ -70,10 +85,12 @@ export const useHUDLayout = () => {
   }, []);
 
   const updateWidgetPosition = useCallback((id: string, position: WidgetPosition) => {
+    // Clampe Position beim Update um Überlappungen am Rand zu vermeiden
+    const clampedPosition = clampPosition(position);
     setState(prev => ({
       ...prev,
       widgets: prev.widgets.map(w => 
-        w.id === id ? { ...w, position } : w
+        w.id === id ? { ...w, position: clampedPosition } : w
       ),
     }));
   }, []);
