@@ -10,15 +10,20 @@ Config.EnableHunger = true
 Config.EnableThirst = true
 Config.EnableStress = true
 Config.EnableOxygen = true
+Config.EnableStamina = true
 
 -- Keybinds
 Config.EditModeKey = 'F7'              -- Taste für Edit-Mode
 
--- Voice (für pma-voice / mumble-voip)
-Config.VoiceResource = 'pma-voice'     -- 'pma-voice' oder 'mumble-voip'
+-- Voice (für pma-voice / mumble-voip / saltychat)
+-- 'auto' = automatische Erkennung, 'none' = deaktiviert
+Config.VoiceResource = 'auto'
 
 -- Geld (für esx/qb)
 Config.Framework = 'auto'              -- 'esx', 'qb', oder 'auto' für automatische Erkennung
+
+-- Minimap
+Config.HideDefaultMinimap = false      -- Standard-Minimap ausblenden (für eigene Minimap)
 
 -- Debug
 Config.Debug = false

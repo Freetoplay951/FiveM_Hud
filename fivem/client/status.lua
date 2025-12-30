@@ -1,4 +1,6 @@
 -- Status Updates (Health, Armor, etc.)
+local cachedStamina = 100
+
 CreateThread(function()
     while true do
         Wait(Config.StatusUpdateInterval)
@@ -19,15 +21,21 @@ CreateThread(function()
         }
         
         -- Hunger/Thirst (ESX)
-        if Framework == 'esx' and Config.EnableHunger then
-            local status = exports['esx_status']:getStatus('hunger')
-            if status then
-                data.hunger = status.percent
-            end
-            
-            local thirst = exports['esx_status']:getStatus('thirst')
-            if thirst then
-                data.thirst = thirst.percent
+        if Framework == 'esx' then
+            if Config.EnableHunger and IsResourceStarted('esx_status') then
+                local success, status = pcall(function()
+                    return exports['esx_status']:getStatus('hunger')
+                end)
+                if success and status then
+                    data.hunger = status.percent
+                end
+                
+                local successThirst, thirst = pcall(function()
+                    return exports['esx_status']:getStatus('thirst')
+                end)
+                if successThirst and thirst then
+                    data.thirst = thirst.percent
+                end
             end
         end
         
@@ -47,11 +55,20 @@ CreateThread(function()
             end
         end
         
-        -- Stamina
-        data.stamina = 100 - GetPlayerSprintStaminaDrainMultiplier(PlayerId()) * 100
-        -- Alternativ: Einfacher Stamina-Wert
-        if IsPlayerSprinting(PlayerId()) then
-            data.stamina = math.max(0, (data.stamina or 100) - 1)
+        -- Stamina (korrigiert - keine ungültige Native mehr)
+        if Config.EnableStamina then
+            local sprinting = IsPedSprinting(playerPed)
+            local swimming = IsPedSwimming(playerPed)
+            
+            if sprinting or swimming then
+                -- Stamina verringert sich beim Sprinten/Schwimmen
+                cachedStamina = math.max(0, cachedStamina - 2)
+            else
+                -- Stamina regeneriert sich
+                cachedStamina = math.min(100, cachedStamina + 1)
+            end
+            
+            data.stamina = cachedStamina
         end
         
         -- Oxygen (Unterwasser)
@@ -69,16 +86,21 @@ CreateThread(function()
 end)
 
 -- Stress Events (QB-Core Beispiel)
-if Framework == 'qb' then
-    RegisterNetEvent('hud:client:UpdateStress')
-    AddEventHandler('hud:client:UpdateStress', function(stress)
-        if Config.EnableStress then
-            SendNUI('updateHud', {
-                stress = stress
-            })
-        end
-    end)
-end
+-- Wird nach Framework-Detection registriert
+CreateThread(function()
+    Wait(1000) -- Warten bis Framework erkannt wurde
+    
+    if Framework == 'qb' then
+        RegisterNetEvent('hud:client:UpdateStress')
+        AddEventHandler('hud:client:UpdateStress', function(stress)
+            if Config.EnableStress then
+                SendNUI('updateHud', {
+                    stress = stress
+                })
+            end
+        end)
+    end
+end)
 
 -- Externe Status Updates (für andere Resourcen)
 RegisterNetEvent('hud:updateStatus')
