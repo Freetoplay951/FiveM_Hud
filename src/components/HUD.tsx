@@ -132,6 +132,7 @@ export const HUD = () => {
     const [teamChatState, setTeamChatState] = useState<TeamChatState>(DEMO_TEAM_CHAT);
     const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false); // For edit mode preview
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
+    const [isVoiceEnabled, setIsVoiceEnabled] = useState(true); // Voice-Widget aktiviert (wird auf false gesetzt wenn kein Voice-System gefunden)
     const [isDemoMode] = useState(!isNuiEnvironment());
 
     const [editMenuOpen, setEditMenuOpen] = useState(false);
@@ -191,6 +192,7 @@ export const HUD = () => {
         onUpdatePlayer: setPlayerState,
         onSetVisible: setIsVisible,
         onUpdateDeath: setDeathState,
+        onSetVoiceEnabled: setIsVoiceEnabled,
         onToggleEditMode: (enabled) => {
             if (enabled && !editMode) toggleEditMode();
             else if (!enabled && editMode) toggleEditMode();
@@ -581,8 +583,9 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Voice Widget - hidden when dead OR when death preview is active in edit mode */}
+            {/* Voice Widget - hidden when dead, death preview active, OR no voice system detected */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (isDemoMode || isVoiceEnabled) &&
                 (() => {
                     const widget = getWidget("voice");
                     if (!widget) return null;
