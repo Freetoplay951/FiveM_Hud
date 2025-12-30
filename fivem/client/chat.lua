@@ -133,12 +133,17 @@ local function SendChatMessage(msgType, sender, message)
     lastChatActivity = GetGameTimer()
     chatVisible = true
     
+    -- Chat automatisch öffnen bei neuer Nachricht
+    if not isChatOpen then
+        isChatOpen = true
+    end
+    
     SendNUI("updateChat", {
         isOpen = isChatOpen,
         isInputActive = isChatInputActive,
         isVisible = chatVisible,
         messages = chatMessages,
-        unreadCount = isChatOpen and 0 or 1
+        unreadCount = isChatInputActive and 0 or 1
     })
 end
 
@@ -162,6 +167,11 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
     lastTeamChatActivity = GetGameTimer()
     teamChatVisible = true
     
+    -- Team-Chat automatisch öffnen bei neuer Nachricht (nur wenn Zugriff)
+    if not isTeamChatOpen and HasTeamChatAccess() then
+        isTeamChatOpen = true
+    end
+    
     local teamType, teamName = GetPlayerTeamInfo()
     local onlineMembers = GetTeamOnlineCount()
     
@@ -173,7 +183,7 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
         teamType = teamType,
         teamName = teamName,
         messages = teamChatMessages,
-        unreadCount = isTeamChatOpen and 0 or 1,
+        unreadCount = isTeamChatInputActive and 0 or 1,
         onlineMembers = onlineMembers,
         isAdmin = IsPlayerTeamAdmin()
     })
@@ -346,7 +356,7 @@ RegisterCommand("+openchat", function()
 end, false)
 
 RegisterCommand("-openchat", function() end, false)
-RegisterKeyMapping("+openchat", "Chat öffnen", "keyboard", "T")
+RegisterKeyMapping("+openchat", "Chat öffnen", "keyboard", Config.ChatKey or "T")
 
 RegisterCommand("+openteamchat", function()
     if not isTeamChatOpen and not isChatOpen then
@@ -355,7 +365,7 @@ RegisterCommand("+openteamchat", function()
 end, false)
 
 RegisterCommand("-openteamchat", function() end, false)
-RegisterKeyMapping("+openteamchat", "Team-Chat öffnen", "keyboard", "Y")
+RegisterKeyMapping("+openteamchat", "Team-Chat öffnen", "keyboard", Config.TeamChatKey or "Y")
 
 -- ============================================================================
 -- NUI CALLBACKS
