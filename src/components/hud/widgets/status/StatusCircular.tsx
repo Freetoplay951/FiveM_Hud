@@ -1,36 +1,14 @@
 import { motion } from "framer-motion";
-import { LucideIcon, Heart, Shield, Utensils, Droplets, Zap, Brain, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { StatusType } from "@/types/hud";
+import { STATUS_CONFIG, StatusProps } from "./config";
 
-interface StatusCircularProps {
-    type: StatusType;
-    value: number;
-    size?: "sm" | "md" | "lg";
-}
-
-const STATUS_CONFIG: Record<StatusType, { icon: LucideIcon; color: string; label: string }> = {
-    health: { icon: Heart, color: "health", label: "HP" },
-    armor: { icon: Shield, color: "armor", label: "ARM" },
-    hunger: { icon: Utensils, color: "hunger", label: "HNG" },
-    thirst: { icon: Droplets, color: "thirst", label: "THR" },
-    stamina: { icon: Zap, color: "stamina", label: "STA" },
-    stress: { icon: Brain, color: "stress", label: "STR" },
-    oxygen: { icon: Wind, color: "oxygen", label: "O2" },
-};
-
-const SIZE_CONFIG = {
-    sm: { container: "w-12 h-12", icon: 14, stroke: 3, radius: 20, fontSize: "text-[8px]" },
-    md: { container: "w-14 h-14", icon: 16, stroke: 3.5, radius: 23, fontSize: "text-[9px]" },
-    lg: { container: "w-16 h-16", icon: 18, stroke: 4, radius: 26, fontSize: "text-[10px]" },
-};
-
-export const StatusCircular = ({ type, value, size = "md" }: StatusCircularProps) => {
+export const StatusCircular = ({ type, value }: StatusProps) => {
     const config = STATUS_CONFIG[type];
-    const sizeConfig = SIZE_CONFIG[size];
     const Icon = config.icon;
 
-    const circumference = 2 * Math.PI * sizeConfig.radius;
+    const radius = 23;
+    const stroke = 3.5;
+    const circumference = 2 * Math.PI * radius;
     const progress = (value / 100) * circumference;
 
     const isWarning = value <= 30;
@@ -45,7 +23,7 @@ export const StatusCircular = ({ type, value, size = "md" }: StatusCircularProps
     const colorVar = getColor();
 
     return (
-        <div className={cn("relative", sizeConfig.container)}>
+        <div className="relative w-14 h-14">
             {/* Glass Background */}
             <div className="absolute inset-0 rounded-full glass-panel overflow-hidden">
                 <motion.div
@@ -88,19 +66,19 @@ export const StatusCircular = ({ type, value, size = "md" }: StatusCircularProps
                 <circle
                     cx="30"
                     cy="30"
-                    r={sizeConfig.radius}
+                    r={radius}
                     fill="none"
                     stroke="hsl(var(--muted) / 0.15)"
-                    strokeWidth={sizeConfig.stroke}
+                    strokeWidth={stroke}
                 />
 
                 <motion.circle
                     cx="30"
                     cy="30"
-                    r={sizeConfig.radius}
+                    r={radius}
                     fill="none"
                     stroke={`hsl(var(--${colorVar}))`}
-                    strokeWidth={sizeConfig.stroke}
+                    strokeWidth={stroke}
                     strokeLinecap="round"
                     strokeDasharray={circumference}
                     initial={{ strokeDashoffset: circumference }}
@@ -116,7 +94,7 @@ export const StatusCircular = ({ type, value, size = "md" }: StatusCircularProps
             {/* Center Content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <Icon
-                    size={sizeConfig.icon}
+                    size={16}
                     className={cn("transition-colors", isCritical && "critical-pulse")}
                     style={{
                         color: `hsl(var(--${colorVar}))`,
@@ -124,7 +102,7 @@ export const StatusCircular = ({ type, value, size = "md" }: StatusCircularProps
                     }}
                 />
                 <span
-                    className={cn("hud-number mt-0.5", sizeConfig.fontSize)}
+                    className="hud-number mt-0.5 text-[9px]"
                     style={{
                         color: `hsl(var(--${colorVar}))`,
                         textShadow: `0 0 8px hsl(var(--${colorVar}) / 0.5)`,

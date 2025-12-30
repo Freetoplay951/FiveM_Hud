@@ -1,33 +1,9 @@
 import { motion } from "framer-motion";
-import { LucideIcon, Heart, Shield, Utensils, Droplets, Zap, Brain, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { StatusType } from "@/types/hud";
+import { STATUS_CONFIG, StatusProps } from "./config";
 
-interface StatusBarProps {
-    type: StatusType;
-    value: number;
-    size?: "sm" | "md" | "lg";
-}
-
-const STATUS_CONFIG: Record<StatusType, { icon: LucideIcon; color: string; label: string }> = {
-    health: { icon: Heart, color: "health", label: "HP" },
-    armor: { icon: Shield, color: "armor", label: "ARM" },
-    hunger: { icon: Utensils, color: "hunger", label: "HNG" },
-    thirst: { icon: Droplets, color: "thirst", label: "THR" },
-    stamina: { icon: Zap, color: "stamina", label: "STA" },
-    stress: { icon: Brain, color: "stress", label: "STR" },
-    oxygen: { icon: Wind, color: "oxygen", label: "O2" },
-};
-
-const SIZE_CONFIG = {
-    sm: { width: "w-24", height: "h-5", icon: 12, fontSize: "text-[8px]" },
-    md: { width: "w-28", height: "h-6", icon: 14, fontSize: "text-[9px]" },
-    lg: { width: "w-32", height: "h-7", icon: 16, fontSize: "text-[10px]" },
-};
-
-export const StatusBar = ({ type, value, size = "md" }: StatusBarProps) => {
+export const StatusBar = ({ type, value }: StatusProps) => {
     const config = STATUS_CONFIG[type];
-    const sizeConfig = SIZE_CONFIG[size];
     const Icon = config.icon;
 
     const isWarning = value <= 30;
@@ -42,14 +18,9 @@ export const StatusBar = ({ type, value, size = "md" }: StatusBarProps) => {
     const colorVar = getColor();
 
     return (
-        <div
-            className={cn(
-                "glass-panel rounded-full flex items-center gap-2 px-2",
-                sizeConfig.width,
-                sizeConfig.height
-            )}>
+        <div className="glass-panel rounded-full flex items-center gap-2 px-2 w-28 h-6">
             <Icon
-                size={sizeConfig.icon}
+                size={14}
                 className={cn(isCritical && "critical-pulse")}
                 style={{
                     color: `hsl(var(--${colorVar}))`,
@@ -71,7 +42,7 @@ export const StatusBar = ({ type, value, size = "md" }: StatusBarProps) => {
             </div>
 
             <span
-                className={cn("hud-number min-w-[20px] text-right", sizeConfig.fontSize)}
+                className="hud-number min-w-[20px] text-right text-[9px]"
                 style={{
                     color: `hsl(var(--${colorVar}))`,
                     textShadow: `0 0 6px hsl(var(--${colorVar}) / 0.5)`,

@@ -403,7 +403,6 @@ export const HUD = () => {
                             type={type}
                             value={value}
                             design={statusDesign}
-                            size={widget.size as "sm" | "md" | "lg"}
                         />
                     </HUDWidget>
                 );

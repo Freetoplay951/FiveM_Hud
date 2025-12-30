@@ -10,17 +10,15 @@ interface StatusWidgetProps {
     type: StatusType;
     value: number;
     design: StatusDesign;
-    size?: "sm" | "md" | "lg";
 }
 
-export const StatusWidget = ({ type, value, design, size = "md" }: StatusWidgetProps) => {
+export const StatusWidget = ({ type, value, design }: StatusWidgetProps) => {
     switch (design) {
         case "circular":
             return (
                 <StatusCircular
                     type={type}
                     value={value}
-                    size={size}
                 />
             );
         case "bar":
@@ -28,7 +26,6 @@ export const StatusWidget = ({ type, value, design, size = "md" }: StatusWidgetP
                 <StatusBar
                     type={type}
                     value={value}
-                    size={size}
                 />
             );
         case "vertical":
@@ -36,7 +33,6 @@ export const StatusWidget = ({ type, value, design, size = "md" }: StatusWidgetP
                 <StatusVertical
                     type={type}
                     value={value}
-                    size={size}
                 />
             );
         case "minimal":
@@ -44,7 +40,6 @@ export const StatusWidget = ({ type, value, design, size = "md" }: StatusWidgetP
                 <StatusMinimal
                     type={type}
                     value={value}
-                    size={size}
                 />
             );
         case "arc":
@@ -52,7 +47,6 @@ export const StatusWidget = ({ type, value, design, size = "md" }: StatusWidgetP
                 <StatusArc
                     type={type}
                     value={value}
-                    size={size}
                 />
             );
         default:
@@ -60,7 +54,6 @@ export const StatusWidget = ({ type, value, design, size = "md" }: StatusWidgetP
                 <StatusCircular
                     type={type}
                     value={value}
-                    size={size}
                 />
             );
     }

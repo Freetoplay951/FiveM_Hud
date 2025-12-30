@@ -15,7 +15,6 @@ export interface WidgetConfig {
     type: WidgetType;
     position: WidgetPosition;
     visible: boolean;
-    size?: "sm" | "md" | "lg";
     scale?: number;
 }
 
@@ -99,55 +98,13 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
     { id: "minimap", type: "minimap", position: { xPercent: 0, yPercent: 100 }, visible: true, scale: 1 },
 
     // Next to minimap - Status icons in a horizontal row (yPercent: 96 keeps them near bottom)
-    {
-        id: "health",
-        type: "health",
-        position: { xPercent: nextStatus(), yPercent: 96 },
-        visible: true,
-        size: "md",
-        scale: 1,
-    },
-    { id: "armor", type: "armor", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, size: "md", scale: 1 },
-    {
-        id: "hunger",
-        type: "hunger",
-        position: { xPercent: nextStatus(), yPercent: 96 },
-        visible: true,
-        size: "md",
-        scale: 1,
-    },
-    {
-        id: "thirst",
-        type: "thirst",
-        position: { xPercent: nextStatus(), yPercent: 96 },
-        visible: true,
-        size: "md",
-        scale: 1,
-    },
-    {
-        id: "stamina",
-        type: "stamina",
-        position: { xPercent: nextStatus(), yPercent: 96 },
-        visible: true,
-        size: "md",
-        scale: 1,
-    },
-    {
-        id: "stress",
-        type: "stress",
-        position: { xPercent: nextStatus(), yPercent: 96 },
-        visible: false,
-        size: "md",
-        scale: 1,
-    },
-    {
-        id: "oxygen",
-        type: "oxygen",
-        position: { xPercent: nextStatus(), yPercent: 96 },
-        visible: false,
-        size: "md",
-        scale: 1,
-    },
+    { id: "health", type: "health", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
+    { id: "armor", type: "armor", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
+    { id: "hunger", type: "hunger", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
+    { id: "thirst", type: "thirst", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
+    { id: "stamina", type: "stamina", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
+    { id: "stress", type: "stress", position: { xPercent: nextStatus(), yPercent: 96 }, visible: false, scale: 1 },
+    { id: "oxygen", type: "oxygen", position: { xPercent: nextStatus(), yPercent: 96 }, visible: false, scale: 1 },
 
     // Voice
     { id: "voice", type: "voice", position: { xPercent: 50, yPercent: 94 }, visible: true, scale: 1 },
@@ -159,7 +116,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
 export const DEFAULT_HUD_STATE: HUDLayoutState = {
     widgets: DEFAULT_WIDGETS,
     editMode: false,
-    snapToGrid: false,  // Grid disabled by default
+    snapToGrid: false, // Grid disabled by default
     gridSize: 20,
     statusDesign: "circular",
     hudScale: 1,
