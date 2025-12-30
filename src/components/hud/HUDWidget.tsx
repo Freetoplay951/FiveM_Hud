@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, ReactNode } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect, ReactNode } from "react";
 import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WidgetPosition } from "@/types/widget";
@@ -173,7 +173,8 @@ export const HUDWidget = ({
     );
 
     // Keep widgets in view - ALWAYS (not just in edit mode)
-    useEffect(() => {
+    // useLayoutEffect prevents visible “jumping” because clamping happens before paint.
+    useLayoutEffect(() => {
         if (elementSize.w === 0 || isDragging || isResizing) return;
         const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
         const clamped = clampToViewport(pixelPos.x, pixelPos.y);
