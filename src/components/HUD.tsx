@@ -615,7 +615,7 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Death Screen Widget - always visible when dead, not hideable like notifications */}
+            {/* Death Screen Widget - only render when dead OR in edit mode with preview enabled */}
             {(() => {
                 const widget = getWidget("deathscreen");
                 if (!widget) return null;
@@ -623,11 +623,14 @@ export const HUD = () => {
                 // Show death screen when dead OR in edit mode with preview enabled
                 const showDeathScreen = deathState.isDead || (editMode && showDeathScreenPreview);
                 
+                // Don't render anything if death screen shouldn't be shown
+                if (!showDeathScreen) return null;
+                
                 return (
                     <HUDWidget
                         id="deathscreen"
                         position={widget.position}
-                        visible={showDeathScreen}
+                        visible={true}
                         scale={widget.scale}
                         editMode={editMode}
                         snapToGrid={snapToGrid}
@@ -637,7 +640,7 @@ export const HUD = () => {
                         onReset={resetWidget}>
                         <DeathScreenWidget
                             death={editMode ? { ...DEMO_DEATH, isDead: true } : deathState}
-                            visible={showDeathScreen}
+                            visible={true}
                             isWidget
                         />
                     </HUDWidget>
