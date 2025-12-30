@@ -234,7 +234,11 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                         <Fuel
                             size={12}
                             className={cn(
-                                fuelCritical ? "text-critical critical-pulse" : fuelWarning ? "text-warning warning-pulse" : "text-stamina"
+                                fuelCritical
+                                    ? "text-critical critical-pulse"
+                                    : fuelWarning
+                                    ? "text-warning warning-pulse"
+                                    : "text-stamina"
                             )}
                         />
                         <div className="relative w-24 h-2 rounded-full glass-panel overflow-hidden">
