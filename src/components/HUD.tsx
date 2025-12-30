@@ -10,7 +10,7 @@ import { NeonVoiceWidget } from "./hud/widgets/VoiceWidget";
 import { NeonMinimapWidget } from "./hud/widgets/MinimapWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";
 import { CompassWidget } from "./hud/widgets/CompassWidget";
-import { NotificationContainer } from "./hud/NotificationContainer";
+import { NotificationContainer } from "./hud/notifications/NotificationContainer";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";

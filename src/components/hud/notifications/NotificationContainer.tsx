@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { NotificationData } from "@/types/hud";
-import { NeonNotification } from "./NeonNotification";
+import { NeonNotification } from "./Notification";
 
 interface NotificationContainerProps {
     notifications: NotificationData[];
