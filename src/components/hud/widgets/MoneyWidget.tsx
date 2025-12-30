@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { DollarSign, CreditCard, Briefcase } from "lucide-react";
+import { DollarSign, CreditCard, Briefcase, IdCard } from "lucide-react";
 import { MoneyState, PlayerState } from "@/types/hud";
 
 interface NeonMoneyWidgetProps {

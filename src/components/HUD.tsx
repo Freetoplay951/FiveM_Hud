@@ -5,6 +5,7 @@ import { VehicleHUDFactory } from "./hud/vehicles/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { StatusWidget } from "./hud/widgets/StatusWidget";
 import { NeonMoneyWidget } from "./hud/widgets/MoneyWidget";
+
 import { NeonVoiceWidget } from "./hud/widgets/VoiceWidget";
 import { NeonMinimapWidget } from "./hud/widgets/MinimapWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";

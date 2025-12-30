@@ -1,6 +1,7 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-react";
 import { NotificationData } from "@/types/hud";
+import { cn } from "@/lib/utils";
 
 interface NeonNotificationProps {
     notification: NotificationData;
