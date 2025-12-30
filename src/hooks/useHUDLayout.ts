@@ -11,18 +11,15 @@ import {
   SpeedometerConfig,
   SpeedometerConfigs,
 } from '@/types/widget';
-import { snapPositionToGrid } from '@/lib/snapUtils';
-import { resolveStatusWidgetOverlaps } from '@/lib/overlapUtils';
 
 const STORAGE_KEY = 'hud-layout';
 
-// Clampt Positionen in den sichtbaren Bereich (2-98% um Rand-Überlappungen zu vermeiden)
+// Clamp position to viewport bounds
 const clampPosition = (pos: WidgetPosition): WidgetPosition => ({
-  xPercent: Math.max(2, Math.min(98, pos.xPercent)),
-  yPercent: Math.max(2, Math.min(98, pos.yPercent)),
+  x: Math.max(0, Math.min(1900, pos.x)),
+  y: Math.max(0, Math.min(1060, pos.y)),
 });
 
-// Clampt alle Widget-Positionen
 const clampAllWidgets = (widgets: WidgetConfig[]): WidgetConfig[] =>
   widgets.map((w) => ({
     ...w,
@@ -42,7 +39,7 @@ const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {
     ...raw,
   };
 
-  next.widgets = clampAllWidgets(resolveStatusWidgetOverlaps(next.widgets ?? DEFAULT_WIDGETS));
+  next.widgets = clampAllWidgets(next.widgets ?? DEFAULT_WIDGETS);
   next.speedometerConfigs = clampSpeedometerConfigs(
     (next.speedometerConfigs ?? DEFAULT_SPEEDOMETER_CONFIGS) as SpeedometerConfigs
   );
@@ -56,6 +53,11 @@ export const useHUDLayout = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Migration: if old percent-based positions detected, reset to defaults
+        if (parsed.widgets?.[0]?.position?.xPercent !== undefined) {
+          console.log('Migrating from percent to pixel positions...');
+          return normalizeState(DEFAULT_HUD_STATE);
+        }
         return normalizeState(parsed);
       } catch {
         return normalizeState(DEFAULT_HUD_STATE);
@@ -63,17 +65,6 @@ export const useHUDLayout = () => {
     }
     return normalizeState(DEFAULT_HUD_STATE);
   });
-
-  // Listen to window resize to recalculate positions
-  useEffect(() => {
-    const handleResize = () => {
-      // Force a re-render when window resizes - widgets will recalculate their positions
-      setState((prev) => ({ ...prev }));
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -88,11 +79,9 @@ export const useHUDLayout = () => {
   }, []);
 
   const updateWidgetPosition = useCallback((id: string, position: WidgetPosition) => {
-    // Clampe Position beim Update um Überlappungen am Rand zu vermeiden
-    const clampedPosition = clampPosition(position);
     setState((prev) => ({
       ...prev,
-      widgets: prev.widgets.map((w) => (w.id === id ? { ...w, position: clampedPosition } : w)),
+      widgets: prev.widgets.map((w) => (w.id === id ? { ...w, position } : w)),
     }));
   }, []);
 
@@ -143,54 +132,34 @@ export const useHUDLayout = () => {
   const resetSpeedometer = useCallback((type: SpeedometerType) => {
     setState(prev => {
       const defaultConfig = DEFAULT_SPEEDOMETER_CONFIGS[type];
-      const defaultPosition = prev.snapToGrid 
-        ? snapPositionToGrid(defaultConfig.position, prev.gridSize)
-        : defaultConfig.position;
-      
       return {
         ...prev,
         speedometerConfigs: {
           ...prev.speedometerConfigs,
-          [type]: { position: defaultPosition, scale: 1 },
+          [type]: { position: defaultConfig.position, scale: 1 },
         },
       };
     });
   }, []);
 
   const resetLayout = useCallback(() => {
-    setState(prev => {
-      const widgetsToUse = prev.snapToGrid 
-        ? DEFAULT_WIDGETS.map(w => ({
-            ...w,
-            position: snapPositionToGrid(w.position, prev.gridSize),
-          }))
-        : DEFAULT_WIDGETS;
-      
-      return {
-        ...DEFAULT_HUD_STATE,
-        editMode: true,
-        snapToGrid: prev.snapToGrid,
-        widgets: widgetsToUse,
-      };
-    });
+    setState(prev => ({
+      ...DEFAULT_HUD_STATE,
+      editMode: true,
+      snapToGrid: prev.snapToGrid,
+    }));
   }, []);
 
   const resetWidget = useCallback((id: string) => {
     const defaultWidget = DEFAULT_WIDGETS.find(w => w.id === id);
     if (!defaultWidget) return;
     
-    setState(prev => {
-      const newPosition = prev.snapToGrid 
-        ? snapPositionToGrid(defaultWidget.position, prev.gridSize)
-        : defaultWidget.position;
-      
-      return {
-        ...prev,
-        widgets: prev.widgets.map(w => 
-          w.id === id ? { ...w, position: newPosition, scale: defaultWidget.scale ?? 1 } : w
-        ),
-      };
-    });
+    setState(prev => ({
+      ...prev,
+      widgets: prev.widgets.map(w => 
+        w.id === id ? { ...w, position: defaultWidget.position, scale: defaultWidget.scale ?? 1 } : w
+      ),
+    }));
   }, []);
 
   const getWidget = useCallback((id: string): WidgetConfig | undefined => {
