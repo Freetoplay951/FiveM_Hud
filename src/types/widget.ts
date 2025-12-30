@@ -82,34 +82,34 @@ const nextStatus = function () {
 };
 
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
-    // Top left - Compass (center position)
-    { id: "compass", type: "compass", position: { xPercent: 4, yPercent: 8 }, visible: true, scale: 1 },
+    // Top left - Compass (center position) - mit Abstand vom Rand
+    { id: "compass", type: "compass", position: { xPercent: 5, yPercent: 8 }, visible: true, scale: 1 },
 
     // Top center - Clock
     { id: "clock", type: "clock", position: { xPercent: 50, yPercent: 5 }, visible: true, scale: 1 },
 
-    // Top right - Money
-    { id: "money", type: "money", position: { xPercent: 100, yPercent: 0 }, visible: true, scale: 1 },
+    // Top right - Money - mit Abstand vom Rand
+    { id: "money", type: "money", position: { xPercent: 95, yPercent: 5 }, visible: true, scale: 1 },
 
-    // Left middle (slightly upper) - Notifications
-    { id: "notifications", type: "notifications", position: { xPercent: 0, yPercent: 35 }, visible: true, scale: 1 },
+    // Left middle (slightly upper) - Notifications - mit Abstand vom Rand
+    { id: "notifications", type: "notifications", position: { xPercent: 2, yPercent: 35 }, visible: true, scale: 1 },
 
-    // Bottom left - Minimap (Location is inside minimap)
-    { id: "minimap", type: "minimap", position: { xPercent: 0, yPercent: 100 }, visible: true, scale: 1 },
+    // Bottom left - Minimap (Location is inside minimap) - mit Abstand vom Rand
+    { id: "minimap", type: "minimap", position: { xPercent: 2, yPercent: 92 }, visible: true, scale: 1 },
 
-    // Next to minimap - Status icons in a horizontal row (yPercent: 96 keeps them near bottom)
-    { id: "health", type: "health", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
-    { id: "armor", type: "armor", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
-    { id: "hunger", type: "hunger", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
-    { id: "thirst", type: "thirst", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
-    { id: "stamina", type: "stamina", position: { xPercent: nextStatus(), yPercent: 96 }, visible: true, scale: 1 },
-    { id: "stress", type: "stress", position: { xPercent: nextStatus(), yPercent: 96 }, visible: false, scale: 1 },
-    { id: "oxygen", type: "oxygen", position: { xPercent: nextStatus(), yPercent: 96 }, visible: false, scale: 1 },
+    // Next to minimap - Status icons in a horizontal row (yPercent: 92 keeps them near bottom)
+    { id: "health", type: "health", position: { xPercent: nextStatus(), yPercent: 92 }, visible: true, scale: 1 },
+    { id: "armor", type: "armor", position: { xPercent: nextStatus(), yPercent: 92 }, visible: true, scale: 1 },
+    { id: "hunger", type: "hunger", position: { xPercent: nextStatus(), yPercent: 92 }, visible: true, scale: 1 },
+    { id: "thirst", type: "thirst", position: { xPercent: nextStatus(), yPercent: 92 }, visible: true, scale: 1 },
+    { id: "stamina", type: "stamina", position: { xPercent: nextStatus(), yPercent: 92 }, visible: true, scale: 1 },
+    { id: "stress", type: "stress", position: { xPercent: nextStatus(), yPercent: 92 }, visible: true, scale: 1 },
+    { id: "oxygen", type: "oxygen", position: { xPercent: nextStatus(), yPercent: 92 }, visible: true, scale: 1 },
 
     // Voice
-    { id: "voice", type: "voice", position: { xPercent: 50, yPercent: 94 }, visible: true, scale: 1 },
+    { id: "voice", type: "voice", position: { xPercent: 50, yPercent: 90 }, visible: true, scale: 1 },
 
-    // Bottom right - Speedometer
+    // Bottom right - Speedometer - mit Abstand vom Rand
     { id: "speedometer", type: "speedometer", position: { xPercent: 85, yPercent: 80 }, visible: true, scale: 1 },
 ];
 
