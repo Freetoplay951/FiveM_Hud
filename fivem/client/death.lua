@@ -13,13 +13,16 @@ local HELP_COOLDOWN = 30 -- Seconds before calling help again
 
 -- Send death state to NUI
 local function UpdateDeathNUI()
-    SendNUI("updateDeath", {
-        isDead = isDead,
-        respawnTimer = respawnTimer,
-        waitTimer = waitTimer,
-        canCallHelp = canCallHelp,
-        canRespawn = respawnTimer <= 0,
-        message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
+    SendNUIMessage({
+        action = "updateDeath",
+        data = {
+            isDead = isDead,
+            respawnTimer = respawnTimer,
+            waitTimer = waitTimer,
+            canCallHelp = canCallHelp,
+            canRespawn = respawnTimer <= 0,
+            message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
+        }
     })
 end
 
@@ -94,11 +97,14 @@ RegisterNUICallback("deathCallHelp", function(data, cb)
         TriggerServerEvent("hud:callMedic")
         
         -- Notify player
-        SendNUI("notify", {
-            type = "info",
-            title = "Hilferuf",
-            message = "Der Rettungsdienst wurde benachrichtigt.",
-            duration = 5000
+        SendNUIMessage({
+            action = "notify",
+            data = {
+                type = "info",
+                title = "Hilferuf",
+                message = "Der Rettungsdienst wurde benachrichtigt.",
+                duration = 5000
+            }
         })
         
         -- Cooldown for calling help again
@@ -128,11 +134,14 @@ RegisterNUICallback("deathRespawn", function(data, cb)
         ClearPedBloodDamage(ped)
         
         -- Notify
-        SendNUI("notify", {
-            type = "success",
-            title = "Respawn",
-            message = "Du wurdest im Krankenhaus wiederbelebt.",
-            duration = 5000
+        SendNUIMessage({
+            action = "notify",
+            data = {
+                type = "success",
+                title = "Respawn",
+                message = "Du wurdest im Krankenhaus wiederbelebt.",
+                duration = 5000
+            }
         })
         
         UpdateDeathNUI()
@@ -147,11 +156,14 @@ RegisterNUICallback("deathSyncPosition", function(data, cb)
     
     TriggerServerEvent("hud:syncPosition", coords.x, coords.y, coords.z)
     
-    SendNUI("notify", {
-        type = "info",
-        title = "Sync",
-        message = "Position wurde synchronisiert.",
-        duration = 3000
+    SendNUIMessage({
+        action = "notify",
+        data = {
+            type = "info",
+            title = "Sync",
+            message = "Position wurde synchronisiert.",
+            duration = 3000
+        }
     })
     
     cb({ ok = true })
