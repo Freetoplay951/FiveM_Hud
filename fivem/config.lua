@@ -23,7 +23,9 @@ Config.VoiceResource = 'auto'
 Config.Framework = 'auto'              -- 'esx', 'qb', oder 'auto' für automatische Erkennung
 
 -- Minimap
-Config.HideDefaultMinimap = false      -- Standard-Minimap ausblenden (für eigene Minimap)
+-- WICHTIG: Setze auf FALSE damit die echte GTA Karte angezeigt wird!
+-- Das HUD positioniert die GTA-Minimap automatisch an die richtige Stelle.
+Config.HideDefaultMinimap = false
 
 -- Debug
 Config.Debug = false

@@ -23,15 +23,8 @@ export const NeonMinimapWidget = ({ location, shape = "square" }: NeonMinimapWid
                 className={cn(
                     "px-3 py-1.5 mb-2",
                     isRound ? "rounded-full" : "rounded-lg",
-                    isNui
-                        ? "border border-border/50 bg-transparent"
-                        : "glass-panel"
+                    "bg-black/70 backdrop-blur-sm border border-white/20"
                 )}
-                style={
-                    isNui
-                        ? { boxShadow: "0 0 0 2px hsl(var(--background) / 0.65)" }
-                        : { boxShadow: "0 0 15px hsl(var(--primary) / 0.15)" }
-                }
             >
                 <div
                     className="text-xs hud-text text-primary truncate max-w-[180px]"
@@ -47,38 +40,43 @@ export const NeonMinimapWidget = ({ location, shape = "square" }: NeonMinimapWid
                 </div>
             </div>
 
-            {/* Minimap */}
+            {/* Minimap Container */}
             <div className={cn("relative", isRound ? "w-40 h-40" : "w-44 h-36")}>
-                {/* Frame */}
+                {/* 
+                    In FiveM/NUI: This is just a decorative frame - the actual GTA radar 
+                    renders BEHIND this element. We make it completely transparent in the center.
+                    
+                    In Demo mode: We show a placeholder map with fake roads.
+                */}
                 <div
                     className={cn(
                         "absolute inset-0 overflow-hidden",
                         isRound ? "rounded-full" : "rounded-lg",
-                        isNui
-                            ? "border border-border/60 bg-transparent"
-                            : "glass-panel"
+                        // Only show border frame, center is transparent for GTA radar
+                        "border-2 border-white/30"
                     )}
-                    style={
-                        isNui
-                            ? {
-                                  boxShadow: `0 0 0 2px hsl(var(--background) / 0.85), 0 0 18px hsl(var(--primary) / 0.12)`,
-                              }
-                            : {
-                                  boxShadow:
-                                      "0 0 20px hsl(var(--primary) / 0.1), inset 0 0 15px hsl(var(--background) / 0.5)",
-                              }
-                    }
+                    style={{
+                        // Transparent background - GTA radar shows through
+                        background: isNui ? "transparent" : undefined,
+                        boxShadow: isNui 
+                            ? "0 0 15px hsl(var(--primary) / 0.2), inset 0 0 0 1px hsl(var(--primary) / 0.1)"
+                            : "0 0 20px hsl(var(--primary) / 0.1), inset 0 0 15px hsl(var(--background) / 0.5)",
+                    }}
                 >
+                    {/* Demo Mode Only - Placeholder Map */}
                     {!isNui && (
                         <>
-                            {/* Map Placeholder Grid */}
+                            {/* Dark background for demo */}
+                            <div className="absolute inset-0 bg-background/90" />
+                            
+                            {/* Map Grid */}
                             <div
                                 className={cn("absolute inset-2 opacity-30", isRound ? "rounded-full" : "rounded")}
                                 style={{
                                     backgroundImage: `
-                linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px),
-                linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)
-              `,
+                                        linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px),
+                                        linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)
+                                    `,
                                     backgroundSize: "20px 20px",
                                 }}
                             />
@@ -118,35 +116,16 @@ export const NeonMinimapWidget = ({ location, shape = "square" }: NeonMinimapWid
                             </div>
                         </>
                     )}
-
-                    {isNui && (
-                        <div
-                            className={cn("absolute inset-2", isRound ? "rounded-full" : "rounded")}
-                            style={{
-                                background: "transparent",
-                                boxShadow:
-                                    "inset 0 0 0 2px hsl(var(--background) / 0.75), inset 0 0 0 3px hsl(var(--primary) / 0.18)",
-                            }}
-                            aria-hidden="true"
-                        />
-                    )}
                 </div>
 
-                {/* Compass Direction */}
+                {/* Compass Direction Badge */}
                 <div className={cn("absolute left-1/2 -translate-x-1/2", isRound ? "-bottom-2" : "-bottom-1")}>
                     <div
                         className={cn(
                             "px-2 py-0.5 flex items-center gap-1",
                             isRound ? "rounded-full" : "rounded",
-                            isNui
-                                ? "border border-border/50 bg-transparent"
-                                : "glass-panel"
+                            "bg-black/70 backdrop-blur-sm border border-white/20"
                         )}
-                        style={
-                            isNui
-                                ? { boxShadow: "0 0 0 2px hsl(var(--background) / 0.65)" }
-                                : { boxShadow: "0 0 10px hsl(var(--background) / 0.5)" }
-                        }
                     >
                         <span
                             className="hud-number text-xs text-primary"
