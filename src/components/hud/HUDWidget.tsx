@@ -12,6 +12,12 @@ interface HUDWidgetProps {
     snapToGrid: boolean;
     gridSize: number;
     scale?: number;
+    /**
+     * How the widget position is interpreted.
+     * - center (default): position is the widget's center point (good for fixed-size widgets)
+     * - top-left: position is the widget's top-left corner (good for variable-height widgets like notifications)
+     */
+    anchor?: "center" | "top-left";
     onPositionChange: (id: string, position: WidgetPosition) => void;
     onVisibilityToggle: (id: string) => void;
     onScaleChange?: (id: string, scale: number) => void;
@@ -31,6 +37,7 @@ export const HUDWidget = ({
     snapToGrid,
     gridSize,
     scale = 1,
+    anchor = "center",
     onPositionChange,
     onVisibilityToggle,
     onScaleChange,
@@ -111,9 +118,18 @@ export const HUDWidget = ({
         return () => resizeObserver.disconnect();
     }, [scale, localScale, id, visible]);
 
-    // Convert center percent to top-left pixel position
+    // Convert stored percent position to top-left pixel position
+    // - center: position is the widget center
+    // - top-left: position is the widget's top-left corner
     const centerPercentToTopLeftPixel = useCallback(
         (xPercent: number, yPercent: number) => {
+            if (anchor === "top-left") {
+                return {
+                    x: (xPercent / 100) * window.innerWidth,
+                    y: (yPercent / 100) * window.innerHeight,
+                };
+            }
+
             const centerX = (xPercent / 100) * window.innerWidth;
             const centerY = (yPercent / 100) * window.innerHeight;
             return {
@@ -121,12 +137,19 @@ export const HUDWidget = ({
                 y: centerY - elementSize.h / 2,
             };
         },
-        [elementSize]
+        [anchor, elementSize]
     );
 
-    // Convert top-left pixel to center percent
+    // Convert top-left pixel position to stored percent position
     const topLeftPixelToCenterPercent = useCallback(
         (x: number, y: number): WidgetPosition => {
+            if (anchor === "top-left") {
+                return {
+                    xPercent: (x / window.innerWidth) * 100,
+                    yPercent: (y / window.innerHeight) * 100,
+                };
+            }
+
             const centerX = x + elementSize.w / 2;
             const centerY = y + elementSize.h / 2;
             return {
@@ -134,7 +157,7 @@ export const HUDWidget = ({
                 yPercent: (centerY / window.innerHeight) * 100,
             };
         },
-        [elementSize]
+        [anchor, elementSize]
     );
 
     const clampToViewport = useCallback(
