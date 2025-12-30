@@ -121,7 +121,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
             </svg>
             
             {/* Speed overlay left */}
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 w-[40px]">
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/85 backdrop-blur-sm border border-white/20 rounded px-1.5 py-0.5 w-[40px]">
               <span className="text-[6px] text-muted-foreground block text-center">KTS</span>
               <motion.span 
                 className="hud-number text-[10px] text-stamina tabular-nums block text-center"
@@ -134,7 +134,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
             </div>
             
             {/* Altitude overlay right */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 glass-panel rounded px-1.5 py-0.5 w-[44px]">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/85 backdrop-blur-sm border border-white/20 rounded px-1.5 py-0.5 w-[44px]">
               <span className="text-[6px] text-muted-foreground block text-center">ALT</span>
               <motion.span 
                 className={cn(
@@ -150,7 +150,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
             </div>
             
             {/* Vertical speed indicator right-bottom */}
-            <div className="absolute right-2 bottom-12 glass-panel rounded px-1.5 py-0.5 flex items-center gap-0.5 w-[44px]">
+            <div className="absolute right-2 bottom-12 bg-background/85 backdrop-blur-sm border border-white/20 rounded px-1.5 py-0.5 flex items-center gap-0.5 w-[44px]">
               {verticalSpeed > 0 ? (
                 <ArrowUp size={8} className="text-stamina flex-shrink-0" style={{ filter: 'drop-shadow(0 0 2px hsl(var(--stamina)))' }} />
               ) : verticalSpeed < 0 ? (
@@ -173,7 +173,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
             
             {/* Heading bottom */}
             <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-              <div className="glass-panel rounded px-2 py-0.5 flex items-center gap-1 w-[48px] justify-center">
+              <div className="bg-background/85 backdrop-blur-sm border border-white/20 rounded px-2 py-0.5 flex items-center gap-1 w-[48px] justify-center">
                 <motion.span 
                   className="hud-number text-[10px] text-primary tabular-nums" 
                   style={{ textShadow: '0 0 6px hsl(var(--primary) / 0.6)', fontVariantNumeric: 'tabular-nums' }}
@@ -196,8 +196,8 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
             {/* Rotor RPM */}
             <div 
               className={cn(
-                "glass-panel rounded px-2 py-1 flex items-center gap-1.5 w-[76px]",
-                lowRpm && "border border-critical/50"
+                "bg-background/85 backdrop-blur-sm border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[76px]",
+                lowRpm && "border-critical/50"
               )}
             >
               <Gauge 
@@ -220,7 +220,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
             </div>
             
             {/* Fuel */}
-            <div className="glass-panel rounded px-2 py-1 flex items-center gap-1.5 w-[56px]">
+            <div className="bg-background/85 backdrop-blur-sm border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[56px]">
               <Fuel 
                 size={10} 
                 className={cn(
