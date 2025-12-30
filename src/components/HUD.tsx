@@ -78,7 +78,6 @@ export const HUD = () => {
     const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
     const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
     const [isDemoMode] = useState(!isNuiEnvironment());
-    const [currentTime, setCurrentTime] = useState("18:24");
 
     const [editMenuOpen, setEditMenuOpen] = useState(false);
 
@@ -203,19 +202,6 @@ export const HUD = () => {
 
         return () => clearInterval(interval);
     }, [isDemoMode]);
-
-    // Clock update
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTime(
-                new Date().toLocaleTimeString("de-DE", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })
-            );
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
 
     // Demo key controls
     useEffect(() => {
@@ -441,7 +427,7 @@ export const HUD = () => {
                         visible={widget.visible}
                         scale={widget.scale}
                         {...widgetProps}>
-                        <ClockWidget time={currentTime} />
+                        <ClockWidget />
                     </HUDWidget>
                 );
             })()}
