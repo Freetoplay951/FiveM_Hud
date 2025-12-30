@@ -12,6 +12,7 @@ interface NuiEventHandlers {
     onToggleEditMode?: (enabled: boolean) => void;
     onSetVisible?: (visible: boolean) => void;
     onUpdateDeath?: (data: DeathState) => void;
+    onSetVoiceEnabled?: (enabled: boolean) => void;
 }
 
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
@@ -52,6 +53,9 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                     break;
                 case "updateDeath":
                     handlers.onUpdateDeath?.(data);
+                    break;
+                case "setVoiceEnabled":
+                    handlers.onSetVoiceEnabled?.(data);
                     break;
             }
         },

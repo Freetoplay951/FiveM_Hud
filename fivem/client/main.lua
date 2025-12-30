@@ -85,8 +85,14 @@ local function DetectVoiceResource()
         VoiceResource = Config.VoiceResource
     end
     
+    -- Voice Widget aktivieren/deaktivieren basierend auf erkanntem System
+    SendNUI('setVoiceEnabled', VoiceResource ~= nil)
+    
     if Config.Debug then
         print('[HUD] Voice resource detected: ' .. (VoiceResource or 'none'))
+        if not VoiceResource then
+            print('[HUD] Voice widget disabled - no voice system found')
+        end
     end
 end
 
