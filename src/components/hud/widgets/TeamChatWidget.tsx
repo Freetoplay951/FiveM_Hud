@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Send, X, Shield, Lock } from 'lucide-react';
+import { Users, Send, X, Shield, Lock, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TeamChatMessage, TeamChatState } from '@/types/hud';
 
@@ -11,14 +11,14 @@ interface TeamChatWidgetProps {
   isOpen?: boolean;
 }
 
-// Team colors based on team type
-const TEAM_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  police: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
-  ems: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' },
-  mechanic: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30' },
-  taxi: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30' },
-  admin: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
-  default: { bg: 'bg-primary/20', text: 'text-primary', border: 'border-primary/30' },
+// Staff rank colors
+const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; icon: typeof Shield }> = {
+  supporter: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30', icon: Shield },
+  moderator: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30', icon: Shield },
+  admin: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30', icon: Shield },
+  superadmin: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', icon: Crown },
+  owner: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30', icon: Crown },
+  default: { bg: 'bg-primary/20', text: 'text-primary', border: 'border-primary/30', icon: Shield },
 };
 
 export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true }: TeamChatWidgetProps) => {
@@ -71,12 +71,14 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
       >
         <Lock size={32} className="text-muted-foreground/50 mb-2" />
         <span className="text-xs text-muted-foreground">Kein Zugriff</span>
-        <span className="text-[10px] text-muted-foreground/70 mt-1">
-          Du benötigst die entsprechende Berechtigung
+        <span className="text-[10px] text-muted-foreground/70 mt-1 text-center px-4">
+          Nur für Team-Mitglieder (Supporter, Admin, etc.)
         </span>
       </motion.div>
     );
   }
+
+  const TeamIcon = teamColor.icon;
 
   return (
     <motion.div
@@ -99,8 +101,8 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
         teamColor.border,
         teamColor.bg
       )}>
-        <div className="flex items-center gap-2">
-          <Users size={14} className={teamColor.text} />
+      <div className="flex items-center gap-2">
+          <TeamIcon size={14} className={teamColor.text} />
           <span className={cn("text-xs font-medium uppercase tracking-wider", teamColor.text)}>
             {teamChat.teamName}
           </span>

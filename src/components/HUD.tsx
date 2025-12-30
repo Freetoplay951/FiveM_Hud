@@ -85,22 +85,22 @@ const DEMO_CHAT: ChatState = {
     unreadCount: 3,
 };
 
-// Demo Team Chat State
+// Demo Team Chat State (Staff only)
 const DEMO_TEAM_CHAT: TeamChatState = {
     isOpen: true,
     hasAccess: true,
-    teamType: "police",
-    teamName: "LSPD",
+    teamType: "admin",
+    teamName: "Team-Chat",
     messages: [
-        { id: "1", sender: "Chief Miller", rank: "Chief", message: "Alle Einheiten: Dienstbesprechung um 14:00 Uhr.", timestamp: "11:45", isImportant: true },
-        { id: "2", sender: "Officer Johnson", rank: "Officer", message: "10-4, verstanden.", timestamp: "11:46" },
-        { id: "3", sender: "Sgt. Williams", rank: "Sergeant", message: "Brauche Verstärkung am Pier.", timestamp: "11:50" },
-        { id: "4", sender: "Officer Davis", rank: "Officer", message: "Bin unterwegs, ETA 3 Minuten.", timestamp: "11:51" },
-        { id: "5", sender: "Detective Brown", rank: "Detective", message: "Hat jemand den Bericht vom Überfall?", timestamp: "11:55" },
+        { id: "1", sender: "Owner Max", rank: "Owner", message: "Willkommen im Team-Chat!", timestamp: "11:45", isImportant: true },
+        { id: "2", sender: "Admin Lisa", rank: "Admin", message: "Neuer Spieler braucht Hilfe am Flughafen.", timestamp: "11:46" },
+        { id: "3", sender: "Mod Tom", rank: "Moderator", message: "Bin unterwegs, kümmere mich drum.", timestamp: "11:50" },
+        { id: "4", sender: "Supporter Anna", rank: "Supporter", message: "Hat jemand Zeit für ein Ticket?", timestamp: "11:51" },
+        { id: "5", sender: "Admin Lisa", rank: "Admin", message: "Ich kann übernehmen.", timestamp: "11:55" },
     ],
     unreadCount: 2,
-    onlineMembers: 8,
-    isAdmin: false,
+    onlineMembers: 5,
+    isAdmin: true,
 };
 
 const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
