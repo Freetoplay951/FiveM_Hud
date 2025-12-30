@@ -1,31 +1,90 @@
 -- Minimap Control & Positioning
--- This script controls the GTA V radar/minimap position to match the HUD widget
+-- Steuert die GTA V Radar/Minimap Sichtbarkeit und Position
 
 local minimapEnabled = true
 local minimapShape = "square"
-local currentMinimapPos = { x = 0.02, y = 0.95, w = 0.15, h = 0.22 } -- Default position
 
--- Cache natives for performance
-local DisplayRadar = DisplayRadar
-local SetRadarBigmapEnabled = SetRadarBigmapEnabled
+-- Standard Minimap Position (links unten)
+local minimapPosition = {
+    x = 0.0,
+    y = 0.0,
+    width = 0.15,
+    height = 0.22
+}
 
--- Apply minimap position
-local function ApplyMinimapPosition()
-    local x, y, w, h = currentMinimapPos.x, currentMinimapPos.y, currentMinimapPos.w, currentMinimapPos.h
+-- ============================================================================
+-- INITIALIZATION
+-- ============================================================================
+
+-- Initialisierung beim Ressourcenstart
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then
+        return
+    end
     
-    -- Set all minimap components to match HUD position
-    SetMinimapComponentPosition("minimap", "L", "B", x, y - h, w, h)
-    SetMinimapComponentPosition("minimap_mask", "L", "B", x, y - h, w, h)
-    SetMinimapComponentPosition("minimap_blur", "L", "B", x, y - h, w, h)
-end
+    -- Kurz warten bis alles geladen ist
+    Wait(500)
+    
+    -- Minimap aktivieren falls nicht versteckt
+    if not Config.HideDefaultMinimap then
+        DisplayRadar(true)
+        
+        -- Bigmap deaktivieren (erweiterte Karte)
+        SetRadarBigmapEnabled(false, false)
+        
+        -- Radar Zoom auf Standard
+        SetRadarZoom(0)
+        
+        if Config.Debug then
+            print('[HUD] Minimap initialized and enabled')
+        end
+    else
+        DisplayRadar(false)
+        if Config.Debug then
+            print('[HUD] Minimap hidden by config')
+        end
+    end
+end)
 
--- Set minimap shape
-local function SetMinimapShape(shape)
+-- ============================================================================
+-- MAIN LOOP
+-- ============================================================================
+
+-- Haupt-Loop für Minimap Kontrolle
+CreateThread(function()
+    while true do
+        -- Minimap Sichtbarkeit steuern
+        if Config.HideDefaultMinimap then
+            DisplayRadar(false)
+            Wait(1000)
+        else
+            -- Radar anzeigen wenn aktiviert
+            if minimapEnabled then
+                DisplayRadar(true)
+                
+                -- Bigmap Status prüfen und ggf. deaktivieren
+                if IsBigmapActive() then
+                    SetRadarBigmapEnabled(false, false)
+                end
+            else
+                DisplayRadar(false)
+            end
+            Wait(100)
+        end
+    end
+end)
+
+-- ============================================================================
+-- MINIMAP SHAPE (Square/Round)
+-- ============================================================================
+
+local function SetMinimapShapeInternal(shape)
     minimapShape = shape
     
     if shape == "round" then
-        -- Request circular mask texture
+        -- Runde Minimap (benötigt circlemap Textur)
         RequestStreamedTextureDict("circlemap", false)
+        
         local timeout = 0
         while not HasStreamedTextureDictLoaded("circlemap") and timeout < 100 do
             Wait(10)
@@ -33,66 +92,67 @@ local function SetMinimapShape(shape)
         end
         
         if HasStreamedTextureDictLoaded("circlemap") then
-            -- Apply circular minimap mask
-            AddReplaceTexture("platform:/textures/graphics", "radarmasksm", "circlemap", "noreg")
-            SetRadarBigmapEnabled(false, false)
+            SetMinimapClipType(1) -- 1 = Circle clip
+            if Config.Debug then
+                print('[HUD] Minimap shape set to round')
+            end
         end
     else
-        -- Reset to square minimap
-        AddReplaceTexture("platform:/textures/graphics", "radarmasksm", "noreg", "noreg")
-        SetRadarBigmapEnabled(false, false)
-    end
-end
-
--- Update minimap position from NUI
--- Converts screen coordinates to GTA minimap coordinates
-local function SetMinimapPositionFromHUD(screenX, screenY, width, height)
-    -- screenX, screenY are pixel positions from the HUD
-    -- Convert to GTA's 0-1 coordinate system
-    
-    local sw, sh = GetActiveScreenResolution()
-    
-    -- Convert pixel position to percentage (0-1)
-    local x = screenX / sw
-    local y = screenY / sh
-    local w = (width or 200) / sw
-    local h = (height or 180) / sh
-    
-    currentMinimapPos = { x = x, y = y + h, w = w, h = h }
-    ApplyMinimapPosition()
-end
-
--- Initialize minimap on resource start
-CreateThread(function()
-    Wait(500) -- Wait for game to be ready
-    
-    -- Ensure radar is visible
-    DisplayRadar(true)
-    SetRadarBigmapEnabled(false, false)
-    
-    -- Apply default position
-    ApplyMinimapPosition()
-    
-    -- Apply shape if configured
-    if minimapShape == "round" then
-        SetMinimapShape("round")
-    end
-end)
-
--- Main visibility control - optimized with conditional wait
-CreateThread(function()
-    while true do
-        if Config.HideDefaultMinimap then
-            DisplayRadar(false)
-            Wait(1000)
-        else
-            DisplayRadar(minimapEnabled)
-            Wait(100)
+        -- Standard quadratische Minimap
+        SetMinimapClipType(0) -- 0 = Square clip
+        if Config.Debug then
+            print('[HUD] Minimap shape set to square')
         end
     end
-end)
+end
 
--- Exports
+-- ============================================================================
+-- MINIMAP POSITION
+-- ============================================================================
+
+-- Minimap Position von HUD Koordinaten setzen
+local function SetMinimapPositionFromHUD(screenX, screenY, width, height)
+    -- Bildschirmauflösung holen
+    local screenW, screenH = GetActiveScreenResolution()
+    
+    -- Pixel zu Prozent konvertieren (0.0 - 1.0)
+    minimapPosition.x = screenX / screenW
+    minimapPosition.y = screenY / screenH
+    minimapPosition.width = (width or 200) / screenW
+    minimapPosition.height = (height or 180) / screenH
+    
+    -- Minimap Komponenten positionieren
+    -- Anchor: L = Left, B = Bottom
+    local x = minimapPosition.x
+    local y = minimapPosition.y + minimapPosition.height
+    local w = minimapPosition.width
+    local h = minimapPosition.height
+    
+    SetMinimapComponentPosition("minimap", "L", "B", x, y, w, h)
+    SetMinimapComponentPosition("minimap_mask", "L", "B", x, y, w, h)
+    SetMinimapComponentPosition("minimap_blur", "L", "B", x, y, w, h)
+    
+    if Config.Debug then
+        print(string.format('[HUD] Minimap position set: x=%.3f, y=%.3f, w=%.3f, h=%.3f', x, y, w, h))
+    end
+end
+
+-- Minimap Position zurücksetzen
+local function ResetMinimapPosition()
+    -- Standard GTA V Position
+    SetMinimapComponentPosition("minimap", "L", "B", 0.0, -0.047, 0.1638, 0.183)
+    SetMinimapComponentPosition("minimap_mask", "L", "B", 0.0, -0.047, 0.1638, 0.183)
+    SetMinimapComponentPosition("minimap_blur", "L", "B", 0.0, -0.047, 0.1638, 0.183)
+    
+    if Config.Debug then
+        print('[HUD] Minimap position reset to default')
+    end
+end
+
+-- ============================================================================
+-- EXPORTS
+-- ============================================================================
+
 exports("showMinimap", function()
     minimapEnabled = true
     if not Config.HideDefaultMinimap then
@@ -108,10 +168,19 @@ end)
 exports("toggleMinimap", function()
     minimapEnabled = not minimapEnabled
     DisplayRadar(minimapEnabled and not Config.HideDefaultMinimap)
+    return minimapEnabled
+end)
+
+exports("isMinimapVisible", function()
+    return minimapEnabled and not Config.HideDefaultMinimap
 end)
 
 exports("setMinimapShape", function(shape)
-    SetMinimapShape(shape)
+    SetMinimapShapeInternal(shape)
+end)
+
+exports("getMinimapShape", function()
+    return minimapShape
 end)
 
 exports("setMinimapPosition", function(x, y, width, height)
@@ -119,41 +188,89 @@ exports("setMinimapPosition", function(x, y, width, height)
 end)
 
 exports("resetMinimapPosition", function()
-    currentMinimapPos = { x = 0.02, y = 0.95, w = 0.15, h = 0.22 }
-    ApplyMinimapPosition()
+    ResetMinimapPosition()
 end)
 
--- NUI Callbacks
+exports("setMinimapZoom", function(zoom)
+    -- Zoom: 0-1000 (0 = normal, höher = mehr rausgezoomt)
+    SetRadarZoom(math.max(0, math.min(1000, zoom or 0)))
+end)
+
+-- ============================================================================
+-- NUI CALLBACKS
+-- ============================================================================
+
 RegisterNUICallback("setMinimapPosition", function(data, cb)
     if data.x and data.y then
         SetMinimapPositionFromHUD(data.x, data.y, data.width, data.height)
     end
-    cb({ ok = true })
+    cb({ success = true })
 end)
 
 RegisterNUICallback("setMinimapShape", function(data, cb)
     if data.shape then
-        SetMinimapShape(data.shape)
+        SetMinimapShapeInternal(data.shape)
     end
-    cb({ ok = true })
+    cb({ success = true })
 end)
 
--- Events
-RegisterNetEvent("hud:minimap")
-AddEventHandler("hud:minimap", function(show)
+RegisterNUICallback("toggleMinimap", function(data, cb)
+    local visible = exports[GetCurrentResourceName()]:toggleMinimap()
+    cb({ success = true, visible = visible })
+end)
+
+RegisterNUICallback("resetMinimapPosition", function(data, cb)
+    ResetMinimapPosition()
+    cb({ success = true })
+end)
+
+-- ============================================================================
+-- EVENTS
+-- ============================================================================
+
+-- Minimap ein/ausblenden
+RegisterNetEvent("hud:minimap", function(show)
     if show then
-        exports["hud"]:showMinimap()
+        exports[GetCurrentResourceName()]:showMinimap()
     else
-        exports["hud"]:hideMinimap()
+        exports[GetCurrentResourceName()]:hideMinimap()
     end
 end)
 
-RegisterNetEvent("hud:setMinimapShape")
-AddEventHandler("hud:setMinimapShape", function(shape)
-    SetMinimapShape(shape)
+-- Minimap Form setzen
+RegisterNetEvent("hud:setMinimapShape", function(shape)
+    SetMinimapShapeInternal(shape)
 end)
 
-RegisterNetEvent("hud:setMinimapPosition")
-AddEventHandler("hud:setMinimapPosition", function(x, y, w, h)
+-- Minimap Position setzen
+RegisterNetEvent("hud:setMinimapPosition", function(x, y, w, h)
     SetMinimapPositionFromHUD(x, y, w, h)
 end)
+
+-- Minimap Reset
+RegisterNetEvent("hud:resetMinimap", function()
+    ResetMinimapPosition()
+end)
+
+-- ============================================================================
+-- COMMANDS (Debug)
+-- ============================================================================
+
+if Config.Debug then
+    RegisterCommand("minimap_toggle", function()
+        local visible = exports[GetCurrentResourceName()]:toggleMinimap()
+        print("[HUD] Minimap visible: " .. tostring(visible))
+    end, false)
+    
+    RegisterCommand("minimap_round", function()
+        SetMinimapShapeInternal("round")
+    end, false)
+    
+    RegisterCommand("minimap_square", function()
+        SetMinimapShapeInternal("square")
+    end, false)
+    
+    RegisterCommand("minimap_reset", function()
+        ResetMinimapPosition()
+    end, false)
+end
