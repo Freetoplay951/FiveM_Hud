@@ -74,9 +74,10 @@ export const HUD = () => {
     const [hudState, setHudState] = useState<HudState>(DEMO_HUD);
     const [vehicleState, setVehicleState] = useState<VehicleState>(DEMO_VEHICLE);
     const [moneyState, setMoneyState] = useState<MoneyState>(DEMO_MONEY);
-    const [playerState] = useState<PlayerState>(DEMO_PLAYER);
+    const [playerState, setPlayerState] = useState<PlayerState>(DEMO_PLAYER);
     const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
     const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
+    const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
     const [isDemoMode] = useState(!isNuiEnvironment());
 
     const [editMenuOpen, setEditMenuOpen] = useState(false);
@@ -127,6 +128,16 @@ export const HUD = () => {
         onUpdateMoney: setMoneyState,
         onUpdateVoice: setVoiceState,
         onUpdateLocation: setLocationState,
+        onUpdatePlayer: setPlayerState,
+        onSetVisible: setIsVisible,
+        onToggleEditMode: (enabled) => {
+            if (enabled && !editMode) toggleEditMode();
+            else if (!enabled && editMode) toggleEditMode();
+        },
+        onNotify: (data) => {
+            const notifyFn = { success, error, warning, info }[data.type] || info;
+            notifyFn(data.title, data.message, data.duration);
+        },
     });
 
     // Demo simulation with animated plane/heli values
@@ -292,6 +303,9 @@ export const HUD = () => {
 
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
+
+    // Wenn nicht sichtbar, nichts rendern
+    if (!isVisible) return null;
 
     return (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
