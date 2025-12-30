@@ -211,10 +211,10 @@ export const HUD = () => {
             notifyFn(data.title, data.message, data.duration);
         },
         onUpdateChat: (data) => {
-            setChatState(prev => ({ ...prev, ...data }));
+            setChatState((prev) => ({ ...prev, ...data }));
         },
         onUpdateTeamChat: (data) => {
-            setTeamChatState(prev => ({ ...prev, ...data }));
+            setTeamChatState((prev) => ({ ...prev, ...data }));
         },
     });
 
@@ -314,10 +314,10 @@ export const HUD = () => {
                 const randomMsg = DEMO_CHAT_MESSAGES[Math.floor(Math.random() * DEMO_CHAT_MESSAGES.length)];
                 const newMsg = {
                     id: Date.now().toString(),
-                    type: 'normal' as const,
+                    type: "normal" as const,
                     sender: randomMsg.sender,
                     message: randomMsg.message,
-                    timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
                 };
                 setChatState((prev) => ({
                     ...prev,
@@ -338,7 +338,7 @@ export const HUD = () => {
                     sender: randomMsg.sender,
                     rank: randomMsg.rank,
                     message: randomMsg.message,
-                    timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                    timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
                 };
                 setTeamChatState((prev) => ({
                     ...prev,
@@ -784,13 +784,13 @@ export const HUD = () => {
                 (() => {
                     const widget = getWidget("chat");
                     if (!widget) return null;
-                    
+
                     // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
-                    const showChat = isDemoMode 
-                        ? (chatState.isOpen || editMode) 
-                        : (chatState.isVisible || chatState.isOpen || editMode);
+                    const showChat = isDemoMode
+                        ? chatState.isOpen || editMode
+                        : chatState.isVisible || chatState.isOpen || editMode;
                     if (!showChat && !editMode) return null;
-                    
+
                     return (
                         <HUDWidget
                             id="chat"
@@ -806,10 +806,13 @@ export const HUD = () => {
                                         // Demo mode: add message locally
                                         const newMsg = {
                                             id: Date.now().toString(),
-                                            type: 'normal' as const,
-                                            sender: 'Du',
+                                            type: "normal" as const,
+                                            sender: "Du",
                                             message: msg,
-                                            timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                                            timestamp: new Date().toLocaleTimeString("de-DE", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            }),
                                         };
                                         setChatState((prev) => ({
                                             ...prev,
@@ -817,14 +820,14 @@ export const HUD = () => {
                                         }));
                                     } else {
                                         // FiveM: send to server via NUI callback
-                                        sendNuiCallback('sendChatMessage', { message: msg });
+                                        sendNuiCallback("sendChatMessage", { message: msg });
                                     }
                                 }}
                                 onClose={() => {
                                     if (isDemoMode) {
                                         setChatState((prev) => ({ ...prev, isOpen: false }));
                                     } else {
-                                        sendNuiCallback('closeChat');
+                                        sendNuiCallback("closeChat");
                                     }
                                 }}
                             />
@@ -837,13 +840,13 @@ export const HUD = () => {
                 (() => {
                     const widget = getWidget("teamchat");
                     if (!widget) return null;
-                    
+
                     // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
-                    const showTeamChat = isDemoMode 
-                        ? (teamChatState.isOpen || editMode) 
-                        : (teamChatState.isVisible || teamChatState.isOpen || editMode);
+                    const showTeamChat = isDemoMode
+                        ? teamChatState.isOpen || editMode
+                        : teamChatState.isVisible || teamChatState.isOpen || editMode;
                     if (!showTeamChat && !editMode) return null;
-                    
+
                     return (
                         <HUDWidget
                             id="teamchat"
@@ -859,10 +862,13 @@ export const HUD = () => {
                                         // Demo mode: add message locally
                                         const newMsg = {
                                             id: Date.now().toString(),
-                                            sender: 'Du',
-                                            rank: 'Admin',
+                                            sender: "Du",
+                                            rank: "Admin",
                                             message: msg,
-                                            timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                                            timestamp: new Date().toLocaleTimeString("de-DE", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            }),
                                         };
                                         setTeamChatState((prev) => ({
                                             ...prev,
@@ -870,14 +876,14 @@ export const HUD = () => {
                                         }));
                                     } else {
                                         // FiveM: send to server via NUI callback
-                                        sendNuiCallback('sendTeamChatMessage', { message: msg });
+                                        sendNuiCallback("sendTeamChatMessage", { message: msg });
                                     }
                                 }}
                                 onClose={() => {
                                     if (isDemoMode) {
                                         setTeamChatState((prev) => ({ ...prev, isOpen: false }));
                                     } else {
-                                        sendNuiCallback('closeTeamChat');
+                                        sendNuiCallback("closeTeamChat");
                                     }
                                 }}
                             />
