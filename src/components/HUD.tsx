@@ -23,7 +23,9 @@ import {
     PlayerState,
     StatusType,
     NotificationData,
+    DeathState,
 } from "@/types/hud";
+import { DeathScreenWidget } from "./hud/widgets/DeathScreenWidget";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 
@@ -53,6 +55,16 @@ const DEMO_LOCATION: LocationState = {
     heading: 45,
 };
 
+// Demo Death State
+const DEMO_DEATH: DeathState = {
+    isDead: false, // Default: alive - press D to toggle
+    respawnTimer: 14,
+    waitTimer: 59,
+    canCallHelp: true,
+    canRespawn: false,
+    message: "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
+};
+
 const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
     {
         id: "edit-demo-1",
@@ -77,6 +89,7 @@ export const HUD = () => {
     const [playerState, setPlayerState] = useState<PlayerState>(DEMO_PLAYER);
     const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
     const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
+    const [deathState, setDeathState] = useState<DeathState>(DEMO_DEATH);
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
     const [isDemoMode] = useState(!isNuiEnvironment());
 
@@ -136,6 +149,7 @@ export const HUD = () => {
         onUpdateLocation: setLocationState,
         onUpdatePlayer: setPlayerState,
         onSetVisible: setIsVisible,
+        onUpdateDeath: setDeathState,
         onToggleEditMode: (enabled) => {
             if (enabled && !editMode) toggleEditMode();
             else if (!enabled && editMode) toggleEditMode();
@@ -284,8 +298,26 @@ export const HUD = () => {
             if (!editMode) {
                 if (e.key === "h") success("Erfolg!", "Aktion erfolgreich ausgeführt.");
                 if (e.key === "j") error("Fehler!", "Etwas ist schief gelaufen.");
-                if (e.key === "k") warning("Fehler!", "Etwas ist schief gelaufen.");
-                if (e.key === "l") info("Fehler!", "Etwas ist schief gelaufen.");
+                if (e.key === "k") warning("Warnung!", "Bitte beachten.");
+                if (e.key === "l") info("Info", "Hier ist eine Information.");
+            }
+
+            // Demo death toggle
+            if (e.key === "d") {
+                setDeathState((prev) => {
+                    if (prev.isDead) {
+                        return { ...prev, isDead: false };
+                    } else {
+                        return {
+                            ...prev,
+                            isDead: true,
+                            respawnTimer: 14,
+                            waitTimer: 59,
+                            canCallHelp: true,
+                            canRespawn: false,
+                        };
+                    }
+                });
             }
         };
 
@@ -548,6 +580,30 @@ export const HUD = () => {
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
+                        />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Death Screen Widget */}
+            {(() => {
+                const widget = getWidget("deathscreen");
+                if (!widget) return null;
+                
+                // Show death screen when dead OR in edit mode (to position it)
+                const showDeathScreen = deathState.isDead || editMode;
+                
+                return (
+                    <HUDWidget
+                        id="deathscreen"
+                        position={widget.position}
+                        visible={widget.visible && showDeathScreen}
+                        scale={widget.scale}
+                        {...widgetProps}>
+                        <DeathScreenWidget
+                            death={editMode ? { ...DEMO_DEATH, isDead: true } : deathState}
+                            visible={showDeathScreen}
+                            isWidget
                         />
                     </HUDWidget>
                 );

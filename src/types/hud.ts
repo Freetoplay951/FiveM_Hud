@@ -77,3 +77,13 @@ export interface NotificationData {
     message?: string;
     duration?: number;
 }
+
+// Death Screen State
+export interface DeathState {
+    isDead: boolean;
+    respawnTimer: number; // Seconds until respawn is allowed
+    waitTimer: number; // Seconds of total wait time remaining
+    canCallHelp?: boolean;
+    canRespawn?: boolean;
+    message?: string;
+}
