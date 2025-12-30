@@ -4,10 +4,10 @@ import { HUDWidget } from "./hud/HUDWidget";
 import { VehicleHUDFactory } from "./hud/vehicles/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { StatusWidget } from "./hud/widgets/StatusWidget";
-import { NeonMoneyWidget } from "./hud/widgets/NeonMoneyWidget";
+import { NeonMoneyWidget } from "./hud/widgets/MoneyWidget";
 
-import { NeonVoiceWidget } from "./hud/widgets/NeonVoiceWidget";
-import { NeonMinimapWidget } from "./hud/widgets/NeonMinimapWidget";
+import { NeonVoiceWidget } from "./hud/widgets/VoiceWidget";
+import { NeonMinimapWidget } from "./hud/widgets/MinimapWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";
 import { CompassWidget } from "./hud/widgets/CompassWidget";
 import { NotificationContainer } from "./hud/NotificationContainer";
