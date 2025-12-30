@@ -90,100 +90,71 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
 end
 
 -- ============================================================================
--- TEAM/JOB DETECTION
+-- STAFF RANK DETECTION
 -- ============================================================================
 
-function GetPlayerTeamInfo()
-    local teamType = "default"
-    local teamName = "Team"
+-- Get player's staff rank based on Ace Permissions
+function GetPlayerStaffRank()
+    local playerId = PlayerId()
     
-    if Framework == "esx" and FrameworkObject then
-        local playerData = FrameworkObject.GetPlayerData()
-        if playerData and playerData.job then
-            local jobName = playerData.job.name
-            teamName = playerData.job.label or jobName
-            
-            -- Map job names to team types
-            if jobName == "police" or jobName == "sheriff" or jobName == "lspd" then
-                teamType = "police"
-            elseif jobName == "ambulance" or jobName == "ems" or jobName == "doctor" then
-                teamType = "ems"
-            elseif jobName == "mechanic" or jobName == "bennys" then
-                teamType = "mechanic"
-            elseif jobName == "taxi" or jobName == "uber" then
-                teamType = "taxi"
-            end
-        end
-    elseif Framework == "qb" and FrameworkObject then
-        local PlayerData = FrameworkObject.Functions.GetPlayerData()
-        if PlayerData and PlayerData.job then
-            local jobName = PlayerData.job.name
-            teamName = PlayerData.job.label or jobName
-            
-            if jobName == "police" or jobName == "sheriff" or jobName == "lspd" then
-                teamType = "police"
-            elseif jobName == "ambulance" or jobName == "ems" or jobName == "doctor" then
-                teamType = "ems"
-            elseif jobName == "mechanic" or jobName == "bennys" then
-                teamType = "mechanic"
-            elseif jobName == "taxi" or jobName == "uber" then
-                teamType = "taxi"
-            end
-        end
+    -- Check from highest to lowest rank
+    if IsPlayerAceAllowed(playerId, "hud.staff.owner") then
+        return "owner", "Owner"
+    elseif IsPlayerAceAllowed(playerId, "hud.staff.superadmin") then
+        return "superadmin", "Super-Admin"
+    elseif IsPlayerAceAllowed(playerId, "hud.staff.admin") then
+        return "admin", "Admin"
+    elseif IsPlayerAceAllowed(playerId, "hud.staff.moderator") then
+        return "moderator", "Moderator"
+    elseif IsPlayerAceAllowed(playerId, "hud.staff.supporter") then
+        return "supporter", "Supporter"
     end
     
-    return teamType, teamName
+    return nil, nil
 end
 
-function GetTeamOnlineCount(teamType)
-    -- This would normally query the server for online team members
+-- Get readable rank name
+function GetStaffRankName(rankType)
+    local rankNames = {
+        owner = "Owner",
+        superadmin = "Super-Admin",
+        admin = "Admin",
+        moderator = "Moderator",
+        supporter = "Supporter"
+    }
+    return rankNames[rankType] or "Staff"
+end
+
+function GetTeamOnlineCount()
+    -- This would normally query the server for online staff members
     -- For now, return a placeholder value
-    return 5
+    return 3
 end
 
 function IsPlayerTeamAdmin()
-    -- Check if player has admin ace permission
-    return IsPlayerAceAllowed(PlayerId(), "hud.teamchat.admin")
+    local playerId = PlayerId()
+    -- Admin and above can use admin features
+    return IsPlayerAceAllowed(playerId, "hud.staff.admin") or
+           IsPlayerAceAllowed(playerId, "hud.staff.superadmin") or
+           IsPlayerAceAllowed(playerId, "hud.staff.owner")
 end
 
 -- ============================================================================
--- ACE PERMISSION CHECKS
+-- ACE PERMISSION CHECKS (Staff only)
 -- ============================================================================
 
 function HasTeamChatAccess()
-    -- Check various ace permissions for team chat access
     local playerId = PlayerId()
     
-    -- Check general team chat permission
-    if IsPlayerAceAllowed(playerId, "hud.teamchat") then
-        return true
-    end
+    -- Check if player has any staff rank
+    if IsPlayerAceAllowed(playerId, "hud.staff.supporter") then return true end
+    if IsPlayerAceAllowed(playerId, "hud.staff.moderator") then return true end
+    if IsPlayerAceAllowed(playerId, "hud.staff.admin") then return true end
+    if IsPlayerAceAllowed(playerId, "hud.staff.superadmin") then return true end
+    if IsPlayerAceAllowed(playerId, "hud.staff.owner") then return true end
     
-    -- Check job-specific permissions
-    local teamType, _ = GetPlayerTeamInfo()
-    
-    if teamType == "police" and IsPlayerAceAllowed(playerId, "hud.teamchat.police") then
-        return true
-    end
-    if teamType == "ems" and IsPlayerAceAllowed(playerId, "hud.teamchat.ems") then
-        return true
-    end
-    if teamType == "mechanic" and IsPlayerAceAllowed(playerId, "hud.teamchat.mechanic") then
-        return true
-    end
-    if teamType == "taxi" and IsPlayerAceAllowed(playerId, "hud.teamchat.taxi") then
-        return true
-    end
-    
-    -- Admin always has access
-    if IsPlayerAceAllowed(playerId, "hud.teamchat.admin") then
-        return true
-    end
-    
-    -- Default: check if player has any job (for ESX/QB)
-    if Framework then
-        return true -- Most frameworks give job-based access
-    end
+    -- Generic staff permission
+    if IsPlayerAceAllowed(playerId, "hud.staff") then return true end
     
     return false
 end
@@ -216,23 +187,27 @@ end
 
 function OpenTeamChat()
     if not HasTeamChatAccess() then
-        SendNotification("error", "Kein Zugriff", "Du hast keinen Zugriff auf den Team-Chat.", 3000)
+        SendNotification("error", "Kein Zugriff", "Nur für Team-Mitglieder (Supporter, Admin, etc.).", 3000)
         return
     end
     
     isTeamChatOpen = true
     SetNuiFocus(true, false)
     
-    local teamType, teamName = GetPlayerTeamInfo()
+    local teamType, teamName = GetPlayerStaffRank()
+    if not teamType then
+        teamType = "supporter"
+        teamName = "Team-Chat"
+    end
     
     SendNUI("updateTeamChat", {
         isOpen = true,
         hasAccess = true,
         teamType = teamType,
-        teamName = teamName,
+        teamName = "Team-Chat",
         messages = teamChatMessages,
         unreadCount = 0,
-        onlineMembers = GetTeamOnlineCount(teamType),
+        onlineMembers = GetTeamOnlineCount(),
         isAdmin = IsPlayerTeamAdmin()
     })
 end
@@ -241,16 +216,16 @@ function CloseTeamChat()
     isTeamChatOpen = false
     SetNuiFocus(false, false)
     
-    local teamType, teamName = GetPlayerTeamInfo()
+    local teamType, _ = GetPlayerStaffRank()
     
     SendNUI("updateTeamChat", {
         isOpen = false,
         hasAccess = HasTeamChatAccess(),
-        teamType = teamType,
-        teamName = teamName,
+        teamType = teamType or "supporter",
+        teamName = "Team-Chat",
         messages = teamChatMessages,
         unreadCount = 0,
-        onlineMembers = GetTeamOnlineCount(teamType),
+        onlineMembers = GetTeamOnlineCount(),
         isAdmin = IsPlayerTeamAdmin()
     })
 end

@@ -105,8 +105,8 @@ export interface ChatState {
     unreadCount: number;
 }
 
-// Team Chat Types
-export type TeamType = 'police' | 'ems' | 'mechanic' | 'taxi' | 'admin' | 'custom';
+// Team Chat Types (Staff only - Supporter, Admin, etc.)
+export type TeamType = 'supporter' | 'moderator' | 'admin' | 'superadmin' | 'owner';
 
 export interface TeamChatMessage {
     id: string;
