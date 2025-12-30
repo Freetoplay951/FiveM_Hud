@@ -38,7 +38,7 @@ const DEMO_HUD: HudState = {
     oxygen: 100,
 };
 const DEMO_VEHICLE: VehicleState = {
-    inVehicle: true,
+    inVehicle: false, // Default: not in vehicle - press V to toggle
     vehicleType: "car",
     speed: 127,
     gear: 4,
