@@ -364,8 +364,8 @@ export const HUD = () => {
                 />
             )}
 
-            {/* Notifications - as draggable widget, not hideable, hidden when dead */}
-            {!deathState.isDead && (() => {
+            {/* Notifications - as draggable widget, always visible (even when dead) */}
+            {(() => {
                 const widget = getWidget("notifications");
                 if (!widget)
                     return (
