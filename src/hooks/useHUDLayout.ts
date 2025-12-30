@@ -3,44 +3,34 @@ import {
   HUDLayoutState,
   WidgetConfig,
   WidgetPosition,
-  DEFAULT_HUD_STATE,
-  DEFAULT_WIDGETS,
   StatusDesign,
   SpeedometerType,
-  DEFAULT_SPEEDOMETER_CONFIGS,
   SpeedometerConfig,
   SpeedometerConfigs,
-  REFERENCE_WIDTH,
-  REFERENCE_HEIGHT,
   MinimapShape,
+  getDefaultWidgets,
+  getDefaultSpeedometerConfigs,
 } from '@/types/widget';
+
+// Get dynamic default state based on current screen size
+const getDefaultState = (): HUDLayoutState => ({
+  widgets: getDefaultWidgets(),
+  editMode: false,
+  snapToGrid: true,
+  gridSize: 10,
+  statusDesign: 'circular',
+  hudScale: 1,
+  speedometerType: 'car',
+  speedometerConfigs: getDefaultSpeedometerConfigs(),
+  minimapShape: 'square',
+});
 
 const STORAGE_KEY = 'hud-layout';
 
-// Scale position from reference resolution to current viewport
-export const scalePositionToViewport = (pos: WidgetPosition): WidgetPosition => {
-  const scaleX = window.innerWidth / REFERENCE_WIDTH;
-  const scaleY = window.innerHeight / REFERENCE_HEIGHT;
-  return {
-    x: pos.x * scaleX,
-    y: pos.y * scaleY,
-  };
-};
-
-// Scale position from current viewport to reference resolution
-export const scalePositionToReference = (pos: WidgetPosition): WidgetPosition => {
-  const scaleX = window.innerWidth / REFERENCE_WIDTH;
-  const scaleY = window.innerHeight / REFERENCE_HEIGHT;
-  return {
-    x: pos.x / scaleX,
-    y: pos.y / scaleY,
-  };
-};
-
-// Clamp position to reference resolution bounds
+// Clamp position to screen bounds
 const clampPosition = (pos: WidgetPosition): WidgetPosition => ({
-  x: Math.max(0, Math.min(REFERENCE_WIDTH - 50, pos.x)),
-  y: Math.max(0, Math.min(REFERENCE_HEIGHT - 50, pos.y)),
+  x: Math.max(0, Math.min(window.innerWidth - 50, pos.x)),
+  y: Math.max(0, Math.min(window.innerHeight - 50, pos.y)),
 });
 
 const clampAllWidgets = (widgets: WidgetConfig[]): WidgetConfig[] =>
@@ -57,14 +47,15 @@ const clampSpeedometerConfigs = (configs: SpeedometerConfigs): SpeedometerConfig
 });
 
 const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {
+  const defaultState = getDefaultState();
   const next: HUDLayoutState = {
-    ...DEFAULT_HUD_STATE,
+    ...defaultState,
     ...raw,
   };
 
-  next.widgets = clampAllWidgets(next.widgets ?? DEFAULT_WIDGETS);
+  next.widgets = clampAllWidgets(next.widgets ?? defaultState.widgets);
   next.speedometerConfigs = clampSpeedometerConfigs(
-    (next.speedometerConfigs ?? DEFAULT_SPEEDOMETER_CONFIGS) as SpeedometerConfigs
+    (next.speedometerConfigs ?? defaultState.speedometerConfigs) as SpeedometerConfigs
   );
   next.minimapShape = next.minimapShape ?? 'square';
 
@@ -80,14 +71,14 @@ export const useHUDLayout = () => {
         // Migration: if old percent-based positions detected, reset to defaults
         if (parsed.widgets?.[0]?.position?.xPercent !== undefined) {
           console.log('Migrating from percent to pixel positions...');
-          return normalizeState(DEFAULT_HUD_STATE);
+          return normalizeState(getDefaultState());
         }
         return normalizeState(parsed);
       } catch {
-        return normalizeState(DEFAULT_HUD_STATE);
+        return normalizeState(getDefaultState());
       }
     }
-    return normalizeState(DEFAULT_HUD_STATE);
+    return normalizeState(getDefaultState());
   });
 
   useEffect(() => {
@@ -103,9 +94,8 @@ export const useHUDLayout = () => {
   }, []);
 
   const updateWidgetPosition = useCallback((id: string, position: WidgetPosition) => {
-    // Convert viewport position to reference position for storage
-    const refPosition = scalePositionToReference(position);
-    const clampedPosition = clampPosition(refPosition);
+    // Clamp to current viewport
+    const clampedPosition = clampPosition(position);
     setState((prev) => ({
       ...prev,
       widgets: prev.widgets.map((w) => (w.id === id ? { ...w, position: clampedPosition } : w)),
@@ -157,12 +147,13 @@ export const useHUDLayout = () => {
   }, []);
 
   const getSpeedometerConfig = useCallback((type: SpeedometerType): SpeedometerConfig => {
-    return state.speedometerConfigs?.[type] ?? DEFAULT_SPEEDOMETER_CONFIGS[type];
+    const defaultConfigs = getDefaultSpeedometerConfigs();
+    return state.speedometerConfigs?.[type] ?? defaultConfigs[type];
   }, [state.speedometerConfigs]);
 
   const resetSpeedometer = useCallback((type: SpeedometerType) => {
     setState(prev => {
-      const defaultConfig = DEFAULT_SPEEDOMETER_CONFIGS[type];
+      const defaultConfig = getDefaultSpeedometerConfigs()[type];
       return {
         ...prev,
         speedometerConfigs: {
@@ -175,14 +166,15 @@ export const useHUDLayout = () => {
 
   const resetLayout = useCallback(() => {
     setState(prev => ({
-      ...DEFAULT_HUD_STATE,
+      ...getDefaultState(),
       editMode: true,
       snapToGrid: prev.snapToGrid,
     }));
   }, []);
 
   const resetWidget = useCallback((id: string) => {
-    const defaultWidget = DEFAULT_WIDGETS.find(w => w.id === id);
+    const defaultWidgets = getDefaultWidgets();
+    const defaultWidget = defaultWidgets.find(w => w.id === id);
     if (!defaultWidget) return;
     
     setState(prev => ({
@@ -196,11 +188,6 @@ export const useHUDLayout = () => {
   const getWidget = useCallback((id: string): WidgetConfig | undefined => {
     return state.widgets.find(w => w.id === id);
   }, [state.widgets]);
-
-  // Get scaled position for rendering
-  const getScaledPosition = useCallback((pos: WidgetPosition): WidgetPosition => {
-    return scalePositionToViewport(pos);
-  }, []);
 
   return {
     ...state,
@@ -219,6 +206,5 @@ export const useHUDLayout = () => {
     resetLayout,
     resetWidget,
     getWidget,
-    getScaledPosition,
   };
 };
