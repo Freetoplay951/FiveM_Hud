@@ -90,10 +90,12 @@ export const HUD = () => {
         statusDesign,
         speedometerType,
         speedometerConfigs,
+        minimapShape,
         toggleEditMode,
         setSnapToGrid,
         setStatusDesign,
         setSpeedometerType,
+        setMinimapShape,
         updateSpeedometerConfig,
         getSpeedometerConfig,
         resetSpeedometer,
@@ -376,9 +378,11 @@ export const HUD = () => {
                         snapToGrid={snapToGrid}
                         statusDesign={statusDesign}
                         speedometerType={speedometerType}
+                        minimapShape={minimapShape}
                         onSnapToGridChange={setSnapToGrid}
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
+                        onMinimapShapeChange={setMinimapShape}
                         onReset={resetLayout}
                         onExitEditMode={exitEditMode}
                     />
@@ -484,7 +488,7 @@ export const HUD = () => {
                         visible={widget.visible}
                         scale={widget.scale}
                         {...widgetProps}>
-                        <NeonMinimapWidget location={locationState} />
+                        <NeonMinimapWidget location={locationState} shape={minimapShape} />
                     </HUDWidget>
                 );
             })()}

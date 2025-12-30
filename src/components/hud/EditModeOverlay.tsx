@@ -10,18 +10,21 @@ import {
     Plane,
     Ship,
     Fan,
+    Square,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { StatusDesign, SpeedometerType } from "@/types/widget";
+import { StatusDesign, SpeedometerType, MinimapShape } from "@/types/widget";
 import { PopoverContent } from "@/components/ui/popover";
 
 interface EditModeOverlayProps {
     snapToGrid: boolean;
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
+    minimapShape: MinimapShape;
     onSnapToGridChange: (value: boolean) => void;
     onStatusDesignChange: (design: StatusDesign) => void;
     onSpeedometerTypeChange: (type: SpeedometerType) => void;
+    onMinimapShapeChange: (shape: MinimapShape) => void;
     onReset: () => void;
     onExitEditMode: () => void;
 }
@@ -41,13 +44,20 @@ const SPEEDOMETER_OPTIONS: { type: SpeedometerType; icon: React.ElementType; lab
     { type: "helicopter", icon: Fan, label: "Heli" },
 ];
 
+const MINIMAP_SHAPE_OPTIONS: { shape: MinimapShape; icon: React.ElementType; label: string }[] = [
+    { shape: "square", icon: Square, label: "Eckig" },
+    { shape: "round", icon: Circle, label: "Rund" },
+];
+
 export const EditModeOverlay = ({
     snapToGrid,
     statusDesign,
     speedometerType,
+    minimapShape,
     onSnapToGridChange,
     onStatusDesignChange,
     onSpeedometerTypeChange,
+    onMinimapShapeChange,
     onReset,
     onExitEditMode,
 }: EditModeOverlayProps) => {
@@ -95,6 +105,40 @@ export const EditModeOverlay = ({
                                 className={cn(
                                     "text-[10px]",
                                     statusDesign === design ? "text-primary" : "text-muted-foreground"
+                                )}>
+                                {label}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Minimap Shape */}
+            <div className="mb-4">
+                <h3 className="text-xs font-medium text-foreground mb-2">Minimap Form</h3>
+                <div className="grid grid-cols-2 gap-2">
+                    {MINIMAP_SHAPE_OPTIONS.map(({ shape, icon: Icon, label }) => (
+                        <button
+                            key={shape}
+                            onClick={() => onMinimapShapeChange(shape)}
+                            className={cn(
+                                "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
+                                minimapShape === shape ? "glass-panel border-primary/50" : "hover:bg-muted/20"
+                            )}
+                            style={minimapShape === shape ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}}>
+                            <Icon
+                                size={18}
+                                className={minimapShape === shape ? "text-primary" : "text-muted-foreground"}
+                                style={
+                                    minimapShape === shape
+                                        ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }
+                                        : {}
+                                }
+                            />
+                            <span
+                                className={cn(
+                                    "text-[10px]",
+                                    minimapShape === shape ? "text-primary" : "text-muted-foreground"
                                 )}>
                                 {label}
                             </span>

@@ -1,4 +1,4 @@
-// Position in pixels from top-left corner
+// Position in pixels from top-left corner (responsive - will be scaled based on viewport)
 export interface WidgetPosition {
     x: number;
     y: number;
@@ -37,6 +37,8 @@ export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 
 export type SpeedometerType = "car" | "plane" | "boat" | "helicopter";
 
+export type MinimapShape = "square" | "round";
+
 export interface SpeedometerConfig {
     position: WidgetPosition;
     scale: number;
@@ -48,6 +50,10 @@ export interface SpeedometerConfigs {
     boat: SpeedometerConfig;
     helicopter: SpeedometerConfig;
 }
+
+// Reference resolution for positions (1920x1080)
+export const REFERENCE_WIDTH = 1920;
+export const REFERENCE_HEIGHT = 1080;
 
 // Default speedometer position (bottom right)
 const DEFAULT_SPEEDO_POS: WidgetPosition = { x: 1650, y: 850 };
@@ -68,11 +74,11 @@ export interface HUDLayoutState {
     hudScale: number;
     speedometerType: SpeedometerType;
     speedometerConfigs: SpeedometerConfigs;
+    minimapShape: MinimapShape;
 }
 
 // Status icon positions next to minimap (bottom left, horizontal row)
-// Minimap is at x:20, width ~200px, so status starts around x:230
-const STATUS_Y = 980; // Near bottom
+const STATUS_Y = 980;
 const STATUS_START_X = 230;
 const STATUS_SPACING = 55;
 
@@ -80,7 +86,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
     // Top left - Compass
     { id: "compass", type: "compass", position: { x: 20, y: 20 }, visible: true, scale: 1 },
 
-    // Top center - Clock (centered at ~960 for 1920 width)
+    // Top center - Clock
     { id: "clock", type: "clock", position: { x: 910, y: 20 }, visible: true, scale: 1 },
 
     // Top right - Money
@@ -117,4 +123,5 @@ export const DEFAULT_HUD_STATE: HUDLayoutState = {
     hudScale: 1,
     speedometerType: "car",
     speedometerConfigs: DEFAULT_SPEEDOMETER_CONFIGS,
+    minimapShape: "square",
 };

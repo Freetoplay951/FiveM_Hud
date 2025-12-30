@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from "react";
 import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WidgetPosition } from "@/types/widget";
+import { WidgetPosition, REFERENCE_WIDTH, REFERENCE_HEIGHT } from "@/types/widget";
 
 interface HUDWidgetProps {
     id: string;
     children: ReactNode;
-    position: WidgetPosition;
+    position: WidgetPosition; // Position in reference resolution (1920x1080)
     visible: boolean;
     editMode: boolean;
     snapToGrid: boolean;
@@ -21,6 +21,24 @@ interface HUDWidgetProps {
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
+
+// Widget base sizes for clamping
+const WIDGET_BASE_SIZES: Record<string, { width: number; height: number }> = {
+    health: { width: 48, height: 48 },
+    armor: { width: 48, height: 48 },
+    hunger: { width: 48, height: 48 },
+    thirst: { width: 48, height: 48 },
+    stamina: { width: 48, height: 48 },
+    stress: { width: 48, height: 48 },
+    oxygen: { width: 48, height: 48 },
+    money: { width: 180, height: 80 },
+    clock: { width: 100, height: 40 },
+    compass: { width: 80, height: 80 },
+    voice: { width: 120, height: 50 },
+    minimap: { width: 200, height: 200 },
+    notifications: { width: 280, height: 150 },
+    speedometer: { width: 200, height: 200 },
+};
 
 export const HUDWidget = ({
     id,
@@ -53,6 +71,16 @@ export const HUDWidget = ({
     const resizeStartScale = useRef(1);
     const resizeStartElementSize = useRef({ w: 0, h: 0 });
 
+    // Scale factors for responsive positioning
+    const scaleX = window.innerWidth / REFERENCE_WIDTH;
+    const scaleY = window.innerHeight / REFERENCE_HEIGHT;
+
+    // Convert reference position to viewport position
+    const toViewportPosition = useCallback((refPos: WidgetPosition) => ({
+        x: refPos.x * scaleX,
+        y: refPos.y * scaleY,
+    }), [scaleX, scaleY]);
+
     // Measure element size
     useEffect(() => {
         const el = rootRef.current;
@@ -76,14 +104,18 @@ export const HUDWidget = ({
     // Clamp position to viewport
     const clampToViewport = useCallback(
         (x: number, y: number) => {
-            const maxX = Math.max(0, window.innerWidth - elementSize.w);
-            const maxY = Math.max(0, window.innerHeight - elementSize.h);
+            const baseSize = WIDGET_BASE_SIZES[id] || { width: 50, height: 50 };
+            const widgetWidth = baseSize.width * (localScale ?? scale);
+            const widgetHeight = baseSize.height * (localScale ?? scale);
+            
+            const maxX = Math.max(0, window.innerWidth - widgetWidth);
+            const maxY = Math.max(0, window.innerHeight - widgetHeight);
             return {
                 x: Math.max(0, Math.min(maxX, x)),
                 y: Math.max(0, Math.min(maxY, y)),
             };
         },
-        [elementSize]
+        [id, scale, localScale]
     );
 
     const handleMouseDown = useCallback(
@@ -94,10 +126,11 @@ export const HUDWidget = ({
             e.stopPropagation();
             setIsDragging(true);
             dragStartPos.current = { x: e.clientX, y: e.clientY };
-            widgetStartPos.current = { x: position.x, y: position.y };
-            setLocalPosition({ x: position.x, y: position.y });
+            const viewportPos = toViewportPosition(position);
+            widgetStartPos.current = { x: viewportPos.x, y: viewportPos.y };
+            setLocalPosition({ x: viewportPos.x, y: viewportPos.y });
         },
-        [editMode, isResizing, position.x, position.y]
+        [editMode, isResizing, position, toViewportPosition]
     );
 
     const localPositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -125,6 +158,7 @@ export const HUDWidget = ({
 
         const handleMouseUp = () => {
             if (localPositionRef.current) {
+                // Position is already in viewport coords, onPositionChange will convert to reference
                 onPositionChange(id, { x: localPositionRef.current.x, y: localPositionRef.current.y });
             }
             localPositionRef.current = null;
@@ -168,10 +202,10 @@ export const HUDWidget = ({
             const newWidth = resizeStartElementSize.current.w + deltaX;
             const newHeight = resizeStartElementSize.current.h + deltaY;
 
-            const scaleX = baseWidth > 0 ? newWidth / baseWidth : resizeStartScale.current;
-            const scaleY = baseHeight > 0 ? newHeight / baseHeight : resizeStartScale.current;
+            const scaleXNew = baseWidth > 0 ? newWidth / baseWidth : resizeStartScale.current;
+            const scaleYNew = baseHeight > 0 ? newHeight / baseHeight : resizeStartScale.current;
 
-            const nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, (scaleX + scaleY) / 2));
+            const nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, (scaleXNew + scaleYNew) / 2));
             setLocalScale(Number(nextScale.toFixed(3)));
         };
 
@@ -194,7 +228,9 @@ export const HUDWidget = ({
 
     if (!visible && !editMode) return null;
 
-    const displayPosition = localPosition ?? position;
+    // Calculate display position - use local during drag, otherwise scale from reference
+    const viewportPos = toViewportPosition(position);
+    const displayPosition = localPosition ?? viewportPos;
     const displayScale = localScale ?? scale;
 
     return (
