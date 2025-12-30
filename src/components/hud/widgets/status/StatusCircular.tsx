@@ -24,8 +24,7 @@ export const StatusCircular = ({ type, value }: StatusProps) => {
 
     return (
         <div className="relative w-14 h-14">
-            {/* Dark background for contrast */}
-            <div className="absolute inset-0 rounded-full bg-black/60 backdrop-blur-sm" />
+            {/* Subtle backdrop - no solid black box */}
             
             {/* Subtle glow effect */}
             <motion.div
