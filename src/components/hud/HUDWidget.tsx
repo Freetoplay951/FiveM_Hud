@@ -13,7 +13,7 @@ interface HUDWidgetProps {
     gridSize: number;
     scale?: number;
     onPositionChange: (id: string, position: WidgetPosition) => void;
-    onVisibilityToggle: (id: string) => void;
+    onVisibilityToggle?: (id: string) => void;
     onScaleChange?: (id: string, scale: number) => void;
     onReset?: (id: string) => void;
     className?: string;
@@ -244,7 +244,7 @@ export const HUDWidget = ({
             {/* Edit Mode Controls */}
             {editMode && (
                 <div className="absolute -top-7 left-0 right-0 flex items-center justify-between gap-1">
-                    <div className="flex items-center gap-1 glass-panel rounded px-1 py-0.5">
+                    <div className="flex items-center gap-1 bg-background/60 backdrop-blur-sm border border-border/30 rounded px-1 py-0.5">
                         <GripVertical size={10} className="text-muted-foreground" />
                         <span className="text-[8px] text-muted-foreground uppercase">{id}</span>
                         <span className="text-[8px] text-muted-foreground ml-1">{Math.round(displayScale * 100)}%</span>
@@ -257,23 +257,25 @@ export const HUDWidget = ({
                                     e.stopPropagation();
                                     onReset(id);
                                 }}
-                                className="glass-panel rounded p-1 hover:bg-muted/20 transition-colors"
+                                className="bg-background/60 backdrop-blur-sm border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors"
                                 title="Position & Größe zurücksetzen">
                                 <RotateCcw size={10} className="text-muted-foreground hover:text-warning" />
                             </button>
                         )}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onVisibilityToggle(id);
-                            }}
-                            className="glass-panel rounded p-1 hover:bg-muted/20 transition-colors">
-                            {visible ? (
-                                <Eye size={10} className="text-primary" />
-                            ) : (
-                                <EyeOff size={10} className="text-muted-foreground" />
-                            )}
-                        </button>
+                        {onVisibilityToggle && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onVisibilityToggle(id);
+                                }}
+                                className="bg-background/60 backdrop-blur-sm border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors">
+                                {visible ? (
+                                    <Eye size={10} className="text-primary" />
+                                ) : (
+                                    <EyeOff size={10} className="text-muted-foreground" />
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
@@ -287,8 +289,8 @@ export const HUDWidget = ({
                     aria-label="Widget Größe ändern"
                     onMouseDown={handleResizeMouseDown}
                     className={cn(
-                        "absolute -right-2 -bottom-2 p-1 rounded-md glass-panel",
-                        "cursor-nwse-resize hover:bg-muted/20 transition-colors"
+                        "absolute -right-2 -bottom-2 p-1 rounded-md bg-background/60 backdrop-blur-sm border border-border/30",
+                        "cursor-nwse-resize hover:bg-muted/30 transition-colors"
                     )}>
                     <MoveDiagonal size={12} className="text-muted-foreground" />
                 </button>
