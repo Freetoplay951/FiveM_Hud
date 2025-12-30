@@ -78,7 +78,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
     <AnimatePresence>
       {(isVisible || isInputActive || hasMessages) && (
         <motion.div
-          className="glass-panel rounded-lg overflow-hidden flex flex-col"
+          className="bg-background/90 border border-border/30 rounded-lg overflow-hidden flex flex-col"
           style={{
             width: '320px',
             height: '280px',

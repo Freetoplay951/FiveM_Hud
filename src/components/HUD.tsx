@@ -72,26 +72,45 @@ const DEMO_DEATH: DeathState = {
 
 // Demo Chat State (leer in Production - wird von FiveM befüllt)
 const DEMO_CHAT: ChatState = {
-    isOpen: true,
+    isOpen: false,
     isInputActive: false,
-    isVisible: true,
+    isVisible: false,
     messages: [],
     unreadCount: 0,
 };
 
 // Demo Team Chat State (leer in Production - wird von FiveM befüllt)
 const DEMO_TEAM_CHAT: TeamChatState = {
-    isOpen: true,
+    isOpen: false,
     isInputActive: false,
-    isVisible: true,
+    isVisible: false,
     hasAccess: true,
     teamType: "admin",
     teamName: "Team-Chat",
     messages: [],
     unreadCount: 0,
-    onlineMembers: 0,
+    onlineMembers: 3,
     isAdmin: true,
 };
+
+// Demo Chat Nachrichten
+const DEMO_CHAT_MESSAGES = [
+    { sender: "Max Mustermann", message: "Hey, wie geht's dir?" },
+    { sender: "Anna Schmidt", message: "Wer kommt mit zum Hafen?" },
+    { sender: "Tom Weber", message: "Ich brauche Hilfe bei meinem Auto" },
+    { sender: "Lisa Müller", message: "Treffen wir uns beim Rathaus?" },
+    { sender: "Paul Becker", message: "Hat jemand ein Telefon?" },
+    { sender: "Julia Fischer", message: "Ich bin beim Krankenhaus" },
+    { sender: "Kevin Hoffmann", message: "Wo ist der nächste Laden?" },
+    { sender: "Sarah Wagner", message: "Komme gleich" },
+];
+
+const DEMO_TEAM_MESSAGES = [
+    { sender: "Admin Max", rank: "Admin", message: "Bitte alle aufpassen" },
+    { sender: "Mod Lisa", rank: "Moderator", message: "Neuer Spieler braucht Hilfe" },
+    { sender: "Support Tom", rank: "Supporter", message: "Ticket wurde bearbeitet" },
+    { sender: "Admin Sarah", rank: "Admin", message: "Server Neustart in 30 Minuten" },
+];
 
 const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
     {
@@ -284,6 +303,58 @@ export const HUD = () => {
 
         return () => clearInterval(interval);
     }, [isDemoMode]);
+
+    // Demo: Random Chat-Nachrichten
+    useEffect(() => {
+        if (!isDemoMode || editMode) return;
+
+        // Zufällige Chat-Nachricht alle 5-15 Sekunden
+        const chatInterval = setInterval(() => {
+            if (Math.random() > 0.5) {
+                const randomMsg = DEMO_CHAT_MESSAGES[Math.floor(Math.random() * DEMO_CHAT_MESSAGES.length)];
+                const newMsg = {
+                    id: Date.now().toString(),
+                    type: 'normal' as const,
+                    sender: randomMsg.sender,
+                    message: randomMsg.message,
+                    timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                };
+                setChatState((prev) => ({
+                    ...prev,
+                    isOpen: true,
+                    isVisible: true,
+                    messages: [...prev.messages, newMsg],
+                    unreadCount: prev.isInputActive ? 0 : prev.unreadCount + 1,
+                }));
+            }
+        }, 8000);
+
+        // Zufällige Team-Chat-Nachricht alle 10-20 Sekunden
+        const teamChatInterval = setInterval(() => {
+            if (Math.random() > 0.6) {
+                const randomMsg = DEMO_TEAM_MESSAGES[Math.floor(Math.random() * DEMO_TEAM_MESSAGES.length)];
+                const newMsg = {
+                    id: Date.now().toString(),
+                    sender: randomMsg.sender,
+                    rank: randomMsg.rank,
+                    message: randomMsg.message,
+                    timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                };
+                setTeamChatState((prev) => ({
+                    ...prev,
+                    isOpen: true,
+                    isVisible: true,
+                    messages: [...prev.messages, newMsg],
+                    unreadCount: prev.isInputActive ? 0 : prev.unreadCount + 1,
+                }));
+            }
+        }, 12000);
+
+        return () => {
+            clearInterval(chatInterval);
+            clearInterval(teamChatInterval);
+        };
+    }, [isDemoMode, editMode]);
 
     // Demo key controls
     useEffect(() => {

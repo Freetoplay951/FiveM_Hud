@@ -97,7 +97,7 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
           className={cn(
             "rounded-lg overflow-hidden flex flex-col border",
             teamColor.border,
-            "bg-background/80 backdrop-blur-md"
+            "bg-background/90"
           )}
           style={{
             width: '320px',
