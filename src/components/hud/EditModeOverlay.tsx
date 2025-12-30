@@ -71,7 +71,7 @@ export const EditModeOverlay = ({
             align="end"
             side="left"
             sideOffset={12}
-            className="w-[360px] rounded-2xl border-border/40 bg-background/95 backdrop-blur-md"
+            className="w-[360px] rounded-2xl border-border/40 bg-background/95"
             style={{ boxShadow: "0 0 40px hsl(var(--primary) / 0.2)" }}>
             <div className="flex items-center justify-between">
                 <div>
@@ -135,9 +135,7 @@ export const EditModeOverlay = ({
                                 size={18}
                                 className={minimapShape === shape ? "text-primary" : "text-muted-foreground"}
                                 style={
-                                    minimapShape === shape
-                                        ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }
-                                        : {}
+                                    minimapShape === shape ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" } : {}
                                 }
                             />
                             <span
@@ -162,7 +160,9 @@ export const EditModeOverlay = ({
                             onClick={() => onSpeedometerTypeChange(type)}
                             className={cn(
                                 "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
-                                speedometerType === type ? "bg-primary/20 border border-primary/50" : "hover:bg-muted/20"
+                                speedometerType === type
+                                    ? "bg-primary/20 border border-primary/50"
+                                    : "hover:bg-muted/20"
                             )}
                             style={
                                 speedometerType === type ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}

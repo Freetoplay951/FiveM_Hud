@@ -18,7 +18,7 @@ export const StatusVertical = ({ type, value }: StatusProps) => {
     const colorVar = getColor();
 
     return (
-        <div className="rounded-lg flex flex-col items-center py-1.5 gap-1 w-7 h-20 bg-black/60 backdrop-blur-sm border border-white/10">
+        <div className="rounded-lg flex flex-col items-center py-1.5 gap-1 w-7 h-20 bg-black/60 border border-white/10">
             <Icon
                 size={12}
                 className={cn(isCritical && "critical-pulse")}

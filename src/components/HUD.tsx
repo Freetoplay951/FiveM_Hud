@@ -63,7 +63,7 @@ const DEMO_DEATH: DeathState = {
     waitTimer: 59,
     canCallHelp: true,
     canRespawn: false,
-    message: "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
+    message: "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
 };
 
 const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
@@ -144,7 +144,7 @@ export const HUD = () => {
 
     // NUI Event handlers
     useNuiEvents({
-        onUpdateHud: (data) => setHudState(prev => ({ ...prev, ...data })),
+        onUpdateHud: (data) => setHudState((prev) => ({ ...prev, ...data })),
         onUpdateVehicle: setVehicleState,
         onUpdateMoney: setMoneyState,
         onUpdateVoice: setVoiceState,
@@ -404,7 +404,7 @@ export const HUD = () => {
                     }}>
                     <PopoverTrigger asChild>
                         <button
-                            className="fixed top-4 right-4 pointer-events-auto bg-background/80 backdrop-blur-sm border border-primary/30 rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
+                            className="fixed top-4 right-4 pointer-events-auto bg-background/80 border border-primary/30 rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
                             style={{
                                 boxShadow: "0 0 15px hsl(var(--primary) / 0.4)",
                             }}>
@@ -437,7 +437,7 @@ export const HUD = () => {
             {/* Demo Mode Badge */}
             {isDemoMode && !editMode && (
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-destructive/80 backdrop-blur-sm border border-destructive/50 rounded-lg px-4 py-2 animate-fade-in-up pointer-events-auto">
+                    <div className="bg-destructive/80 border border-destructive/50 rounded-lg px-4 py-2 animate-fade-in-up pointer-events-auto">
                         <div className="flex items-center gap-4">
                             <div>
                                 <span className="text-destructive-foreground font-semibold">Demo Modus</span>
@@ -448,21 +448,22 @@ export const HUD = () => {
                                 </span>
                             </div>
                             <button
-                                onClick={() => setDeathState(prev => ({
-                                    ...prev,
-                                    isDead: !prev.isDead,
-                                    respawnTimer: 14,
-                                    waitTimer: 59,
-                                    canCallHelp: true,
-                                    canRespawn: false,
-                                }))}
+                                onClick={() =>
+                                    setDeathState((prev) => ({
+                                        ...prev,
+                                        isDead: !prev.isDead,
+                                        respawnTimer: 14,
+                                        waitTimer: 59,
+                                        canCallHelp: true,
+                                        canRespawn: false,
+                                    }))
+                                }
                                 className={cn(
                                     "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                                    deathState.isDead 
-                                        ? "bg-critical/80 text-white border border-critical" 
+                                    deathState.isDead
+                                        ? "bg-critical/80 text-white border border-critical"
                                         : "bg-background/30 text-destructive-foreground/80 border border-destructive-foreground/30 hover:bg-background/50"
-                                )}
-                            >
+                                )}>
                                 {deathState.isDead ? "Revive (D)" : "Death (D)"}
                             </button>
                         </div>
@@ -471,162 +472,172 @@ export const HUD = () => {
             )}
 
             {/* Status Widgets - hidden when dead OR when death preview is active in edit mode */}
-            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && statusTypes.map((type) => {
-                const widget = getWidget(type);
-                if (!widget) return null;
-                const value = hudState[type as keyof HudState] ?? 100;
-                return (
-                    <HUDWidget
-                        key={type}
-                        id={type}
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        {...widgetProps}>
-                        <StatusWidget
-                            type={type}
-                            value={value}
-                            design={statusDesign}
-                        />
-                    </HUDWidget>
-                );
-            })}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                statusTypes.map((type) => {
+                    const widget = getWidget(type);
+                    if (!widget) return null;
+                    const value = hudState[type as keyof HudState] ?? 100;
+                    return (
+                        <HUDWidget
+                            key={type}
+                            id={type}
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <StatusWidget
+                                type={type}
+                                value={value}
+                                design={statusDesign}
+                            />
+                        </HUDWidget>
+                    );
+                })}
 
             {/* Money Widget - hidden when dead OR when death preview is active in edit mode */}
-            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
-                const widget = getWidget("money");
-                if (!widget) return null;
-                return (
-                    <HUDWidget
-                        id="money"
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        {...widgetProps}>
-                        <NeonMoneyWidget
-                            money={moneyState}
-                            player={playerState}
-                        />
-                    </HUDWidget>
-                );
-            })()}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("money");
+                    if (!widget) return null;
+                    return (
+                        <HUDWidget
+                            id="money"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <NeonMoneyWidget
+                                money={moneyState}
+                                player={playerState}
+                            />
+                        </HUDWidget>
+                    );
+                })()}
 
             {/* Clock Widget - hidden when dead OR when death preview is active in edit mode */}
-            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
-                const widget = getWidget("clock");
-                if (!widget) return null;
-                return (
-                    <HUDWidget
-                        id="clock"
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        {...widgetProps}>
-                        <ClockWidget />
-                    </HUDWidget>
-                );
-            })()}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("clock");
+                    if (!widget) return null;
+                    return (
+                        <HUDWidget
+                            id="clock"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <ClockWidget />
+                        </HUDWidget>
+                    );
+                })()}
 
             {/* Voice Widget - hidden when dead OR when death preview is active in edit mode */}
-            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
-                const widget = getWidget("voice");
-                if (!widget) return null;
-                return (
-                    <HUDWidget
-                        id="voice"
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        {...widgetProps}>
-                        <NeonVoiceWidget voice={voiceState} />
-                    </HUDWidget>
-                );
-            })()}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("voice");
+                    if (!widget) return null;
+                    return (
+                        <HUDWidget
+                            id="voice"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <NeonVoiceWidget voice={voiceState} />
+                        </HUDWidget>
+                    );
+                })()}
 
             {/* Minimap Widget - hidden when dead OR when death preview is active in edit mode */}
-            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
-                const widget = getWidget("minimap");
-                if (!widget) return null;
-                return (
-                    <HUDWidget
-                        id="minimap"
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        {...widgetProps}>
-                        <NeonMinimapWidget location={locationState} shape={minimapShape} />
-                    </HUDWidget>
-                );
-            })()}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("minimap");
+                    if (!widget) return null;
+                    return (
+                        <HUDWidget
+                            id="minimap"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <NeonMinimapWidget
+                                location={locationState}
+                                shape={minimapShape}
+                            />
+                        </HUDWidget>
+                    );
+                })()}
 
             {/* Compass Widget - hidden when dead OR when death preview is active in edit mode */}
-            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
-                const widget = getWidget("compass");
-                if (!widget) return null;
-                return (
-                    <HUDWidget
-                        id="compass"
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        {...widgetProps}>
-                        <CompassWidget heading={locationState.heading} />
-                    </HUDWidget>
-                );
-            })()}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("compass");
+                    if (!widget) return null;
+                    return (
+                        <HUDWidget
+                            id="compass"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <CompassWidget heading={locationState.heading} />
+                        </HUDWidget>
+                    );
+                })()}
 
             {/* Vehicle Speedometer - hidden when dead OR when death preview is active in edit mode */}
-            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
-                const widget = getWidget("speedometer");
-                if (!widget) return null;
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("speedometer");
+                    if (!widget) return null;
 
-                // Use the config for the currently active speedometer type
-                const activeType = (editMode ? speedometerType : vehicleState.vehicleType) as
-                    | "car"
-                    | "plane"
-                    | "boat"
-                    | "helicopter";
-                const currentConfig = getSpeedometerConfig(activeType);
+                    // Use the config for the currently active speedometer type
+                    const activeType = (editMode ? speedometerType : vehicleState.vehicleType) as
+                        | "car"
+                        | "plane"
+                        | "boat"
+                        | "helicopter";
+                    const currentConfig = getSpeedometerConfig(activeType);
 
-                return (
-                    <HUDWidget
-                        id={`speedometer-${activeType}`}
-                        position={currentConfig.position}
-                        visible={widget.visible && (vehicleState.inVehicle || editMode)}
-                        scale={currentConfig.scale}
-                        editMode={editMode}
-                        snapToGrid={snapToGrid}
-                        gridSize={gridSize}
-                        onPositionChange={(id, position) => {
-                            updateSpeedometerConfig(activeType, { position });
-                        }}
-                        onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
-                        onScaleChange={(id, scale) => {
-                            updateSpeedometerConfig(activeType, { scale });
-                        }}
-                        onReset={() => {
-                            resetSpeedometer(activeType);
-                        }}>
-                        <VehicleHUDFactory
-                            vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
-                            visible={vehicleState.inVehicle || editMode}
-                        />
-                    </HUDWidget>
-                );
-            })()}
+                    return (
+                        <HUDWidget
+                            id={`speedometer-${activeType}`}
+                            position={currentConfig.position}
+                            visible={widget.visible && (vehicleState.inVehicle || editMode)}
+                            scale={currentConfig.scale}
+                            editMode={editMode}
+                            snapToGrid={snapToGrid}
+                            gridSize={gridSize}
+                            onPositionChange={(id, position) => {
+                                updateSpeedometerConfig(activeType, { position });
+                            }}
+                            onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
+                            onScaleChange={(id, scale) => {
+                                updateSpeedometerConfig(activeType, { scale });
+                            }}
+                            onReset={() => {
+                                resetSpeedometer(activeType);
+                            }}>
+                            <VehicleHUDFactory
+                                vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
+                                visible={vehicleState.inVehicle || editMode}
+                            />
+                        </HUDWidget>
+                    );
+                })()}
 
             {/* Death Screen Widget - in edit mode, respect the preview toggle; outside edit mode, show when dead */}
             {(() => {
                 const widget = getWidget("deathscreen");
                 if (!widget) return null;
-                
+
                 // In edit mode: only show if preview is enabled (regardless of actual death state)
                 // Outside edit mode: show when actually dead
                 const showDeathScreen = editMode ? showDeathScreenPreview : deathState.isDead;
-                
+
                 // Don't render anything if death screen shouldn't be shown
                 if (!showDeathScreen) return null;
-                
+
                 return (
                     <HUDWidget
                         id="deathscreen"

@@ -34,7 +34,7 @@ export const StatusArc = ({ type, value }: StatusProps) => {
     };
 
     return (
-        <div className="relative rounded-lg w-16 h-12 bg-black/60 backdrop-blur-sm border border-white/10">
+        <div className="relative rounded-lg w-16 h-12 bg-black/60 border border-white/10">
             <svg
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 50 30">

@@ -97,7 +97,7 @@ export const HUDWidget = ({
             const baseSize = WIDGET_BASE_SIZES[id] || { width: 50, height: 50 };
             const widgetWidth = baseSize.width * (localScale ?? scale);
             const widgetHeight = baseSize.height * (localScale ?? scale);
-            
+
             const maxX = Math.max(0, window.innerWidth - widgetWidth);
             const maxY = Math.max(0, window.innerHeight - widgetHeight);
             return {
@@ -248,8 +248,11 @@ export const HUDWidget = ({
             {/* Edit Mode Controls */}
             {editMode && (
                 <div className="absolute -top-7 left-0 right-0 flex items-center justify-between gap-1">
-                    <div className="flex items-center gap-1 bg-background/60 backdrop-blur-sm border border-border/30 rounded px-1 py-0.5">
-                        <GripVertical size={10} className="text-muted-foreground" />
+                    <div className="flex items-center gap-1 bg-background/60 border border-border/30 rounded px-1 py-0.5">
+                        <GripVertical
+                            size={10}
+                            className="text-muted-foreground"
+                        />
                         <span className="text-[8px] text-muted-foreground uppercase">{id}</span>
                         <span className="text-[8px] text-muted-foreground ml-1">{Math.round(displayScale * 100)}%</span>
                     </div>
@@ -261,9 +264,12 @@ export const HUDWidget = ({
                                     e.stopPropagation();
                                     onReset(id);
                                 }}
-                                className="bg-background/60 backdrop-blur-sm border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors"
+                                className="bg-background/60 border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors"
                                 title="Position & Größe zurücksetzen">
-                                <RotateCcw size={10} className="text-muted-foreground hover:text-warning" />
+                                <RotateCcw
+                                    size={10}
+                                    className="text-muted-foreground hover:text-warning"
+                                />
                             </button>
                         )}
                         {onVisibilityToggle && (
@@ -272,11 +278,17 @@ export const HUDWidget = ({
                                     e.stopPropagation();
                                     onVisibilityToggle(id);
                                 }}
-                                className="bg-background/60 backdrop-blur-sm border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors">
+                                className="bg-background/60 border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors">
                                 {visible ? (
-                                    <Eye size={10} className="text-primary" />
+                                    <Eye
+                                        size={10}
+                                        className="text-primary"
+                                    />
                                 ) : (
-                                    <EyeOff size={10} className="text-muted-foreground" />
+                                    <EyeOff
+                                        size={10}
+                                        className="text-muted-foreground"
+                                    />
                                 )}
                             </button>
                         )}
@@ -293,10 +305,13 @@ export const HUDWidget = ({
                     aria-label="Widget Größe ändern"
                     onMouseDown={handleResizeMouseDown}
                     className={cn(
-                        "absolute -right-2 -bottom-2 p-1 rounded-md bg-background/60 backdrop-blur-sm border border-border/30",
+                        "absolute -right-2 -bottom-2 p-1 rounded-md bg-background/60 border border-border/30",
                         "cursor-nwse-resize hover:bg-muted/30 transition-colors"
                     )}>
-                    <MoveDiagonal size={12} className="text-muted-foreground" />
+                    <MoveDiagonal
+                        size={12}
+                        className="text-muted-foreground"
+                    />
                 </button>
             )}
         </div>

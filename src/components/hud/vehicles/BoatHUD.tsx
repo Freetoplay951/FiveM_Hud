@@ -186,8 +186,8 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                         {/* Center */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
                             {/* Dark backdrop for better text readability */}
-                            <div className="absolute inset-[25%] rounded-full bg-background/80 backdrop-blur-sm" />
-                            
+                            <div className="absolute inset-[25%] rounded-full bg-background/80" />
+
                             <span className="relative text-[8px] text-muted-foreground uppercase tracking-wider mb-1">
                                 KNOTS
                             </span>
