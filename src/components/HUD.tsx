@@ -340,7 +340,6 @@ export const HUD = () => {
                         position={widget.position}
                         visible={widget.visible}
                         scale={widget.scale}
-                        anchor="top-left"
                         {...widgetProps}>
                         <NotificationContainer
                             notifications={displayedNotifications}
