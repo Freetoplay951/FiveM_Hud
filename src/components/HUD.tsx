@@ -12,6 +12,8 @@ import { NeonMinimapWidget } from "./hud/widgets/MinimapWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";
 import { CompassWidget } from "./hud/widgets/CompassWidget";
 import { NotificationContainer } from "./hud/notifications/NotificationContainer";
+import { ChatWidget } from "./hud/widgets/ChatWidget";
+import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -25,6 +27,8 @@ import {
     StatusType,
     NotificationData,
     DeathState,
+    ChatState,
+    TeamChatState,
 } from "@/types/hud";
 import { DeathScreenWidget } from "./hud/widgets/DeathScreenWidget";
 import { motion } from "framer-motion";
@@ -66,6 +70,39 @@ const DEMO_DEATH: DeathState = {
     message: "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
 };
 
+// Demo Chat State
+const DEMO_CHAT: ChatState = {
+    isOpen: true,
+    messages: [
+        { id: "1", type: "system", message: "Willkommen auf dem Server!", timestamp: "12:00" },
+        { id: "2", type: "normal", sender: "Max Müller", message: "Hey, wie geht's?", timestamp: "12:01" },
+        { id: "3", type: "action", sender: "Anna Schmidt", message: "*winkt freundlich*", timestamp: "12:02" },
+        { id: "4", type: "ooc", sender: "Tom", message: "((Bin gleich back))", timestamp: "12:03" },
+        { id: "5", type: "whisper", sender: "Lisa", message: "*flüstert* Hast du das gesehen?", timestamp: "12:04" },
+        { id: "6", type: "shout", sender: "Polizist", message: "STEHEN BLEIBEN!", timestamp: "12:05" },
+        { id: "7", type: "radio", sender: "Dispatch", message: "[FUNK] Einheit 5, bitte kommen.", timestamp: "12:06" },
+    ],
+    unreadCount: 3,
+};
+
+// Demo Team Chat State
+const DEMO_TEAM_CHAT: TeamChatState = {
+    isOpen: true,
+    hasAccess: true,
+    teamType: "police",
+    teamName: "LSPD",
+    messages: [
+        { id: "1", sender: "Chief Miller", rank: "Chief", message: "Alle Einheiten: Dienstbesprechung um 14:00 Uhr.", timestamp: "11:45", isImportant: true },
+        { id: "2", sender: "Officer Johnson", rank: "Officer", message: "10-4, verstanden.", timestamp: "11:46" },
+        { id: "3", sender: "Sgt. Williams", rank: "Sergeant", message: "Brauche Verstärkung am Pier.", timestamp: "11:50" },
+        { id: "4", sender: "Officer Davis", rank: "Officer", message: "Bin unterwegs, ETA 3 Minuten.", timestamp: "11:51" },
+        { id: "5", sender: "Detective Brown", rank: "Detective", message: "Hat jemand den Bericht vom Überfall?", timestamp: "11:55" },
+    ],
+    unreadCount: 2,
+    onlineMembers: 8,
+    isAdmin: false,
+};
+
 const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
     {
         id: "edit-demo-1",
@@ -91,6 +128,8 @@ export const HUD = () => {
     const [voiceState, setVoiceState] = useState<VoiceState>(DEMO_VOICE);
     const [locationState, setLocationState] = useState<LocationState>(DEMO_LOCATION);
     const [deathState, setDeathState] = useState<DeathState>(DEMO_DEATH);
+    const [chatState, setChatState] = useState<ChatState>(DEMO_CHAT);
+    const [teamChatState, setTeamChatState] = useState<TeamChatState>(DEMO_TEAM_CHAT);
     const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false); // For edit mode preview
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
     const [isDemoMode] = useState(!isNuiEnvironment());
@@ -321,6 +360,16 @@ export const HUD = () => {
                     }
                 });
             }
+
+            // Chat toggle - T key
+            if (e.key === "t" && !editMode) {
+                setChatState((prev) => ({ ...prev, isOpen: !prev.isOpen }));
+            }
+
+            // Team Chat toggle - Y key
+            if (e.key === "y" && !editMode) {
+                setTeamChatState((prev) => ({ ...prev, isOpen: !prev.isOpen }));
+            }
         };
 
         window.addEventListener("keypress", handleKeyPress);
@@ -443,8 +492,9 @@ export const HUD = () => {
                                 <span className="text-destructive-foreground font-semibold">Demo Modus</span>
                                 <span className="flex flex-col text-xs text-destructive-foreground/80 uppercase tracking-wider hud-text">
                                     <span>Vehicle: V (Typ: 1︱2︱3︱4)</span>
-                                    <span>Voice: R | Edit: E</span>
+                                    <span>Voice: R | Edit: E | Death: D</span>
                                     <span>Notify: H︱J︱K︱L</span>
+                                    <span>Chat: T | TeamChat: Y</span>
                                 </span>
                             </div>
                             <button
@@ -658,6 +708,90 @@ export const HUD = () => {
                     </HUDWidget>
                 );
             })()}
+
+            {/* Chat Widget - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("chat");
+                    if (!widget) return null;
+                    
+                    // In demo mode, always show. In NUI mode, respect isOpen state
+                    const showChat = isDemoMode ? (chatState.isOpen || editMode) : chatState.isOpen;
+                    if (!showChat && !editMode) return null;
+                    
+                    return (
+                        <HUDWidget
+                            id="chat"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <ChatWidget
+                                chat={chatState}
+                                isOpen={chatState.isOpen || editMode}
+                                onSendMessage={(msg) => {
+                                    // In demo mode, add message locally
+                                    if (isDemoMode) {
+                                        const newMsg = {
+                                            id: Date.now().toString(),
+                                            type: 'normal' as const,
+                                            sender: 'Du',
+                                            message: msg,
+                                            timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                                        };
+                                        setChatState((prev) => ({
+                                            ...prev,
+                                            messages: [...prev.messages, newMsg],
+                                        }));
+                                    }
+                                }}
+                                onClose={() => setChatState((prev) => ({ ...prev, isOpen: false }))}
+                            />
+                        </HUDWidget>
+                    );
+                })()}
+
+            {/* Team Chat Widget - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("teamchat");
+                    if (!widget) return null;
+                    
+                    // In demo mode, always show. In NUI mode, respect isOpen state
+                    const showTeamChat = isDemoMode ? (teamChatState.isOpen || editMode) : teamChatState.isOpen;
+                    if (!showTeamChat && !editMode) return null;
+                    
+                    return (
+                        <HUDWidget
+                            id="teamchat"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <TeamChatWidget
+                                teamChat={teamChatState}
+                                isOpen={teamChatState.isOpen || editMode}
+                                onSendMessage={(msg) => {
+                                    // In demo mode, add message locally
+                                    if (isDemoMode) {
+                                        const newMsg = {
+                                            id: Date.now().toString(),
+                                            sender: 'Du',
+                                            rank: 'Officer',
+                                            message: msg,
+                                            timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                                        };
+                                        setTeamChatState((prev) => ({
+                                            ...prev,
+                                            messages: [...prev.messages, newMsg],
+                                        }));
+                                    }
+                                }}
+                                onClose={() => setTeamChatState((prev) => ({ ...prev, isOpen: false }))}
+                            />
+                        </HUDWidget>
+                    );
+                })()}
         </div>
     );
 };

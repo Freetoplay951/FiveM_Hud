@@ -87,3 +87,43 @@ export interface DeathState {
     canRespawn?: boolean;
     message?: string;
 }
+
+// Chat Message Types
+export type ChatMessageType = 'normal' | 'system' | 'action' | 'ooc' | 'whisper' | 'shout' | 'radio';
+
+export interface ChatMessage {
+    id: string;
+    type: ChatMessageType;
+    sender?: string;
+    message: string;
+    timestamp: string;
+}
+
+export interface ChatState {
+    isOpen: boolean;
+    messages: ChatMessage[];
+    unreadCount: number;
+}
+
+// Team Chat Types
+export type TeamType = 'police' | 'ems' | 'mechanic' | 'taxi' | 'admin' | 'custom';
+
+export interface TeamChatMessage {
+    id: string;
+    sender: string;
+    rank?: string;
+    message: string;
+    timestamp: string;
+    isImportant?: boolean;
+}
+
+export interface TeamChatState {
+    isOpen: boolean;
+    hasAccess: boolean;
+    teamType: TeamType;
+    teamName: string;
+    messages: TeamChatMessage[];
+    unreadCount: number;
+    onlineMembers: number;
+    isAdmin?: boolean;
+}

@@ -32,7 +32,9 @@ export type WidgetType =
     | "minimap"
     | "speedometer"
     | "notifications"
-    | "deathscreen";
+    | "deathscreen"
+    | "chat"
+    | "teamchat";
 
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 
@@ -166,6 +168,12 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
 
         // Death Screen - centered (only visible when dead)
         { id: "deathscreen", type: "deathscreen", position: pos(0.25, 0.15), visible: true, scale: 1 },
+
+        // Chat - left side middle
+        { id: "chat", type: "chat", position: pos(0.01, 0.45), visible: true, scale: 1 },
+
+        // Team Chat - right side middle (only visible with permission)
+        { id: "teamchat", type: "teamchat", position: pos(0.76, 0.45), visible: true, scale: 1 },
     ];
 };
 
