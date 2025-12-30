@@ -49,7 +49,6 @@ const DEMO_PLAYER: PlayerState = { id: 42, job: "LSPD", rank: "Chief" };
 const DEMO_VOICE: VoiceState = { active: true, range: "normal" };
 const DEMO_LOCATION: LocationState = {
     street: "Vinewood Boulevard",
-    direction: "NE",
     area: "Vinewood",
     heading: 45,
 };
@@ -200,17 +199,17 @@ export const HUD = () => {
                 active: Math.random() > 0.3,
             }));
 
-            // Animate compass heading and direction
-            setLocationState((prev) => {
-                const newHeading = ((prev.heading || 0) + (Math.random() - 0.4) * 8 + 360) % 360;
-                const DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-                const directionIndex = Math.round(newHeading / 45) % 8;
-                return {
-                    ...prev,
-                    heading: newHeading,
-                    direction: DIRECTIONS[directionIndex],
-                };
-            });
+            if (Math.random() > 0.75) {
+                setLocationState((prev) => {
+                    const currentDeg = prev.heading ?? 0;
+                    const change = Math.random() > 0.5 ? 45 : -45;
+                    const newHeading = (currentDeg + change + 360) % 360;
+                    return {
+                        ...prev,
+                        heading: newHeading,
+                    };
+                });
+            }
         }, 500);
 
         return () => clearInterval(interval);
@@ -488,7 +487,7 @@ export const HUD = () => {
                         visible={widget.visible}
                         scale={widget.scale}
                         {...widgetProps}>
-                        <CompassWidget direction={locationState.direction} heading={locationState.heading} />
+                        <CompassWidget heading={locationState.heading} />
                     </HUDWidget>
                 );
             })()}
