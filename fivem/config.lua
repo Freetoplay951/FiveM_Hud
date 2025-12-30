@@ -69,6 +69,9 @@ Config.Framework = 'auto'              -- 'esx', 'qb', oder 'auto' für automati
 -- Das HUD positioniert die GTA-Minimap automatisch an die richtige Stelle.
 Config.HideDefaultMinimap = false
 
+-- Minimap Form: 'square' (Standard) oder 'round' (Rund)
+Config.MinimapShape = 'square'
+
 -- ============================================================================
 -- TEAM-CHAT KONFIGURATION (Staff-Ränge)
 -- ============================================================================

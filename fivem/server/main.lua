@@ -1,5 +1,5 @@
 -- Server-side HUD Functions
--- Notification Helper und Server Events
+-- Notification Helper, Chat Sync und Server Events
 
 -- ============================================================================
 -- NOTIFICATION FUNCTIONS
@@ -11,6 +11,133 @@ end
 
 function NotifyAll(notificationType, title, message, duration)
     TriggerClientEvent('hud:notify', -1, notificationType, title, message, duration)
+end
+
+-- ============================================================================
+-- CHAT SYNCHRONIZATION
+-- ============================================================================
+
+-- Spielernamen bekommen
+local function GetPlayerDisplayName(source)
+    local name = GetPlayerName(source)
+    return name or "Unknown"
+end
+
+-- Chat-Nachricht von Client empfangen und an alle senden
+RegisterNetEvent('hud:sendChatMessage', function(message)
+    local source = source
+    local playerName = GetPlayerDisplayName(source)
+    
+    -- An alle Spieler senden (inkl. Sender)
+    TriggerClientEvent('hud:receiveChatMessage', -1, 'normal', playerName, message)
+    
+    if Config and Config.Debug then
+        print('[HUD Chat] ' .. playerName .. ': ' .. message)
+    end
+end)
+
+-- Chat-Nachricht mit Typ senden (action, ooc, etc.)
+RegisterNetEvent('hud:sendChatMessageType', function(msgType, message)
+    local source = source
+    local playerName = GetPlayerDisplayName(source)
+    
+    -- An alle Spieler senden
+    TriggerClientEvent('hud:receiveChatMessage', -1, msgType, playerName, message)
+    
+    if Config and Config.Debug then
+        print('[HUD Chat] [' .. msgType .. '] ' .. playerName .. ': ' .. message)
+    end
+end)
+
+-- System-Nachricht an alle senden
+function SendSystemMessage(message)
+    TriggerClientEvent('hud:receiveChatMessage', -1, 'system', nil, message)
+end
+
+-- ============================================================================
+-- TEAM CHAT SYNCHRONIZATION (Staff only)
+-- ============================================================================
+
+-- Team-Chat Nachricht empfangen und an alle Team-Mitglieder senden
+RegisterNetEvent('hud:sendTeamChatMessage', function(message)
+    local source = source
+    local playerName = GetPlayerDisplayName(source)
+    
+    -- Rang des Spielers ermitteln (Server-seitig via Ace Permissions)
+    local rank = "Staff"
+    
+    -- Prüfe Ränge aus Config (falls vorhanden)
+    if Config and Config.TeamChatRanks then
+        for _, rankConfig in ipairs(Config.TeamChatRanks) do
+            if IsPlayerAceAllowed(source, rankConfig.permission) then
+                rank = rankConfig.name
+                break
+            end
+        end
+    end
+    
+    -- An alle Spieler senden die Team-Chat Zugriff haben
+    local players = GetPlayers()
+    for _, playerId in ipairs(players) do
+        local targetId = tonumber(playerId)
+        
+        -- Prüfen ob Spieler Zugriff auf Team-Chat hat
+        local hasAccess = false
+        
+        -- Allgemeine Permission prüfen
+        if Config and Config.TeamChatGeneralPermission then
+            if IsPlayerAceAllowed(targetId, Config.TeamChatGeneralPermission) then
+                hasAccess = true
+            end
+        end
+        
+        -- Spezifische Rang-Permissions prüfen
+        if not hasAccess and Config and Config.TeamChatRanks then
+            for _, rankConfig in ipairs(Config.TeamChatRanks) do
+                if IsPlayerAceAllowed(targetId, rankConfig.permission) then
+                    hasAccess = true
+                    break
+                end
+            end
+        end
+        
+        -- Nachricht senden wenn Zugriff
+        if hasAccess then
+            TriggerClientEvent('hud:receiveTeamChatMessage', targetId, playerName, rank, message, false)
+        end
+    end
+    
+    if Config and Config.Debug then
+        print('[HUD TeamChat] [' .. rank .. '] ' .. playerName .. ': ' .. message)
+    end
+end)
+
+-- Wichtige Team-Chat Nachricht (vom Server)
+function SendTeamChatMessage(sender, rank, message, isImportant)
+    local players = GetPlayers()
+    for _, playerId in ipairs(players) do
+        local targetId = tonumber(playerId)
+        
+        local hasAccess = false
+        if Config and Config.TeamChatGeneralPermission then
+            if IsPlayerAceAllowed(targetId, Config.TeamChatGeneralPermission) then
+                hasAccess = true
+            end
+        end
+        
+        if not hasAccess and Config and Config.TeamChatRanks then
+            for _, rankConfig in ipairs(Config.TeamChatRanks) do
+                if IsPlayerAceAllowed(targetId, rankConfig.permission) then
+                    hasAccess = true
+                    break
+                end
+            end
+        end
+        
+        if hasAccess then
+            TriggerClientEvent('hud:receiveTeamChatMessage', targetId, sender, rank, message, isImportant or false)
+        end
+    end
 end
 
 -- ============================================================================
@@ -57,6 +184,8 @@ end)
 
 exports('notifyPlayer', NotifyPlayer)
 exports('notifyAll', NotifyAll)
+exports('sendSystemMessage', SendSystemMessage)
+exports('sendTeamChatMessage', SendTeamChatMessage)
 
 exports('success', function(source, title, message, duration)
     NotifyPlayer(source, 'success', title, message, duration)
@@ -94,5 +223,27 @@ RegisterCommand('revive', function(source, args)
         local targetId = tonumber(args[1]) or source
         TriggerClientEvent('hud:revivePlayer', targetId)
         print('[HUD] Revived player ' .. targetId)
+    end
+end, true)
+
+-- Chat Commands
+RegisterCommand('say', function(source, args)
+    if source == 0 then
+        -- Server-Console Nachricht
+        SendSystemMessage('[SERVER] ' .. table.concat(args, ' '))
+    end
+end, true)
+
+RegisterCommand('announce', function(source, args)
+    if source == 0 or IsPlayerAceAllowed(source, 'command.announce') then
+        local message = table.concat(args, ' ')
+        SendSystemMessage('[ANKÜNDIGUNG] ' .. message)
+    end
+end, true)
+
+RegisterCommand('teamchat', function(source, args)
+    if source == 0 or IsPlayerAceAllowed(source, 'command.teamchat') then
+        local message = table.concat(args, ' ')
+        SendTeamChatMessage('Server', 'System', message, true)
     end
 end, true)
