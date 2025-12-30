@@ -31,7 +31,8 @@ export type WidgetType =
     | "voice"
     | "minimap"
     | "speedometer"
-    | "notifications";
+    | "notifications"
+    | "deathscreen";
 
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 
@@ -162,6 +163,9 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
 
         // Bottom right - Speedometer (aligned to bottom)
         { id: "speedometer", type: "speedometer", position: getDefaultSpeedoPos(), visible: true, scale: 1 },
+
+        // Death Screen - centered (only visible when dead)
+        { id: "deathscreen", type: "deathscreen", position: pos(0.25, 0.15), visible: true, scale: 1 },
     ];
 };
 

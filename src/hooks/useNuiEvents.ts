@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { HudState, VehicleState, MoneyState, VoiceState, LocationState, NotificationData } from "@/types/hud";
+import { HudState, VehicleState, MoneyState, VoiceState, LocationState, NotificationData, DeathState } from "@/types/hud";
 
 interface NuiEventHandlers {
     onUpdateHud?: (data: Partial<HudState>) => void;
@@ -11,6 +11,7 @@ interface NuiEventHandlers {
     onNotify?: (data: { type: NotificationData['type']; title: string; message: string; duration?: number }) => void;
     onToggleEditMode?: (enabled: boolean) => void;
     onSetVisible?: (visible: boolean) => void;
+    onUpdateDeath?: (data: DeathState) => void;
 }
 
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
@@ -48,6 +49,9 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                     break;
                 case "setVisible":
                     handlers.onSetVisible?.(data);
+                    break;
+                case "updateDeath":
+                    handlers.onUpdateDeath?.(data);
                     break;
             }
         },
