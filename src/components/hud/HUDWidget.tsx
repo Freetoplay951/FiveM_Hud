@@ -172,16 +172,15 @@ export const HUDWidget = ({
         [elementSize]
     );
 
-    // Keep widgets in view when resizing window
+    // Keep widgets in view - ALWAYS (not just in edit mode)
     useEffect(() => {
-        if (!editMode || elementSize.w === 0 || isDragging || isResizing) return;
+        if (elementSize.w === 0 || isDragging || isResizing) return;
         const pixelPos = centerPercentToTopLeftPixel(position.xPercent, position.yPercent);
         const clamped = clampToViewport(pixelPos.x, pixelPos.y);
         if (Math.abs(clamped.x - pixelPos.x) > 1 || Math.abs(clamped.y - pixelPos.y) > 1) {
             onPositionChange(id, topLeftPixelToCenterPercent(clamped.x, clamped.y));
         }
     }, [
-        editMode,
         clampToViewport,
         id,
         onPositionChange,
