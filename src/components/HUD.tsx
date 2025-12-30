@@ -615,13 +615,14 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Death Screen Widget - only render when dead OR in edit mode with preview enabled */}
+            {/* Death Screen Widget - in edit mode, respect the preview toggle; outside edit mode, show when dead */}
             {(() => {
                 const widget = getWidget("deathscreen");
                 if (!widget) return null;
                 
-                // Show death screen when dead OR in edit mode with preview enabled
-                const showDeathScreen = deathState.isDead || (editMode && showDeathScreenPreview);
+                // In edit mode: only show if preview is enabled (regardless of actual death state)
+                // Outside edit mode: show when actually dead
+                const showDeathScreen = editMode ? showDeathScreenPreview : deathState.isDead;
                 
                 // Don't render anything if death screen shouldn't be shown
                 if (!showDeathScreen) return null;
