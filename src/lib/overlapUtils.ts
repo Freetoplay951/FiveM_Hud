@@ -1,4 +1,4 @@
-import { WidgetConfig, WidgetPosition } from "@/types/widget";
+import { WidgetConfig } from "@/types/widget";
 
 interface WidgetBounds {
     id: string;
