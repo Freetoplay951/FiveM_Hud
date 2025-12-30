@@ -66,7 +66,7 @@ export const EditModeOverlay = ({
             align="end"
             side="left"
             sideOffset={12}
-            className="glass-panel w-[360px] rounded-2xl border-border/40"
+            className="w-[360px] rounded-2xl border-border/40 bg-background/95 backdrop-blur-md"
             style={{ boxShadow: "0 0 40px hsl(var(--primary) / 0.2)" }}>
             <div className="flex items-center justify-between">
                 <div>
@@ -89,7 +89,7 @@ export const EditModeOverlay = ({
                             onClick={() => onStatusDesignChange(design)}
                             className={cn(
                                 "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
-                                statusDesign === design ? "glass-panel border-primary/50" : "hover:bg-muted/20"
+                                statusDesign === design ? "bg-primary/20 border border-primary/50" : "hover:bg-muted/20"
                             )}
                             style={statusDesign === design ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}}>
                             <Icon
@@ -123,7 +123,7 @@ export const EditModeOverlay = ({
                             onClick={() => onMinimapShapeChange(shape)}
                             className={cn(
                                 "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
-                                minimapShape === shape ? "glass-panel border-primary/50" : "hover:bg-muted/20"
+                                minimapShape === shape ? "bg-primary/20 border border-primary/50" : "hover:bg-muted/20"
                             )}
                             style={minimapShape === shape ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}}>
                             <Icon
@@ -157,7 +157,7 @@ export const EditModeOverlay = ({
                             onClick={() => onSpeedometerTypeChange(type)}
                             className={cn(
                                 "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
-                                speedometerType === type ? "glass-panel border-primary/50" : "hover:bg-muted/20"
+                                speedometerType === type ? "bg-primary/20 border border-primary/50" : "hover:bg-muted/20"
                             )}
                             style={
                                 speedometerType === type ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}
@@ -203,7 +203,7 @@ export const EditModeOverlay = ({
                 </button>
                 <button
                     onClick={onReset}
-                    className="w-full py-2 rounded-lg glass-panel text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2">
+                    className="w-full py-2 rounded-lg bg-muted/30 border border-border/30 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2">
                     <RotateCcw size={14} />
                     Layout zurücksetzen
                 </button>
@@ -222,7 +222,7 @@ interface ToggleOptionProps {
 const ToggleOption = ({ icon: Icon, label, checked, onChange }: ToggleOptionProps) => (
     <button
         onClick={() => onChange(!checked)}
-        className="w-full flex items-center justify-between p-3 rounded-lg glass-panel hover:bg-muted/20 transition-colors">
+        className="w-full flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border/30 hover:bg-muted/30 transition-colors">
         <div className="flex items-center gap-3">
             <Icon
                 size={16}

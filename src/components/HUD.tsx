@@ -362,7 +362,7 @@ export const HUD = () => {
                 />
             )}
 
-            {/* Notifications - as draggable widget */}
+            {/* Notifications - as draggable widget, not hideable */}
             {(() => {
                 const widget = getWidget("notifications");
                 if (!widget)
@@ -378,7 +378,12 @@ export const HUD = () => {
                         position={widget.position}
                         visible={widget.visible}
                         scale={widget.scale}
-                        {...widgetProps}>
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={updateWidgetPosition}
+                        onScaleChange={updateWidgetScale}
+                        onReset={resetWidget}>
                         <NotificationContainer
                             notifications={displayedNotifications}
                             onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
@@ -397,9 +402,9 @@ export const HUD = () => {
                     }}>
                     <PopoverTrigger asChild>
                         <button
-                            className="fixed top-4 right-4 pointer-events-auto glass-panel rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
+                            className="fixed top-4 right-4 pointer-events-auto bg-background/80 backdrop-blur-sm border border-primary/30 rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
                             style={{
-                                boxShadow: "0 0 15px hsl(var(--primary))",
+                                boxShadow: "0 0 15px hsl(var(--primary) / 0.4)",
                             }}>
                             <Settings
                                 size={18}
@@ -428,9 +433,9 @@ export const HUD = () => {
             {/* Demo Mode Badge */}
             {isDemoMode && !editMode && (
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="glass-panel bg-red-500/80 rounded-lg px-4 py-2 animate-fade-in-up pointer-events-auto">
+                    <div className="bg-destructive/80 backdrop-blur-sm border border-destructive/50 rounded-lg px-4 py-2 animate-fade-in-up pointer-events-auto">
                         Demo Modus
-                        <span className="flex flex-col text-xs text-white uppercase tracking-wider hud-text pl-4">
+                        <span className="flex flex-col text-xs text-destructive-foreground uppercase tracking-wider hud-text pl-4">
                             <span>Vehicle: V (Typ: 1︱2︱3︱4)</span>
                             <span>Voice: R</span>
                             <span>Edit: E</span>
@@ -585,7 +590,7 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Death Screen Widget */}
+            {/* Death Screen Widget - always visible when dead, not hideable like notifications */}
             {(() => {
                 const widget = getWidget("deathscreen");
                 if (!widget) return null;
@@ -597,9 +602,14 @@ export const HUD = () => {
                     <HUDWidget
                         id="deathscreen"
                         position={widget.position}
-                        visible={widget.visible && showDeathScreen}
+                        visible={showDeathScreen}
                         scale={widget.scale}
-                        {...widgetProps}>
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={updateWidgetPosition}
+                        onScaleChange={updateWidgetScale}
+                        onReset={resetWidget}>
                         <DeathScreenWidget
                             death={editMode ? { ...DEMO_DEATH, isDead: true } : deathState}
                             visible={showDeathScreen}
