@@ -68,6 +68,53 @@ function SetHudVisible(visible)
     })
 end
 
+-- Initiale HUD Anzeige beim Ressourcenstart
+CreateThread(function()
+    -- Kurz warten bis NUI geladen ist
+    Wait(500)
+    
+    -- HUD standardmäßig anzeigen
+    SetHudVisible(true)
+    
+    -- Initiale Daten senden
+    local playerPed = PlayerPedId()
+    local coords = GetEntityCoords(playerPed)
+    local heading = GetEntityHeading(playerPed)
+    
+    -- Initiale Status-Werte
+    SendNUI('updateHud', {
+        health = GetEntityHealth(playerPed) - 100,
+        armor = GetPedArmour(playerPed),
+        hunger = 100,
+        thirst = 100,
+        stamina = 100,
+        stress = 0,
+        oxygen = 100
+    })
+    
+    -- Initiale Location
+    local streetHash, crossingHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
+    local streetName = GetStreetNameFromHashKey(streetHash)
+    local zone = GetNameOfZone(coords.x, coords.y, coords.z)
+    local zoneName = GetLabelText(zone)
+    
+    SendNUI('updateLocation', {
+        street = streetName,
+        area = zoneName,
+        heading = heading
+    })
+    
+    -- Initiale Voice
+    SendNUI('updateVoice', {
+        active = false,
+        range = 'normal'
+    })
+    
+    if Config.Debug then
+        print('[HUD] Initial data sent')
+    end
+end)
+
 -- Edit Mode Toggle
 RegisterCommand('hudedit', function()
     isEditMode = not isEditMode
