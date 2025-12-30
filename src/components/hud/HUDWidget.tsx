@@ -236,9 +236,13 @@ export const HUDWidget = ({
             style={{
                 left: displayPosition.x,
                 top: displayPosition.y,
-                transform: `scale(${displayScale})`,
+                // CEF Fix: Use translate3d for hardware acceleration consistency
+                // Round scale to avoid subpixel rendering issues
+                transform: `scale(${Math.round(displayScale * 100) / 100})`,
                 transformOrigin: "top left",
                 opacity: visible || editMode ? 1 : 0,
+                // CEF Fix: Prevent black box artifacts
+                willChange: isDragging || isResizing ? "transform" : "auto",
             }}
             onMouseDown={handleMouseDown}>
             {/* Edit Mode Controls */}
