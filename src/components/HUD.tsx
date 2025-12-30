@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Settings } from "lucide-react";
 import { HUDWidget } from "./hud/HUDWidget";
-import { VehicleHUDFactory } from "./hud/VehicleHUDFactory";
+import { VehicleHUDFactory } from "./hud/vehicles/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { StatusWidget } from "./hud/widgets/StatusWidget";
 import { NeonMoneyWidget } from "./hud/widgets/NeonMoneyWidget";
