@@ -14,7 +14,8 @@ const RANGE_CONFIG = {
 };
 
 export const NeonVoiceWidget = ({ voice }: NeonVoiceWidgetProps) => {
-  const config = RANGE_CONFIG[voice.range];
+  // Fallback auf 'normal' wenn Range nicht erkannt wird (z.B. bei Saltychat)
+  const config = RANGE_CONFIG[voice.range] || RANGE_CONFIG.normal;
   
   return (
     <motion.div 
