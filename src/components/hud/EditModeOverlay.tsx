@@ -11,6 +11,7 @@ import {
     Ship,
     Fan,
     Square,
+    Skull,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusDesign, SpeedometerType, MinimapShape } from "@/types/widget";
@@ -18,10 +19,12 @@ import { PopoverContent } from "@/components/ui/popover";
 
 interface EditModeOverlayProps {
     snapToGrid: boolean;
+    showDeathScreen: boolean;
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
     onSnapToGridChange: (value: boolean) => void;
+    onShowDeathScreenChange: (value: boolean) => void;
     onStatusDesignChange: (design: StatusDesign) => void;
     onSpeedometerTypeChange: (type: SpeedometerType) => void;
     onMinimapShapeChange: (shape: MinimapShape) => void;
@@ -51,10 +54,12 @@ const MINIMAP_SHAPE_OPTIONS: { shape: MinimapShape; icon: React.ElementType; lab
 
 export const EditModeOverlay = ({
     snapToGrid,
+    showDeathScreen,
     statusDesign,
     speedometerType,
     minimapShape,
     onSnapToGridChange,
+    onShowDeathScreenChange,
     onStatusDesignChange,
     onSpeedometerTypeChange,
     onMinimapShapeChange,
@@ -190,6 +195,12 @@ export const EditModeOverlay = ({
                     label="Am Raster ausrichten"
                     checked={snapToGrid}
                     onChange={onSnapToGridChange}
+                />
+                <ToggleOption
+                    icon={Skull}
+                    label="Death-Screen anzeigen"
+                    checked={showDeathScreen}
+                    onChange={onShowDeathScreenChange}
                 />
             </div>
 
