@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { HudState, VehicleState, MoneyState, VoiceState, LocationState, NotificationData, DeathState } from "@/types/hud";
+import { HudState, VehicleState, MoneyState, VoiceState, LocationState, NotificationData, DeathState, ChatState, TeamChatState } from "@/types/hud";
 
 interface NuiEventHandlers {
     onUpdateHud?: (data: Partial<HudState>) => void;
@@ -13,6 +13,8 @@ interface NuiEventHandlers {
     onSetVisible?: (visible: boolean) => void;
     onUpdateDeath?: (data: DeathState) => void;
     onSetVoiceEnabled?: (enabled: boolean) => void;
+    onUpdateChat?: (data: ChatState) => void;
+    onUpdateTeamChat?: (data: TeamChatState) => void;
 }
 
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
@@ -56,6 +58,12 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                     break;
                 case "setVoiceEnabled":
                     handlers.onSetVoiceEnabled?.(data);
+                    break;
+                case "updateChat":
+                    handlers.onUpdateChat?.(data);
+                    break;
+                case "updateTeamChat":
+                    handlers.onUpdateTeamChat?.(data);
                     break;
             }
         },

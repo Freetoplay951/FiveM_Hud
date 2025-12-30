@@ -7,14 +7,14 @@
 
 local isChatOpen = false
 local isTeamChatOpen = false
-local isChatInputActive = false      -- Ob Eingabe aktiv ist
-local isTeamChatInputActive = false  -- Ob Team-Chat Eingabe aktiv ist
+local isChatInputActive = false
+local isTeamChatInputActive = false
 local chatMessages = {}
 local teamChatMessages = {}
-local lastChatActivity = 0           -- Zeitstempel der letzten Chat-Aktivität
-local lastTeamChatActivity = 0       -- Zeitstempel der letzten Team-Chat-Aktivität
-local chatVisible = false            -- Ob Chat sichtbar ist (nicht nur offen)
-local teamChatVisible = false        -- Ob Team-Chat sichtbar ist
+local lastChatActivity = 0
+local lastTeamChatActivity = 0
+local chatVisible = false
+local teamChatVisible = false
 
 -- ============================================================================
 -- UTILITY FUNCTIONS
@@ -27,10 +27,93 @@ local function GetTimestamp()
 end
 
 -- ============================================================================
+-- STAFF RANK & PERMISSION FUNCTIONS
+-- ============================================================================
+
+function GetPlayerStaffRank()
+    local playerId = PlayerId()
+    
+    if not Config or not Config.TeamChatRanks then
+        return nil, nil, nil
+    end
+    
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if IsPlayerAceAllowed(playerId, rank.permission) then
+            return rank.id, rank.name, rank
+        end
+    end
+    
+    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
+        local defaultRank = Config.TeamChatRanks[#Config.TeamChatRanks]
+        if defaultRank then
+            return defaultRank.id, defaultRank.name, defaultRank
+        end
+    end
+    
+    return nil, nil, nil
+end
+
+function GetRankConfig(rankId)
+    if not Config or not Config.TeamChatRanks then return nil end
+    
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if rank.id == rankId then
+            return rank
+        end
+    end
+    return nil
+end
+
+function GetTeamOnlineCount()
+    return 3
+end
+
+function IsPlayerTeamAdmin()
+    local playerId = PlayerId()
+    
+    if not Config or not Config.TeamChatRanks then return false end
+    
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if rank.isAdmin and IsPlayerAceAllowed(playerId, rank.permission) then
+            return true
+        end
+    end
+    
+    return false
+end
+
+function HasTeamChatAccess()
+    local playerId = PlayerId()
+    
+    if not Config then return false end
+    
+    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
+        return true
+    end
+    
+    if Config.TeamChatRanks then
+        for _, rank in ipairs(Config.TeamChatRanks) do
+            if IsPlayerAceAllowed(playerId, rank.permission) then
+                return true
+            end
+        end
+    end
+    
+    return false
+end
+
+function GetPlayerTeamInfo()
+    local rankId, rankName, rankConfig = GetPlayerStaffRank()
+    if rankId then
+        return rankId, Config.TeamChatName or "Team-Chat"
+    end
+    return "default", Config.TeamChatName or "Team-Chat"
+end
+
+-- ============================================================================
 -- CHAT FUNCTIONS
 -- ============================================================================
 
--- Send chat message to NUI
 local function SendChatMessage(msgType, sender, message)
     local maxMessages = Config.ChatMaxMessages or 50
     
@@ -42,17 +125,14 @@ local function SendChatMessage(msgType, sender, message)
         timestamp = GetTimestamp()
     }
     
-    -- Add to local history
     table.insert(chatMessages, msg)
     if #chatMessages > maxMessages then
         table.remove(chatMessages, 1)
     end
     
-    -- Update activity timestamp and show chat
     lastChatActivity = GetGameTimer()
     chatVisible = true
     
-    -- Send to NUI
     SendNUI("updateChat", {
         isOpen = isChatOpen,
         isInputActive = isChatInputActive,
@@ -62,7 +142,6 @@ local function SendChatMessage(msgType, sender, message)
     })
 end
 
--- Send team chat message to NUI
 local function SendTeamChatMessage(sender, rank, message, isImportant)
     local maxMessages = Config.ChatMaxMessages or 50
     
@@ -75,21 +154,17 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
         isImportant = isImportant or false
     }
     
-    -- Add to local history
     table.insert(teamChatMessages, msg)
     if #teamChatMessages > maxMessages then
         table.remove(teamChatMessages, 1)
     end
     
-    -- Update activity timestamp and show team chat
     lastTeamChatActivity = GetGameTimer()
     teamChatVisible = true
     
-    -- Get team info
     local teamType, teamName = GetPlayerTeamInfo()
-    local onlineMembers = GetTeamOnlineCount(teamType)
+    local onlineMembers = GetTeamOnlineCount()
     
-    -- Send to NUI
     SendNUI("updateTeamChat", {
         isOpen = isTeamChatOpen,
         isInputActive = isTeamChatInputActive,
@@ -105,84 +180,6 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
 end
 
 -- ============================================================================
--- STAFF RANK DETECTION (Uses Config.TeamChatRanks)
--- ============================================================================
-
--- Get player's staff rank based on configured Ace Permissions
-function GetPlayerStaffRank()
-    local playerId = PlayerId()
-    
-    -- Check ranks in order (first match = highest rank player has)
-    for _, rank in ipairs(Config.TeamChatRanks) do
-        if IsPlayerAceAllowed(playerId, rank.permission) then
-            return rank.id, rank.name, rank
-        end
-    end
-    
-    -- Check general permission
-    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
-        -- Return first (lowest) rank as default
-        local defaultRank = Config.TeamChatRanks[#Config.TeamChatRanks]
-        if defaultRank then
-            return defaultRank.id, defaultRank.name, defaultRank
-        end
-    end
-    
-    return nil, nil, nil
-end
-
--- Get rank config by ID
-function GetRankConfig(rankId)
-    for _, rank in ipairs(Config.TeamChatRanks) do
-        if rank.id == rankId then
-            return rank
-        end
-    end
-    return nil
-end
-
-function GetTeamOnlineCount()
-    -- This would normally query the server for online staff members
-    -- For now, return a placeholder value
-    return 3
-end
-
-function IsPlayerTeamAdmin()
-    local playerId = PlayerId()
-    
-    -- Check each rank for admin flag
-    for _, rank in ipairs(Config.TeamChatRanks) do
-        if rank.isAdmin and IsPlayerAceAllowed(playerId, rank.permission) then
-            return true
-        end
-    end
-    
-    return false
-end
-
--- ============================================================================
--- ACE PERMISSION CHECKS (Uses Config)
--- ============================================================================
-
-function HasTeamChatAccess()
-    local playerId = PlayerId()
-    
-    -- Check general permission first
-    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
-        return true
-    end
-    
-    -- Check each configured rank
-    for _, rank in ipairs(Config.TeamChatRanks) do
-        if IsPlayerAceAllowed(playerId, rank.permission) then
-            return true
-        end
-    end
-    
-    return false
-end
-
--- ============================================================================
 -- CHAT OPEN/CLOSE
 -- ============================================================================
 
@@ -191,7 +188,7 @@ function OpenChat()
     isChatInputActive = true
     chatVisible = true
     lastChatActivity = GetGameTimer()
-    SetNuiFocus(true, false) -- Focus for typing, no mouse cursor
+    SetNuiFocus(true, false)
     
     SendNUI("updateChat", {
         isOpen = true,
@@ -200,14 +197,16 @@ function OpenChat()
         messages = chatMessages,
         unreadCount = 0
     })
+    
+    if Config.Debug then
+        print('[HUD Chat] Chat opened')
+    end
 end
 
 function CloseChat()
     isChatOpen = false
     isChatInputActive = false
     SetNuiFocus(false, false)
-    
-    -- Update activity for fade timer
     lastChatActivity = GetGameTimer()
     
     SendNUI("updateChat", {
@@ -217,11 +216,20 @@ function CloseChat()
         messages = chatMessages,
         unreadCount = 0
     })
+    
+    if Config.Debug then
+        print('[HUD Chat] Chat closed')
+    end
 end
 
 function OpenTeamChat()
     if not HasTeamChatAccess() then
-        SendNotification("error", "Kein Zugriff", "Nur für Team-Mitglieder.", 3000)
+        SendNUI("notify", {
+            type = "error",
+            title = "Kein Zugriff",
+            message = "Nur für Team-Mitglieder.",
+            duration = 3000
+        })
         return
     end
     
@@ -248,16 +256,18 @@ function OpenTeamChat()
         unreadCount = 0,
         onlineMembers = GetTeamOnlineCount(),
         isAdmin = IsPlayerTeamAdmin(),
-        rankConfig = rankConfig -- Send rank config for styling
+        rankConfig = rankConfig
     })
+    
+    if Config.Debug then
+        print('[HUD Chat] Team chat opened')
+    end
 end
 
 function CloseTeamChat()
     isTeamChatOpen = false
     isTeamChatInputActive = false
     SetNuiFocus(false, false)
-    
-    -- Update activity for fade timer
     lastTeamChatActivity = GetGameTimer()
     
     local teamType, _, rankConfig = GetPlayerStaffRank()
@@ -275,20 +285,23 @@ function CloseTeamChat()
         isAdmin = IsPlayerTeamAdmin(),
         rankConfig = rankConfig
     })
+    
+    if Config.Debug then
+        print('[HUD Chat] Team chat closed')
+    end
 end
 
 -- ============================================================================
--- CHAT FADE TIMER (Inaktivitäts-Ausblendung)
+-- CHAT FADE TIMER
 -- ============================================================================
 
 CreateThread(function()
     while true do
-        Wait(1000) -- Check every second
+        Wait(1000)
         
-        local fadeTime = (Config.ChatFadeTime or 10) * 1000 -- Convert to ms
+        local fadeTime = (Config.ChatFadeTime or 10) * 1000
         local currentTime = GetGameTimer()
         
-        -- Check if chat should fade (not in input mode)
         if chatVisible and not isChatInputActive then
             if currentTime - lastChatActivity > fadeTime then
                 chatVisible = false
@@ -302,7 +315,6 @@ CreateThread(function()
             end
         end
         
-        -- Check if team chat should fade (not in input mode)
         if teamChatVisible and not isTeamChatInputActive then
             if currentTime - lastTeamChatActivity > fadeTime then
                 teamChatVisible = false
@@ -327,9 +339,8 @@ end)
 -- KEY BINDINGS
 -- ============================================================================
 
--- Chat öffnen (T)
 RegisterCommand("+openchat", function()
-    if not isChatOpen then
+    if not isChatOpen and not isTeamChatOpen then
         OpenChat()
     end
 end, false)
@@ -337,9 +348,8 @@ end, false)
 RegisterCommand("-openchat", function() end, false)
 RegisterKeyMapping("+openchat", "Chat öffnen", "keyboard", "T")
 
--- Team Chat öffnen (Y)
 RegisterCommand("+openteamchat", function()
-    if not isTeamChatOpen then
+    if not isTeamChatOpen and not isChatOpen then
         OpenTeamChat()
     end
 end, false)
@@ -353,16 +363,16 @@ RegisterKeyMapping("+openteamchat", "Team-Chat öffnen", "keyboard", "Y")
 
 RegisterNUICallback("sendChatMessage", function(data, cb)
     if data.message and data.message ~= "" then
-        -- Send to server
         TriggerServerEvent("hud:sendChatMessage", data.message)
+        CloseChat()
     end
     cb({ success = true })
 end)
 
 RegisterNUICallback("sendTeamChatMessage", function(data, cb)
     if data.message and data.message ~= "" and HasTeamChatAccess() then
-        -- Send to server
         TriggerServerEvent("hud:sendTeamChatMessage", data.message)
+        CloseTeamChat()
     end
     cb({ success = true })
 end)
@@ -381,17 +391,14 @@ end)
 -- EVENTS (From Server)
 -- ============================================================================
 
--- Receive chat message from server
 RegisterNetEvent("hud:receiveChatMessage", function(msgType, sender, message)
     SendChatMessage(msgType, sender, message)
 end)
 
--- Receive team chat message from server
 RegisterNetEvent("hud:receiveTeamChatMessage", function(sender, rank, message, isImportant)
     SendTeamChatMessage(sender, rank, message, isImportant)
 end)
 
--- System message
 RegisterNetEvent("hud:systemMessage", function(message)
     SendChatMessage("system", nil, message)
 end)
