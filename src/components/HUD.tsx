@@ -115,8 +115,12 @@ export const HUD = () => {
     };
 
     const exitEditMode = () => {
+        // First close the popover, then exit edit mode after a brief delay
+        // This ensures the popover closes properly before the component unmounts
         setEditMenuOpen(false);
-        if (editMode) toggleEditMode();
+        setTimeout(() => {
+            if (editMode) toggleEditMode();
+        }, 50);
     };
 
     useEffect(() => {
