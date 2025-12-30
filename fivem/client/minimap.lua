@@ -13,6 +13,38 @@ local minimapPosition = {
 }
 
 -- ============================================================================
+-- MINIMAP SHAPE (Square/Round) - Muss vor Initialization definiert sein!
+-- ============================================================================
+
+local function SetMinimapShapeInternal(shape)
+    minimapShape = shape
+    
+    if shape == "round" then
+        -- Runde Minimap (benötigt circlemap Textur)
+        RequestStreamedTextureDict("circlemap", false)
+        
+        local timeout = 0
+        while not HasStreamedTextureDictLoaded("circlemap") and timeout < 100 do
+            Wait(10)
+            timeout = timeout + 1
+        end
+        
+        if HasStreamedTextureDictLoaded("circlemap") then
+            SetMinimapClipType(1) -- 1 = Circle clip
+            if Config.Debug then
+                print('[HUD] Minimap shape set to round')
+            end
+        end
+    else
+        -- Standard quadratische Minimap
+        SetMinimapClipType(0) -- 0 = Square clip
+        if Config.Debug then
+            print('[HUD] Minimap shape set to square')
+        end
+    end
+end
+
+-- ============================================================================
 -- INITIALIZATION
 -- ============================================================================
 
@@ -79,37 +111,7 @@ CreateThread(function()
     end
 end)
 
--- ============================================================================
--- MINIMAP SHAPE (Square/Round)
--- ============================================================================
-
-local function SetMinimapShapeInternal(shape)
-    minimapShape = shape
-    
-    if shape == "round" then
-        -- Runde Minimap (benötigt circlemap Textur)
-        RequestStreamedTextureDict("circlemap", false)
-        
-        local timeout = 0
-        while not HasStreamedTextureDictLoaded("circlemap") and timeout < 100 do
-            Wait(10)
-            timeout = timeout + 1
-        end
-        
-        if HasStreamedTextureDictLoaded("circlemap") then
-            SetMinimapClipType(1) -- 1 = Circle clip
-            if Config.Debug then
-                print('[HUD] Minimap shape set to round')
-            end
-        end
-    else
-        -- Standard quadratische Minimap
-        SetMinimapClipType(0) -- 0 = Square clip
-        if Config.Debug then
-            print('[HUD] Minimap shape set to square')
-        end
-    end
-end
+-- (SetMinimapShapeInternal wurde nach oben verschoben)
 
 -- ============================================================================
 -- MINIMAP POSITION
