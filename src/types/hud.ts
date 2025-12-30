@@ -51,7 +51,7 @@ export interface PlayerState {
 
 export interface VoiceState {
     active: boolean;
-    range: "whisper" | "normal" | "shout";
+    range: string; // Flexibler String für verschiedene Voice-Systeme (pma-voice, saltychat, etc.)
 }
 
 export interface LocationState {
@@ -101,6 +101,8 @@ export interface ChatMessage {
 
 export interface ChatState {
     isOpen: boolean;
+    isInputActive?: boolean;  // Ob Eingabefeld aktiv ist
+    isVisible?: boolean;      // Ob Chat sichtbar ist (für Fade-Out)
     messages: ChatMessage[];
     unreadCount: number;
 }
@@ -119,6 +121,8 @@ export interface TeamChatMessage {
 
 export interface TeamChatState {
     isOpen: boolean;
+    isInputActive?: boolean;  // Ob Eingabefeld aktiv ist
+    isVisible?: boolean;      // Ob Team-Chat sichtbar ist (für Fade-Out)
     hasAccess: boolean;
     teamType: TeamType;
     teamName: string;

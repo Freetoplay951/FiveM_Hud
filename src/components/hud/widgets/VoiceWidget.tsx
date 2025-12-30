@@ -5,17 +5,42 @@ import { cn } from '@/lib/utils';
 
 interface NeonVoiceWidgetProps {
   voice: VoiceState;
+  rangeConfig?: Record<string, { bars: number; color: string; label: string }>;
 }
 
-const RANGE_CONFIG = {
+// Default Range-Konfiguration (kann via NUI überschrieben werden)
+const DEFAULT_RANGE_CONFIG: Record<string, { bars: number; color: string; label: string }> = {
+  // Standard Ranges (pma-voice, mumble-voip)
   whisper: { bars: 1, color: 'muted-foreground', label: 'Flüstern' },
   normal: { bars: 2, color: 'warning', label: 'Normal' },
   shout: { bars: 3, color: 'critical', label: 'Schreien' },
+  
+  // SaltyChat Ranges (numerische Werte)
+  '1': { bars: 1, color: 'muted-foreground', label: 'Flüstern' },
+  '2': { bars: 2, color: 'warning', label: 'Normal' },
+  '3': { bars: 3, color: 'critical', label: 'Schreien' },
+  
+  // SaltyChat alternative Namen
+  whisper_range: { bars: 1, color: 'muted-foreground', label: 'Flüstern' },
+  normal_range: { bars: 2, color: 'warning', label: 'Normal' },
+  shouting: { bars: 3, color: 'critical', label: 'Schreien' },
+  megaphone: { bars: 3, color: 'primary', label: 'Megafon' },
+  
+  // TokoVOIP Ranges
+  short: { bars: 1, color: 'muted-foreground', label: 'Kurz' },
+  medium: { bars: 2, color: 'warning', label: 'Mittel' },
+  long: { bars: 3, color: 'critical', label: 'Weit' },
 };
 
-export const NeonVoiceWidget = ({ voice }: NeonVoiceWidgetProps) => {
-  // Fallback auf 'normal' wenn Range nicht erkannt wird (z.B. bei Saltychat)
-  const config = RANGE_CONFIG[voice.range] || RANGE_CONFIG.normal;
+export const NeonVoiceWidget = ({ voice, rangeConfig }: NeonVoiceWidgetProps) => {
+  // Merge custom config with defaults
+  const mergedConfig = { ...DEFAULT_RANGE_CONFIG, ...rangeConfig };
+  
+  // Konvertiere range zu string für Lookup (SaltyChat sendet manchmal Zahlen)
+  const rangeKey = String(voice.range);
+  
+  // Fallback auf 'normal' wenn Range nicht erkannt wird
+  const config = mergedConfig[rangeKey] || mergedConfig.normal;
   
   return (
     <motion.div 

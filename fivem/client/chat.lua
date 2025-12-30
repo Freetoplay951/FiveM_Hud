@@ -2,20 +2,19 @@
 -- Handles global and team chat with FiveM Ace Permissions
 
 -- ============================================================================
--- CONFIGURATION
--- ============================================================================
-
-local MAX_MESSAGES = 50 -- Maximum messages to keep in history
-local CHAT_FADE_TIME = 10 -- Seconds before chat fades
-
--- ============================================================================
 -- VARIABLES
 -- ============================================================================
 
 local isChatOpen = false
 local isTeamChatOpen = false
+local isChatInputActive = false      -- Ob Eingabe aktiv ist
+local isTeamChatInputActive = false  -- Ob Team-Chat Eingabe aktiv ist
 local chatMessages = {}
 local teamChatMessages = {}
+local lastChatActivity = 0           -- Zeitstempel der letzten Chat-Aktivität
+local lastTeamChatActivity = 0       -- Zeitstempel der letzten Team-Chat-Aktivität
+local chatVisible = false            -- Ob Chat sichtbar ist (nicht nur offen)
+local teamChatVisible = false        -- Ob Team-Chat sichtbar ist
 
 -- ============================================================================
 -- UTILITY FUNCTIONS
@@ -33,6 +32,8 @@ end
 
 -- Send chat message to NUI
 local function SendChatMessage(msgType, sender, message)
+    local maxMessages = Config.ChatMaxMessages or 50
+    
     local msg = {
         id = tostring(GetGameTimer()),
         type = msgType or "normal",
@@ -43,13 +44,19 @@ local function SendChatMessage(msgType, sender, message)
     
     -- Add to local history
     table.insert(chatMessages, msg)
-    if #chatMessages > MAX_MESSAGES then
+    if #chatMessages > maxMessages then
         table.remove(chatMessages, 1)
     end
+    
+    -- Update activity timestamp and show chat
+    lastChatActivity = GetGameTimer()
+    chatVisible = true
     
     -- Send to NUI
     SendNUI("updateChat", {
         isOpen = isChatOpen,
+        isInputActive = isChatInputActive,
+        isVisible = chatVisible,
         messages = chatMessages,
         unreadCount = isChatOpen and 0 or 1
     })
@@ -57,6 +64,8 @@ end
 
 -- Send team chat message to NUI
 local function SendTeamChatMessage(sender, rank, message, isImportant)
+    local maxMessages = Config.ChatMaxMessages or 50
+    
     local msg = {
         id = tostring(GetGameTimer()),
         sender = sender,
@@ -68,9 +77,13 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
     
     -- Add to local history
     table.insert(teamChatMessages, msg)
-    if #teamChatMessages > MAX_MESSAGES then
+    if #teamChatMessages > maxMessages then
         table.remove(teamChatMessages, 1)
     end
+    
+    -- Update activity timestamp and show team chat
+    lastTeamChatActivity = GetGameTimer()
+    teamChatVisible = true
     
     -- Get team info
     local teamType, teamName = GetPlayerTeamInfo()
@@ -79,6 +92,8 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
     -- Send to NUI
     SendNUI("updateTeamChat", {
         isOpen = isTeamChatOpen,
+        isInputActive = isTeamChatInputActive,
+        isVisible = teamChatVisible,
         hasAccess = HasTeamChatAccess(),
         teamType = teamType,
         teamName = teamName,
@@ -173,10 +188,15 @@ end
 
 function OpenChat()
     isChatOpen = true
+    isChatInputActive = true
+    chatVisible = true
+    lastChatActivity = GetGameTimer()
     SetNuiFocus(true, false) -- Focus for typing, no mouse cursor
     
     SendNUI("updateChat", {
         isOpen = true,
+        isInputActive = true,
+        isVisible = true,
         messages = chatMessages,
         unreadCount = 0
     })
@@ -184,10 +204,16 @@ end
 
 function CloseChat()
     isChatOpen = false
+    isChatInputActive = false
     SetNuiFocus(false, false)
+    
+    -- Update activity for fade timer
+    lastChatActivity = GetGameTimer()
     
     SendNUI("updateChat", {
         isOpen = false,
+        isInputActive = false,
+        isVisible = chatVisible,
         messages = chatMessages,
         unreadCount = 0
     })
@@ -200,6 +226,9 @@ function OpenTeamChat()
     end
     
     isTeamChatOpen = true
+    isTeamChatInputActive = true
+    teamChatVisible = true
+    lastTeamChatActivity = GetGameTimer()
     SetNuiFocus(true, false)
     
     local teamType, teamName, rankConfig = GetPlayerStaffRank()
@@ -210,6 +239,8 @@ function OpenTeamChat()
     
     SendNUI("updateTeamChat", {
         isOpen = true,
+        isInputActive = true,
+        isVisible = true,
         hasAccess = true,
         teamType = teamType,
         teamName = Config.TeamChatName or "Team-Chat",
@@ -223,12 +254,18 @@ end
 
 function CloseTeamChat()
     isTeamChatOpen = false
+    isTeamChatInputActive = false
     SetNuiFocus(false, false)
+    
+    -- Update activity for fade timer
+    lastTeamChatActivity = GetGameTimer()
     
     local teamType, _, rankConfig = GetPlayerStaffRank()
     
     SendNUI("updateTeamChat", {
         isOpen = false,
+        isInputActive = false,
+        isVisible = teamChatVisible,
         hasAccess = HasTeamChatAccess(),
         teamType = teamType or "default",
         teamName = Config.TeamChatName or "Team-Chat",
@@ -239,6 +276,52 @@ function CloseTeamChat()
         rankConfig = rankConfig
     })
 end
+
+-- ============================================================================
+-- CHAT FADE TIMER (Inaktivitäts-Ausblendung)
+-- ============================================================================
+
+CreateThread(function()
+    while true do
+        Wait(1000) -- Check every second
+        
+        local fadeTime = (Config.ChatFadeTime or 10) * 1000 -- Convert to ms
+        local currentTime = GetGameTimer()
+        
+        -- Check if chat should fade (not in input mode)
+        if chatVisible and not isChatInputActive then
+            if currentTime - lastChatActivity > fadeTime then
+                chatVisible = false
+                SendNUI("updateChat", {
+                    isOpen = false,
+                    isInputActive = false,
+                    isVisible = false,
+                    messages = chatMessages,
+                    unreadCount = 0
+                })
+            end
+        end
+        
+        -- Check if team chat should fade (not in input mode)
+        if teamChatVisible and not isTeamChatInputActive then
+            if currentTime - lastTeamChatActivity > fadeTime then
+                teamChatVisible = false
+                SendNUI("updateTeamChat", {
+                    isOpen = false,
+                    isInputActive = false,
+                    isVisible = false,
+                    hasAccess = HasTeamChatAccess(),
+                    teamType = "default",
+                    teamName = Config.TeamChatName or "Team-Chat",
+                    messages = teamChatMessages,
+                    unreadCount = 0,
+                    onlineMembers = GetTeamOnlineCount(),
+                    isAdmin = IsPlayerTeamAdmin()
+                })
+            end
+        end
+    end
+end)
 
 -- ============================================================================
 -- KEY BINDINGS
