@@ -20,7 +20,7 @@ export const StatusMinimal = ({ type, value }: StatusProps) => {
     return (
         <motion.div
             className={cn(
-                "glass-panel rounded-full flex items-center px-2.5 py-1.5 gap-1.5",
+                "rounded-full flex items-center px-2.5 py-1.5 gap-1.5 bg-black/60 backdrop-blur-sm border border-white/10",
                 isCritical && "critical-pulse"
             )}
             animate={{

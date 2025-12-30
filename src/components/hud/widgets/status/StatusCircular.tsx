@@ -24,17 +24,20 @@ export const StatusCircular = ({ type, value }: StatusProps) => {
 
     return (
         <div className="relative w-14 h-14">
-            {/* Subtle glow background - no solid background */}
+            {/* Dark background for contrast */}
+            <div className="absolute inset-0 rounded-full bg-black/60 backdrop-blur-sm" />
+            
+            {/* Subtle glow effect */}
             <motion.div
                 className="absolute inset-0 rounded-full"
                 animate={{
                     boxShadow: isCritical
                         ? [
-                              `inset 0 0 15px hsl(var(--${colorVar}) / 0.2)`,
-                              `inset 0 0 25px hsl(var(--${colorVar}) / 0.35)`,
-                              `inset 0 0 15px hsl(var(--${colorVar}) / 0.2)`,
+                              `inset 0 0 15px hsl(var(--${colorVar}) / 0.3), 0 0 8px hsl(var(--${colorVar}) / 0.4)`,
+                              `inset 0 0 25px hsl(var(--${colorVar}) / 0.45), 0 0 12px hsl(var(--${colorVar}) / 0.5)`,
+                              `inset 0 0 15px hsl(var(--${colorVar}) / 0.3), 0 0 8px hsl(var(--${colorVar}) / 0.4)`,
                           ]
-                        : `inset 0 0 10px hsl(var(--${colorVar}) / 0.1)`,
+                        : `inset 0 0 10px hsl(var(--${colorVar}) / 0.15)`,
                 }}
                 transition={isCritical ? { duration: 0.5, repeat: Infinity } : {}}
             />
