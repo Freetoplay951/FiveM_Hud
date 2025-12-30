@@ -176,57 +176,117 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
             </p>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 mb-4">
+            <div className="flex gap-4 mb-4">
                 {/* Call Help Button */}
-                <button
+                <motion.button
                     onClick={handleCallHelp}
                     disabled={!canCallHelp}
+                    whileHover={canCallHelp ? { scale: 1.02 } : {}}
+                    whileTap={canCallHelp ? { scale: 0.98 } : {}}
                     className={cn(
-                        "flex items-center gap-3 px-6 py-3 rounded-lg transition-all",
-                        "border border-primary/50",
+                        "relative flex items-center gap-3 px-5 py-3 transition-all overflow-hidden",
+                        "clip-corner",
                         canCallHelp 
-                            ? "bg-primary/20 hover:bg-primary/30 text-primary" 
-                            : "bg-muted/20 text-muted-foreground cursor-not-allowed opacity-50"
+                            ? "text-primary cursor-pointer" 
+                            : "text-muted-foreground cursor-not-allowed opacity-40"
                     )}
-                    style={canCallHelp ? {
-                        boxShadow: "0 0 15px hsl(var(--primary) / 0.3), inset 0 0 10px hsl(var(--primary) / 0.1)"
-                    } : {}}
+                    style={{
+                        background: canCallHelp 
+                            ? "linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.05) 100%)"
+                            : "hsl(var(--muted) / 0.1)",
+                        clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))"
+                    }}
                 >
-                    <span className="px-2 py-0.5 bg-background/50 rounded text-xs font-bold">E</span>
-                    <Phone size={16} />
-                    <div className="text-left">
-                        <div className="text-sm font-semibold tracking-wide">HILFE</div>
-                        <div className="text-xs opacity-80">RUFEN</div>
+                    {/* Border frame */}
+                    <div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            background: canCallHelp
+                                ? "linear-gradient(135deg, hsl(var(--primary) / 0.6) 0%, hsl(var(--primary) / 0.2) 100%)"
+                                : "hsl(var(--muted) / 0.3)",
+                            clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+                            WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                            WebkitMaskComposite: "xor",
+                            maskComposite: "exclude",
+                            padding: "1px"
+                        }}
+                    />
+                    {/* Glow effect */}
+                    {canCallHelp && (
+                        <motion.div 
+                            className="absolute inset-0 pointer-events-none"
+                            animate={{ opacity: [0.3, 0.6, 0.3] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            style={{
+                                background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.2) 0%, transparent 70%)"
+                            }}
+                        />
+                    )}
+                    <Phone size={18} className="relative z-10" />
+                    <div className="relative z-10 text-left">
+                        <div className="text-sm font-bold tracking-wider" style={{ fontFamily: "Orbitron, sans-serif" }}>HILFE RUFEN</div>
+                        <div className="text-[10px] opacity-60 tracking-wide">Rettungsdienst benachrichtigen</div>
                     </div>
-                </button>
+                    <span className="relative z-10 ml-2 px-2 py-1 bg-background/40 rounded text-[10px] font-bold tracking-wider border border-primary/30">E</span>
+                </motion.button>
 
                 {/* Respawn Button */}
-                <button
+                <motion.button
                     onClick={handleRespawn}
                     disabled={!canRespawn}
+                    whileHover={canRespawn ? { scale: 1.02 } : {}}
+                    whileTap={canRespawn ? { scale: 0.98 } : {}}
                     className={cn(
-                        "flex items-center gap-3 px-6 py-3 rounded-lg transition-all",
-                        "border border-white/20",
+                        "relative flex items-center gap-3 px-5 py-3 transition-all overflow-hidden",
                         canRespawn 
-                            ? "bg-muted/30 hover:bg-muted/50 text-foreground" 
-                            : "bg-muted/10 text-muted-foreground cursor-not-allowed opacity-50"
+                            ? "text-foreground cursor-pointer" 
+                            : "text-muted-foreground cursor-not-allowed opacity-40"
                     )}
+                    style={{
+                        background: canRespawn 
+                            ? "linear-gradient(135deg, hsl(var(--muted) / 0.3) 0%, hsl(var(--muted) / 0.1) 100%)"
+                            : "hsl(var(--muted) / 0.1)",
+                        clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))"
+                    }}
                 >
-                    <span className="px-1.5 py-0.5 bg-background/50 rounded text-[10px] font-bold">ENTER</span>
-                    <RotateCcw size={14} className="text-muted-foreground" />
-                    <span className="text-sm font-semibold tracking-wide">RESPAWN</span>
-                </button>
+                    {/* Border frame */}
+                    <div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            background: canRespawn
+                                ? "linear-gradient(135deg, hsl(var(--foreground) / 0.4) 0%, hsl(var(--foreground) / 0.1) 100%)"
+                                : "hsl(var(--muted) / 0.2)",
+                            clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+                            WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                            WebkitMaskComposite: "xor",
+                            maskComposite: "exclude",
+                            padding: "1px"
+                        }}
+                    />
+                    <RotateCcw size={18} className="relative z-10" />
+                    <div className="relative z-10 text-left">
+                        <div className="text-sm font-bold tracking-wider" style={{ fontFamily: "Orbitron, sans-serif" }}>RESPAWN</div>
+                        <div className="text-[10px] opacity-60 tracking-wide">Im Krankenhaus aufwachen</div>
+                    </div>
+                    <span className="relative z-10 ml-2 px-2 py-1 bg-background/40 rounded text-[10px] font-bold tracking-wider border border-foreground/20">↵</span>
+                </motion.button>
             </div>
 
-            {/* Sync Position Button */}
-            <button
+            {/* Sync Position Button - smaller, subtle */}
+            <motion.button
                 onClick={handleSyncPosition}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-background/30 hover:bg-background/50 transition-colors text-muted-foreground hover:text-foreground"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                style={{
+                    background: "hsl(var(--muted) / 0.1)",
+                    border: "1px solid hsl(var(--muted) / 0.2)"
+                }}
             >
-                <span className="px-1.5 py-0.5 bg-background/50 rounded text-[10px] font-bold">F5</span>
                 <RefreshCw size={12} />
-                <span className="text-xs tracking-wide">POSITION SYNCHRONISIEREN</span>
-            </button>
+                <span className="text-[10px] tracking-wider uppercase">Position synchronisieren</span>
+                <span className="px-1.5 py-0.5 bg-background/40 rounded text-[9px] font-bold">F5</span>
+            </motion.button>
         </motion.div>
     );
 
