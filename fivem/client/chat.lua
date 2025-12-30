@@ -349,23 +349,23 @@ end)
 -- KEY BINDINGS
 -- ============================================================================
 
-RegisterCommand("+openchat", function()
+RegisterCommand("chat", function()
     if not isChatOpen and not isTeamChatOpen then
         OpenChat()
     end
 end, false)
 
-RegisterCommand("-openchat", function() end, false)
-RegisterKeyMapping("+openchat", "Chat öffnen", "keyboard", Config.ChatKey or "T")
+RegisterCommand("closechat", function() end, false)
+RegisterKeyMapping("chat", "Chat öffnen", "keyboard", Config.ChatKey or "T")
 
-RegisterCommand("+openteamchat", function()
+RegisterCommand("tc", function()
     if not isTeamChatOpen and not isChatOpen then
         OpenTeamChat()
     end
 end, false)
 
-RegisterCommand("-openteamchat", function() end, false)
-RegisterKeyMapping("+openteamchat", "Team-Chat öffnen", "keyboard", Config.TeamChatKey or "Y")
+RegisterCommand("closetc", function() end, false)
+RegisterKeyMapping("tc", "Team-Chat öffnen", "keyboard", Config.TeamChatKey or "Y")
 
 -- ============================================================================
 -- NUI CALLBACKS
