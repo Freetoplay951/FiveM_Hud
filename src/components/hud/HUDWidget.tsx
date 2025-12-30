@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect, ReactNode } from "react";
 import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WidgetPosition, REFERENCE_WIDTH, REFERENCE_HEIGHT } from "@/types/widget";
+import { WidgetPosition } from "@/types/widget";
 
 interface HUDWidgetProps {
     id: string;
     children: ReactNode;
-    position: WidgetPosition; // Position in reference resolution (1920x1080)
+    position: WidgetPosition; // Position in viewport pixels
     visible: boolean;
     editMode: boolean;
     snapToGrid: boolean;
@@ -71,16 +71,6 @@ export const HUDWidget = ({
     const resizeStartScale = useRef(1);
     const resizeStartElementSize = useRef({ w: 0, h: 0 });
 
-    // Scale factors for responsive positioning
-    const scaleX = window.innerWidth / REFERENCE_WIDTH;
-    const scaleY = window.innerHeight / REFERENCE_HEIGHT;
-
-    // Convert reference position to viewport position
-    const toViewportPosition = useCallback((refPos: WidgetPosition) => ({
-        x: refPos.x * scaleX,
-        y: refPos.y * scaleY,
-    }), [scaleX, scaleY]);
-
     // Measure element size
     useEffect(() => {
         const el = rootRef.current;
@@ -126,11 +116,10 @@ export const HUDWidget = ({
             e.stopPropagation();
             setIsDragging(true);
             dragStartPos.current = { x: e.clientX, y: e.clientY };
-            const viewportPos = toViewportPosition(position);
-            widgetStartPos.current = { x: viewportPos.x, y: viewportPos.y };
-            setLocalPosition({ x: viewportPos.x, y: viewportPos.y });
+            widgetStartPos.current = { x: position.x, y: position.y };
+            setLocalPosition({ x: position.x, y: position.y });
         },
-        [editMode, isResizing, position, toViewportPosition]
+        [editMode, isResizing, position]
     );
 
     const localPositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -228,9 +217,8 @@ export const HUDWidget = ({
 
     if (!visible && !editMode) return null;
 
-    // Calculate display position - use local during drag, otherwise scale from reference
-    const viewportPos = toViewportPosition(position);
-    const displayPosition = localPosition ?? viewportPos;
+    // Display position - use local during drag, otherwise use stored position
+    const displayPosition = localPosition ?? position;
     const displayScale = localScale ?? scale;
 
     return (
