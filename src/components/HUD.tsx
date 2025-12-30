@@ -15,7 +15,7 @@ import { NotificationContainer } from "./hud/notifications/NotificationContainer
 import { ChatWidget } from "./hud/widgets/ChatWidget";
 import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
-import { useNuiEvents, isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { useNuiEvents, isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
 import {
     HudState,
@@ -190,6 +190,12 @@ export const HUD = () => {
         onNotify: (data) => {
             const notifyFn = { success, error, warning, info }[data.type] || info;
             notifyFn(data.title, data.message, data.duration);
+        },
+        onUpdateChat: (data) => {
+            setChatState(prev => ({ ...prev, ...data }));
+        },
+        onUpdateTeamChat: (data) => {
+            setTeamChatState(prev => ({ ...prev, ...data }));
         },
     });
 
@@ -708,8 +714,10 @@ export const HUD = () => {
                     const widget = getWidget("chat");
                     if (!widget) return null;
                     
-                    // In demo mode, always show. In NUI mode, respect isOpen state
-                    const showChat = isDemoMode ? (chatState.isOpen || editMode) : chatState.isOpen;
+                    // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
+                    const showChat = isDemoMode 
+                        ? (chatState.isOpen || editMode) 
+                        : (chatState.isVisible || chatState.isOpen || editMode);
                     if (!showChat && !editMode) return null;
                     
                     return (
@@ -723,8 +731,8 @@ export const HUD = () => {
                                 chat={chatState}
                                 isOpen={chatState.isOpen || editMode}
                                 onSendMessage={(msg) => {
-                                    // In demo mode, add message locally
                                     if (isDemoMode) {
+                                        // Demo mode: add message locally
                                         const newMsg = {
                                             id: Date.now().toString(),
                                             type: 'normal' as const,
@@ -736,9 +744,18 @@ export const HUD = () => {
                                             ...prev,
                                             messages: [...prev.messages, newMsg],
                                         }));
+                                    } else {
+                                        // FiveM: send to server via NUI callback
+                                        sendNuiCallback('sendChatMessage', { message: msg });
                                     }
                                 }}
-                                onClose={() => setChatState((prev) => ({ ...prev, isOpen: false }))}
+                                onClose={() => {
+                                    if (isDemoMode) {
+                                        setChatState((prev) => ({ ...prev, isOpen: false }));
+                                    } else {
+                                        sendNuiCallback('closeChat');
+                                    }
+                                }}
                             />
                         </HUDWidget>
                     );
@@ -750,8 +767,10 @@ export const HUD = () => {
                     const widget = getWidget("teamchat");
                     if (!widget) return null;
                     
-                    // In demo mode, always show. In NUI mode, respect isOpen state
-                    const showTeamChat = isDemoMode ? (teamChatState.isOpen || editMode) : teamChatState.isOpen;
+                    // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
+                    const showTeamChat = isDemoMode 
+                        ? (teamChatState.isOpen || editMode) 
+                        : (teamChatState.isVisible || teamChatState.isOpen || editMode);
                     if (!showTeamChat && !editMode) return null;
                     
                     return (
@@ -765,12 +784,12 @@ export const HUD = () => {
                                 teamChat={teamChatState}
                                 isOpen={teamChatState.isOpen || editMode}
                                 onSendMessage={(msg) => {
-                                    // In demo mode, add message locally
                                     if (isDemoMode) {
+                                        // Demo mode: add message locally
                                         const newMsg = {
                                             id: Date.now().toString(),
                                             sender: 'Du',
-                                            rank: 'Officer',
+                                            rank: 'Admin',
                                             message: msg,
                                             timestamp: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
                                         };
@@ -778,9 +797,18 @@ export const HUD = () => {
                                             ...prev,
                                             messages: [...prev.messages, newMsg],
                                         }));
+                                    } else {
+                                        // FiveM: send to server via NUI callback
+                                        sendNuiCallback('sendTeamChatMessage', { message: msg });
                                     }
                                 }}
-                                onClose={() => setTeamChatState((prev) => ({ ...prev, isOpen: false }))}
+                                onClose={() => {
+                                    if (isDemoMode) {
+                                        setTeamChatState((prev) => ({ ...prev, isOpen: false }));
+                                    } else {
+                                        sendNuiCallback('closeTeamChat');
+                                    }
+                                }}
                             />
                         </HUDWidget>
                     );
