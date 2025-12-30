@@ -470,8 +470,8 @@ export const HUD = () => {
                 </div>
             )}
 
-            {/* Status Widgets - hidden when dead (unless in edit mode) */}
-            {(!deathState.isDead || editMode) && statusTypes.map((type) => {
+            {/* Status Widgets - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && statusTypes.map((type) => {
                 const widget = getWidget(type);
                 if (!widget) return null;
                 const value = hudState[type as keyof HudState] ?? 100;
@@ -492,8 +492,8 @@ export const HUD = () => {
                 );
             })}
 
-            {/* Money Widget - hidden when dead (unless in edit mode) */}
-            {(!deathState.isDead || editMode) && (() => {
+            {/* Money Widget - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
                 const widget = getWidget("money");
                 if (!widget) return null;
                 return (
@@ -511,8 +511,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Clock Widget - hidden when dead (unless in edit mode) */}
-            {(!deathState.isDead || editMode) && (() => {
+            {/* Clock Widget - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
                 const widget = getWidget("clock");
                 if (!widget) return null;
                 return (
@@ -527,8 +527,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Voice Widget - hidden when dead (unless in edit mode) */}
-            {(!deathState.isDead || editMode) && (() => {
+            {/* Voice Widget - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
                 const widget = getWidget("voice");
                 if (!widget) return null;
                 return (
@@ -543,8 +543,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Minimap Widget - hidden when dead (unless in edit mode) */}
-            {(!deathState.isDead || editMode) && (() => {
+            {/* Minimap Widget - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
                 const widget = getWidget("minimap");
                 if (!widget) return null;
                 return (
@@ -559,8 +559,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Compass Widget - hidden when dead (unless in edit mode) */}
-            {(!deathState.isDead || editMode) && (() => {
+            {/* Compass Widget - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
                 const widget = getWidget("compass");
                 if (!widget) return null;
                 return (
@@ -575,8 +575,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Vehicle Speedometer - hidden when dead (unless in edit mode) */}
-            {(!deathState.isDead || editMode) && (() => {
+            {/* Vehicle Speedometer - hidden when dead OR when death preview is active in edit mode */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) && (() => {
                 const widget = getWidget("speedometer");
                 if (!widget) return null;
 
