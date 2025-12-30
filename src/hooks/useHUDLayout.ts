@@ -10,14 +10,37 @@ import {
   DEFAULT_SPEEDOMETER_CONFIGS,
   SpeedometerConfig,
   SpeedometerConfigs,
+  REFERENCE_WIDTH,
+  REFERENCE_HEIGHT,
+  MinimapShape,
 } from '@/types/widget';
 
 const STORAGE_KEY = 'hud-layout';
 
-// Clamp position to viewport bounds
+// Scale position from reference resolution to current viewport
+export const scalePositionToViewport = (pos: WidgetPosition): WidgetPosition => {
+  const scaleX = window.innerWidth / REFERENCE_WIDTH;
+  const scaleY = window.innerHeight / REFERENCE_HEIGHT;
+  return {
+    x: pos.x * scaleX,
+    y: pos.y * scaleY,
+  };
+};
+
+// Scale position from current viewport to reference resolution
+export const scalePositionToReference = (pos: WidgetPosition): WidgetPosition => {
+  const scaleX = window.innerWidth / REFERENCE_WIDTH;
+  const scaleY = window.innerHeight / REFERENCE_HEIGHT;
+  return {
+    x: pos.x / scaleX,
+    y: pos.y / scaleY,
+  };
+};
+
+// Clamp position to reference resolution bounds
 const clampPosition = (pos: WidgetPosition): WidgetPosition => ({
-  x: Math.max(0, Math.min(1900, pos.x)),
-  y: Math.max(0, Math.min(1060, pos.y)),
+  x: Math.max(0, Math.min(REFERENCE_WIDTH - 50, pos.x)),
+  y: Math.max(0, Math.min(REFERENCE_HEIGHT - 50, pos.y)),
 });
 
 const clampAllWidgets = (widgets: WidgetConfig[]): WidgetConfig[] =>
@@ -43,6 +66,7 @@ const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {
   next.speedometerConfigs = clampSpeedometerConfigs(
     (next.speedometerConfigs ?? DEFAULT_SPEEDOMETER_CONFIGS) as SpeedometerConfigs
   );
+  next.minimapShape = next.minimapShape ?? 'square';
 
   return next;
 };
@@ -79,9 +103,12 @@ export const useHUDLayout = () => {
   }, []);
 
   const updateWidgetPosition = useCallback((id: string, position: WidgetPosition) => {
+    // Convert viewport position to reference position for storage
+    const refPosition = scalePositionToReference(position);
+    const clampedPosition = clampPosition(refPosition);
     setState((prev) => ({
       ...prev,
-      widgets: prev.widgets.map((w) => (w.id === id ? { ...w, position } : w)),
+      widgets: prev.widgets.map((w) => (w.id === id ? { ...w, position: clampedPosition } : w)),
     }));
   }, []);
 
@@ -113,6 +140,10 @@ export const useHUDLayout = () => {
 
   const setSpeedometerType = useCallback((type: SpeedometerType) => {
     setState(prev => ({ ...prev, speedometerType: type }));
+  }, []);
+
+  const setMinimapShape = useCallback((shape: MinimapShape) => {
+    setState(prev => ({ ...prev, minimapShape: shape }));
   }, []);
 
   const updateSpeedometerConfig = useCallback((type: SpeedometerType, config: Partial<SpeedometerConfig>) => {
@@ -166,6 +197,11 @@ export const useHUDLayout = () => {
     return state.widgets.find(w => w.id === id);
   }, [state.widgets]);
 
+  // Get scaled position for rendering
+  const getScaledPosition = useCallback((pos: WidgetPosition): WidgetPosition => {
+    return scalePositionToViewport(pos);
+  }, []);
+
   return {
     ...state,
     toggleEditMode,
@@ -176,11 +212,13 @@ export const useHUDLayout = () => {
     setStatusDesign,
     setHudScale,
     setSpeedometerType,
+    setMinimapShape,
     updateSpeedometerConfig,
     getSpeedometerConfig,
     resetSpeedometer,
     resetLayout,
     resetWidget,
     getWidget,
+    getScaledPosition,
   };
 };
