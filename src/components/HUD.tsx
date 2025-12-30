@@ -358,6 +358,8 @@ export const HUD = () => {
 
     // Demo key controls
     useEffect(() => {
+        if (!isDemoMode) return;
+
         const handleKeyPress = (e: KeyboardEvent) => {
             if (e.key === "v") {
                 setVehicleState((prev) => ({ ...prev, inVehicle: !prev.inVehicle }));
