@@ -15,20 +15,21 @@ files {
     'build/**/*'
 }
 
+-- Shared Config (muss zuerst geladen werden)
+shared_scripts {
+    'config.lua'
+}
+
 -- Client Scripts
 client_scripts {
     'client/main.lua',
     'client/vehicle.lua',
     'client/status.lua',
-    'client/notifications.lua'
+    'client/notifications.lua',
+    'client/minimap.lua'
 }
 
 -- Server Scripts (optional)
 server_scripts {
     'server/main.lua'
-}
-
--- Shared Config
-shared_scripts {
-    'config.lua'
 }

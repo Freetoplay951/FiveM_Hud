@@ -1,14 +1,21 @@
 local isHudVisible = true
 local isEditMode = false
 local Framework = nil
+local VoiceResource = nil
+
+-- Resource Detection Helper
+function IsResourceStarted(resourceName)
+    local state = GetResourceState(resourceName)
+    return state == 'started' or state == 'starting'
+end
 
 -- Framework Detection
 CreateThread(function()
     if Config.Framework == 'auto' then
-        if GetResourceState('es_extended') == 'started' then
+        if IsResourceStarted('es_extended') then
             Framework = 'esx'
             ESX = exports['es_extended']:getSharedObject()
-        elseif GetResourceState('qb-core') == 'started' then
+        elseif IsResourceStarted('qb-core') then
             Framework = 'qb'
             QBCore = exports['qb-core']:GetCoreObject()
         end
@@ -22,6 +29,25 @@ CreateThread(function()
     
     if Config.Debug then
         print('[HUD] Framework detected: ' .. (Framework or 'none'))
+    end
+end)
+
+-- Voice Resource Detection
+CreateThread(function()
+    if Config.VoiceResource == 'auto' then
+        if IsResourceStarted('pma-voice') then
+            VoiceResource = 'pma-voice'
+        elseif IsResourceStarted('saltychat') then
+            VoiceResource = 'saltychat'
+        elseif IsResourceStarted('mumble-voip') then
+            VoiceResource = 'mumble-voip'
+        end
+    elseif Config.VoiceResource ~= 'none' and IsResourceStarted(Config.VoiceResource) then
+        VoiceResource = Config.VoiceResource
+    end
+    
+    if Config.Debug then
+        print('[HUD] Voice resource detected: ' .. (VoiceResource or 'none'))
     end
 end)
 
@@ -146,31 +172,56 @@ CreateThread(function()
     end
 end)
 
--- Voice Updates (für pma-voice)
-if Config.VoiceResource == 'pma-voice' then
-    CreateThread(function()
-        while true do
-            Wait(200)
+-- Voice Updates (dynamisch basierend auf erkannter Voice Resource)
+CreateThread(function()
+    -- Warten bis Voice Resource erkannt wurde
+    Wait(2000)
+    
+    while true do
+        Wait(200)
+        
+        if isHudVisible and VoiceResource then
+            local talking = false
+            local range = 'normal'
             
-            if isHudVisible then
-                local talking = exports['pma-voice']:isPlayerTalking(PlayerId())
-                local mode = exports['pma-voice']:getVoiceMode()
+            if VoiceResource == 'pma-voice' then
+                -- pma-voice verwendet NetworkIsPlayerTalking
+                talking = NetworkIsPlayerTalking(PlayerId())
                 
-                local range = 'normal'
-                if mode == 1 then
-                    range = 'whisper'
-                elseif mode == 3 then
-                    range = 'shout'
+                -- Voice Mode über Export holen (falls verfügbar)
+                local success, mode = pcall(function()
+                    return exports['pma-voice']:getVoiceMode()
+                end)
+                
+                if success and mode then
+                    if mode == 1 then
+                        range = 'whisper'
+                    elseif mode == 3 then
+                        range = 'shout'
+                    end
                 end
                 
-                SendNUI('updateVoice', {
-                    active = talking,
-                    range = range
-                })
+            elseif VoiceResource == 'saltychat' then
+                talking = NetworkIsPlayerTalking(PlayerId())
+                -- SaltyChat hat andere Voice Modes
+                
+            elseif VoiceResource == 'mumble-voip' then
+                talking = NetworkIsPlayerTalking(PlayerId())
             end
+            
+            SendNUI('updateVoice', {
+                active = talking,
+                range = range
+            })
+        elseif isHudVisible and not VoiceResource then
+            -- Kein Voice Resource, aber trotzdem Talking-Status senden
+            SendNUI('updateVoice', {
+                active = NetworkIsPlayerTalking(PlayerId()),
+                range = 'normal'
+            })
         end
-    end)
-end
+    end
+end)
 
 -- Player Info Updates
 CreateThread(function()
