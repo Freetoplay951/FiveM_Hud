@@ -90,39 +90,40 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
 end
 
 -- ============================================================================
--- STAFF RANK DETECTION
+-- STAFF RANK DETECTION (Uses Config.TeamChatRanks)
 -- ============================================================================
 
--- Get player's staff rank based on Ace Permissions
+-- Get player's staff rank based on configured Ace Permissions
 function GetPlayerStaffRank()
     local playerId = PlayerId()
     
-    -- Check from highest to lowest rank
-    if IsPlayerAceAllowed(playerId, "hud.staff.owner") then
-        return "owner", "Owner"
-    elseif IsPlayerAceAllowed(playerId, "hud.staff.superadmin") then
-        return "superadmin", "Super-Admin"
-    elseif IsPlayerAceAllowed(playerId, "hud.staff.admin") then
-        return "admin", "Admin"
-    elseif IsPlayerAceAllowed(playerId, "hud.staff.moderator") then
-        return "moderator", "Moderator"
-    elseif IsPlayerAceAllowed(playerId, "hud.staff.supporter") then
-        return "supporter", "Supporter"
+    -- Check ranks in order (first match = highest rank player has)
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if IsPlayerAceAllowed(playerId, rank.permission) then
+            return rank.id, rank.name, rank
+        end
     end
     
-    return nil, nil
+    -- Check general permission
+    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
+        -- Return first (lowest) rank as default
+        local defaultRank = Config.TeamChatRanks[#Config.TeamChatRanks]
+        if defaultRank then
+            return defaultRank.id, defaultRank.name, defaultRank
+        end
+    end
+    
+    return nil, nil, nil
 end
 
--- Get readable rank name
-function GetStaffRankName(rankType)
-    local rankNames = {
-        owner = "Owner",
-        superadmin = "Super-Admin",
-        admin = "Admin",
-        moderator = "Moderator",
-        supporter = "Supporter"
-    }
-    return rankNames[rankType] or "Staff"
+-- Get rank config by ID
+function GetRankConfig(rankId)
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if rank.id == rankId then
+            return rank
+        end
+    end
+    return nil
 end
 
 function GetTeamOnlineCount()
@@ -133,28 +134,35 @@ end
 
 function IsPlayerTeamAdmin()
     local playerId = PlayerId()
-    -- Admin and above can use admin features
-    return IsPlayerAceAllowed(playerId, "hud.staff.admin") or
-           IsPlayerAceAllowed(playerId, "hud.staff.superadmin") or
-           IsPlayerAceAllowed(playerId, "hud.staff.owner")
+    
+    -- Check each rank for admin flag
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if rank.isAdmin and IsPlayerAceAllowed(playerId, rank.permission) then
+            return true
+        end
+    end
+    
+    return false
 end
 
 -- ============================================================================
--- ACE PERMISSION CHECKS (Staff only)
+-- ACE PERMISSION CHECKS (Uses Config)
 -- ============================================================================
 
 function HasTeamChatAccess()
     local playerId = PlayerId()
     
-    -- Check if player has any staff rank
-    if IsPlayerAceAllowed(playerId, "hud.staff.supporter") then return true end
-    if IsPlayerAceAllowed(playerId, "hud.staff.moderator") then return true end
-    if IsPlayerAceAllowed(playerId, "hud.staff.admin") then return true end
-    if IsPlayerAceAllowed(playerId, "hud.staff.superadmin") then return true end
-    if IsPlayerAceAllowed(playerId, "hud.staff.owner") then return true end
+    -- Check general permission first
+    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
+        return true
+    end
     
-    -- Generic staff permission
-    if IsPlayerAceAllowed(playerId, "hud.staff") then return true end
+    -- Check each configured rank
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if IsPlayerAceAllowed(playerId, rank.permission) then
+            return true
+        end
+    end
     
     return false
 end
@@ -187,28 +195,29 @@ end
 
 function OpenTeamChat()
     if not HasTeamChatAccess() then
-        SendNotification("error", "Kein Zugriff", "Nur für Team-Mitglieder (Supporter, Admin, etc.).", 3000)
+        SendNotification("error", "Kein Zugriff", "Nur für Team-Mitglieder.", 3000)
         return
     end
     
     isTeamChatOpen = true
     SetNuiFocus(true, false)
     
-    local teamType, teamName = GetPlayerStaffRank()
+    local teamType, teamName, rankConfig = GetPlayerStaffRank()
     if not teamType then
-        teamType = "supporter"
-        teamName = "Team-Chat"
+        teamType = "default"
+        teamName = "Staff"
     end
     
     SendNUI("updateTeamChat", {
         isOpen = true,
         hasAccess = true,
         teamType = teamType,
-        teamName = "Team-Chat",
+        teamName = Config.TeamChatName or "Team-Chat",
         messages = teamChatMessages,
         unreadCount = 0,
         onlineMembers = GetTeamOnlineCount(),
-        isAdmin = IsPlayerTeamAdmin()
+        isAdmin = IsPlayerTeamAdmin(),
+        rankConfig = rankConfig -- Send rank config for styling
     })
 end
 
@@ -216,17 +225,18 @@ function CloseTeamChat()
     isTeamChatOpen = false
     SetNuiFocus(false, false)
     
-    local teamType, _ = GetPlayerStaffRank()
+    local teamType, _, rankConfig = GetPlayerStaffRank()
     
     SendNUI("updateTeamChat", {
         isOpen = false,
         hasAccess = HasTeamChatAccess(),
-        teamType = teamType or "supporter",
-        teamName = "Team-Chat",
+        teamType = teamType or "default",
+        teamName = Config.TeamChatName or "Team-Chat",
         messages = teamChatMessages,
         unreadCount = 0,
         onlineMembers = GetTeamOnlineCount(),
-        isAdmin = IsPlayerTeamAdmin()
+        isAdmin = IsPlayerTeamAdmin(),
+        rankConfig = rankConfig
     })
 end
 
