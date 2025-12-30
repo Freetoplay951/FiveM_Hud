@@ -21,14 +21,16 @@ export const NeonNotification = ({ notification, onClose }: NeonNotificationProp
 
     return (
         <motion.div
-            layout
-            initial={{ opacity: 0, x: 50, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 50, scale: 0.9 }}
+            layout="position" // CEF Fix: Use position-only layout to reduce FLIP complexity
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="glass-panel rounded-lg p-3 min-w-[280px] max-w-[360px] relative overflow-hidden"
             style={{
                 boxShadow: `0 0 20px hsl(var(--${config.color}) / 0.3), inset 0 0 10px hsl(var(--${config.color}) / 0.1)`,
+                // CEF Fix: Prevent transform artifacts
+                willChange: "transform, opacity",
             }}>
             {/* Glow line on left */}
             <div

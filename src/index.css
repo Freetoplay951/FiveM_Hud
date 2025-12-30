@@ -109,6 +109,9 @@
 @layer base {
     * {
         @apply border-border;
+        /* CEF Fix: Force hardware acceleration consistency */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
 
     body {
@@ -123,14 +126,29 @@
         background: transparent !important;
         user-select: none;
     }
+    
+    /* CEF Rendering Fixes */
+    html {
+        /* Prevent subpixel rendering issues */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
 }
 
 @layer components {
-    /* Glassmorphism Panel */
+    /* Glassmorphism Panel - CEF-safe version */
     .glass-panel {
         background: var(--glass-bg);
+        /* backdrop-filter can cause black boxes in CEF, use fallback */
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+    }
+    
+    /* CEF-safe glass panel alternative without backdrop-filter */
+    .glass-panel-safe {
+        background: hsla(220, 20%, 8%, 0.85);
         border: 1px solid var(--glass-border);
         box-shadow: var(--glass-shadow);
     }
