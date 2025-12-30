@@ -71,23 +71,42 @@ export const REFERENCE_HEIGHT = 1080;
 const getScreenWidth = () => typeof window !== 'undefined' ? window.innerWidth : REFERENCE_WIDTH;
 const getScreenHeight = () => typeof window !== 'undefined' ? window.innerHeight : REFERENCE_HEIGHT;
 
+// Widget sizes for bottom alignment calculations
+const MINIMAP_HEIGHT = 200; // Approximate height including location text
+const STATUS_WIDGET_SIZE = 56; // w-14 = 56px
+const STATUS_GAP = 8; // Gap between widgets
+const VOICE_HEIGHT = 50;
+const SPEEDOMETER_HEIGHT = 200;
+
+// Common bottom margin (distance from screen bottom)
+const BOTTOM_MARGIN = 20;
+
+// Calculate bottom-aligned Y position (widgets align at their bottom edge)
+const getBottomY = (widgetHeight: number) => 
+    getScreenHeight() - BOTTOM_MARGIN - widgetHeight;
+
 // Dynamic position helpers
 const pos = (xPercent: number, yPercent: number, offsetX = 0, offsetY = 0): WidgetPosition => ({
     x: Math.round(getScreenWidth() * xPercent + offsetX),
     y: Math.round(getScreenHeight() * yPercent + offsetY),
 });
 
-// Status widget size (w-14 = 56px)
-const STATUS_WIDGET_SIZE = 56;
-const STATUS_GAP = 8; // Gap between widgets
+// Bottom-aligned position (from left percentage, aligned to bottom)
+const bottomPos = (xPercent: number, widgetHeight: number, offsetX = 0): WidgetPosition => ({
+    x: Math.round(getScreenWidth() * xPercent + offsetX),
+    y: getBottomY(widgetHeight),
+});
 
-// Status icon positions - use widget width + gap for proper spacing
+// Status icon positions - all aligned to bottom
 const getStatusStartX = () => Math.round(getScreenWidth() * 0.12);
-const getStatusY = () => Math.round(getScreenHeight() * 0.91);
+const getStatusY = () => getBottomY(STATUS_WIDGET_SIZE);
 const getStatusSpacing = () => STATUS_WIDGET_SIZE + STATUS_GAP;
 
-// Default speedometer position (bottom right) - dynamic
-const getDefaultSpeedoPos = (): WidgetPosition => pos(0.86, 0.79);
+// Default speedometer position (bottom right, aligned to bottom)
+const getDefaultSpeedoPos = (): WidgetPosition => ({
+    x: Math.round(getScreenWidth() * 0.86),
+    y: getBottomY(SPEEDOMETER_HEIGHT),
+});
 
 export const getDefaultSpeedometerConfigs = (): SpeedometerConfigs => {
     const defaultPos = getDefaultSpeedoPos();
@@ -101,10 +120,10 @@ export const getDefaultSpeedometerConfigs = (): SpeedometerConfigs => {
 
 // Legacy static configs for backwards compatibility
 export const DEFAULT_SPEEDOMETER_CONFIGS: SpeedometerConfigs = {
-    car: { position: { x: 1650, y: 850 }, scale: 1 },
-    plane: { position: { x: 1650, y: 850 }, scale: 1 },
-    boat: { position: { x: 1650, y: 850 }, scale: 1 },
-    helicopter: { position: { x: 1650, y: 850 }, scale: 1 },
+    car: { position: { x: 1650, y: 860 }, scale: 1 },
+    plane: { position: { x: 1650, y: 860 }, scale: 1 },
+    boat: { position: { x: 1650, y: 860 }, scale: 1 },
+    helicopter: { position: { x: 1650, y: 860 }, scale: 1 },
 };
 
 // Dynamic widget generator - call this at runtime
@@ -126,10 +145,10 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         // Middle left - Notifications
         { id: "notifications", type: "notifications", position: pos(0.01, 0.32), visible: true, scale: 1 },
 
-        // Bottom left - Minimap
-        { id: "minimap", type: "minimap", position: pos(0.01, 0.77), visible: true, scale: 1 },
+        // Bottom left - Minimap (aligned to bottom)
+        { id: "minimap", type: "minimap", position: bottomPos(0.01, MINIMAP_HEIGHT), visible: true, scale: 1 },
 
-        // Bottom - next to minimap - Status icons in horizontal row
+        // Bottom - Status icons (all aligned to same bottom line)
         { id: "health", type: "health", position: { x: statusStartX, y: statusY }, visible: true, scale: 1 },
         { id: "armor", type: "armor", position: { x: statusStartX + statusSpacing, y: statusY }, visible: true, scale: 1 },
         { id: "hunger", type: "hunger", position: { x: statusStartX + statusSpacing * 2, y: statusY }, visible: true, scale: 1 },
@@ -138,10 +157,10 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         { id: "stress", type: "stress", position: { x: statusStartX + statusSpacing * 5, y: statusY }, visible: true, scale: 1 },
         { id: "oxygen", type: "oxygen", position: { x: statusStartX + statusSpacing * 6, y: statusY }, visible: true, scale: 1 },
 
-        // Voice - centered bottom
-        { id: "voice", type: "voice", position: pos(0.47, 0.93), visible: true, scale: 1 },
+        // Voice - centered, aligned to bottom
+        { id: "voice", type: "voice", position: bottomPos(0.47, VOICE_HEIGHT), visible: true, scale: 1 },
 
-        // Bottom right - Speedometer
+        // Bottom right - Speedometer (aligned to bottom)
         { id: "speedometer", type: "speedometer", position: getDefaultSpeedoPos(), visible: true, scale: 1 },
     ];
 };
