@@ -77,10 +77,14 @@ const pos = (xPercent: number, yPercent: number, offsetX = 0, offsetY = 0): Widg
     y: Math.round(getScreenHeight() * yPercent + offsetY),
 });
 
-// Status icon positions - dynamic based on screen size
+// Status widget size (w-14 = 56px)
+const STATUS_WIDGET_SIZE = 56;
+const STATUS_GAP = 8; // Gap between widgets
+
+// Status icon positions - use widget width + gap for proper spacing
 const getStatusStartX = () => Math.round(getScreenWidth() * 0.12);
 const getStatusY = () => Math.round(getScreenHeight() * 0.91);
-const getStatusSpacing = () => Math.round(getScreenWidth() * 0.029);
+const getStatusSpacing = () => STATUS_WIDGET_SIZE + STATUS_GAP;
 
 // Default speedometer position (bottom right) - dynamic
 const getDefaultSpeedoPos = (): WidgetPosition => pos(0.86, 0.79);

@@ -65,7 +65,18 @@ end
 -- Initialize minimap on resource start
 CreateThread(function()
     Wait(500) -- Wait for game to be ready
+    
+    -- Ensure radar is visible
+    DisplayRadar(true)
+    SetRadarBigmapEnabled(false, false)
+    
+    -- Apply default position
     ApplyMinimapPosition()
+    
+    -- Apply shape if configured
+    if minimapShape == "round" then
+        SetMinimapShape("round")
+    end
 end)
 
 -- Main visibility control - optimized with conditional wait
