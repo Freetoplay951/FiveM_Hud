@@ -122,7 +122,7 @@ export const HUD = () => {
 
     // NUI Event handlers
     useNuiEvents({
-        onUpdateHud: setHudState,
+        onUpdateHud: (data) => setHudState(prev => ({ ...prev, ...data })),
         onUpdateVehicle: setVehicleState,
         onUpdateMoney: setMoneyState,
         onUpdateVoice: setVoiceState,
