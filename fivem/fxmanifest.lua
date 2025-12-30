@@ -27,7 +27,8 @@ client_scripts {
     'client/status.lua',
     'client/notifications.lua',
     'client/minimap.lua',
-    'client/death.lua'
+    'client/death.lua',
+    'client/chat.lua'
 }
 
 -- Server Scripts (optional)
