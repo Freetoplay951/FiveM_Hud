@@ -5,8 +5,6 @@
 -- VARIABLES
 -- ============================================================================
 
-local isChatOpen = false
-local isTeamChatOpen = false
 local isChatInputActive = false
 local isTeamChatInputActive = false
 local chatMessages = {}
@@ -132,14 +130,9 @@ local function SendChatMessage(msgType, sender, message)
     
     lastChatActivity = GetGameTimer()
     chatVisible = true
-    
-    -- Chat automatisch öffnen bei neuer Nachricht
-    if not isChatOpen then
-        isChatOpen = true
-    end
-    
+        
     SendNUI("updateChat", {
-        isOpen = isChatOpen,
+        isOpen = true,
         isInputActive = isChatInputActive,
         isVisible = chatVisible,
         messages = chatMessages,
@@ -167,16 +160,11 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
     lastTeamChatActivity = GetGameTimer()
     teamChatVisible = true
     
-    -- Team-Chat automatisch öffnen bei neuer Nachricht (nur wenn Zugriff)
-    if not isTeamChatOpen and HasTeamChatAccess() then
-        isTeamChatOpen = true
-    end
-    
     local teamType, teamName = GetPlayerTeamInfo()
     local onlineMembers = GetTeamOnlineCount()
     
     SendNUI("updateTeamChat", {
-        isOpen = isTeamChatOpen,
+        isOpen = true,
         isInputActive = isTeamChatInputActive,
         isVisible = teamChatVisible,
         hasAccess = HasTeamChatAccess(),
@@ -194,7 +182,6 @@ end
 -- ============================================================================
 
 function OpenChat()
-    isChatOpen = true
     isChatInputActive = true
     chatVisible = true
     lastChatActivity = GetGameTimer()
@@ -214,7 +201,6 @@ function OpenChat()
 end
 
 function CloseChat()
-    isChatOpen = false
     isChatInputActive = false
     SetNuiFocus(false, false)
     lastChatActivity = GetGameTimer()
@@ -243,7 +229,6 @@ function OpenTeamChat()
         return
     end
     
-    isTeamChatOpen = true
     isTeamChatInputActive = true
     teamChatVisible = true
     lastTeamChatActivity = GetGameTimer()
@@ -275,7 +260,6 @@ function OpenTeamChat()
 end
 
 function CloseTeamChat()
-    isTeamChatOpen = false
     isTeamChatInputActive = false
     SetNuiFocus(false, false)
     lastTeamChatActivity = GetGameTimer()
@@ -350,22 +334,22 @@ end)
 -- ============================================================================
 
 RegisterCommand("chat", function()
-    if not isChatOpen and not isTeamChatOpen then
-        OpenChat()
-    end
+    OpenChat()
 end, false)
-
-RegisterCommand("closechat", function() end, false)
 RegisterKeyMapping("chat", "Chat öffnen", "keyboard", Config.ChatKey or "T")
 
-RegisterCommand("tc", function()
-    if not isTeamChatOpen and not isChatOpen then
-        OpenTeamChat()
-    end
+RegisterCommand("closechat", function() 
+    CloseChat()
 end, false)
 
-RegisterCommand("closetc", function() end, false)
+RegisterCommand("tc", function()
+    OpenTeamChat()
+end, false)
 RegisterKeyMapping("tc", "Team-Chat öffnen", "keyboard", Config.TeamChatKey or "Y")
+
+RegisterCommand("closetc", function() 
+    CloseTeamChat()
+end, false)
 
 -- ============================================================================
 -- NUI CALLBACKS
@@ -421,8 +405,8 @@ exports("openChat", OpenChat)
 exports("closeChat", CloseChat)
 exports("openTeamChat", OpenTeamChat)
 exports("closeTeamChat", CloseTeamChat)
-exports("isChatOpen", function() return isChatOpen end)
-exports("isTeamChatOpen", function() return isTeamChatOpen end)
+exports("isChatOpen", function() end) --Todo: Status vom Frontend auslesen
+exports("isTeamChatOpen", function() end) --Todo: Status vom Frontend auslesen
 exports("hasTeamChatAccess", HasTeamChatAccess)
 
 exports("sendChatMessage", function(msgType, sender, message)
