@@ -62,7 +62,7 @@ export const EditModeOverlay = ({
                 <div>
                     <h2 className="text-sm font-semibold text-foreground">Edit Mode</h2>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Widgets ziehen & per Ecke skalieren (30%–300%).
+                        Widgets ziehen & per Ecke skalieren (50%–300%).
                     </p>
                 </div>
             </div>

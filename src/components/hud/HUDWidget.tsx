@@ -19,7 +19,7 @@ interface HUDWidgetProps {
     className?: string;
 }
 
-const MIN_SCALE = 0.3;
+const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
 
 export const HUDWidget = ({
