@@ -28,8 +28,8 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
             switch (eventType) {
                 // Debug: Ping from Lua
                 case "ping":
-                    console.log("[HUD DEBUG] Web received ping from Lua");
-                    // Send pong back to Lua
+                    console.log("[HUD DEBUG] Lua -> Web ping received");
+                    console.log("[HUD DEBUG] Web -> Lua pong sent");
                     sendNuiCallback("pong");
                     break;
                 case "updateHud":

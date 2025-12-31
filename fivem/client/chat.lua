@@ -367,8 +367,33 @@ end, false)
 
 RegisterNUICallback("sendChatMessage", function(data, cb)
     if data.message and data.message ~= "" then
-        TriggerServerEvent("hud:sendChatMessage", data.message)
-        CloseChat()
+        local message = data.message
+        
+        -- Check if it's a command (starts with /)
+        if string.sub(message, 1, 1) == "/" then
+            local commandStr = string.sub(message, 2) -- Remove the /
+            local args = {}
+            for word in string.gmatch(commandStr, "%S+") do
+                table.insert(args, word)
+            end
+            
+            if #args > 0 then
+                local command = table.remove(args, 1) -- First word is the command
+                
+                if Config and Config.Debug then
+                    print('[HUD Chat] Executing command: /' .. command .. ' with args: ' .. table.concat(args, ", "))
+                end
+                
+                -- Execute the command
+                ExecuteCommand(command .. " " .. table.concat(args, " "))
+            end
+            
+            CloseChat()
+        else
+            -- Normal message
+            TriggerServerEvent("hud:sendChatMessage", message)
+            CloseChat()
+        end
     end
     cb({ success = true })
 end)
