@@ -23,6 +23,9 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
 
 export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true }: TeamChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
+    const [messageHistory, setMessageHistory] = useState<string[]>([]);
+    const [historyIndex, setHistoryIndex] = useState(-1);
+    const [tempInput, setTempInput] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,8 +50,16 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
 
     const handleSend = () => {
         if (inputValue.trim() && onSendMessage) {
-            onSendMessage(inputValue.trim());
+            const msg = inputValue.trim();
+            // Add to history (avoid duplicates at the end)
+            setMessageHistory((prev) => {
+                if (prev[prev.length - 1] === msg) return prev;
+                return [...prev, msg];
+            });
+            onSendMessage(msg);
             setInputValue("");
+            setHistoryIndex(-1);
+            setTempInput("");
         }
     };
 
@@ -59,6 +70,29 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
         }
         if (e.key === "Escape" && onClose) {
             onClose();
+        }
+        // Arrow up - previous message
+        if (e.key === "ArrowUp" && messageHistory.length > 0) {
+            e.preventDefault();
+            if (historyIndex === -1) {
+                setTempInput(inputValue);
+                setHistoryIndex(messageHistory.length - 1);
+                setInputValue(messageHistory[messageHistory.length - 1]);
+            } else if (historyIndex > 0) {
+                setHistoryIndex(historyIndex - 1);
+                setInputValue(messageHistory[historyIndex - 1]);
+            }
+        }
+        // Arrow down - newer message
+        if (e.key === "ArrowDown" && historyIndex !== -1) {
+            e.preventDefault();
+            if (historyIndex < messageHistory.length - 1) {
+                setHistoryIndex(historyIndex + 1);
+                setInputValue(messageHistory[historyIndex + 1]);
+            } else {
+                setHistoryIndex(-1);
+                setInputValue(tempInput);
+            }
         }
     };
 
