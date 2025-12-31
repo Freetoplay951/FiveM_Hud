@@ -221,6 +221,17 @@ RegisterNUICallback("setMinimapShape", function(data, cb)
     cb({ success = true })
 end)
 
+-- Callback wenn Shape im Edit Mode geändert wird
+RegisterNUICallback("onMinimapShapeChange", function(data, cb)
+    if data.shape then
+        SetMinimapShapeInternal(data.shape)
+        if Config.Debug then
+            print('[HUD] Minimap shape changed via Edit Mode: ' .. data.shape)
+        end
+    end
+    cb({ success = true })
+end)
+
 RegisterNUICallback("toggleMinimap", function(data, cb)
     local visible = exports[GetCurrentResourceName()]:toggleMinimap()
     cb({ success = true, visible = visible })

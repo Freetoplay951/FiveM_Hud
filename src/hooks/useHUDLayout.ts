@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { sendNuiCallback } from '@/hooks/useNuiEvents';
 import {
   HUDLayoutState,
   WidgetConfig,
@@ -142,6 +143,8 @@ export const useHUDLayout = () => {
 
   const setMinimapShape = useCallback((shape: MinimapShape) => {
     setState(prev => ({ ...prev, minimapShape: shape }));
+    // Notify Lua about shape change
+    sendNuiCallback('onMinimapShapeChange', { shape });
   }, []);
 
   const updateSpeedometerConfig = useCallback((type: SpeedometerType, config: Partial<SpeedometerConfig>) => {
