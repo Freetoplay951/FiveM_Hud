@@ -38,7 +38,8 @@ export const NeonMoneyWidget = ({ money, player }: NeonMoneyWidgetProps) => {
                     <span
                         className="text-[10px] text-primary"
                         style={{ textShadow: "0 0 6px hsl(var(--primary) / 0.4)" }}>
-                        {player.job} ({player.rank})
+                        {player.job}
+                        {player.rank ? ` (${player.rank})` : ""}
                     </span>
                 </div>
             )}
