@@ -1,8 +1,34 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Send, X } from "lucide-react";
+import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatMessage, ChatState } from "@/types/hud";
+import {
+    Command,
+    CommandGroup,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+
+interface ChatCommand {
+    command: string;
+    description: string;
+    usage?: string;
+}
+
+// Vordefinierte Chat-Commands
+const CHAT_COMMANDS: ChatCommand[] = [
+    { command: "/me", description: "Aktion ausführen", usage: "/me [text]" },
+    { command: "/do", description: "Umgebungsbeschreibung", usage: "/do [text]" },
+    { command: "/ooc", description: "Out of Character", usage: "/ooc [text]" },
+    { command: "/whisper", description: "Flüstern", usage: "/whisper [text]" },
+    { command: "/shout", description: "Schreien", usage: "/shout [text]" },
+    { command: "/tc", description: "Team Chat öffnen", usage: "/tc" },
+    { command: "/clear", description: "Chat leeren", usage: "/clear" },
+    { command: "/help", description: "Hilfe anzeigen", usage: "/help" },
+    { command: "/report", description: "Report erstellen", usage: "/report [spieler] [grund]" },
+    { command: "/pm", description: "Private Nachricht", usage: "/pm [id] [text]" },
+];
 
 interface ChatWidgetProps {
     chat: ChatState;
@@ -16,6 +42,8 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
     const [messageHistory, setMessageHistory] = useState<string[]>([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
     const [tempInput, setTempInput] = useState("");
+    const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
+    const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -23,6 +51,25 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
     const isVisible = chat.isVisible ?? true;
     const isInputActive = chat.isInputActive || isOpen;
     const hasMessages = chat.messages.length > 0;
+
+    // Gefilterte Commands basierend auf Input
+    const filteredCommands = useMemo(() => {
+        if (!inputValue.startsWith("/")) return [];
+        const search = inputValue.toLowerCase();
+        return CHAT_COMMANDS.filter((cmd) =>
+            cmd.command.toLowerCase().startsWith(search)
+        );
+    }, [inputValue]);
+
+    // Show suggestions when typing a command
+    useEffect(() => {
+        if (inputValue.startsWith("/") && filteredCommands.length > 0) {
+            setShowCommandSuggestions(true);
+            setSelectedCommandIndex(0);
+        } else {
+            setShowCommandSuggestions(false);
+        }
+    }, [inputValue, filteredCommands.length]);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -36,6 +83,18 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
         }
     }, [isInputActive]);
 
+    const selectCommand = (command: string) => {
+        // Wenn Command Parameter hat, füge Leerzeichen hinzu
+        const cmd = CHAT_COMMANDS.find((c) => c.command === command);
+        if (cmd && cmd.usage && cmd.usage.includes("[")) {
+            setInputValue(command + " ");
+        } else {
+            setInputValue(command);
+        }
+        setShowCommandSuggestions(false);
+        inputRef.current?.focus();
+    };
+
     const handleSend = () => {
         if (inputValue.trim() && onSendMessage) {
             const msg = inputValue.trim();
@@ -48,10 +107,40 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
             setInputValue("");
             setHistoryIndex(-1);
             setTempInput("");
+            setShowCommandSuggestions(false);
         }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        // Command suggestions navigation
+        if (showCommandSuggestions && filteredCommands.length > 0) {
+            if (e.key === "Tab" || (e.key === "ArrowDown" && !e.shiftKey)) {
+                e.preventDefault();
+                setSelectedCommandIndex((prev) =>
+                    prev < filteredCommands.length - 1 ? prev + 1 : 0
+                );
+                return;
+            }
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setSelectedCommandIndex((prev) =>
+                    prev > 0 ? prev - 1 : filteredCommands.length - 1
+                );
+                return;
+            }
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                selectCommand(filteredCommands[selectedCommandIndex].command);
+                return;
+            }
+            if (e.key === "Escape") {
+                e.preventDefault();
+                setShowCommandSuggestions(false);
+                return;
+            }
+        }
+
+        // Normal behavior when no suggestions
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
@@ -59,8 +148,8 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
         if (e.key === "Escape" && onClose) {
             onClose();
         }
-        // Arrow up - previous message
-        if (e.key === "ArrowUp" && messageHistory.length > 0) {
+        // Arrow up - previous message (nur wenn keine Suggestions)
+        if (e.key === "ArrowUp" && messageHistory.length > 0 && !showCommandSuggestions) {
             e.preventDefault();
             if (historyIndex === -1) {
                 setTempInput(inputValue);
@@ -71,8 +160,8 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
                 setInputValue(messageHistory[historyIndex - 1]);
             }
         }
-        // Arrow down - newer message
-        if (e.key === "ArrowDown" && historyIndex !== -1) {
+        // Arrow down - newer message (nur wenn keine Suggestions)
+        if (e.key === "ArrowDown" && historyIndex !== -1 && !showCommandSuggestions) {
             e.preventDefault();
             if (historyIndex < messageHistory.length - 1) {
                 setHistoryIndex(historyIndex + 1);
@@ -181,7 +270,51 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
 
                     {/* Input - nur anzeigen wenn Eingabe aktiv */}
                     {isInputActive && (
-                        <div className="px-3 py-2 border-t border-border/30 bg-background/40">
+                        <div className="relative px-3 py-2 border-t border-border/30 bg-background/40">
+                            {/* Command Suggestions Popup */}
+                            <AnimatePresence>
+                                {showCommandSuggestions && filteredCommands.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute bottom-full left-3 right-3 mb-1 z-50">
+                                        <Command className="rounded-lg border border-border/50 bg-popover shadow-lg">
+                                            <CommandList className="max-h-[150px]">
+                                                <CommandGroup heading="Commands">
+                                                    {filteredCommands.map((cmd, index) => (
+                                                        <CommandItem
+                                                            key={cmd.command}
+                                                            value={cmd.command}
+                                                            onSelect={() => selectCommand(cmd.command)}
+                                                            className={cn(
+                                                                "flex items-center gap-2 cursor-pointer text-xs",
+                                                                index === selectedCommandIndex &&
+                                                                    "bg-accent text-accent-foreground"
+                                                            )}>
+                                                            <Terminal size={12} className="text-primary shrink-0" />
+                                                            <div className="flex flex-col flex-1 min-w-0">
+                                                                <span className="font-medium text-foreground">
+                                                                    {cmd.command}
+                                                                </span>
+                                                                <span className="text-[10px] text-muted-foreground truncate">
+                                                                    {cmd.description}
+                                                                </span>
+                                                            </div>
+                                                            {cmd.usage && (
+                                                                <span className="text-[9px] text-muted-foreground/70 shrink-0">
+                                                                    {cmd.usage}
+                                                                </span>
+                                                            )}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                             <div className="flex items-center gap-2">
                                 <input
                                     ref={inputRef}
@@ -189,7 +322,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Nachricht eingeben..."
+                                    placeholder="Nachricht eingeben... (/ für Commands)"
                                     className="flex-1 bg-background/30 border border-border/30 rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
                                 />
                                 <button
