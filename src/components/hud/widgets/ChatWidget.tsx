@@ -139,6 +139,12 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
     const handleSend = () => {
         if (inputValue.trim() && onSendMessage) {
             const msg = inputValue.trim();
+            // Check if it's a valid command (starts with / and exists)
+            const isValidCommand = msg.startsWith("/") && 
+                availableCommands.some((cmd) => 
+                    cmd.command.toLowerCase() === msg.split(" ")[0].toLowerCase()
+                );
+            
             // Add to history (avoid duplicates at the end)
             setMessageHistory((prev) => {
                 if (prev[prev.length - 1] === msg) return prev;
@@ -149,13 +155,33 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
             setHistoryIndex(-1);
             setTempInput("");
             setShowCommandSuggestions(false);
+            
+            // Close chat immediately for valid commands
+            if (isValidCommand && onClose) {
+                onClose();
+            }
         }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        // ESC always closes the chat
+        if (e.key === "Escape") {
+            e.preventDefault();
+            setShowCommandSuggestions(false);
+            onClose?.();
+            return;
+        }
+
+        // Tab closes the chat (prevents focus trap)
+        if (e.key === "Tab") {
+            e.preventDefault();
+            onClose?.();
+            return;
+        }
+
         // Command suggestions navigation
         if (showCommandSuggestions && filteredCommands.length > 0) {
-            if (e.key === "Tab" || (e.key === "ArrowDown" && !e.shiftKey)) {
+            if (e.key === "ArrowDown") {
                 e.preventDefault();
                 setSelectedCommandIndex((prev) =>
                     prev < filteredCommands.length - 1 ? prev + 1 : 0
@@ -169,14 +195,19 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                 );
                 return;
             }
+            // Enter with suggestions: if input exactly matches a command, send it; otherwise select
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                selectCommand(filteredCommands[selectedCommandIndex].command);
-                return;
-            }
-            if (e.key === "Escape") {
-                e.preventDefault();
-                setShowCommandSuggestions(false);
+                const exactMatch = availableCommands.find(
+                    (cmd) => cmd.command.toLowerCase() === inputValue.toLowerCase()
+                );
+                if (exactMatch) {
+                    // Exact command match - send it directly
+                    handleSend();
+                } else {
+                    // Partial match - select the highlighted command
+                    selectCommand(filteredCommands[selectedCommandIndex].command);
+                }
                 return;
             }
         }
@@ -185,9 +216,6 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
-        }
-        if (e.key === "Escape" && onClose) {
-            onClose();
         }
         // Arrow up - previous message (nur wenn keine Suggestions)
         if (e.key === "ArrowUp" && messageHistory.length > 0 && !showCommandSuggestions) {

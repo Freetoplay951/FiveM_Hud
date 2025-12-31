@@ -365,9 +365,24 @@ export const HUD = () => {
         };
     }, [isDemoMode, editMode]);
 
-    // Demo key controls
+    // Demo key controls + ESC to exit edit mode
     useEffect(() => {
-        if (!isDemoMode) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // ESC to exit edit mode (works in both demo and FiveM)
+            if (e.key === "Escape" && editMode) {
+                e.preventDefault();
+                exitEditMode();
+                return;
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        if (!isDemoMode) {
+            return () => {
+                window.removeEventListener("keydown", handleKeyDown);
+            };
+        }
 
         const handleKeyPress = (e: KeyboardEvent) => {
             if (e.key === "v") {
@@ -470,9 +485,10 @@ export const HUD = () => {
 
         window.addEventListener("keypress", handleKeyPress);
         return () => {
+            window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keypress", handleKeyPress);
         };
-    }, [editMode, success, error, warning, info]);
+    }, [editMode, isDemoMode, success, error, warning, info]);
 
     const widgetProps = {
         editMode,
@@ -869,11 +885,17 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Team Chat Widget - hidden when dead OR when death preview is active in edit mode */}
+            {/* Team Chat Widget - hidden when dead, death preview, or no access (if hideWithoutAccess) */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("teamchat");
                     if (!widget) return null;
+
+                    // Hide completely in edit mode if no access (configurable in FiveM)
+                    // In demo mode, always show for testing
+                    if (editMode && !teamChatState.hasAccess && !isDemoMode) {
+                        return null;
+                    }
 
                     // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
                     const showTeamChat = isDemoMode

@@ -156,13 +156,13 @@ export const EditModeOverlay = ({
             {/* Speedometer Type */}
             <div className="mb-4">
                 <h3 className="text-xs font-medium text-foreground mb-2">Speedometer Typ</h3>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="flex flex-wrap justify-center gap-2">
                     {SPEEDOMETER_OPTIONS.map(({ type, icon: Icon, label }) => (
                         <button
                             key={type}
                             onClick={() => onSpeedometerTypeChange(type)}
                             className={cn(
-                                "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
+                                "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all w-[70px]",
                                 speedometerType === type
                                     ? "bg-primary/20 border border-primary/50"
                                     : "hover:bg-muted/20"
