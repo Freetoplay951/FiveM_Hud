@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/lib/formatUtils";
 import { DeathState } from "@/types/hud";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useTranslation } from "@/contexts/LanguageContext";
@@ -112,12 +113,6 @@ export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) =>
     } = death;
 
     const displayMessage = message || t.death.defaultMessage;
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-    };
 
     const waitProgress = waitTimer > 0 ? ((60 - waitTimer) / 60) * 100 : 100;
 
@@ -438,64 +433,6 @@ export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) =>
                     />
                     {content}
                 </div>
-            )}
-        </AnimatePresence>
-    );
-};
-    // Full screen overlay mode with red overlay and blood splatters
-    return (
-        <AnimatePresence>
-            {visible && isDead && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center pointer-events-auto overflow-hidden">
-                    
-                    {/* Red screen overlay */}
-                    <motion.div
-                        className="absolute inset-0"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        style={{
-                            background: "linear-gradient(to bottom, hsl(0 60% 10% / 0.85), hsl(0 40% 5% / 0.95))",
-                        }}
-                    />
-                    
-                    {/* Blood splatter effects in corners */}
-                    <BloodSplatter position="top-left" delay={0} />
-                    <BloodSplatter position="top-right" delay={0.3} />
-                    <BloodSplatter position="bottom-left" delay={0.6} />
-                    <BloodSplatter position="bottom-right" delay={0.9} />
-                    
-                    {/* Pulsing red vignette */}
-                    <motion.div
-                        className="absolute inset-0"
-                        animate={{ opacity: [0.4, 0.7, 0.4] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        style={{
-                            background: "radial-gradient(ellipse at center, transparent 20%, hsl(0 70% 20% / 0.6) 100%)",
-                        }}
-                    />
-                    
-                    {/* Stronger edge vignette */}
-                    <div
-                        className="absolute inset-0"
-                        style={{
-                            background: "radial-gradient(ellipse at center, transparent 30%, hsl(0 80% 8% / 0.9) 100%)",
-                        }}
-                    />
-                    
-                    {/* Scanline effect for atmosphere */}
-                    <div
-                        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                        style={{
-                            backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(0 100% 50% / 0.1) 2px, hsl(0 100% 50% / 0.1) 4px)",
-                        }}
-                    />
-
-                    {content}
-                </motion.div>
             )}
         </AnimatePresence>
     );

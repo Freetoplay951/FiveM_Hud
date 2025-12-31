@@ -142,6 +142,8 @@ export const HUD = () => {
     const [chatState, setChatState] = useState<ChatState>(DEMO_CHAT);
     const [teamChatState, setTeamChatState] = useState<TeamChatState>(DEMO_TEAM_CHAT);
     const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false); // For edit mode preview
+    const [demoDeathTimer, setDemoDeathTimer] = useState({ respawnTimer: 14, waitTimer: 59 }); // Demo timer state
+    const [teamChatEditModeVisibility, setTeamChatEditModeVisibility] = useState<'hidden' | 'locked'>('locked'); // TeamChat visibility in edit mode
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
     const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => !isNuiEnvironment()); // In Demo an, in FiveM aus bis Voice erkannt wird
     const [isDemoMode] = useState(!isNuiEnvironment());
@@ -383,6 +385,37 @@ export const HUD = () => {
             clearInterval(chatInterval);
             clearInterval(teamChatInterval);
         };
+    }, [isDemoMode, editMode]);
+
+    // Demo: Death Timer Animation (countdown when death preview is active in edit mode)
+    useEffect(() => {
+        if (!isDemoMode || !showDeathScreenPreview) {
+            // Reset timer when preview is turned off
+            setDemoDeathTimer({ respawnTimer: 14, waitTimer: 59 });
+            return;
+        }
+
+        const timerInterval = setInterval(() => {
+            setDemoDeathTimer((prev) => {
+                const newWaitTimer = prev.waitTimer > 0 ? prev.waitTimer - 1 : 59;
+                const newRespawnTimer = prev.respawnTimer > 0 ? prev.respawnTimer - 1 : 14;
+                
+                // Check if respawn should be enabled
+                const canRespawn = newRespawnTimer === 0;
+                
+                // Update death state for respawn button
+                if (canRespawn && !deathState.canRespawn) {
+                    setDeathState((d) => ({ ...d, canRespawn: true }));
+                }
+                
+                return {
+                    respawnTimer: newRespawnTimer,
+                    waitTimer: newWaitTimer,
+                };
+            });
+        }, 1000);
+
+        return () => clearInterval(timerInterval);
     }, [isDemoMode, editMode]);
 
     // Demo key controls + ESC to exit edit mode
@@ -651,7 +684,7 @@ export const HUD = () => {
                                 </button>
                             </div>
                             {/* Permission Toggles */}
-                            <div className="flex items-center gap-4 border-t border-destructive-foreground/20 pt-2">
+                            <div className="flex flex-wrap items-center gap-3 border-t border-destructive-foreground/20 pt-2">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-destructive-foreground/80">{t.demo.teamChatAccess}</span>
                                     <Switch
@@ -667,6 +700,20 @@ export const HUD = () => {
                                         onCheckedChange={(checked) => setTeamChatState(prev => ({ ...prev, isAdmin: checked }))}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
+                                </div>
+                                {/* TeamChat Edit Mode Visibility Toggle */}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">{t.demo.teamChatVisibility}</span>
+                                    <button
+                                        onClick={() => setTeamChatEditModeVisibility(prev => prev === 'hidden' ? 'locked' : 'hidden')}
+                                        className={cn(
+                                            "px-2 py-0.5 rounded text-[10px] font-medium transition-all border",
+                                            teamChatEditModeVisibility === 'hidden'
+                                                ? "bg-muted/30 text-muted-foreground border-muted-foreground/30"
+                                                : "bg-warning/20 text-warning border-warning/30"
+                                        )}>
+                                        {teamChatEditModeVisibility === 'hidden' ? t.demo.hidden : t.demo.locked}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -862,7 +909,7 @@ export const HUD = () => {
                         onScaleChange={updateWidgetScale}
                         onReset={resetWidget}>
                         <DeathScreenWidget
-                            death={editMode ? { ...DEMO_DEATH, isDead: true } : deathState}
+                            death={editMode ? { ...DEMO_DEATH, isDead: true, respawnTimer: demoDeathTimer.respawnTimer, waitTimer: demoDeathTimer.waitTimer, canRespawn: demoDeathTimer.respawnTimer === 0 } : deathState}
                             visible={true}
                         />
                     </HUDWidget>
@@ -931,10 +978,13 @@ export const HUD = () => {
                     const widget = getWidget("teamchat");
                     if (!widget) return null;
 
-                    // Hide completely in edit mode if no access (configurable in FiveM)
-                    // In demo mode, always show for testing
-                    if (editMode && !teamChatState.hasAccess && !isDemoMode) {
-                        return null;
+                    // Hide completely in edit mode if visibility is set to 'hidden' and no access
+                    // In demo mode, respect the teamChatEditModeVisibility setting
+                    if (editMode && !teamChatState.hasAccess) {
+                        if (teamChatEditModeVisibility === 'hidden') {
+                            return null;
+                        }
+                        // 'locked' mode shows the locked state widget
                     }
 
                     // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
