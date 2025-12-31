@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { DollarSign, CreditCard, Briefcase, IdCard } from "lucide-react";
+import { DollarSign, CreditCard, Briefcase, Banknote } from "lucide-react";
 import { MoneyState, PlayerState } from "@/types/hud";
 
 interface NeonMoneyWidgetProps {
@@ -70,6 +70,22 @@ export const NeonMoneyWidget = ({ money, player }: NeonMoneyWidgetProps) => {
                     ${formatMoney(money.bank)}
                 </span>
             </div>
+
+            {/* Black Money - nur anzeigen wenn vorhanden */}
+            {money.blackMoney !== undefined && money.blackMoney > 0 && (
+                <div className="glass-panel rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <Banknote
+                        size={12}
+                        className="text-black-money"
+                        style={{ filter: "drop-shadow(0 0 4px hsl(var(--black-money) / 0.5))" }}
+                    />
+                    <span
+                        className="hud-number text-sm text-black-money"
+                        style={{ textShadow: "0 0 10px hsl(var(--black-money) / 0.5)" }}>
+                        ${formatMoney(money.blackMoney)}
+                    </span>
+                </div>
+            )}
         </motion.div>
     );
 };
