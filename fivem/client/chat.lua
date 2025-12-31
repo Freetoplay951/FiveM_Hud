@@ -134,14 +134,12 @@ CreateThread(function()
         SendRegisteredCommandsToNUI()
     end
 end)
-
--- Send all registered commands to NUI
-function SendRegisteredCommandsToNUI()
+-- Generische Funktion zum Sammeln von Befehlen
+local function CollectCommands()
     local commands = GetRegisteredCommands()
     local commandSet = {}
     local commandList = {}
 
-    -- Präfixe, die ausgeschlossen werden sollen
     local excludedPrefixes = {"_", "sv_", "onesync_", "rateLimiter_", "adhesive_"} 
 
     for _, cmd in ipairs(commands) do
@@ -179,8 +177,13 @@ function SendRegisteredCommandsToNUI()
         return a.command:lower() < b.command:lower()
     end)
 
+    return commandList
+end
+
+-- Send all registered commands to NUI
+function SendRegisteredCommandsToNUI()
+    local commandList = CollectCommands()
     SendNUI("updateCommands", commandList)
-    
     if Config and Config.Debug then
         print('[HUD Chat] Sent ' .. #commandList .. ' commands to NUI')
     end
@@ -188,23 +191,7 @@ end
 
 -- NUI Callback to request commands
 RegisterNUICallback("getCommands", function(data, cb)
-    local commands = GetRegisteredCommands()
-    local commandList = {}
-    
-    for _, cmd in ipairs(commands) do
-        if not cmd.name:match("^_") then
-            table.insert(commandList, {
-                command = "/" .. cmd.name,
-                description = "",
-                usage = "/" .. cmd.name
-            })
-        end
-    end
-    
-    table.sort(commandList, function(a, b)
-        return a.command < b.command
-    end)
-    
+    local commandList = CollectCommands()
     cb({ success = true, commands = commandList })
 end)
 
