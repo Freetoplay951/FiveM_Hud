@@ -124,11 +124,13 @@ CreateThread(function()
         if Config.EnableOxygen then
             local isUnderwater = IsPedSwimmingUnderWater(ped)
             local isInWater = IsPedSwimming(ped)
-            
+
             if isUnderwater then
-                -- Verbleibende Unterwasser-Zeit (0-1, wir wollen 0-100)
                 local remainingAir = GetPlayerUnderwaterTimeRemaining(PlayerId())
-                statusData.oxygen = math.floor(remainingAir * 100)
+                local maxAir = 10.0 -- FiveM Standard
+
+                local oxygen = (remainingAir / maxAir) * 100
+                statusData.oxygen = math.floor(math.max(0, math.min(100, oxygen)))
                 statusData.showOxygen = true
             elseif isInWater then
                 statusData.oxygen = 100
