@@ -3,6 +3,7 @@ import { Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DeathState } from "@/types/hud";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface DeathScreenWidgetProps {
     death: DeathState;
@@ -31,15 +32,87 @@ const SkullIcon = ({ size = 32, className = "" }: { size?: number; className?: s
     </svg>
 );
 
+// Blood splatter SVG component
+const BloodSplatter = ({ position, delay = 0 }: { position: "top-left" | "top-right" | "bottom-left" | "bottom-right"; delay?: number }) => {
+    const positionClasses = {
+        "top-left": "top-0 left-0 origin-top-left",
+        "top-right": "top-0 right-0 origin-top-right rotate-90",
+        "bottom-left": "bottom-0 left-0 origin-bottom-left -rotate-90",
+        "bottom-right": "bottom-0 right-0 origin-bottom-right rotate-180",
+    };
+
+    return (
+        <motion.div
+            className={cn("absolute pointer-events-none", positionClasses[position])}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+                opacity: [0.6, 0.8, 0.6],
+                scale: [1, 1.02, 1],
+            }}
+            transition={{ 
+                delay,
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+            }}>
+            <svg
+                width="300"
+                height="300"
+                viewBox="0 0 300 300"
+                fill="none"
+                className="w-[200px] h-[200px] md:w-[300px] md:h-[300px]">
+                {/* Main splatter */}
+                <path
+                    d="M0 0 C50 20, 80 60, 100 120 C110 150, 90 180, 70 200 C50 220, 20 210, 0 180 Z"
+                    fill="url(#bloodGradient1)"
+                    opacity="0.7"
+                />
+                {/* Drip 1 */}
+                <path
+                    d="M60 100 C65 130, 55 160, 50 200 C48 220, 45 240, 40 260 C38 270, 35 275, 30 270 C25 265, 28 250, 30 230 C35 190, 45 150, 55 110 Z"
+                    fill="url(#bloodGradient2)"
+                    opacity="0.8"
+                />
+                {/* Drip 2 */}
+                <path
+                    d="M90 80 C100 110, 95 140, 85 180 C80 200, 75 220, 72 250 C70 260, 68 265, 65 260 C60 255, 65 230, 70 200 C75 160, 85 120, 88 90 Z"
+                    fill="url(#bloodGradient2)"
+                    opacity="0.6"
+                />
+                {/* Splatter drops */}
+                <circle cx="30" cy="150" r="8" fill="hsl(0 80% 25%)" opacity="0.5" />
+                <circle cx="50" cy="180" r="5" fill="hsl(0 80% 20%)" opacity="0.6" />
+                <circle cx="15" cy="120" r="6" fill="hsl(0 70% 30%)" opacity="0.4" />
+                <circle cx="80" cy="140" r="4" fill="hsl(0 80% 25%)" opacity="0.5" />
+                <defs>
+                    <linearGradient id="bloodGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="hsl(0 80% 30%)" />
+                        <stop offset="50%" stopColor="hsl(0 70% 20%)" />
+                        <stop offset="100%" stopColor="hsl(0 60% 10%)" />
+                    </linearGradient>
+                    <linearGradient id="bloodGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="hsl(0 80% 25%)" />
+                        <stop offset="100%" stopColor="hsl(0 70% 15%)" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </motion.div>
+    );
+};
+
 export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScreenWidgetProps) => {
+    const { t } = useTranslation();
+    
     const {
         isDead,
         respawnTimer,
         waitTimer,
         canCallHelp = true,
         canRespawn = false,
-        message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
+        message,
     } = death;
+
+    const displayMessage = message || t.death.defaultMessage;
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -71,7 +144,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className={cn("flex flex-col items-center text-center", isWidget ? "p-3" : "p-6")}>
+            className={cn("flex flex-col items-center text-center z-10", isWidget ? "p-3" : "p-6")}>
             {/* Skull Icon with Glow */}
             <motion.div
                 className="relative mb-4"
@@ -105,11 +178,11 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                 }}
                 animate={{ opacity: [0.8, 1, 0.8] }}
                 transition={{ duration: 2, repeat: Infinity }}>
-                BEWUSSTLOS
+                {t.death.title}
             </motion.h1>
 
             {/* Subtitle */}
-            <p className="text-xs text-muted-foreground mb-4 max-w-xs">{message}</p>
+            <p className="text-xs text-muted-foreground mb-4 max-w-xs">{displayMessage}</p>
 
             {/* Critical Health Bar */}
             <div className="w-full max-w-xs mb-4">
@@ -118,7 +191,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                         size={12}
                         className="text-critical"
                     />
-                    <span className="text-[10px] text-critical uppercase tracking-wider">KRITISCH</span>
+                    <span className="text-[10px] text-critical uppercase tracking-wider">{t.death.critical}</span>
                 </div>
                 <div
                     className="h-1 rounded-full overflow-hidden"
@@ -138,7 +211,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
             {/* Respawn Timer */}
             <div className="mb-3">
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-                    RESPAWN MÖGLICH IN
+                    {t.death.respawnIn}
                 </span>
                 <motion.div
                     className="hud-number text-2xl text-primary"
@@ -171,7 +244,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                 <div className="flex justify-between items-center mt-0.5">
                     <div className="flex items-center gap-1 text-[10px] text-primary">
                         <Clock size={8} />
-                        <span>Wartezeit</span>
+                        <span>{t.death.waitTime}</span>
                     </div>
                     <span className="text-[10px] text-muted-foreground hud-number">{formatTime(waitTimer)}</span>
                 </div>
@@ -179,7 +252,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
 
             {/* Info Text */}
             <p className="text-[10px] text-muted-foreground mb-4 max-w-xs">
-                Warte auf den Rettungsdienst oder respawne im Krankenhaus
+                {t.death.infoText}
             </p>
 
             {/* Action Buttons */}
@@ -238,7 +311,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                         <div
                             className="text-[11px] font-bold tracking-wider"
                             style={{ fontFamily: "Orbitron, sans-serif" }}>
-                            HILFE
+                            {t.death.helpButton}
                         </div>
                     </div>
                     <span className="relative z-10 ml-1 px-1.5 py-0.5 bg-background/40 rounded text-[9px] font-bold tracking-wider border border-primary/30">
@@ -299,7 +372,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                         <div
                             className="text-[11px] font-bold tracking-wider"
                             style={{ fontFamily: "Orbitron, sans-serif" }}>
-                            RESPAWN
+                            {t.death.respawnButton}
                         </div>
                     </div>
                     <span className="relative z-10 ml-1 px-1.5 py-0.5 bg-background/40 rounded text-[9px] font-bold tracking-wider border border-foreground/20">
@@ -338,7 +411,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                 <span
                     className="relative z-10 text-[9px] tracking-wider uppercase font-medium"
                     style={{ fontFamily: "Orbitron, sans-serif" }}>
-                    Sync
+                    {t.death.syncButton}
                 </span>
                 <span className="relative z-10 px-1 py-0.5 bg-background/40 rounded text-[8px] font-bold border border-muted/30">
                     F5
@@ -358,7 +431,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
         );
     }
 
-    // Full screen overlay mode with red overlay
+    // Full screen overlay mode with red overlay and blood splatters
     return (
         <AnimatePresence>
             {visible && isDead && (
@@ -366,7 +439,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center pointer-events-auto">
+                    className="fixed inset-0 z-50 flex items-center justify-center pointer-events-auto overflow-hidden">
                     
                     {/* Red screen overlay */}
                     <motion.div
@@ -377,6 +450,12 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                             background: "linear-gradient(to bottom, hsl(0 60% 10% / 0.85), hsl(0 40% 5% / 0.95))",
                         }}
                     />
+                    
+                    {/* Blood splatter effects in corners */}
+                    <BloodSplatter position="top-left" delay={0} />
+                    <BloodSplatter position="top-right" delay={0.3} />
+                    <BloodSplatter position="bottom-left" delay={0.6} />
+                    <BloodSplatter position="bottom-right" delay={0.9} />
                     
                     {/* Pulsing red vignette */}
                     <motion.div

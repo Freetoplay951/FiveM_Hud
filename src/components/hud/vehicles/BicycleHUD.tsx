@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Bike } from "lucide-react";
 import { VehicleState } from "@/types/hud";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface BicycleHUDProps {
     vehicle: VehicleState;
@@ -8,6 +9,7 @@ interface BicycleHUDProps {
 }
 
 export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
+    const { t } = useTranslation();
     const maxSpeed = 50;
 
     const svgCenter = 50;
@@ -211,7 +213,7 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                                     className="text-[10px] text-muted-foreground uppercase tracking-wider"
                                     animate={{ opacity: vehicle.speed > 0 ? [0.6, 1, 0.6] : 0.5 }}
                                     transition={{ duration: 0.8, repeat: vehicle.speed > 0 ? Infinity : 0 }}>
-                                    {vehicle.speed > 0 ? "PEDALING" : "STOPPED"}
+                                    {vehicle.speed > 0 ? t.vehicle.pedaling.toUpperCase() : t.vehicle.stopped.toUpperCase()}
                                 </motion.span>
                             </div>
                         </div>

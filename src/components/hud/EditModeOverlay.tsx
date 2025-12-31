@@ -13,10 +13,12 @@ import {
     Bike,
     Square,
     Skull,
+    Languages,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusDesign, SpeedometerType, MinimapShape } from "@/types/widget";
 import { PopoverContent } from "@/components/ui/popover";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface EditModeOverlayProps {
     snapToGrid: boolean;
@@ -33,26 +35,26 @@ interface EditModeOverlayProps {
     onExitEditMode: () => void;
 }
 
-const DESIGN_OPTIONS: { design: StatusDesign; icon: React.ElementType; label: string }[] = [
-    { design: "circular", icon: Circle, label: "Kreis" },
-    { design: "bar", icon: BarChart3, label: "Balken" },
-    { design: "vertical", icon: AlignVerticalSpaceAround, label: "Vertikal" },
-    { design: "minimal", icon: Minus, label: "Minimal" },
-    { design: "arc", icon: Activity, label: "Bogen" },
+const DESIGN_OPTIONS: { design: StatusDesign; icon: React.ElementType; labelDe: string; labelEn: string }[] = [
+    { design: "circular", icon: Circle, labelDe: "Kreis", labelEn: "Circle" },
+    { design: "bar", icon: BarChart3, labelDe: "Balken", labelEn: "Bar" },
+    { design: "vertical", icon: AlignVerticalSpaceAround, labelDe: "Vertikal", labelEn: "Vertical" },
+    { design: "minimal", icon: Minus, labelDe: "Minimal", labelEn: "Minimal" },
+    { design: "arc", icon: Activity, labelDe: "Bogen", labelEn: "Arc" },
 ];
 
-const SPEEDOMETER_OPTIONS: { type: SpeedometerType; icon: React.ElementType; label: string }[] = [
-    { type: "car", icon: Car, label: "Auto" },
-    { type: "plane", icon: Plane, label: "Flugzeug" },
-    { type: "boat", icon: Ship, label: "Boot" },
-    { type: "helicopter", icon: Fan, label: "Heli" },
-    { type: "motorcycle", icon: Bike, label: "Motorrad" },
-    { type: "bicycle", icon: Bike, label: "Fahrrad" },
+const SPEEDOMETER_OPTIONS: { type: SpeedometerType; icon: React.ElementType; labelDe: string; labelEn: string }[] = [
+    { type: "car", icon: Car, labelDe: "Auto", labelEn: "Car" },
+    { type: "plane", icon: Plane, labelDe: "Flugzeug", labelEn: "Plane" },
+    { type: "boat", icon: Ship, labelDe: "Boot", labelEn: "Boat" },
+    { type: "helicopter", icon: Fan, labelDe: "Heli", labelEn: "Heli" },
+    { type: "motorcycle", icon: Bike, labelDe: "Motorrad", labelEn: "Bike" },
+    { type: "bicycle", icon: Bike, labelDe: "Fahrrad", labelEn: "Bicycle" },
 ];
 
-const MINIMAP_SHAPE_OPTIONS: { shape: MinimapShape; icon: React.ElementType; label: string }[] = [
-    { shape: "square", icon: Square, label: "Eckig" },
-    { shape: "round", icon: Circle, label: "Rund" },
+const MINIMAP_SHAPE_OPTIONS: { shape: MinimapShape; icon: React.ElementType; labelDe: string; labelEn: string }[] = [
+    { shape: "square", icon: Square, labelDe: "Eckig", labelEn: "Square" },
+    { shape: "round", icon: Circle, labelDe: "Rund", labelEn: "Round" },
 ];
 
 export const EditModeOverlay = ({
@@ -69,6 +71,8 @@ export const EditModeOverlay = ({
     onReset,
     onExitEditMode,
 }: EditModeOverlayProps) => {
+    const { language, toggleLanguage, t } = useTranslation();
+    
     return (
         <PopoverContent
             align="end"
@@ -78,20 +82,30 @@ export const EditModeOverlay = ({
             style={{ boxShadow: "0 0 40px hsl(var(--primary) / 0.2)" }}>
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-sm font-semibold text-foreground">Edit Mode</h2>
+                    <h2 className="text-sm font-semibold text-foreground">{t.editMode.title}</h2>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Widgets ziehen & per Ecke skalieren (50%–300%).
+                        {language === "de" 
+                            ? "Widgets ziehen & per Ecke skalieren (50%–300%)."
+                            : "Drag widgets & scale via corner (50%–300%)."}
                     </p>
                 </div>
+                {/* Language Toggle */}
+                <button
+                    onClick={toggleLanguage}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors border border-border/30"
+                    title={language === "de" ? "Switch to English" : "Auf Deutsch wechseln"}>
+                    <Languages size={14} className="text-muted-foreground" />
+                    <span className="text-[10px] font-medium text-foreground uppercase">{language}</span>
+                </button>
             </div>
 
             <div className="my-4 h-px bg-border/40" />
 
             {/* Status Design */}
             <div className="mb-4">
-                <h3 className="text-xs font-medium text-foreground mb-2">Status-Widget Design</h3>
+                <h3 className="text-xs font-medium text-foreground mb-2">{t.editMode.statusDesign}</h3>
                 <div className="grid grid-cols-5 gap-2">
-                    {DESIGN_OPTIONS.map(({ design, icon: Icon, label }) => (
+                    {DESIGN_OPTIONS.map(({ design, icon: Icon, labelDe, labelEn }) => (
                         <button
                             key={design}
                             onClick={() => onStatusDesignChange(design)}
@@ -114,7 +128,7 @@ export const EditModeOverlay = ({
                                     "text-[10px]",
                                     statusDesign === design ? "text-primary" : "text-muted-foreground"
                                 )}>
-                                {label}
+                                {language === "de" ? labelDe : labelEn}
                             </span>
                         </button>
                     ))}
@@ -123,9 +137,9 @@ export const EditModeOverlay = ({
 
             {/* Minimap Shape */}
             <div className="mb-4">
-                <h3 className="text-xs font-medium text-foreground mb-2">Minimap Form</h3>
+                <h3 className="text-xs font-medium text-foreground mb-2">{t.editMode.minimapShape}</h3>
                 <div className="grid grid-cols-2 gap-2">
-                    {MINIMAP_SHAPE_OPTIONS.map(({ shape, icon: Icon, label }) => (
+                    {MINIMAP_SHAPE_OPTIONS.map(({ shape, icon: Icon, labelDe, labelEn }) => (
                         <button
                             key={shape}
                             onClick={() => onMinimapShapeChange(shape)}
@@ -146,7 +160,7 @@ export const EditModeOverlay = ({
                                     "text-[10px]",
                                     minimapShape === shape ? "text-primary" : "text-muted-foreground"
                                 )}>
-                                {label}
+                                {language === "de" ? labelDe : labelEn}
                             </span>
                         </button>
                     ))}
@@ -155,9 +169,9 @@ export const EditModeOverlay = ({
 
             {/* Speedometer Type */}
             <div className="mb-4">
-                <h3 className="text-xs font-medium text-foreground mb-2">Speedometer Typ</h3>
+                <h3 className="text-xs font-medium text-foreground mb-2">{t.editMode.speedometerType}</h3>
                 <div className="flex flex-wrap justify-center gap-2">
-                    {SPEEDOMETER_OPTIONS.map(({ type, icon: Icon, label }) => (
+                    {SPEEDOMETER_OPTIONS.map(({ type, icon: Icon, labelDe, labelEn }) => (
                         <button
                             key={type}
                             onClick={() => onSpeedometerTypeChange(type)}
@@ -184,7 +198,7 @@ export const EditModeOverlay = ({
                                     "text-[10px]",
                                     speedometerType === type ? "text-primary" : "text-muted-foreground"
                                 )}>
-                                {label}
+                                {language === "de" ? labelDe : labelEn}
                             </span>
                         </button>
                     ))}
@@ -195,13 +209,13 @@ export const EditModeOverlay = ({
             <div className="space-y-2 mb-4">
                 <ToggleOption
                     icon={Grid3X3}
-                    label="Am Raster ausrichten"
+                    label={t.editMode.snapToGrid}
                     checked={snapToGrid}
                     onChange={onSnapToGridChange}
                 />
                 <ToggleOption
                     icon={Skull}
-                    label="Death-Screen anzeigen"
+                    label={t.editMode.showDeathScreen}
                     checked={showDeathScreen}
                     onChange={onShowDeathScreenChange}
                 />
@@ -216,13 +230,13 @@ export const EditModeOverlay = ({
                     type="button"
                     className="w-full py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors pointer-events-auto"
                     style={{ boxShadow: "0 0 18px hsl(var(--primary) / 0.25)" }}>
-                    Bearbeitung beenden
+                    {t.editMode.exitEdit}
                 </button>
                 <button
                     onClick={onReset}
                     className="w-full py-2 rounded-lg bg-muted/30 border border-border/30 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2">
                     <RotateCcw size={14} />
-                    Layout zurücksetzen
+                    {t.editMode.resetLayout}
                 </button>
             </div>
         </PopoverContent>
