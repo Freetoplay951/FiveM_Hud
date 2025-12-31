@@ -22,24 +22,6 @@ interface HUDWidgetProps {
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
 
-// Widget base sizes for clamping
-const WIDGET_BASE_SIZES: Record<string, { width: number; height: number }> = {
-    health: { width: 48, height: 48 },
-    armor: { width: 48, height: 48 },
-    hunger: { width: 48, height: 48 },
-    thirst: { width: 48, height: 48 },
-    stamina: { width: 48, height: 48 },
-    stress: { width: 48, height: 48 },
-    oxygen: { width: 48, height: 48 },
-    money: { width: 180, height: 80 },
-    clock: { width: 100, height: 40 },
-    compass: { width: 80, height: 80 },
-    voice: { width: 120, height: 50 },
-    minimap: { width: 200, height: 200 },
-    notifications: { width: 280, height: 150 },
-    speedometer: { width: 200, height: 200 },
-};
-
 export const HUDWidget = ({
     id,
     children,
@@ -91,12 +73,13 @@ export const HUDWidget = ({
         return () => resizeObserver.disconnect();
     }, [visible]);
 
-    // Clamp position to viewport
+    // Clamp position to viewport using actual element size
     const clampToViewport = useCallback(
         (x: number, y: number) => {
-            const baseSize = WIDGET_BASE_SIZES[id] || { width: 50, height: 50 };
-            const widgetWidth = baseSize.width * (localScale ?? scale);
-            const widgetHeight = baseSize.height * (localScale ?? scale);
+            // Use actual measured element size (already includes scale from CSS transform)
+            // But since transform doesn't affect offsetWidth/Height, we need to apply scale manually
+            const widgetWidth = elementSize.w > 0 ? elementSize.w : 50;
+            const widgetHeight = elementSize.h > 0 ? elementSize.h : 50;
 
             const maxX = Math.max(0, window.innerWidth - widgetWidth);
             const maxY = Math.max(0, window.innerHeight - widgetHeight);
@@ -105,7 +88,7 @@ export const HUDWidget = ({
                 y: Math.max(0, Math.min(maxY, y)),
             };
         },
-        [id, scale, localScale]
+        [elementSize]
     );
 
     const handleMouseDown = useCallback(
