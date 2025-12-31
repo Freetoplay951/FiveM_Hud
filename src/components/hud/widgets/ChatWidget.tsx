@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatMessage, ChatState } from "@/types/hud";
+import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 
 interface ChatCommand {
     command: string;
@@ -10,8 +11,8 @@ interface ChatCommand {
     usage?: string;
 }
 
-// Vordefinierte Chat-Commands
-const CHAT_COMMANDS: ChatCommand[] = [
+// Fallback Commands für Demo-Modus
+const DEMO_COMMANDS: ChatCommand[] = [
     { command: "/me", description: "Aktion ausführen", usage: "/me [text]" },
     { command: "/do", description: "Umgebungsbeschreibung", usage: "/do [text]" },
     { command: "/ooc", description: "Out of Character", usage: "/ooc [text]" },
@@ -29,15 +30,17 @@ interface ChatWidgetProps {
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
     isOpen?: boolean;
+    registeredCommands?: ChatCommand[];
 }
 
-export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: ChatWidgetProps) => {
+export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, registeredCommands }: ChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const [messageHistory, setMessageHistory] = useState<string[]>([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
     const [tempInput, setTempInput] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+    const [nuiCommands, setNuiCommands] = useState<ChatCommand[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const commandListRef = useRef<HTMLDivElement>(null);
@@ -47,14 +50,47 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
     const isInputActive = chat.isInputActive || isOpen;
     const hasMessages = chat.messages.length > 0;
 
+    // Load commands from FiveM in production
+    useEffect(() => {
+        if (isNuiEnvironment()) {
+            sendNuiCallback<{ success: boolean; commands: ChatCommand[] }>("getCommands").then((response) => {
+                if (response?.success && response.commands) {
+                    setNuiCommands(response.commands);
+                }
+            });
+        }
+
+        // Listen for updateCommands events from Lua
+        const handleMessage = (event: MessageEvent) => {
+            const { action, data } = event.data;
+            if (action === "updateCommands" && Array.isArray(data)) {
+                setNuiCommands(data);
+            }
+        };
+
+        window.addEventListener("message", handleMessage);
+        return () => window.removeEventListener("message", handleMessage);
+    }, []);
+
+    // Use registered commands from props, NUI, or fallback to demo
+    const availableCommands = useMemo(() => {
+        if (registeredCommands && registeredCommands.length > 0) {
+            return registeredCommands;
+        }
+        if (nuiCommands.length > 0) {
+            return nuiCommands;
+        }
+        return DEMO_COMMANDS;
+    }, [registeredCommands, nuiCommands]);
+
     // Gefilterte Commands basierend auf Input
     const filteredCommands = useMemo(() => {
         if (!inputValue.startsWith("/")) return [];
         const search = inputValue.toLowerCase();
-        return CHAT_COMMANDS.filter((cmd) =>
+        return availableCommands.filter((cmd) =>
             cmd.command.toLowerCase().startsWith(search)
         );
-    }, [inputValue]);
+    }, [inputValue, availableCommands]);
 
     // Show suggestions when typing a command
     useEffect(() => {
@@ -90,7 +126,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
 
     const selectCommand = (command: string) => {
         // Wenn Command Parameter hat, füge Leerzeichen hinzu
-        const cmd = CHAT_COMMANDS.find((c) => c.command === command);
+        const cmd = availableCommands.find((c) => c.command === command);
         if (cmd && cmd.usage && cmd.usage.includes("[")) {
             setInputValue(command + " ");
         } else {

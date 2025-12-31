@@ -121,6 +121,8 @@ AddEventHandler('onClientResourceStart', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
     Wait(1000)
     RequestPermissionData()
+    -- Send registered commands to NUI
+    SendRegisteredCommandsToNUI()
 end)
 
 -- Refresh permissions periodically (every 30 seconds)
@@ -128,7 +130,59 @@ CreateThread(function()
     while true do
         Wait(30000)
         RequestPermissionData()
+        -- Also refresh commands periodically
+        SendRegisteredCommandsToNUI()
     end
+end)
+
+-- Send all registered commands to NUI
+function SendRegisteredCommandsToNUI()
+    local commands = GetRegisteredCommands()
+    local commandList = {}
+    
+    for _, cmd in ipairs(commands) do
+        -- Filter out internal/system commands if needed
+        if not cmd.name:match("^_") then
+            table.insert(commandList, {
+                command = "/" .. cmd.name,
+                description = "", -- FiveM doesn't provide descriptions
+                usage = "/" .. cmd.name
+            })
+        end
+    end
+    
+    -- Sort alphabetically
+    table.sort(commandList, function(a, b)
+        return a.command < b.command
+    end)
+    
+    SendNUI("updateCommands", commandList)
+    
+    if Config and Config.Debug then
+        print('[HUD Chat] Sent ' .. #commandList .. ' commands to NUI')
+    end
+end
+
+-- NUI Callback to request commands
+RegisterNUICallback("getCommands", function(data, cb)
+    local commands = GetRegisteredCommands()
+    local commandList = {}
+    
+    for _, cmd in ipairs(commands) do
+        if not cmd.name:match("^_") then
+            table.insert(commandList, {
+                command = "/" .. cmd.name,
+                description = "",
+                usage = "/" .. cmd.name
+            })
+        end
+    end
+    
+    table.sort(commandList, function(a, b)
+        return a.command < b.command
+    end)
+    
+    cb({ success = true, commands = commandList })
 end)
 
 function GetPlayerStaffRank()
