@@ -38,7 +38,7 @@ export const StatusMinimal = ({ type, value }: StatusProps) => {
             />
 
             <span
-                className="hud-number text-[10px]"
+                className="hud-number text-[10px] w-6 text-right tabular-nums"
                 style={{
                     color: `hsl(var(--${colorVar}))`,
                     textShadow: `0 0 6px hsl(var(--${colorVar}) / 0.5)`,
