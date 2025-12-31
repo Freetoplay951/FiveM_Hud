@@ -154,5 +154,11 @@ Config.TeamChatName = "Team-Chat"
 -- 'locked' = Mit Schloss-Icon anzeigen (zeigt dass es existiert aber kein Zugriff)
 Config.TeamChatEditModeVisibility = 'hidden'
 
+-- ============================================================================
+-- SPRACHE / LANGUAGE
+-- ============================================================================
+-- Verfügbare Sprachen: 'de' (Deutsch), 'en' (English)
+Config.Language = 'de'
+
 -- Debug
 Config.Debug = true

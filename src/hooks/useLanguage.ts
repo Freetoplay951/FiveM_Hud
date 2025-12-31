@@ -16,30 +16,54 @@ export const useLanguage = () => {
         return DEFAULT_LANGUAGE;
     });
 
+    // Start with default translations, can be overwritten by Lua
     const [t, setT] = useState<Translations>(translations[language]);
 
-    // Update translations when language changes
+    // Update translations when language changes (for demo mode)
     useEffect(() => {
-        setT(translations[language]);
-        
-        // Persist to localStorage in demo mode
+        // Only use local translations in demo mode
         if (!isNuiEnvironment()) {
+            setT(translations[language]);
             localStorage.setItem(STORAGE_KEY, language);
         }
     }, [language]);
 
-    // Listen for language changes from FiveM
+    // Listen for language and translations from FiveM
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             const { action, data } = event.data;
+            
+            // Language change from Lua
             if (action === "setLanguage" && (data === "de" || data === "en")) {
                 setLanguageState(data);
+            }
+            
+            // Full translations object from Lua
+            if (action === "setTranslations" && data) {
+                // Merge with defaults to ensure all keys exist
+                const mergedTranslations: Translations = {
+                    ...translations[language],
+                    ...data,
+                    death: { ...translations[language].death, ...data.death },
+                    chat: { ...translations[language].chat, ...data.chat },
+                    teamChat: { ...translations[language].teamChat, ...data.teamChat },
+                    status: { ...translations[language].status, ...data.status },
+                    vehicle: { ...translations[language].vehicle, ...data.vehicle },
+                    editMode: { ...translations[language].editMode, ...data.editMode },
+                    statusDesigns: { ...translations[language].statusDesigns, ...data.statusDesigns },
+                    minimapShapes: { ...translations[language].minimapShapes, ...data.minimapShapes },
+                    speedometerTypes: { ...translations[language].speedometerTypes, ...data.speedometerTypes },
+                    general: { ...translations[language].general, ...data.general },
+                    notifications: { ...translations[language].notifications, ...data.notifications },
+                    demo: { ...translations[language].demo, ...data.demo },
+                };
+                setT(mergedTranslations);
             }
         };
 
         window.addEventListener("message", handleMessage);
         return () => window.removeEventListener("message", handleMessage);
-    }, []);
+    }, [language]);
 
     const setLanguage = useCallback((lang: Language) => {
         setLanguageState(lang);

@@ -122,6 +122,16 @@ AddEventHandler('onClientResourceStart', function(resourceName)
     -- Kurz warten bis NUI geladen
     Wait(500)
     
+    -- Sprache und Übersetzungen senden
+    local currentLang = Config.Language or 'de'
+    local translations = Lang[currentLang] or Lang.de
+    SendNUI('setLanguage', currentLang)
+    SendNUI('setTranslations', translations)
+    
+    if Config.Debug then
+        print('[HUD] Language set to: ' .. currentLang)
+    end
+    
     -- Debug: Send ping to NUI to verify communication
     if Config.Debug then
         print('[HUD DEBUG] Lua -> Web ping sent')

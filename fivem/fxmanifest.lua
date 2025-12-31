@@ -14,9 +14,11 @@ files {
     'build/**/*'
 }
 
--- Shared Config (muss zuerst geladen werden)
+-- Shared Config und Sprachen (muss zuerst geladen werden)
 shared_scripts {
-    'config.lua'
+    'config.lua',
+    'langs/de.lua',
+    'langs/en.lua'
 }
 
 -- Client Scripts

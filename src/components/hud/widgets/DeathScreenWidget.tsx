@@ -8,7 +8,6 @@ import { useTranslation } from "@/contexts/LanguageContext";
 interface DeathScreenWidgetProps {
     death: DeathState;
     visible: boolean;
-    isWidget?: boolean;
 }
 
 // Sharp SVG Skull Icon - prevents blurriness
@@ -100,7 +99,7 @@ const BloodSplatter = ({ position, delay = 0 }: { position: "top-left" | "top-ri
     );
 };
 
-export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScreenWidgetProps) => {
+export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) => {
     const { t } = useTranslation();
     
     const {
@@ -144,7 +143,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className={cn("flex flex-col items-center text-center z-10", isWidget ? "p-3" : "p-6")}>
+            className="flex flex-col items-center text-center z-10 p-3">
             {/* Skull Icon with Glow */}
             <motion.div
                 className="relative mb-4"
@@ -420,17 +419,29 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
         </motion.div>
     );
 
-    // If used as widget (movable), just return the content
-    if (isWidget) {
-        return (
-            <AnimatePresence>
-                {visible && isDead && (
-                    <div className="bg-background/90 rounded-2xl border border-critical/30">{content}</div>
-                )}
-            </AnimatePresence>
-        );
-    }
-
+    // Widget mode: return content with blood splatters in a contained box
+    return (
+        <AnimatePresence>
+            {visible && isDead && (
+                <div className="relative bg-background/90 rounded-2xl border border-critical/30 overflow-hidden">
+                    {/* Blood splatters scaled down for widget */}
+                    <div className="absolute inset-0 pointer-events-none opacity-50">
+                        <BloodSplatter position="top-left" delay={0} />
+                        <BloodSplatter position="top-right" delay={0.3} />
+                    </div>
+                    {/* Red vignette */}
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            background: "radial-gradient(ellipse at center, transparent 30%, hsl(0 70% 20% / 0.3) 100%)",
+                        }}
+                    />
+                    {content}
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
     // Full screen overlay mode with red overlay and blood splatters
     return (
         <AnimatePresence>
