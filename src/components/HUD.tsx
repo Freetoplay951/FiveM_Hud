@@ -17,6 +17,7 @@ import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useTranslation } from "@/contexts/LanguageContext";
 import {
     HudState,
     VehicleState,
@@ -33,6 +34,7 @@ import {
 import { DeathScreenWidget } from "./hud/widgets/DeathScreenWidget";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 
 // Demo values
 const DEMO_HUD: HudState = {
@@ -171,6 +173,8 @@ export const HUD = () => {
         getWidget,
     } = useHUDLayout();
 
+    const { t } = useTranslation();
+
     const { notifications, removeNotification, success, error, warning, info } = useNotifications();
 
     const enterEditMode = () => {
@@ -286,6 +290,22 @@ export const HUD = () => {
                         ),
                         rotorRpm: Math.min(100, Math.max(70, (prev.rotorRpm || 95) + (Math.random() - 0.5) * 5)),
                         speed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
+                    };
+                }
+
+                if (prev.vehicleType === "motorcycle") {
+                    return {
+                        ...baseUpdate,
+                        speed: prev.inVehicle ? Math.min(220, Math.max(0, prev.speed + (Math.random() - 0.5) * 25)) : 0,
+                        gear: Math.max(1, Math.min(6, Math.floor((prev.speed || 0) / 35) + 1)),
+                    };
+                }
+
+                if (prev.vehicleType === "bicycle") {
+                    return {
+                        ...baseUpdate,
+                        speed: prev.inVehicle ? Math.min(50, Math.max(0, prev.speed + (Math.random() - 0.5) * 8)) : 0,
+                        fuel: 0, // Fahrrad hat keinen Kraftstoff
                     };
                 }
 
@@ -598,36 +618,57 @@ export const HUD = () => {
             {/* Demo Mode Badge */}
             {isDemoMode && !editMode && (
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-destructive/80 border border-destructive/50 rounded-lg px-4 py-2 animate-fade-in-up pointer-events-auto">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <span className="text-destructive-foreground font-semibold">Demo Modus</span>
-                                <span className="flex flex-col text-xs text-destructive-foreground/80 uppercase tracking-wider hud-text">
-                                    <span>Vehicle: V (Typ: 1︱2︱3︱4︱5︱6)</span>
-                                    <span>Voice: R | Edit: E | Death: D</span>
-                                    <span>Notify: H︱J︱K︱L</span>
-                                    <span>Chat: T | TeamChat: Y</span>
-                                </span>
+                    <div className="bg-destructive/80 border border-destructive/50 rounded-lg px-4 py-3 animate-fade-in-up pointer-events-auto">
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <span className="text-destructive-foreground font-semibold">{t.demo.title}</span>
+                                    <span className="flex flex-col text-xs text-destructive-foreground/80 uppercase tracking-wider hud-text">
+                                        <span>Vehicle: V (Typ: 1︱2︱3︱4︱5︱6)</span>
+                                        <span>Voice: R | Edit: E | Death: D</span>
+                                        <span>Notify: H︱J︱K︱L</span>
+                                        <span>Chat: T | TeamChat: Y</span>
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() =>
+                                        setDeathState((prev) => ({
+                                            ...prev,
+                                            isDead: !prev.isDead,
+                                            respawnTimer: 14,
+                                            waitTimer: 59,
+                                            canCallHelp: true,
+                                            canRespawn: false,
+                                        }))
+                                    }
+                                    className={cn(
+                                        "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                                        deathState.isDead
+                                            ? "bg-critical/80 text-white border border-critical"
+                                            : "bg-background/30 text-destructive-foreground/80 border border-destructive-foreground/30 hover:bg-background/50"
+                                    )}>
+                                    {deathState.isDead ? "Revive (D)" : "Death (D)"}
+                                </button>
                             </div>
-                            <button
-                                onClick={() =>
-                                    setDeathState((prev) => ({
-                                        ...prev,
-                                        isDead: !prev.isDead,
-                                        respawnTimer: 14,
-                                        waitTimer: 59,
-                                        canCallHelp: true,
-                                        canRespawn: false,
-                                    }))
-                                }
-                                className={cn(
-                                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                                    deathState.isDead
-                                        ? "bg-critical/80 text-white border border-critical"
-                                        : "bg-background/30 text-destructive-foreground/80 border border-destructive-foreground/30 hover:bg-background/50"
-                                )}>
-                                {deathState.isDead ? "Revive (D)" : "Death (D)"}
-                            </button>
+                            {/* Permission Toggles */}
+                            <div className="flex items-center gap-4 border-t border-destructive-foreground/20 pt-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">{t.demo.teamChatAccess}</span>
+                                    <Switch
+                                        checked={teamChatState.hasAccess}
+                                        onCheckedChange={(checked) => setTeamChatState(prev => ({ ...prev, hasAccess: checked }))}
+                                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">{t.demo.adminRights}</span>
+                                    <Switch
+                                        checked={teamChatState.isAdmin}
+                                        onCheckedChange={(checked) => setTeamChatState(prev => ({ ...prev, isAdmin: checked }))}
+                                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -823,7 +864,6 @@ export const HUD = () => {
                         <DeathScreenWidget
                             death={editMode ? { ...DEMO_DEATH, isDead: true } : deathState}
                             visible={true}
-                            isWidget
                         />
                     </HUDWidget>
                 );

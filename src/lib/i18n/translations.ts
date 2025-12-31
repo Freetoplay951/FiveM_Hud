@@ -57,6 +57,7 @@ export interface Translations {
     // Edit Mode
     editMode: {
         title: string;
+        subtitle: string;
         statusDesign: string;
         minimapShape: string;
         speedometerType: string;
@@ -65,6 +66,28 @@ export interface Translations {
         showDeathScreen: string;
         exitEdit: string;
         resetLayout: string;
+    };
+    // Status Designs
+    statusDesigns: {
+        circular: string;
+        bar: string;
+        vertical: string;
+        minimal: string;
+        arc: string;
+    };
+    // Minimap Shapes
+    minimapShapes: {
+        square: string;
+        round: string;
+    };
+    // Speedometer Types
+    speedometerTypes: {
+        car: string;
+        plane: string;
+        boat: string;
+        helicopter: string;
+        motorcycle: string;
+        bicycle: string;
     };
     // General
     general: {
@@ -80,8 +103,15 @@ export interface Translations {
     notifications: {
         title: string;
     };
+    // Demo Mode
+    demo: {
+        title: string;
+        teamChatAccess: string;
+        adminRights: string;
+    };
 }
 
+// Default/Fallback translations for demo mode
 export const translations: Record<Language, Translations> = {
     de: {
         death: {
@@ -134,6 +164,7 @@ export const translations: Record<Language, Translations> = {
         },
         editMode: {
             title: "HUD Bearbeiten",
+            subtitle: "Widgets ziehen & per Ecke skalieren (50%–300%).",
             statusDesign: "Status Design",
             minimapShape: "Minimap Form",
             speedometerType: "Tacho Typ",
@@ -142,6 +173,25 @@ export const translations: Record<Language, Translations> = {
             showDeathScreen: "Death-Screen anzeigen",
             exitEdit: "Bearbeitung beenden",
             resetLayout: "Layout zurücksetzen",
+        },
+        statusDesigns: {
+            circular: "Kreis",
+            bar: "Balken",
+            vertical: "Vertikal",
+            minimal: "Minimal",
+            arc: "Bogen",
+        },
+        minimapShapes: {
+            square: "Eckig",
+            round: "Rund",
+        },
+        speedometerTypes: {
+            car: "Auto",
+            plane: "Flugzeug",
+            boat: "Boot",
+            helicopter: "Heli",
+            motorcycle: "Motorrad",
+            bicycle: "Fahrrad",
         },
         general: {
             cash: "Bargeld",
@@ -154,6 +204,11 @@ export const translations: Record<Language, Translations> = {
         },
         notifications: {
             title: "Benachrichtigungen",
+        },
+        demo: {
+            title: "Demo Modus",
+            teamChatAccess: "Team-Chat",
+            adminRights: "Admin",
         },
     },
     en: {
@@ -207,6 +262,7 @@ export const translations: Record<Language, Translations> = {
         },
         editMode: {
             title: "Edit HUD",
+            subtitle: "Drag widgets & scale via corner (50%–300%).",
             statusDesign: "Status Design",
             minimapShape: "Minimap Shape",
             speedometerType: "Speedometer Type",
@@ -215,6 +271,25 @@ export const translations: Record<Language, Translations> = {
             showDeathScreen: "Show Death Screen",
             exitEdit: "Exit Edit Mode",
             resetLayout: "Reset Layout",
+        },
+        statusDesigns: {
+            circular: "Circle",
+            bar: "Bar",
+            vertical: "Vertical",
+            minimal: "Minimal",
+            arc: "Arc",
+        },
+        minimapShapes: {
+            square: "Square",
+            round: "Round",
+        },
+        speedometerTypes: {
+            car: "Car",
+            plane: "Plane",
+            boat: "Boat",
+            helicopter: "Heli",
+            motorcycle: "Bike",
+            bicycle: "Bicycle",
         },
         general: {
             cash: "Cash",
@@ -227,6 +302,11 @@ export const translations: Record<Language, Translations> = {
         },
         notifications: {
             title: "Notifications",
+        },
+        demo: {
+            title: "Demo Mode",
+            teamChatAccess: "Team Chat",
+            adminRights: "Admin",
         },
     },
 };
