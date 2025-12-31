@@ -1,9 +1,8 @@
 fx_version 'cerulean'
 game 'gta5'
 
-name 'neon-hud'
-description 'Neon HUD für FiveM'
-author 'Dein Name'
+name 'Hud System'
+author 'IronSystems (MrFox)'
 version '1.0.0'
 
 -- UI Seite (gebaut mit yarn build)

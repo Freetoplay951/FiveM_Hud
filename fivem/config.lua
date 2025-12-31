@@ -150,4 +150,4 @@ Config.TeamChatGeneralPermission = "hud.staff"
 Config.TeamChatName = "Team-Chat"
 
 -- Debug
-Config.Debug = false
+Config.Debug = true
