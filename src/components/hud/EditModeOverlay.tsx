@@ -10,6 +10,7 @@ import {
     Plane,
     Ship,
     Fan,
+    Bike,
     Square,
     Skull,
 } from "lucide-react";
@@ -45,6 +46,8 @@ const SPEEDOMETER_OPTIONS: { type: SpeedometerType; icon: React.ElementType; lab
     { type: "plane", icon: Plane, label: "Flugzeug" },
     { type: "boat", icon: Ship, label: "Boot" },
     { type: "helicopter", icon: Fan, label: "Heli" },
+    { type: "motorcycle", icon: Bike, label: "Motorrad" },
+    { type: "bicycle", icon: Bike, label: "Fahrrad" },
 ];
 
 const MINIMAP_SHAPE_OPTIONS: { shape: MinimapShape; icon: React.ElementType; label: string }[] = [

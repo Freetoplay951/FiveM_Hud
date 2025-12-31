@@ -205,8 +205,6 @@ export const HUD = () => {
         onUpdateMoney: setMoneyState,
         onUpdateVoice: (data) => {
             setVoiceState(data);
-            // Sobald wir Voice-Daten bekommen, gilt das Voice-System als "gefunden"
-            setIsVoiceEnabled(true);
         },
         onUpdateLocation: setLocationState,
         onUpdatePlayer: setPlayerState,
@@ -416,6 +414,22 @@ export const HUD = () => {
                     heading: 90,
                     airspeed: 80,
                 }));
+            if (e.key === "5")
+                setVehicleState((prev) => ({
+                    ...prev,
+                    vehicleType: "motorcycle",
+                    speed: 95,
+                    gear: 3,
+                    fuel: 70,
+                }));
+            if (e.key === "6")
+                setVehicleState((prev) => ({
+                    ...prev,
+                    vehicleType: "bicycle",
+                    speed: 22,
+                    gear: 1,
+                    fuel: 0,
+                }));
 
             // Demo notifications - only in demo mode, NOT in edit mode
             if (!editMode) {
@@ -573,7 +587,7 @@ export const HUD = () => {
                             <div>
                                 <span className="text-destructive-foreground font-semibold">Demo Modus</span>
                                 <span className="flex flex-col text-xs text-destructive-foreground/80 uppercase tracking-wider hud-text">
-                                    <span>Vehicle: V (Typ: 1︱2︱3︱4)</span>
+                                    <span>Vehicle: V (Typ: 1︱2︱3︱4︱5︱6)</span>
                                     <span>Voice: R | Edit: E | Death: D</span>
                                     <span>Notify: H︱J︱K︱L</span>
                                     <span>Chat: T | TeamChat: Y</span>
