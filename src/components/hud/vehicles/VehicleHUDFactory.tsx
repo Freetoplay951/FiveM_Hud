@@ -3,6 +3,8 @@ import { VehicleHUD } from "./VehicleHUD";
 import { PlaneHUD } from "./PlaneHUD";
 import { BoatHUD } from "./BoatHUD";
 import { HelicopterHUD } from "./HelicopterHUD";
+import { MotorcycleHUD } from "./MotorcycleHUD";
+import { BicycleHUD } from "./BicycleHUD";
 
 interface VehicleHUDFactoryProps {
     vehicle: VehicleState;
@@ -28,6 +30,20 @@ export const VehicleHUDFactory = ({ vehicle, visible }: VehicleHUDFactoryProps) 
         case "helicopter":
             return (
                 <HelicopterHUD
+                    vehicle={vehicle}
+                    visible={visible}
+                />
+            );
+        case "motorcycle":
+            return (
+                <MotorcycleHUD
+                    vehicle={vehicle}
+                    visible={visible}
+                />
+            );
+        case "bicycle":
+            return (
+                <BicycleHUD
                     vehicle={vehicle}
                     visible={visible}
                 />
