@@ -365,6 +365,16 @@ end, false)
 -- NUI CALLBACKS
 -- ============================================================================
 
+function CommandExists(cmdName)
+    local commands = GetRegisteredCommands()
+    for _, cmd in ipairs(commands) do
+        if cmd.name == cmdName then
+            return true
+        end
+    end
+    return false
+end
+
 RegisterNUICallback("sendChatMessage", function(data, cb)
     local msg = data.message
     if not msg then
@@ -378,7 +388,12 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
     end
 
     if msg:sub(1, 1) == "/" then
-        ExecuteCommand(msg:sub(2))
+        local cmd = msg:sub(2)
+        if CommandExists(cmd) then
+            ExecuteCommand(cmd)
+        else
+            TriggerEvent("hud:error", "Ausführung fehlgeschlagen", "Der Command '/" .. cmd .. "' existiert nicht.")
+        end
     else
         TriggerServerEvent("hud:sendChatMessage", msg)
     end
