@@ -56,10 +56,20 @@ const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {
 
   next.widgets = clampAllWidgets(next.widgets ?? defaultState.widgets);
 
-  // Migration: altes Default-TeamChat (y=100) hat das Money-Widget überlappt
+  // Migration: TeamChat sollte immer unterhalb des Money-Widgets sein
+  // Money ist bei y=20, Höhe ca. 140px (mit Job + Schwarzgeld), also TeamChat bei y>=170
+  const MIN_TEAMCHAT_Y = 170;
   next.widgets = next.widgets.map((w) =>
-    w.id === 'teamchat' && w.position.y === 100
-      ? { ...w, position: { ...w.position, y: 140 } }
+    w.id === 'teamchat' && w.position.y < MIN_TEAMCHAT_Y
+      ? { ...w, position: { ...w.position, y: MIN_TEAMCHAT_Y } }
+      : w
+  );
+
+  // Migration: Speedometer sollte weiter rechts sein (näher an der Ecke)
+  const defaultSpeedoX = window.innerWidth - 260; // 240px width + 20px margin
+  next.widgets = next.widgets.map((w) =>
+    w.id === 'speedometer' && w.position.x < defaultSpeedoX - 50
+      ? { ...w, position: { ...w.position, x: defaultSpeedoX } }
       : w
   );
 

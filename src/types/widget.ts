@@ -80,6 +80,13 @@ const STATUS_WIDGET_SIZE = 56; // w-14 = 56px
 const STATUS_GAP = 8; // Gap between widgets
 const VOICE_HEIGHT = 50;
 const SPEEDOMETER_HEIGHT = 200;
+const SPEEDOMETER_WIDTH = 240; // Approximate width of speedometer
+
+// Money widget approximate sizes
+const MONEY_WIDGET_WIDTH = 160;
+const MONEY_WIDGET_HEIGHT_BASE = 80; // Base height (2 rows: cash + bank)
+const MONEY_WIDGET_HEIGHT_WITH_JOB = 110; // With player job row
+const MONEY_WIDGET_HEIGHT_WITH_BLACK = 140; // With player job + black money
 
 // Common bottom margin (distance from screen bottom)
 const BOTTOM_MARGIN = 20;
@@ -105,9 +112,9 @@ const getStatusStartX = () => Math.round(getScreenWidth() * 0.12);
 const getStatusY = () => getBottomY(STATUS_WIDGET_SIZE);
 const getStatusSpacing = () => STATUS_WIDGET_SIZE + STATUS_GAP;
 
-// Default speedometer position (bottom right corner)
+// Default speedometer position (bottom right corner - really in the corner)
 const getDefaultSpeedoPos = (): WidgetPosition => ({
-    x: Math.round(getScreenWidth() - 280), // Really bottom right corner
+    x: Math.round(getScreenWidth() - SPEEDOMETER_WIDTH - 20), // 20px from right edge
     y: getBottomY(SPEEDOMETER_HEIGHT),
 });
 
@@ -146,8 +153,8 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         // Top center - Clock
         { id: "clock", type: "clock", position: pos(0.47, 0.02), visible: true, scale: 1 },
 
-        // Top right corner - Money (further right)
-        { id: "money", type: "money", position: { x: getScreenWidth() - 180, y: 20 }, visible: true, scale: 1 },
+        // Top right corner - Money (20px from right edge)
+        { id: "money", type: "money", position: { x: getScreenWidth() - MONEY_WIDGET_WIDTH - 20, y: 20 }, visible: true, scale: 1 },
 
         // Left side - Notifications
         { id: "notifications", type: "notifications", position: pos(0.01, 0.25), visible: true, scale: 1 },
@@ -176,8 +183,9 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         // Chat - below notifications with gap
         { id: "chat", type: "chat", position: pos(0.01, 0.25 + (NOTIFICATION_HEIGHT + NOTIFICATION_GAP) / getScreenHeight()), visible: true, scale: 1 },
 
-        // Team Chat - below money widget on right side
-        { id: "teamchat", type: "teamchat", position: { x: getScreenWidth() - 340, y: 140 }, visible: true, scale: 1 },
+        // Team Chat - dynamically positioned below money widget
+        // Money is at y=20, height ~140px (with job+black money), add 10px gap
+        { id: "teamchat", type: "teamchat", position: { x: getScreenWidth() - 340, y: 20 + MONEY_WIDGET_HEIGHT_WITH_BLACK + 10 }, visible: true, scale: 1 },
     ];
 };
 
