@@ -83,27 +83,56 @@ end
 -- STAFF RANK & PERMISSION FUNCTIONS
 -- ============================================================================
 
+-- Cached values (updated via server callbacks)
+local cachedTeamAccess = false
+local cachedStaffRank = nil
+local cachedStaffRankName = nil
+local cachedStaffRankConfig = nil
+local cachedIsAdmin = false
+local cachedOnlineCount = 0
+local lastPermissionCheck = 0
+
+-- Request permission data from server
+local function RequestPermissionData()
+    TriggerServerEvent('hud:requestTeamPermissions')
+end
+
+-- Event handler for permission response from server
+RegisterNetEvent('hud:teamPermissionsResponse', function(data)
+    cachedTeamAccess = data.hasAccess or false
+    cachedStaffRank = data.rankId
+    cachedStaffRankName = data.rankName
+    cachedIsAdmin = data.isAdmin or false
+    cachedOnlineCount = data.onlineCount or 0
+    
+    if data.rankConfig then
+        cachedStaffRankConfig = data.rankConfig
+    end
+    
+    lastPermissionCheck = GetGameTimer()
+    
+    if Config and Config.Debug then
+        print('[HUD Chat] Permission data received - Access: ' .. tostring(cachedTeamAccess) .. ', Rank: ' .. tostring(cachedStaffRankName) .. ', Online: ' .. tostring(cachedOnlineCount))
+    end
+end)
+
+-- Request permissions on resource start
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then return end
+    Wait(1000)
+    RequestPermissionData()
+end)
+
+-- Refresh permissions periodically (every 30 seconds)
+CreateThread(function()
+    while true do
+        Wait(30000)
+        RequestPermissionData()
+    end
+end)
+
 function GetPlayerStaffRank()
-    local playerId = PlayerId()
-    
-    if not Config or not Config.TeamChatRanks then
-        return nil, nil, nil
-    end
-    
-    for _, rank in ipairs(Config.TeamChatRanks) do
-        if IsPlayerAceAllowed(playerId, rank.permission) then
-            return rank.id, rank.name, rank
-        end
-    end
-    
-    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
-        local defaultRank = Config.TeamChatRanks[#Config.TeamChatRanks]
-        if defaultRank then
-            return defaultRank.id, defaultRank.name, defaultRank
-        end
-    end
-    
-    return nil, nil, nil
+    return cachedStaffRank, cachedStaffRankName, cachedStaffRankConfig
 end
 
 function GetRankConfig(rankId)
@@ -118,43 +147,22 @@ function GetRankConfig(rankId)
 end
 
 function GetTeamOnlineCount()
-    -- TODO: Implement via server callback
-    return 3
+    return cachedOnlineCount
 end
 
 function IsPlayerTeamAdmin()
-    -- Check via server callback since IsPlayerAceAllowed only works on server
-    -- For now, return false - admin status should be checked server-side
-    local rankId, _, rankConfig = GetPlayerStaffRank()
-    return rankConfig and rankConfig.isAdmin or false
+    return cachedIsAdmin
 end
 
 function HasTeamChatAccess()
-    local playerId = PlayerId()
-    
-    if not Config then return false end
-    
-    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(playerId, Config.TeamChatGeneralPermission) then
-        return true
-    end
-    
-    if Config.TeamChatRanks then
-        for _, rank in ipairs(Config.TeamChatRanks) do
-            if IsPlayerAceAllowed(playerId, rank.permission) then
-                return true
-            end
-        end
-    end
-    
-    return false
+    return cachedTeamAccess
 end
 
 function GetPlayerTeamInfo()
-    local rankId, rankName, rankConfig = GetPlayerStaffRank()
-    if rankId then
-        return rankId, Config.TeamChatName or "Team-Chat"
+    if cachedStaffRank then
+        return cachedStaffRank, Config and Config.TeamChatName or "Team-Chat"
     end
-    return "default", Config.TeamChatName or "Team-Chat"
+    return "default", Config and Config.TeamChatName or "Team-Chat"
 end
 
 -- ============================================================================

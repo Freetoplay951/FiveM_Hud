@@ -26,6 +26,12 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
             const eventType = action || event.data.type;
 
             switch (eventType) {
+                // Debug: Ping from Lua
+                case "ping":
+                    console.log("[HUD DEBUG] Web received ping from Lua");
+                    // Send pong back to Lua
+                    sendNuiCallback("pong");
+                    break;
                 case "updateHud":
                     handlers.onUpdateHud?.(data);
                     break;

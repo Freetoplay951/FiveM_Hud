@@ -141,6 +141,90 @@ function SendTeamChatMessage(sender, rank, message, isImportant)
 end
 
 -- ============================================================================
+-- TEAM PERMISSION SYSTEM (Server-side Ace checks)
+-- ============================================================================
+
+-- Get staff rank for a player
+local function GetPlayerStaffRank(source)
+    if not Config or not Config.TeamChatRanks then
+        return nil, nil, nil
+    end
+    
+    for _, rank in ipairs(Config.TeamChatRanks) do
+        if IsPlayerAceAllowed(source, rank.permission) then
+            return rank.id, rank.name, rank
+        end
+    end
+    
+    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(source, Config.TeamChatGeneralPermission) then
+        local defaultRank = Config.TeamChatRanks[#Config.TeamChatRanks]
+        if defaultRank then
+            return defaultRank.id, defaultRank.name, defaultRank
+        end
+    end
+    
+    return nil, nil, nil
+end
+
+-- Check if player has team chat access
+local function HasTeamChatAccess(source)
+    if not Config then return false end
+    
+    if Config.TeamChatGeneralPermission then
+        if IsPlayerAceAllowed(source, Config.TeamChatGeneralPermission) then
+            return true
+        end
+    end
+    
+    if Config.TeamChatRanks then
+        for _, rank in ipairs(Config.TeamChatRanks) do
+            if IsPlayerAceAllowed(source, rank.permission) then
+                return true
+            end
+        end
+    end
+    
+    return false
+end
+
+-- Count online team members
+local function GetTeamOnlineCount()
+    local count = 0
+    local players = GetPlayers()
+    
+    for _, playerId in ipairs(players) do
+        local targetId = tonumber(playerId)
+        if HasTeamChatAccess(targetId) then
+            count = count + 1
+        end
+    end
+    
+    return count
+end
+
+-- Client requests permission data
+RegisterNetEvent('hud:requestTeamPermissions', function()
+    local source = source
+    local rankId, rankName, rankConfig = GetPlayerStaffRank(source)
+    local hasAccess = HasTeamChatAccess(source)
+    local isAdmin = rankConfig and rankConfig.isAdmin or false
+    local onlineCount = GetTeamOnlineCount()
+    
+    TriggerClientEvent('hud:teamPermissionsResponse', source, {
+        hasAccess = hasAccess,
+        rankId = rankId,
+        rankName = rankName,
+        rankConfig = rankConfig,
+        isAdmin = isAdmin,
+        onlineCount = onlineCount
+    })
+    
+    if Config and Config.Debug then
+        print('[HUD Server] Sent permission data to player ' .. source .. ' - Access: ' .. tostring(hasAccess) .. ', Online: ' .. onlineCount)
+    end
+end)
+
+-- ============================================================================
 -- EVENTS
 -- ============================================================================
 
