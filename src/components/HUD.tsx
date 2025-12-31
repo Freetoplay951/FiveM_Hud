@@ -182,6 +182,13 @@ export const HUD = () => {
         // First close the popover, then exit edit mode after a brief delay
         // This ensures the popover closes properly before the component unmounts
         setEditMenuOpen(false);
+        
+        // Save layout to Lua before exiting
+        sendNuiCallback('saveLayout', { widgets, speedometerConfigs });
+        
+        // Tell Lua to close edit mode (reset NUI focus)
+        sendNuiCallback('closeEditMode');
+        
         setTimeout(() => {
             if (editMode) toggleEditMode();
         }, 50);

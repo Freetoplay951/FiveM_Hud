@@ -146,8 +146,8 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         // Top center - Clock
         { id: "clock", type: "clock", position: pos(0.47, 0.02), visible: true, scale: 1 },
 
-        // Top right corner - Money
-        { id: "money", type: "money", position: { x: getScreenWidth() - 200, y: 20 }, visible: true, scale: 1 },
+        // Top right corner - Money (further right)
+        { id: "money", type: "money", position: { x: getScreenWidth() - 180, y: 20 }, visible: true, scale: 1 },
 
         // Left side - Notifications
         { id: "notifications", type: "notifications", position: pos(0.01, 0.25), visible: true, scale: 1 },

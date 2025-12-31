@@ -122,6 +122,12 @@ AddEventHandler('onClientResourceStart', function(resourceName)
     -- Kurz warten bis NUI geladen
     Wait(500)
     
+    -- Debug: Send ping to NUI to verify communication
+    if Config.Debug then
+        print('[HUD DEBUG] Lua -> Web ping sent')
+        SendNUI('ping', {})
+    end
+    
     -- HUD anzeigen
     SetHudVisible(true)
     
@@ -209,6 +215,9 @@ RegisterKeyMapping('hudedit', 'HUD Edit Mode', 'keyboard', Config.EditModeKey or
 
 -- NUI Callback: Edit Mode schließen
 RegisterNUICallback('closeEditMode', function(data, cb)
+    if Config.Debug then
+        print('[HUD DEBUG] closeEditMode callback received from Web')
+    end
     isEditMode = false
     SetNuiFocus(false, false)
     cb({ success = true })
@@ -216,10 +225,19 @@ end)
 
 -- NUI Callback: Layout speichern
 RegisterNUICallback('saveLayout', function(data, cb)
+    if Config.Debug then
+        print('[HUD DEBUG] saveLayout callback received from Web')
+        print('[HUD DEBUG] Layout data: ' .. json.encode(data))
+    end
     -- Layout wird im Browser localStorage gespeichert
     -- Optional: Server-seitige Speicherung hier implementieren
+    cb({ success = true })
+end)
+
+-- NUI Callback: Pong (Debug response from Web)
+RegisterNUICallback('pong', function(data, cb)
     if Config.Debug then
-        print('[HUD] Layout saved')
+        print('[HUD DEBUG] Web -> Lua pong received')
     end
     cb({ success = true })
 end)
