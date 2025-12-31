@@ -78,7 +78,7 @@
         --radius: 0.75rem;
 
         /* Glass Effect Variables - More transparent */
-        --glass-bg: hsla(220, 20%, 8%, 0.4);
+        --glass-bg: hsla(220, 20%, 8%, 0.75);
         --glass-border: hsla(185, 100%, 50%, 0.15);
         --glass-shadow: 0 8px 32px hsla(0, 0%, 0%, 0.3);
 
