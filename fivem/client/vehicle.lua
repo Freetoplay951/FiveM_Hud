@@ -133,8 +133,13 @@ local function GetVehicleData(vehicle, vehicleType)
         data.highbeams = highbeamsOn == 1
         
         -- Blinker
-        data.indicatorLeft = IsVehicleIndicatorLightOn(vehicle, 0)
-        data.indicatorRight = IsVehicleIndicatorLightOn(vehicle, 1)
+        -- 0 = keine Blinker
+        -- 1 = linker Blinker an
+        -- 2 = rechter Blinker an
+        -- 3 = beide Blinker an
+        local lights = GetVehicleIndicatorLights(vehicle)
+        data.indicatorLeft = lights == 1 or lights == 3
+        data.indicatorRight = lights == 2 or lights == 3
     end
     
     -- ================================================================
