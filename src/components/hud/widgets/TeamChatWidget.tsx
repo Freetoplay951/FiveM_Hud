@@ -96,11 +96,7 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
         <AnimatePresence>
             {(isVisible || isInputActive || hasMessages) && (
                 <motion.div
-                    className={cn(
-                        "rounded-lg overflow-hidden flex flex-col border",
-                        teamColor.border,
-                        "bg-background/90"
-                    )}
+                    className={cn("glass-panel rounded-lg overflow-hidden flex flex-col border", teamColor.border)}
                     style={{
                         width: "320px",
                         height: "280px",
