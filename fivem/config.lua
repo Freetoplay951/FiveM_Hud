@@ -9,12 +9,17 @@ Config.LocationUpdateInterval = 1000   -- Wie oft Location aktualisiert wird
 Config.ChatFadeTime = 10               -- Sekunden bis Chat ausblendet (bei Inaktivität)
 Config.ChatMaxMessages = 50            -- Maximale Anzahl Nachrichten im Verlauf
 
--- Status Einstellungen
+-- Status Einstellungen (deaktivieren wenn Server nicht unterstützt)
 Config.EnableHunger = true
 Config.EnableThirst = true
-Config.EnableStress = true
-Config.EnableOxygen = true
+Config.EnableStress = false            -- Nur aktivieren wenn euer Framework Stress unterstützt
+Config.EnableOxygen = true             -- Wird automatisch nur im Wasser angezeigt
 Config.EnableStamina = true
+
+-- Death Screen Einstellungen
+Config.EarlyRespawnTimer = 60          -- Sekunden bis Respawn möglich ist
+Config.BleedoutTimer = 300             -- Sekunden bis automatischer Respawn
+Config.HospitalCoords = vector3(311.8, -593.5, 43.28) -- Pillbox Hospital
 
 -- Keybinds
 Config.EditModeKey = 'F7'              -- Taste für Edit-Mode

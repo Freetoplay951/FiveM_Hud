@@ -207,8 +207,11 @@ export const EditModeOverlay = ({
             {/* Actions */}
             <div className="flex flex-col gap-2">
                 <button
-                    onClick={onExitEditMode}
-                    className="w-full py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    onClick={() => {
+                        onExitEditMode();
+                    }}
+                    type="button"
+                    className="w-full py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors pointer-events-auto"
                     style={{ boxShadow: "0 0 18px hsl(var(--primary) / 0.25)" }}>
                     Bearbeitung beenden
                 </button>

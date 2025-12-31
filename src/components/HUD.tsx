@@ -598,6 +598,13 @@ export const HUD = () => {
                     const widget = getWidget(type);
                     if (!widget) return null;
                     const value = hudState[type as keyof HudState] ?? 100;
+                    
+                    // Oxygen: Only show in water (or in edit mode)
+                    if (type === "oxygen" && !editMode) {
+                        const showOxygen = (hudState as any).showOxygen;
+                        if (showOxygen === false) return null;
+                    }
+                    
                     return (
                         <HUDWidget
                             key={type}

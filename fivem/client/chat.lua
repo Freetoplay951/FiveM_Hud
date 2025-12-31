@@ -5,14 +5,16 @@
 -- VARIABLES
 -- ============================================================================
 
-local isChatInputActive = false
-local isTeamChatInputActive = false
 local chatMessages = {}
 local teamChatMessages = {}
-local lastChatActivity = 0
-local lastTeamChatActivity = 0
 local chatVisible = false
 local teamChatVisible = false
+local chatInputActive = false
+local teamChatInputActive = false
+
+-- Auto-close timer
+local chatHideTimer = nil
+local teamChatHideTimer = nil
 
 -- ============================================================================
 -- UTILITY FUNCTIONS
@@ -22,6 +24,59 @@ local function GetTimestamp()
     local hour = GetClockHours()
     local minute = GetClockMinutes()
     return string.format("%02d:%02d", hour, minute)
+end
+
+local function ResetChatHideTimer()
+    local fadeTime = (Config and Config.ChatFadeTime or 10) * 1000
+    
+    if chatHideTimer then
+        -- Cancel previous timer by setting flag
+        chatHideTimer = nil
+    end
+    
+    local timerId = GetGameTimer()
+    chatHideTimer = timerId
+    
+    SetTimeout(fadeTime, function()
+        if chatHideTimer == timerId and chatVisible and not chatInputActive then
+            chatVisible = false
+            SendNUI("updateChat", {
+                isOpen = false,
+                isVisible = false,
+                messages = chatMessages,
+                unreadCount = 0
+            })
+        end
+    end)
+end
+
+local function ResetTeamChatHideTimer()
+    local fadeTime = (Config and Config.ChatFadeTime or 10) * 1000
+    
+    if teamChatHideTimer then
+        teamChatHideTimer = nil
+    end
+    
+    local timerId = GetGameTimer()
+    teamChatHideTimer = timerId
+    
+    SetTimeout(fadeTime, function()
+        if teamChatHideTimer == timerId and teamChatVisible and not teamChatInputActive then
+            teamChatVisible = false
+            local teamType, teamName = GetPlayerTeamInfo()
+            SendNUI("updateTeamChat", {
+                isOpen = false,
+                isVisible = false,
+                hasAccess = HasTeamChatAccess(),
+                teamType = teamType,
+                teamName = teamName,
+                messages = teamChatMessages,
+                unreadCount = 0,
+                onlineMembers = GetTeamOnlineCount(),
+                isAdmin = IsPlayerTeamAdmin()
+            })
+        end
+    end)
 end
 
 -- ============================================================================
@@ -63,21 +118,15 @@ function GetRankConfig(rankId)
 end
 
 function GetTeamOnlineCount()
+    -- TODO: Implement via server callback
     return 3
 end
 
 function IsPlayerTeamAdmin()
-    local playerId = PlayerId()
-    
-    if not Config or not Config.TeamChatRanks then return false end
-    
-    for _, rank in ipairs(Config.TeamChatRanks) do
-        if rank.isAdmin and IsPlayerAceAllowed(playerId, rank.permission) then
-            return true
-        end
-    end
-    
-    return false
+    -- Check via server callback since IsPlayerAceAllowed only works on server
+    -- For now, return false - admin status should be checked server-side
+    local rankId, _, rankConfig = GetPlayerStaffRank()
+    return rankConfig and rankConfig.isAdmin or false
 end
 
 function HasTeamChatAccess()
@@ -113,7 +162,7 @@ end
 -- ============================================================================
 
 local function SendChatMessage(msgType, sender, message)
-    local maxMessages = Config.ChatMaxMessages or 50
+    local maxMessages = Config and Config.ChatMaxMessages or 50
     
     local msg = {
         id = tostring(GetGameTimer()),
@@ -128,20 +177,20 @@ local function SendChatMessage(msgType, sender, message)
         table.remove(chatMessages, 1)
     end
     
-    lastChatActivity = GetGameTimer()
+    -- Show chat and reset timer
     chatVisible = true
-        
+    ResetChatHideTimer()
+    
     SendNUI("updateChat", {
         isOpen = true,
-        isInputActive = isChatInputActive,
-        isVisible = chatVisible,
+        isVisible = true,
         messages = chatMessages,
-        unreadCount = isChatInputActive and 0 or 1
+        unreadCount = chatInputActive and 0 or 1
     })
 end
 
 local function SendTeamChatMessage(sender, rank, message, isImportant)
-    local maxMessages = Config.ChatMaxMessages or 50
+    local maxMessages = Config and Config.ChatMaxMessages or 50
     
     local msg = {
         id = tostring(GetGameTimer()),
@@ -157,22 +206,21 @@ local function SendTeamChatMessage(sender, rank, message, isImportant)
         table.remove(teamChatMessages, 1)
     end
     
-    lastTeamChatActivity = GetGameTimer()
+    -- Show team chat and reset timer
     teamChatVisible = true
+    ResetTeamChatHideTimer()
     
     local teamType, teamName = GetPlayerTeamInfo()
-    local onlineMembers = GetTeamOnlineCount()
     
     SendNUI("updateTeamChat", {
         isOpen = true,
-        isInputActive = isTeamChatInputActive,
-        isVisible = teamChatVisible,
+        isVisible = true,
         hasAccess = HasTeamChatAccess(),
         teamType = teamType,
         teamName = teamName,
         messages = teamChatMessages,
-        unreadCount = isTeamChatInputActive and 0 or 1,
-        onlineMembers = onlineMembers,
+        unreadCount = teamChatInputActive and 0 or 1,
+        onlineMembers = GetTeamOnlineCount(),
         isAdmin = IsPlayerTeamAdmin()
     })
 end
@@ -182,38 +230,40 @@ end
 -- ============================================================================
 
 function OpenChat()
-    isChatInputActive = true
+    chatInputActive = true
     chatVisible = true
-    lastChatActivity = GetGameTimer()
     SetNuiFocus(true, false)
+    
+    -- Cancel auto-hide timer
+    chatHideTimer = nil
     
     SendNUI("updateChat", {
         isOpen = true,
-        isInputActive = true,
         isVisible = true,
         messages = chatMessages,
         unreadCount = 0
     })
     
-    if Config.Debug then
+    if Config and Config.Debug then
         print('[HUD Chat] Chat opened')
     end
 end
 
 function CloseChat()
-    isChatInputActive = false
+    chatInputActive = false
     SetNuiFocus(false, false)
-    lastChatActivity = GetGameTimer()
+    
+    -- Start auto-hide timer
+    ResetChatHideTimer()
     
     SendNUI("updateChat", {
         isOpen = false,
-        isInputActive = false,
         isVisible = chatVisible,
         messages = chatMessages,
         unreadCount = 0
     })
     
-    if Config.Debug then
+    if Config and Config.Debug then
         print('[HUD Chat] Chat closed')
     end
 end
@@ -229,105 +279,57 @@ function OpenTeamChat()
         return
     end
     
-    isTeamChatInputActive = true
+    teamChatInputActive = true
     teamChatVisible = true
-    lastTeamChatActivity = GetGameTimer()
     SetNuiFocus(true, false)
     
-    local teamType, teamName, rankConfig = GetPlayerStaffRank()
-    if not teamType then
-        teamType = "default"
-        teamName = "Staff"
-    end
+    -- Cancel auto-hide timer
+    teamChatHideTimer = nil
+    
+    local teamType, teamName = GetPlayerTeamInfo()
     
     SendNUI("updateTeamChat", {
         isOpen = true,
-        isInputActive = true,
         isVisible = true,
         hasAccess = true,
         teamType = teamType,
-        teamName = Config.TeamChatName or "Team-Chat",
+        teamName = Config and Config.TeamChatName or "Team-Chat",
         messages = teamChatMessages,
         unreadCount = 0,
         onlineMembers = GetTeamOnlineCount(),
-        isAdmin = IsPlayerTeamAdmin(),
-        rankConfig = rankConfig
+        isAdmin = IsPlayerTeamAdmin()
     })
     
-    if Config.Debug then
+    if Config and Config.Debug then
         print('[HUD Chat] Team chat opened')
     end
 end
 
 function CloseTeamChat()
-    isTeamChatInputActive = false
+    teamChatInputActive = false
     SetNuiFocus(false, false)
-    lastTeamChatActivity = GetGameTimer()
     
-    local teamType, _, rankConfig = GetPlayerStaffRank()
+    -- Start auto-hide timer
+    ResetTeamChatHideTimer()
+    
+    local teamType, teamName = GetPlayerTeamInfo()
     
     SendNUI("updateTeamChat", {
         isOpen = false,
-        isInputActive = false,
         isVisible = teamChatVisible,
         hasAccess = HasTeamChatAccess(),
-        teamType = teamType or "default",
-        teamName = Config.TeamChatName or "Team-Chat",
+        teamType = teamType,
+        teamName = Config and Config.TeamChatName or "Team-Chat",
         messages = teamChatMessages,
         unreadCount = 0,
         onlineMembers = GetTeamOnlineCount(),
-        isAdmin = IsPlayerTeamAdmin(),
-        rankConfig = rankConfig
+        isAdmin = IsPlayerTeamAdmin()
     })
     
-    if Config.Debug then
+    if Config and Config.Debug then
         print('[HUD Chat] Team chat closed')
     end
 end
-
--- ============================================================================
--- CHAT FADE TIMER
--- ============================================================================
-
-CreateThread(function()
-    while true do
-        Wait(1000)
-        
-        local fadeTime = (Config.ChatFadeTime or 10) * 1000
-        local currentTime = GetGameTimer()
-        
-        if chatVisible and not isChatInputActive then
-            if currentTime - lastChatActivity > fadeTime then
-                chatVisible = false
-                SendNUI("updateChat", {
-                    isOpen = false,
-                    isInputActive = false,
-                    isVisible = false,
-                    messages = chatMessages,
-                    unreadCount = 0
-                })
-            end
-        end
-        
-        if teamChatVisible and not isTeamChatInputActive then
-            if currentTime - lastTeamChatActivity > fadeTime then
-                teamChatVisible = false
-                SendNUI("updateTeamChat", {
-                    isOpen = false,
-                    isInputActive = false,
-                    isVisible = false,
-                    hasAccess = HasTeamChatAccess(),
-                    teamType = "default",
-                    teamName = Config.TeamChatName or "Team-Chat",
-                    messages = teamChatMessages,
-                    unreadCount = 0,
-                    onlineMembers = GetTeamOnlineCount(),
-                    isAdmin = IsPlayerTeamAdmin()
-                })
-            end
-        end
-    end
-end)
 
 -- ============================================================================
 -- KEY BINDINGS
@@ -336,7 +338,7 @@ end)
 RegisterCommand("chat", function()
     OpenChat()
 end, false)
-RegisterKeyMapping("chat", "Chat öffnen", "keyboard", Config.ChatKey or "T")
+RegisterKeyMapping("chat", "Chat öffnen", "keyboard", Config and Config.ChatKey or "T")
 
 RegisterCommand("closechat", function() 
     CloseChat()
@@ -345,7 +347,7 @@ end, false)
 RegisterCommand("tc", function()
     OpenTeamChat()
 end, false)
-RegisterKeyMapping("tc", "Team-Chat öffnen", "keyboard", Config.TeamChatKey or "Y")
+RegisterKeyMapping("tc", "Team-Chat öffnen", "keyboard", Config and Config.TeamChatKey or "Y")
 
 RegisterCommand("closetc", function() 
     CloseTeamChat()
@@ -405,8 +407,10 @@ exports("openChat", OpenChat)
 exports("closeChat", CloseChat)
 exports("openTeamChat", OpenTeamChat)
 exports("closeTeamChat", CloseTeamChat)
-exports("isChatOpen", function() end) --Todo: Status vom Frontend auslesen
-exports("isTeamChatOpen", function() end) --Todo: Status vom Frontend auslesen
+exports("isChatOpen", function() return chatInputActive end)
+exports("isTeamChatOpen", function() return teamChatInputActive end)
+exports("isChatVisible", function() return chatVisible end)
+exports("isTeamChatVisible", function() return teamChatVisible end)
 exports("hasTeamChatAccess", HasTeamChatAccess)
 
 exports("sendChatMessage", function(msgType, sender, message)

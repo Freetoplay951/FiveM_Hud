@@ -24,10 +24,10 @@ export const StatusCircular = ({ type, value }: StatusProps) => {
 
     return (
         <div className="relative w-14 h-14">
-            {/* Border ring around widget */}
+            {/* Background for better contrast */}
             <div 
-                className="absolute inset-0 rounded-full border border-white/20"
-                style={{ boxShadow: `0 0 10px hsl(var(--${colorVar}) / 0.2)` }}
+                className="absolute inset-0 rounded-full bg-black/60 border-2 border-white/30"
+                style={{ boxShadow: `0 0 15px hsl(var(--${colorVar}) / 0.4), inset 0 0 8px rgba(0,0,0,0.5)` }}
             />
             
             {/* Subtle glow effect */}

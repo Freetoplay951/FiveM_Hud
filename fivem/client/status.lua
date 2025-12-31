@@ -119,17 +119,24 @@ CreateThread(function()
         end
         
         -- ================================================================
-        -- OXYGEN (Unterwasser)
+        -- OXYGEN (Nur im Wasser anzeigen)
         -- ================================================================
         if Config.EnableOxygen then
             local isUnderwater = IsPedSwimmingUnderWater(ped)
+            local isInWater = IsPedSwimming(ped)
             
             if isUnderwater then
                 -- Verbleibende Unterwasser-Zeit (0-1, wir wollen 0-100)
                 local remainingAir = GetPlayerUnderwaterTimeRemaining(PlayerId())
                 statusData.oxygen = math.floor(remainingAir * 100)
-            else
+                statusData.showOxygen = true
+            elseif isInWater then
                 statusData.oxygen = 100
+                statusData.showOxygen = true
+            else
+                -- Nicht im Wasser - Widget ausblenden
+                statusData.oxygen = 100
+                statusData.showOxygen = false
             end
         end
         
