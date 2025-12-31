@@ -54,6 +54,14 @@ const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {
   };
 
   next.widgets = clampAllWidgets(next.widgets ?? defaultState.widgets);
+
+  // Migration: altes Default-TeamChat (y=100) hat das Money-Widget überlappt
+  next.widgets = next.widgets.map((w) =>
+    w.id === 'teamchat' && w.position.y === 100
+      ? { ...w, position: { ...w.position, y: 140 } }
+      : w
+  );
+
   next.speedometerConfigs = clampSpeedometerConfigs(
     (next.speedometerConfigs ?? defaultState.speedometerConfigs) as SpeedometerConfigs
   );

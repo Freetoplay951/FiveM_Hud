@@ -6,6 +6,7 @@ export interface HudState {
     stamina: number;
     stress?: number;
     oxygen?: number;
+    showOxygen?: boolean;
 }
 
 export type VehicleType = "car" | "plane" | "boat" | "helicopter";

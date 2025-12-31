@@ -177,7 +177,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         { id: "chat", type: "chat", position: pos(0.01, 0.25 + (NOTIFICATION_HEIGHT + NOTIFICATION_GAP) / getScreenHeight()), visible: true, scale: 1 },
 
         // Team Chat - below money widget on right side
-        { id: "teamchat", type: "teamchat", position: { x: getScreenWidth() - 340, y: 100 }, visible: true, scale: 1 },
+        { id: "teamchat", type: "teamchat", position: { x: getScreenWidth() - 340, y: 140 }, visible: true, scale: 1 },
     ];
 };
 
