@@ -138,24 +138,47 @@ end)
 -- Send all registered commands to NUI
 function SendRegisteredCommandsToNUI()
     local commands = GetRegisteredCommands()
+    local commandSet = {}
     local commandList = {}
-    
+
+    -- Präfixe, die ausgeschlossen werden sollen
+    local excludedPrefixes = {"_", "sv_", "onesync_", "rateLimiter_", "adhesive_"} 
+
     for _, cmd in ipairs(commands) do
-        -- Filter out internal/system commands if needed
-        if not cmd.name:match("^_") then
-            table.insert(commandList, {
-                command = "/" .. cmd.name,
-                description = "", -- FiveM doesn't provide descriptions
-                usage = "/" .. cmd.name
-            })
+        local name = cmd.name
+        local skip = false
+
+        -- Interne Ressourcen ausschließen
+        if cmd.resource == "internal" or cmd.resource == "monitor" then
+            skip = true
+        end
+
+        -- Präfixe prüfen
+        for _, prefix in ipairs(excludedPrefixes) do
+            if name:match("^" .. prefix) then
+                skip = true
+                break
+            end
+        end
+
+        if not skip and type(name) == "string" then
+            local commandName = "/" .. name
+            if not commandSet[commandName] then
+                commandSet[commandName] = true
+                table.insert(commandList, {
+                    command = commandName,
+                    description = "", -- FiveM liefert keine Beschreibungen
+                    usage = commandName
+                })
+            end
         end
     end
-    
-    -- Sort alphabetically
+
+    -- Alphabetisch sortieren
     table.sort(commandList, function(a, b)
-        return a.command < b.command
+        return a.command:lower() < b.command:lower()
     end)
-    
+
     SendNUI("updateCommands", commandList)
     
     if Config and Config.Debug then
