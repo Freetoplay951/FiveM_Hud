@@ -313,7 +313,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                         {/* Rotor RPM */}
                         <div
                             className={cn(
-                                "bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[76px]",
+                                "bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[88px] whitespace-nowrap",
                                 lowRpm && "border-critical/50"
                             )}>
                             <Gauge
@@ -329,7 +329,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                             <span className="text-[8px] text-muted-foreground">ROTOR</span>
                             <motion.span
                                 className={cn(
-                                    "hud-number text-[10px] tabular-nums w-[32px] text-right",
+                                    "hud-number text-[10px] tabular-nums text-right ml-auto",
                                     lowRpm ? "text-critical" : "text-primary"
                                 )}
                                 style={{
@@ -343,7 +343,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                         </div>
 
                         {/* Fuel */}
-                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[56px]">
+                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[64px] whitespace-nowrap">
                             <Fuel
                                 size={10}
                                 className={cn(
@@ -362,7 +362,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                             />
                             <motion.span
                                 className={cn(
-                                    "hud-number text-[10px] tabular-nums w-[32px] text-right",
+                                    "hud-number text-[10px] tabular-nums text-right ml-auto",
                                     fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-stamina"
                                 )}
                                 style={{

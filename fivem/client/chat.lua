@@ -452,16 +452,20 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
     end
 
     if msg:sub(1, 1) == "/" then
+        -- IMPORTANT: close chat BEFORE executing commands, otherwise CloseChat() can override focus changes
+        CloseChat()
+
         local cmd = msg:sub(2)
         if CommandExists(cmd) then
             ExecuteCommand(cmd)
         else
             TriggerEvent("hud:error", "Ausführung fehlgeschlagen", "Der Command '/" .. cmd .. "' existiert nicht.")
         end
-    else
-        TriggerServerEvent("hud:sendChatMessage", msg)
+
+        return cb({ success = true })
     end
 
+    TriggerServerEvent("hud:sendChatMessage", msg)
     CloseChat()
     cb({ success = true })
 end)
