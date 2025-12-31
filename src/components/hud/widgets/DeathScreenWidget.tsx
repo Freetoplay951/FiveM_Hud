@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
+import { Skull, Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/formatUtils";
 import { DeathState } from "@/types/hud";
@@ -11,106 +11,10 @@ interface DeathScreenWidgetProps {
     visible: boolean;
 }
 
-// Sharp SVG Skull Icon - prevents blurriness
-const SkullIcon = ({ size = 32, className = "" }: { size?: number; className?: string }) => (
-    <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-        style={{ shapeRendering: "geometricPrecision" }}>
-        <circle cx="9" cy="12" r="1" />
-        <circle cx="15" cy="12" r="1" />
-        <path d="M8 20v2h8v-2" />
-        <path d="m12.5 17-.5-1-.5 1h1z" />
-        <path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20" />
-    </svg>
-);
-
-// Blood splatter SVG component
-const BloodSplatter = ({ position, delay = 0 }: { position: "top-left" | "top-right" | "bottom-left" | "bottom-right"; delay?: number }) => {
-    const positionClasses = {
-        "top-left": "top-0 left-0 origin-top-left",
-        "top-right": "top-0 right-0 origin-top-right rotate-90",
-        "bottom-left": "bottom-0 left-0 origin-bottom-left -rotate-90",
-        "bottom-right": "bottom-0 right-0 origin-bottom-right rotate-180",
-    };
-
-    return (
-        <motion.div
-            className={cn("absolute pointer-events-none", positionClasses[position])}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ 
-                opacity: [0.6, 0.8, 0.6],
-                scale: [1, 1.02, 1],
-            }}
-            transition={{ 
-                delay,
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-            }}>
-            <svg
-                width="300"
-                height="300"
-                viewBox="0 0 300 300"
-                fill="none"
-                className="w-[200px] h-[200px] md:w-[300px] md:h-[300px]">
-                {/* Main splatter */}
-                <path
-                    d="M0 0 C50 20, 80 60, 100 120 C110 150, 90 180, 70 200 C50 220, 20 210, 0 180 Z"
-                    fill="url(#bloodGradient1)"
-                    opacity="0.7"
-                />
-                {/* Drip 1 */}
-                <path
-                    d="M60 100 C65 130, 55 160, 50 200 C48 220, 45 240, 40 260 C38 270, 35 275, 30 270 C25 265, 28 250, 30 230 C35 190, 45 150, 55 110 Z"
-                    fill="url(#bloodGradient2)"
-                    opacity="0.8"
-                />
-                {/* Drip 2 */}
-                <path
-                    d="M90 80 C100 110, 95 140, 85 180 C80 200, 75 220, 72 250 C70 260, 68 265, 65 260 C60 255, 65 230, 70 200 C75 160, 85 120, 88 90 Z"
-                    fill="url(#bloodGradient2)"
-                    opacity="0.6"
-                />
-                {/* Splatter drops */}
-                <circle cx="30" cy="150" r="8" fill="hsl(0 80% 25%)" opacity="0.5" />
-                <circle cx="50" cy="180" r="5" fill="hsl(0 80% 20%)" opacity="0.6" />
-                <circle cx="15" cy="120" r="6" fill="hsl(0 70% 30%)" opacity="0.4" />
-                <circle cx="80" cy="140" r="4" fill="hsl(0 80% 25%)" opacity="0.5" />
-                <defs>
-                    <linearGradient id="bloodGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="hsl(0 80% 30%)" />
-                        <stop offset="50%" stopColor="hsl(0 70% 20%)" />
-                        <stop offset="100%" stopColor="hsl(0 60% 10%)" />
-                    </linearGradient>
-                    <linearGradient id="bloodGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="hsl(0 80% 25%)" />
-                        <stop offset="100%" stopColor="hsl(0 70% 15%)" />
-                    </linearGradient>
-                </defs>
-            </svg>
-        </motion.div>
-    );
-};
-
 export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) => {
     const { t } = useTranslation();
-    
-    const {
-        isDead,
-        respawnTimer,
-        waitTimer,
-        canCallHelp = true,
-        canRespawn = false,
-        message,
-    } = death;
+
+    const { isDead, respawnTimer, waitTimer, canCallHelp = true, canRespawn = false, message } = death;
 
     const displayMessage = message || t.death.defaultMessage;
 
@@ -156,7 +60,7 @@ export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) =>
                         background: "radial-gradient(circle, hsl(var(--critical) / 0.2) 0%, transparent 70%)",
                         boxShadow: "0 0 30px hsl(var(--critical) / 0.4), inset 0 0 15px hsl(var(--critical) / 0.2)",
                     }}>
-                    <SkullIcon
+                    <Skull
                         size={32}
                         className="text-critical"
                     />
@@ -245,9 +149,7 @@ export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) =>
             </div>
 
             {/* Info Text */}
-            <p className="text-[10px] text-muted-foreground mb-4 max-w-xs">
-                {t.death.infoText}
-            </p>
+            <p className="text-[10px] text-muted-foreground mb-4 max-w-xs">{t.death.infoText}</p>
 
             {/* Action Buttons */}
             <div className="flex gap-2 mb-3">
@@ -419,16 +321,12 @@ export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) =>
         <AnimatePresence>
             {visible && isDead && (
                 <div className="relative bg-background/90 rounded-2xl border border-critical/30 overflow-hidden">
-                    {/* Blood splatters scaled down for widget */}
-                    <div className="absolute inset-0 pointer-events-none opacity-50">
-                        <BloodSplatter position="top-left" delay={0} />
-                        <BloodSplatter position="top-right" delay={0.3} />
-                    </div>
                     {/* Red vignette */}
                     <div
                         className="absolute inset-0 pointer-events-none"
                         style={{
-                            background: "radial-gradient(ellipse at center, transparent 30%, hsl(0 70% 20% / 0.3) 100%)",
+                            background:
+                                "radial-gradient(ellipse at center, transparent 30%, hsl(0 70% 20% / 0.3) 100%)",
                         }}
                     />
                     {content}

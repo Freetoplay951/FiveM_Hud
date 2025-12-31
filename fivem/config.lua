@@ -149,11 +149,6 @@ Config.TeamChatGeneralPermission = "hud.staff"
 -- Team-Chat Name (wird oben im Chat angezeigt)
 Config.TeamChatName = "Team-Chat"
 
--- Team-Chat im Edit-Mode für Spieler ohne Rechte:
--- 'hidden' = Komplett versteckt (Widget nicht sichtbar)
--- 'locked' = Mit Schloss-Icon anzeigen (zeigt dass es existiert aber kein Zugriff)
-Config.TeamChatEditModeVisibility = 'hidden'
-
 -- ============================================================================
 -- SPRACHE / LANGUAGE
 -- ============================================================================
