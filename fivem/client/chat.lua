@@ -119,6 +119,9 @@ end)
 -- Request permissions on resource start
 AddEventHandler('onClientResourceStart', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
+    
+    SetTextChatEnabled(false)
+    
     Wait(1000)
     RequestPermissionData()
     -- Send registered commands to NUI
