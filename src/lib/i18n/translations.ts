@@ -108,6 +108,9 @@ export interface Translations {
         title: string;
         teamChatAccess: string;
         adminRights: string;
+        teamChatVisibility: string;
+        hidden: string;
+        locked: string;
     };
 }
 
@@ -209,6 +212,9 @@ export const translations: Record<Language, Translations> = {
             title: "Demo Modus",
             teamChatAccess: "Team-Chat",
             adminRights: "Admin",
+            teamChatVisibility: "Sichtbarkeit",
+            hidden: "Versteckt",
+            locked: "Gesperrt",
         },
     },
     en: {
@@ -307,6 +313,9 @@ export const translations: Record<Language, Translations> = {
             title: "Demo Mode",
             teamChatAccess: "Team Chat",
             adminRights: "Admin",
+            teamChatVisibility: "Visibility",
+            hidden: "Hidden",
+            locked: "Locked",
         },
     },
 };
