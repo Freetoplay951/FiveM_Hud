@@ -89,7 +89,7 @@ export default {
           DEFAULT: "hsl(var(--bank))",
           glow: "hsl(var(--bank-glow))",
         },
-        blackMoney: {
+        "black-money": {
           DEFAULT: "hsl(var(--black-money))",
           glow: "hsl(var(--black-money-glow))",
         },
