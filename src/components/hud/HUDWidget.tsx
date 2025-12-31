@@ -73,13 +73,22 @@ export const HUDWidget = ({
         return () => resizeObserver.disconnect();
     }, [visible]);
 
-    // Clamp position to viewport using actual element size
+    // Clamp position to viewport using the widget's *rendered* size (includes CSS transforms)
     const clampToViewport = useCallback(
         (x: number, y: number) => {
-            // Use actual measured element size (already includes scale from CSS transform)
-            // But since transform doesn't affect offsetWidth/Height, we need to apply scale manually
-            const widgetWidth = elementSize.w > 0 ? elementSize.w : 50;
-            const widgetHeight = elementSize.h > 0 ? elementSize.h : 50;
+            const el = rootRef.current;
+            const rect = el?.getBoundingClientRect();
+
+            // Fallback if rect is not available yet
+            const fallbackScale = localScale ?? scale;
+            const widgetWidth =
+                rect && rect.width > 0
+                    ? rect.width
+                    : (elementSize.w > 0 ? elementSize.w : 50) * fallbackScale;
+            const widgetHeight =
+                rect && rect.height > 0
+                    ? rect.height
+                    : (elementSize.h > 0 ? elementSize.h : 50) * fallbackScale;
 
             const maxX = Math.max(0, window.innerWidth - widgetWidth);
             const maxY = Math.max(0, window.innerHeight - widgetHeight);
@@ -88,7 +97,7 @@ export const HUDWidget = ({
                 y: Math.max(0, Math.min(maxY, y)),
             };
         },
-        [elementSize]
+        [elementSize.w, elementSize.h, localScale, scale]
     );
 
     const handleMouseDown = useCallback(

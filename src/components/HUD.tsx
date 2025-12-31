@@ -141,7 +141,7 @@ export const HUD = () => {
     const [teamChatState, setTeamChatState] = useState<TeamChatState>(DEMO_TEAM_CHAT);
     const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false); // For edit mode preview
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
-    const [isVoiceEnabled, setIsVoiceEnabled] = useState(true); // Voice-Widget aktiviert (wird auf false gesetzt wenn kein Voice-System gefunden)
+    const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => !isNuiEnvironment()); // In Demo an, in FiveM aus bis Voice erkannt wird
     const [isDemoMode] = useState(!isNuiEnvironment());
 
     const [editMenuOpen, setEditMenuOpen] = useState(false);
@@ -203,7 +203,11 @@ export const HUD = () => {
         onUpdateHud: (data) => setHudState((prev) => ({ ...prev, ...data })),
         onUpdateVehicle: setVehicleState,
         onUpdateMoney: setMoneyState,
-        onUpdateVoice: setVoiceState,
+        onUpdateVoice: (data) => {
+            setVoiceState(data);
+            // Sobald wir Voice-Daten bekommen, gilt das Voice-System als "gefunden"
+            setIsVoiceEnabled(true);
+        },
         onUpdateLocation: setLocationState,
         onUpdatePlayer: setPlayerState,
         onSetVisible: setIsVisible,
@@ -604,12 +608,11 @@ export const HUD = () => {
                 statusTypes.map((type) => {
                     const widget = getWidget(type);
                     if (!widget) return null;
-                    const value = hudState[type as keyof HudState] ?? 100;
-                    
+                    const value = hudState[type] ?? 100;
+
                     // Oxygen: Only show in water (or in edit mode)
                     if (type === "oxygen" && !editMode) {
-                        const showOxygen = (hudState as any).showOxygen;
-                        if (showOxygen === false) return null;
+                        if (hudState.showOxygen === false) return null;
                     }
                     
                     return (
