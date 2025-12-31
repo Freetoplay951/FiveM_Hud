@@ -47,6 +47,63 @@ local function GetVehicleTypeFromModel(vehicle)
 end
 
 -- ============================================================================
+-- FRAMEWORK ANCHOR DETECTION
+-- ============================================================================
+
+local function GetBoatAnchorState(vehicle)
+    -- Try various frameworks that support anchor
+    
+    -- jg-advancedgarages / jg-mechanic anchor system
+    local success, result = pcall(function()
+        return Entity(vehicle).state.anchor
+    end)
+    if success and result ~= nil then
+        return result
+    end
+    
+    -- ESX boat anchor (some scripts use this)
+    success, result = pcall(function()
+        return exports['esx_boat']:IsAnchorDropped(vehicle)
+    end)
+    if success and result ~= nil then
+        return result
+    end
+    
+    -- QB-Core boat scripts
+    success, result = pcall(function()
+        return exports['qb-boat']:GetAnchorState(vehicle)
+    end)
+    if success and result ~= nil then
+        return result
+    end
+    
+    -- Renewed-Vehicles anchor
+    success, result = pcall(function()
+        return exports['Renewed-Vehiclekeys']:GetBoatAnchor(vehicle)
+    end)
+    if success and result ~= nil then
+        return result
+    end
+    
+    -- okokBoats anchor
+    success, result = pcall(function()
+        return exports['okokBoats']:IsAnchorDown(vehicle)
+    end)
+    if success and result ~= nil then
+        return result
+    end
+    
+    -- Default: check if vehicle is stationary (basic anchor detection)
+    local speed = GetEntitySpeed(vehicle)
+    if speed < 0.5 then
+        -- Check if handbrake is applied (closest to anchor for boats in vanilla)
+        return GetVehicleHandbrake(vehicle)
+    end
+    
+    return false
+end
+
+-- ============================================================================
 -- VEHICLE DATA COLLECTION
 -- ============================================================================
 
@@ -75,7 +132,7 @@ local function GetVehicleData(vehicle, vehicleType)
         data.lights = lightsOn == 1
         data.highbeams = highbeamsOn == 1
         
-        -- Blinker (Native nicht verfügbar, aber manche Frameworks fügen es hinzu)
+        -- Blinker
         data.indicatorLeft = IsVehicleIndicatorLightOn(vehicle, 0)
         data.indicatorRight = IsVehicleIndicatorLightOn(vehicle, 1)
     end
@@ -141,8 +198,8 @@ local function GetVehicleData(vehicle, vehicleType)
         local speedKnots = math.sqrt(velocity.x^2 + velocity.y^2) * 1.944
         data.speedKnots = math.floor(speedKnots)
         
-        -- Anchor (GTA hat kein natives System, aber manche Frameworks)
-        data.anchor = false
+        -- Anchor state from frameworks
+        data.anchor = GetBoatAnchorState(vehicle)
         
         -- Engine Status
         data.engineRunning = GetIsVehicleEngineRunning(vehicle)
@@ -165,7 +222,7 @@ end
 
 CreateThread(function()
     while true do
-        Wait(Config.VehicleUpdateInterval or 100)
+        Wait(Config and Config.VehicleUpdateInterval or 100)
         
         local ped = PlayerPedId()
         local inVehicle = IsPedInAnyVehicle(ped, false)
@@ -230,6 +287,22 @@ CreateThread(function()
             SendNUI('updateVehicle', { seatbelt = false })
         end)
     end
+    
+    -- QB-Seatbelt
+    if GetResourceState('qb-seatbelt') == 'started' then
+        RegisterNetEvent('seatbelt:client:ToggleSeatbelt', function()
+            -- Toggle - need to track state
+        end)
+    end
+end)
+
+-- ============================================================================
+-- ANCHOR INTEGRATION
+-- ============================================================================
+
+-- Manual anchor event
+RegisterNetEvent('hud:anchor', function(anchorState)
+    SendNUI('updateVehicle', { anchor = anchorState })
 end)
 
 -- ============================================================================

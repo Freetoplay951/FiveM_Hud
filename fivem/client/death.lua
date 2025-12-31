@@ -1,318 +1,360 @@
 -- Death Screen Handler
--- Verwaltet den Spieler-Tod Zustand und sendet Updates an das HUD
+-- Based on pure_deathscreen architecture
 
 -- ============================================================================
--- CONFIGURATION
+-- STATE
 -- ============================================================================
 
-local RESPAWN_WAIT_TIME = 60 -- Sekunden bis Respawn möglich ist
-local HELP_COOLDOWN = 30 -- Sekunden zwischen Hilferufen
-local HOSPITAL_COORDS = vector3(311.8, -593.5, 43.28) -- Pillbox Hospital
+local deathOpen = false
 
 -- ============================================================================
--- VARIABLES
+-- CONFIGURATION (from Config or defaults)
 -- ============================================================================
 
-local isDead = false
-local respawnTimer = 0
-local waitTimer = 0
-local canCallHelp = true
-local deathTime = 0
+local function GetEarlyRespawnTime()
+    return Config and Config.EarlyRespawnTimer or 60
+end
+
+local function GetBleedoutTime()
+    return Config and Config.BleedoutTimer or 300
+end
+
+local function GetHospitalCoords()
+    if Config and Config.HospitalCoords then
+        return Config.HospitalCoords
+    end
+    return vector3(311.8, -593.5, 43.28) -- Pillbox Hospital
+end
 
 -- ============================================================================
--- NUI UPDATE
+-- CAMERA SYSTEM
 -- ============================================================================
 
-local function UpdateDeathNUI()
-    SendNUI('updateDeath', {
-        isDead = isDead,
-        respawnTimer = respawnTimer,
-        waitTimer = waitTimer,
-        canCallHelp = canCallHelp,
-        canRespawn = respawnTimer <= 0,
+local camera = nil
+local playerPed = nil
+local rotX = 0.0
+local rotY = math.rad(45.0)
+local cameraRadius = 5.0
+
+local zoom = {
+    min = 2.0,
+    max = 8.0,
+    step = 0.5
+}
+
+-- Sync ShapeTest Result
+local function GetShapeTestResultSync(shape)
+    local handle, hit, coords, normal, entity
+    repeat
+        handle, hit, coords, normal, entity = GetShapeTestResult(shape)
+        Wait(0)
+    until handle ~= 1
+    return hit, coords
+end
+
+function StartDeathCam()
+    if camera then return end
+    
+    playerPed = PlayerPedId()
+    
+    DoScreenFadeOut(300)
+    Wait(300)
+    
+    camera = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+    SetCamActive(camera, true)
+    RenderScriptCams(true, true, 800, true, false)
+    
+    DoScreenFadeIn(800)
+end
+
+function EndDeathCam()
+    if not camera then return end
+    
+    DoScreenFadeOut(300)
+    Wait(300)
+    
+    RenderScriptCams(false, true, 500, true, false)
+    DestroyCam(camera, false)
+    
+    camera = nil
+    playerPed = nil
+    
+    DoScreenFadeIn(500)
+end
+
+function ProcessCamControls()
+    if not camera or not playerPed then return end
+    
+    local playerCoords = GetEntityCoords(playerPed)
+    
+    -- Mouse Rotation (smooth)
+    local sensitivity = 2.5
+    
+    local targetX = rotX - GetDisabledControlNormal(0, 1) * sensitivity
+    local targetY = rotY - GetDisabledControlNormal(0, 2) * sensitivity
+    
+    rotX = rotX + (targetX - rotX) * 0.15
+    rotY = rotY + (targetY - rotY) * 0.15
+    
+    rotY = math.max(math.rad(15.0), math.min(math.rad(85.0), rotY))
+    
+    -- Zoom (smooth)
+    local targetRadius = cameraRadius
+    
+    if IsDisabledControlPressed(0, 14) then -- scroll up
+        targetRadius = math.min(zoom.max, targetRadius + zoom.step)
+    elseif IsDisabledControlPressed(0, 15) then -- scroll down
+        targetRadius = math.max(zoom.min, targetRadius - zoom.step)
+    end
+    
+    cameraRadius = cameraRadius + (targetRadius - cameraRadius) * 0.12
+    
+    -- Camera Direction
+    local direction = vector3(
+        math.sin(rotY) * math.cos(rotX),
+        math.sin(rotY) * math.sin(rotX),
+        math.cos(rotY)
+    )
+    
+    local desiredPos = playerCoords + direction * cameraRadius
+    
+    -- Collision Check
+    local hit, hitCoords = GetShapeTestResultSync(
+        StartShapeTestLosProbe(playerCoords, desiredPos, -1, playerPed)
+    )
+    
+    local finalPos = desiredPos
+    if hit == 1 then
+        finalPos = playerCoords + direction * (#(playerCoords - hitCoords) - 0.5)
+    end
+    
+    -- Floating Effect
+    local time = GetGameTimer() / 1000
+    finalPos = finalPos + vector3(0.0, 0.0, math.sin(time) * 0.05)
+    
+    -- FOV Dynamic
+    local minFov, maxFov = 50.0, 80.0
+    local fov = maxFov - ((cameraRadius - zoom.min) / (zoom.max - zoom.min)) * (maxFov - minFov)
+    SetCamFov(camera, fov)
+    
+    -- Apply
+    SetCamCoord(camera, finalPos.x, finalPos.y, finalPos.z)
+    PointCamAtCoord(camera, playerCoords.x, playerCoords.y, playerCoords.z)
+end
+
+-- ============================================================================
+-- OPEN / CLOSE DEATH SCREEN
+-- ============================================================================
+
+function OpenDeathScreen()
+    if deathOpen then return end
+    deathOpen = true
+    
+    StartDeathCam()
+    
+    SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(true)
+    
+    SendNUI("updateDeath", {
+        isDead = true,
+        respawnTimer = GetEarlyRespawnTime(),
+        waitTimer = GetBleedoutTime(),
+        canCallHelp = true,
+        canRespawn = false,
         message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
     })
-end
-
--- ============================================================================
--- DEATH CHECK
--- ============================================================================
-
-local function IsPlayerDead()
-    local ped = PlayerPedId()
-    return IsEntityDead(ped) or IsPedDeadOrDying(ped, true)
-end
-
--- ============================================================================
--- DEATH HANDLING
--- ============================================================================
-
-local function OnPlayerDeath()
-    isDead = true
-    deathTime = GetGameTimer()
-    respawnTimer = RESPAWN_WAIT_TIME
-    waitTimer = RESPAWN_WAIT_TIME
-    canCallHelp = true
     
-    -- Ragdoll aktivieren
-    local ped = PlayerPedId()
-    SetPedToRagdoll(ped, 1000, 1000, 0, false, false, false)
-    
-    UpdateDeathNUI()
+    -- Start control disable loop
+    CreateThread(function()
+        local respawnTime = GetEarlyRespawnTime()
+        local bleedoutTime = GetBleedoutTime()
+        local startTime = GetGameTimer()
+        
+        while deathOpen do
+            Wait(0)
+            DisableAllControlActions(0)
+            
+            -- Allow mouse & scroll for deathcam
+            EnableControlAction(0, 1, true)
+            EnableControlAction(0, 2, true)
+            EnableControlAction(0, 14, true)
+            EnableControlAction(0, 15, true)
+            
+            ProcessCamControls()
+            
+            -- Update timers every second
+            local elapsed = math.floor((GetGameTimer() - startTime) / 1000)
+            local currentRespawnTimer = math.max(0, respawnTime - elapsed)
+            local currentBleedoutTimer = math.max(0, bleedoutTime - elapsed)
+            
+            -- Only update NUI every second
+            if elapsed % 1 == 0 then
+                SendNUI("updateDeath", {
+                    isDead = true,
+                    respawnTimer = currentRespawnTimer,
+                    waitTimer = currentBleedoutTimer,
+                    canCallHelp = true,
+                    canRespawn = currentRespawnTimer <= 0,
+                    message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
+                })
+            end
+        end
+    end)
     
     if Config and Config.Debug then
-        print('[HUD] Player died')
+        print('[HUD] Death screen opened')
     end
 end
 
-local function OnPlayerRevive()
-    isDead = false
-    respawnTimer = 0
-    waitTimer = 0
-    canCallHelp = true
+function CloseDeathScreen()
+    if not deathOpen then return end
+    deathOpen = false
     
-    UpdateDeathNUI()
+    SetNuiFocus(false, false)
+    SetNuiFocusKeepInput(false)
+    
+    SendNUI("updateDeath", {
+        isDead = false,
+        respawnTimer = 0,
+        waitTimer = 0,
+        canCallHelp = true,
+        canRespawn = false
+    })
+    
+    EndDeathCam()
     
     if Config and Config.Debug then
-        print('[HUD] Player revived')
+        print('[HUD] Death screen closed')
     end
 end
 
 -- ============================================================================
--- MAIN DEATH LOOP
+-- DEATH EVENTS (Framework Integration)
 -- ============================================================================
 
-CreateThread(function()
-    while true do
-        local playerDead = IsPlayerDead()
-        
-        if playerDead and not isDead then
-            -- Spieler ist gerade gestorben
-            OnPlayerDeath()
-            
-        elseif not playerDead and isDead then
-            -- Spieler wurde wiederbelebt
-            OnPlayerRevive()
-        end
-        
-        if isDead then
-            -- Timer aktualisieren
-            if respawnTimer > 0 then
-                respawnTimer = respawnTimer - 1
-            end
-            if waitTimer > 0 then
-                waitTimer = waitTimer - 1
-            end
-            
-            UpdateDeathNUI()
-            
-            -- Controls deaktivieren während tot
-            local ped = PlayerPedId()
-            
-            DisableControlAction(0, 1, true)   -- Look LR
-            DisableControlAction(0, 2, true)   -- Look UD
-            DisableControlAction(0, 24, true)  -- Attack
-            DisableControlAction(0, 25, true)  -- Aim
-            DisableControlAction(0, 37, true)  -- Select Weapon
-            DisableControlAction(0, 44, true)  -- Cover
-            DisableControlAction(0, 47, true)  -- Weapon Special
-            DisableControlAction(0, 58, true)  -- Weapon Special 2
-            DisableControlAction(0, 140, true) -- Melee Light
-            DisableControlAction(0, 141, true) -- Melee Alternate
-            DisableControlAction(0, 142, true) -- Melee Heavy
-            DisableControlAction(0, 143, true) -- Melee Block
-            DisableControlAction(0, 263, true) -- Melee Attack 1
-            DisableControlAction(0, 264, true) -- Melee Attack 2
-            
-            -- Kamera-Einschränkungen (optional)
-            -- DisableControlAction(0, 0, true) -- Kamera Rotation
-            
-            Wait(1000)
-        else
-            Wait(500)
-        end
-    end
-end)
+-- ESX Fallback
+AddEventHandler('esx:onPlayerDeath', OpenDeathScreen)
+
+-- ESX Ambulancejob
+AddEventHandler('esx_ambulancejob:playerDead', OpenDeathScreen)
+
+-- Manual events (recommended for custom death systems)
+RegisterNetEvent('hud:openDeathScreen', OpenDeathScreen)
+RegisterNetEvent('hud:closeDeathScreen', CloseDeathScreen)
+
+-- Legacy pure_deathscreen events
+RegisterNetEvent('pure_deathscreen:open', OpenDeathScreen)
+RegisterNetEvent('pure_deathscreen:close', CloseDeathScreen)
 
 -- ============================================================================
 -- NUI CALLBACKS
 -- ============================================================================
 
--- Hilfe rufen
-RegisterNUICallback('deathCallHelp', function(data, cb)
-    if isDead and canCallHelp then
-        canCallHelp = false
-        
-        -- Server Event für Medic-Ruf
-        TriggerServerEvent('hud:callMedic', GetEntityCoords(PlayerPedId()))
-        
-        -- Notification
-        SendNUI('notify', {
-            type = 'info',
-            title = 'Hilferuf',
-            message = 'Der Rettungsdienst wurde benachrichtigt.',
-            duration = 5000
-        })
-        
-        -- Cooldown Timer
-        SetTimeout(HELP_COOLDOWN * 1000, function()
-            if isDead then
-                canCallHelp = true
-                UpdateDeathNUI()
-            end
-        end)
-        
-        UpdateDeathNUI()
-    end
-    
-    cb({ success = true })
-end)
-
--- Respawn
-RegisterNUICallback('deathRespawn', function(data, cb)
-    if isDead and respawnTimer <= 0 then
-        local ped = PlayerPedId()
-        
-        -- Spieler wiederbeleben
-        NetworkResurrectLocalPlayer(
-            HOSPITAL_COORDS.x,
-            HOSPITAL_COORDS.y,
-            HOSPITAL_COORDS.z,
-            0.0,
-            true,
-            false
-        )
-        
-        -- Health wiederherstellen
-        SetEntityHealth(ped, GetEntityMaxHealth(ped))
-        ClearPedBloodDamage(ped)
-        ClearPedWetness(ped)
-        ResetPedVisibleDamage(ped)
-        
-        -- Status zurücksetzen
-        isDead = false
-        respawnTimer = 0
-        waitTimer = 0
-        
-        -- Notification
-        SendNUI('notify', {
-            type = 'success',
-            title = 'Respawn',
-            message = 'Du wurdest im Krankenhaus wiederbelebt.',
-            duration = 5000
-        })
-        
-        UpdateDeathNUI()
-        
-        -- Server über Respawn informieren
-        TriggerServerEvent('hud:playerRespawned')
-    end
-    
-    cb({ success = true })
-end)
-
--- Position synchronisieren
-RegisterNUICallback('deathSyncPosition', function(data, cb)
-    local ped = PlayerPedId()
-    local coords = GetEntityCoords(ped)
-    
-    TriggerServerEvent('hud:syncPosition', coords.x, coords.y, coords.z)
+RegisterNUICallback('deathCallHelp', function(_, cb)
+    TriggerServerEvent('hud:callMedic', GetEntityCoords(PlayerPedId()))
     
     SendNUI('notify', {
         type = 'info',
-        title = 'Sync',
-        message = 'Position wurde synchronisiert.',
-        duration = 3000
+        title = 'Hilferuf',
+        message = 'Der Rettungsdienst wurde benachrichtigt.',
+        duration = 5000
     })
     
     cb({ success = true })
 end)
 
+RegisterNUICallback('deathRespawn', function(_, cb)
+    local coords = GetHospitalCoords()
+    local ped = PlayerPedId()
+    
+    -- Resurrect player
+    NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, 0.0, true, false)
+    
+    -- Restore health
+    SetEntityHealth(ped, GetEntityMaxHealth(ped))
+    ClearPedBloodDamage(ped)
+    ClearPedWetness(ped)
+    ResetPedVisibleDamage(ped)
+    
+    -- Trigger framework events
+    TriggerEvent('esx_ambulancejob:respawn')
+    TriggerServerEvent('hud:playerRespawned')
+    
+    CloseDeathScreen()
+    cb({ success = true })
+end)
+
+RegisterNUICallback('deathSyncPosition', function(_, cb)
+    local ped = PlayerPedId()
+    local c = GetEntityCoords(ped)
+    SetEntityCoords(ped, c.x, c.y, c.z)
+    cb({ success = true })
+end)
+
 -- ============================================================================
--- SERVER EVENTS
+-- COOLDOWN UPDATE (from Server)
 -- ============================================================================
 
--- Spieler wiederbeleben (von außen)
+RegisterNetEvent('hud:helpCooldownUpdate', function(seconds)
+    SendNUI("updateDeath", {
+        canCallHelp = seconds <= 0
+    })
+end)
+
+-- Legacy pure_deathscreen cooldown
+RegisterNetEvent('pure_deathscreen:cooldownUpdate', function(seconds)
+    SendNUI("updateDeath", {
+        canCallHelp = seconds <= 0
+    })
+end)
+
+-- ============================================================================
+-- EXTERNAL REVIVE EVENT
+-- ============================================================================
+
 RegisterNetEvent('hud:revivePlayer', function(healAmount)
     local ped = PlayerPedId()
     local coords = GetEntityCoords(ped)
     local heading = GetEntityHeading(ped)
     
-    -- Wiederbeleben an aktueller Position
+    -- Resurrect at current position
     NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, heading, true, false)
     
-    -- Health setzen
+    -- Set health
     local maxHealth = GetEntityMaxHealth(ped)
     local newHealth = healAmount and math.min(maxHealth, 100 + healAmount) or maxHealth
     SetEntityHealth(ped, newHealth)
     
-    -- Aufräumen
+    -- Cleanup
     ClearPedBloodDamage(ped)
     ClearPedWetness(ped)
     ResetPedVisibleDamage(ped)
     
-    -- Status zurücksetzen
-    OnPlayerRevive()
+    CloseDeathScreen()
 end)
 
--- Spieler töten (für Skripte)
-RegisterNetEvent('hud:killPlayer', function(customMessage)
-    local ped = PlayerPedId()
-    SetEntityHealth(ped, 0)
-    
-    -- Optional: Custom Message
-    if customMessage then
-        Wait(100)
-        SendNUI('updateDeath', {
-            isDead = true,
-            respawnTimer = respawnTimer,
-            waitTimer = waitTimer,
-            canCallHelp = canCallHelp,
-            canRespawn = false,
-            message = customMessage
-        })
-    end
-end)
+-- ============================================================================
+-- TEST COMMANDS (Debug)
+-- ============================================================================
+
+RegisterCommand('test_deathui', function()
+    OpenDeathScreen()
+end, false)
+
+RegisterCommand('test_deathui_off', function()
+    CloseDeathScreen()
+end, false)
 
 -- ============================================================================
 -- EXPORTS
 -- ============================================================================
 
 exports('isPlayerDead', function()
-    return isDead
+    return deathOpen
 end)
 
-exports('getDeathTimer', function()
-    return respawnTimer
-end)
-
-exports('canPlayerRespawn', function()
-    return isDead and respawnTimer <= 0
-end)
-
-exports('setPlayerDead', function(dead, customMessage)
-    if dead then
-        isDead = true
-        respawnTimer = RESPAWN_WAIT_TIME
-        waitTimer = RESPAWN_WAIT_TIME
-        canCallHelp = true
-        
-        if customMessage then
-            SendNUI('updateDeath', {
-                isDead = true,
-                respawnTimer = respawnTimer,
-                waitTimer = waitTimer,
-                canCallHelp = canCallHelp,
-                canRespawn = false,
-                message = customMessage
-            })
-        else
-            UpdateDeathNUI()
-        end
-    else
-        OnPlayerRevive()
-    end
-end)
+exports('openDeathScreen', OpenDeathScreen)
+exports('closeDeathScreen', CloseDeathScreen)
 
 exports('revivePlayer', function(healAmount)
     TriggerEvent('hud:revivePlayer', healAmount)
@@ -320,8 +362,8 @@ end)
 
 exports('setRespawnLocation', function(coords)
     if type(coords) == 'vector3' then
-        HOSPITAL_COORDS = coords
+        Config.HospitalCoords = coords
     elseif type(coords) == 'table' then
-        HOSPITAL_COORDS = vector3(coords.x or coords[1], coords.y or coords[2], coords.z or coords[3])
+        Config.HospitalCoords = vector3(coords.x or coords[1], coords.y or coords[2], coords.z or coords[3])
     end
 end)

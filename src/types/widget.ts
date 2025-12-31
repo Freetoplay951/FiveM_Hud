@@ -105,9 +105,9 @@ const getStatusStartX = () => Math.round(getScreenWidth() * 0.12);
 const getStatusY = () => getBottomY(STATUS_WIDGET_SIZE);
 const getStatusSpacing = () => STATUS_WIDGET_SIZE + STATUS_GAP;
 
-// Default speedometer position (bottom right, aligned to bottom)
+// Default speedometer position (bottom right corner)
 const getDefaultSpeedoPos = (): WidgetPosition => ({
-    x: Math.round(getScreenWidth() * 0.86),
+    x: Math.round(getScreenWidth() - 280), // Really bottom right corner
     y: getBottomY(SPEEDOMETER_HEIGHT),
 });
 
@@ -121,12 +121,12 @@ export const getDefaultSpeedometerConfigs = (): SpeedometerConfigs => {
     };
 };
 
-// Legacy static configs for backwards compatibility
+// Legacy static configs for backwards compatibility (bottom right corner)
 export const DEFAULT_SPEEDOMETER_CONFIGS: SpeedometerConfigs = {
-    car: { position: { x: 1650, y: 860 }, scale: 1 },
-    plane: { position: { x: 1650, y: 860 }, scale: 1 },
-    boat: { position: { x: 1650, y: 860 }, scale: 1 },
-    helicopter: { position: { x: 1650, y: 860 }, scale: 1 },
+    car: { position: { x: 1640, y: 860 }, scale: 1 },
+    plane: { position: { x: 1640, y: 860 }, scale: 1 },
+    boat: { position: { x: 1640, y: 860 }, scale: 1 },
+    helicopter: { position: { x: 1640, y: 860 }, scale: 1 },
 };
 
 // Dynamic widget generator - call this at runtime
@@ -135,6 +135,10 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
     const statusY = getStatusY();
     const statusSpacing = getStatusSpacing();
 
+    // Calculate notification height for chat positioning
+    const NOTIFICATION_HEIGHT = 180; // Approximate height of notification container
+    const NOTIFICATION_GAP = 20; // Gap between notifications and chat
+
     return [
         // Top left - Compass
         { id: "compass", type: "compass", position: pos(0.01, 0.02), visible: true, scale: 1 },
@@ -142,11 +146,11 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         // Top center - Clock
         { id: "clock", type: "clock", position: pos(0.47, 0.02), visible: true, scale: 1 },
 
-        // Top right - Money
-        { id: "money", type: "money", position: pos(0.89, 0.02), visible: true, scale: 1 },
+        // Top right corner - Money
+        { id: "money", type: "money", position: { x: getScreenWidth() - 200, y: 20 }, visible: true, scale: 1 },
 
-        // Middle left - Notifications
-        { id: "notifications", type: "notifications", position: pos(0.01, 0.32), visible: true, scale: 1 },
+        // Left side - Notifications
+        { id: "notifications", type: "notifications", position: pos(0.01, 0.25), visible: true, scale: 1 },
 
         // Bottom left - Minimap (aligned to bottom)
         { id: "minimap", type: "minimap", position: bottomPos(0.01, MINIMAP_HEIGHT), visible: true, scale: 1 },
@@ -163,17 +167,17 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         // Voice - centered, aligned to bottom
         { id: "voice", type: "voice", position: bottomPos(0.47, VOICE_HEIGHT), visible: true, scale: 1 },
 
-        // Bottom right - Speedometer (aligned to bottom)
+        // Bottom right corner - Speedometer
         { id: "speedometer", type: "speedometer", position: getDefaultSpeedoPos(), visible: true, scale: 1 },
 
         // Death Screen - centered (only visible when dead)
         { id: "deathscreen", type: "deathscreen", position: pos(0.25, 0.15), visible: true, scale: 1 },
 
-        // Chat - left side middle
-        { id: "chat", type: "chat", position: pos(0.01, 0.45), visible: true, scale: 1 },
+        // Chat - below notifications with gap
+        { id: "chat", type: "chat", position: pos(0.01, 0.25 + (NOTIFICATION_HEIGHT + NOTIFICATION_GAP) / getScreenHeight()), visible: true, scale: 1 },
 
-        // Team Chat - right side middle (only visible with permission)
-        { id: "teamchat", type: "teamchat", position: pos(0.76, 0.45), visible: true, scale: 1 },
+        // Team Chat - below money widget on right side
+        { id: "teamchat", type: "teamchat", position: { x: getScreenWidth() - 340, y: 100 }, visible: true, scale: 1 },
     ];
 };
 
