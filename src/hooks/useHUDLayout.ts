@@ -45,6 +45,8 @@ const clampSpeedometerConfigs = (configs: SpeedometerConfigs): SpeedometerConfig
   plane: { ...configs.plane, position: clampPosition(configs.plane.position) },
   boat: { ...configs.boat, position: clampPosition(configs.boat.position) },
   helicopter: { ...configs.helicopter, position: clampPosition(configs.helicopter.position) },
+  motorcycle: { ...configs.motorcycle, position: clampPosition(configs.motorcycle.position) },
+  bicycle: { ...configs.bicycle, position: clampPosition(configs.bicycle.position) },
 });
 
 const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {

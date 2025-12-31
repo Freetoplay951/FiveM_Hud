@@ -38,7 +38,7 @@ export type WidgetType =
 
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 
-export type SpeedometerType = "car" | "plane" | "boat" | "helicopter";
+export type SpeedometerType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
 
 export type MinimapShape = "square" | "round";
 
@@ -52,6 +52,8 @@ export interface SpeedometerConfigs {
     plane: SpeedometerConfig;
     boat: SpeedometerConfig;
     helicopter: SpeedometerConfig;
+    motorcycle: SpeedometerConfig;
+    bicycle: SpeedometerConfig;
 }
 
 export interface HUDLayoutState {
@@ -125,6 +127,8 @@ export const getDefaultSpeedometerConfigs = (): SpeedometerConfigs => {
         plane: { position: defaultPos, scale: 1 },
         boat: { position: defaultPos, scale: 1 },
         helicopter: { position: defaultPos, scale: 1 },
+        motorcycle: { position: defaultPos, scale: 1 },
+        bicycle: { position: defaultPos, scale: 1 },
     };
 };
 
@@ -134,6 +138,8 @@ export const DEFAULT_SPEEDOMETER_CONFIGS: SpeedometerConfigs = {
     plane: { position: { x: 1640, y: 860 }, scale: 1 },
     boat: { position: { x: 1640, y: 860 }, scale: 1 },
     helicopter: { position: { x: 1640, y: 860 }, scale: 1 },
+    motorcycle: { position: { x: 1640, y: 860 }, scale: 1 },
+    bicycle: { position: { x: 1640, y: 860 }, scale: 1 },
 };
 
 // Dynamic widget generator - call this at runtime

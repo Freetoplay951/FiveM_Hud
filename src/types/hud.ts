@@ -9,7 +9,7 @@ export interface HudState {
     showOxygen?: boolean;
 }
 
-export type VehicleType = "car" | "plane" | "boat" | "helicopter";
+export type VehicleType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
 
 export interface VehicleState {
     inVehicle: boolean;

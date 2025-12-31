@@ -731,11 +731,12 @@ export const HUD = () => {
                     if (!widget) return null;
 
                     // Use the config for the currently active speedometer type
-                    const activeType = (editMode ? speedometerType : vehicleState.vehicleType) as
-                        | "car"
-                        | "plane"
-                        | "boat"
-                        | "helicopter";
+                    // Map unknown types to 'car' as fallback
+                    const rawType = editMode ? speedometerType : vehicleState.vehicleType;
+                    const validTypes = ["car", "plane", "boat", "helicopter", "motorcycle", "bicycle"] as const;
+                    const activeType = validTypes.includes(rawType as typeof validTypes[number]) 
+                        ? (rawType as typeof validTypes[number])
+                        : "car";
                     const currentConfig = getSpeedometerConfig(activeType);
 
                     return (
