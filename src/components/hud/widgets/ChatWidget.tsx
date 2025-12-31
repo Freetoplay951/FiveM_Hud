@@ -3,12 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatMessage, ChatState } from "@/types/hud";
-import {
-    Command,
-    CommandGroup,
-    CommandItem,
-    CommandList,
-} from "@/components/ui/command";
 
 interface ChatCommand {
     command: string;
@@ -46,6 +40,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const commandListRef = useRef<HTMLDivElement>(null);
 
     // Bestimme ob Chat sichtbar sein soll
     const isVisible = chat.isVisible ?? true;
@@ -82,6 +77,16 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
             inputRef.current.focus();
         }
     }, [isInputActive]);
+
+    // Scroll selected command into view
+    useEffect(() => {
+        if (showCommandSuggestions && commandListRef.current) {
+            const selectedElement = commandListRef.current.querySelector(`[data-index="${selectedCommandIndex}"]`);
+            if (selectedElement) {
+                selectedElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            }
+        }
+    }, [selectedCommandIndex, showCommandSuggestions]);
 
     const selectCommand = (command: string) => {
         // Wenn Command Parameter hat, füge Leerzeichen hinzu
@@ -279,38 +284,59 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true }: Chat
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
                                         className="absolute bottom-full left-3 right-3 mb-1 z-50">
-                                        <Command className="rounded-lg border border-border/50 bg-popover shadow-lg">
-                                            <CommandList className="max-h-[150px]">
-                                                <CommandGroup heading="Commands">
-                                                    {filteredCommands.map((cmd, index) => (
-                                                        <CommandItem
-                                                            key={cmd.command}
-                                                            value={cmd.command}
-                                                            onSelect={() => selectCommand(cmd.command)}
+                                        <div className="rounded-lg border border-border/50 bg-card shadow-lg overflow-hidden">
+                                            <div className="px-2 py-1.5 border-b border-border/30">
+                                                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                                    Commands
+                                                </span>
+                                            </div>
+                                            <div 
+                                                ref={commandListRef}
+                                                className="max-h-[150px] overflow-y-auto py-1"
+                                            >
+                                                {filteredCommands.map((cmd, index) => (
+                                                    <div
+                                                        key={cmd.command}
+                                                        data-index={index}
+                                                        onClick={() => selectCommand(cmd.command)}
+                                                        className={cn(
+                                                            "flex items-center gap-2 px-2 py-1.5 cursor-pointer transition-colors",
+                                                            index === selectedCommandIndex
+                                                                ? "bg-primary/20 text-foreground"
+                                                                : "hover:bg-accent/50"
+                                                        )}>
+                                                        <Terminal 
+                                                            size={12} 
                                                             className={cn(
-                                                                "flex items-center gap-2 cursor-pointer text-xs",
-                                                                index === selectedCommandIndex &&
-                                                                    "bg-accent text-accent-foreground"
+                                                                "shrink-0",
+                                                                index === selectedCommandIndex ? "text-primary" : "text-muted-foreground"
+                                                            )} 
+                                                        />
+                                                        <div className="flex flex-col flex-1 min-w-0">
+                                                            <span className={cn(
+                                                                "text-xs font-medium",
+                                                                index === selectedCommandIndex ? "text-primary" : "text-foreground"
                                                             )}>
-                                                            <Terminal size={12} className="text-primary shrink-0" />
-                                                            <div className="flex flex-col flex-1 min-w-0">
-                                                                <span className="font-medium text-foreground">
-                                                                    {cmd.command}
-                                                                </span>
-                                                                <span className="text-[10px] text-muted-foreground truncate">
-                                                                    {cmd.description}
-                                                                </span>
-                                                            </div>
-                                                            {cmd.usage && (
-                                                                <span className="text-[9px] text-muted-foreground/70 shrink-0">
-                                                                    {cmd.usage}
-                                                                </span>
-                                                            )}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
+                                                                {cmd.command}
+                                                            </span>
+                                                            <span className="text-[10px] text-muted-foreground truncate">
+                                                                {cmd.description}
+                                                            </span>
+                                                        </div>
+                                                        {cmd.usage && (
+                                                            <span className="text-[9px] text-muted-foreground/60 shrink-0 font-mono">
+                                                                {cmd.usage}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="px-2 py-1 border-t border-border/30 bg-background/30">
+                                                <span className="text-[9px] text-muted-foreground">
+                                                    ↑↓ navigieren • Tab/Enter auswählen • Esc schließen
+                                                </span>
+                                            </div>
+                                        </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
