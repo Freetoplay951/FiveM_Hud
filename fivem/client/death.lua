@@ -82,23 +82,35 @@ function EndDeathCam()
     DoScreenFadeIn(500)
 end
 
+-- Smooth camera position tracking
+local smoothCamPos = nil
+local smoothLerpFactor = 0.08 -- Lower = smoother but slower
+
 function ProcessCamControls()
     if not camera or not playerPed then return end
     
     local playerCoords = GetEntityCoords(playerPed)
     
-    -- Mouse Rotation (smooth)
-    local sensitivity = 2.5
+    -- Mouse Rotation (smoother interpolation)
+    local sensitivity = 2.0
     
-    local targetX = rotX - GetDisabledControlNormal(0, 1) * sensitivity
-    local targetY = rotY - GetDisabledControlNormal(0, 2) * sensitivity
+    local mouseX = GetDisabledControlNormal(0, 1)
+    local mouseY = GetDisabledControlNormal(0, 2)
     
-    rotX = rotX + (targetX - rotX) * 0.15
-    rotY = rotY + (targetY - rotY) * 0.15
+    -- Apply dead zone to reduce jitter
+    if math.abs(mouseX) < 0.01 then mouseX = 0 end
+    if math.abs(mouseY) < 0.01 then mouseY = 0 end
+    
+    local targetX = rotX - mouseX * sensitivity
+    local targetY = rotY - mouseY * sensitivity
+    
+    -- Smoother lerp for rotation
+    rotX = rotX + (targetX - rotX) * 0.08
+    rotY = rotY + (targetY - rotY) * 0.08
     
     rotY = math.max(math.rad(15.0), math.min(math.rad(85.0), rotY))
     
-    -- Zoom (smooth)
+    -- Zoom (smoother)
     local targetRadius = cameraRadius
     
     if IsDisabledControlPressed(0, 14) then -- scroll up
@@ -107,7 +119,7 @@ function ProcessCamControls()
         targetRadius = math.max(zoom.min, targetRadius - zoom.step)
     end
     
-    cameraRadius = cameraRadius + (targetRadius - cameraRadius) * 0.12
+    cameraRadius = cameraRadius + (targetRadius - cameraRadius) * 0.06
     
     -- Camera Direction
     local direction = vector3(
@@ -123,21 +135,33 @@ function ProcessCamControls()
         StartShapeTestLosProbe(playerCoords, desiredPos, -1, playerPed)
     )
     
-    local finalPos = desiredPos
+    local targetPos = desiredPos
     if hit == 1 then
-        finalPos = playerCoords + direction * (#(playerCoords - hitCoords) - 0.5)
+        targetPos = playerCoords + direction * (#(playerCoords - hitCoords) - 0.5)
     end
     
-    -- Floating Effect
-    local time = GetGameTimer() / 1000
-    finalPos = finalPos + vector3(0.0, 0.0, math.sin(time) * 0.05)
+    -- Initialize smooth position if needed
+    if not smoothCamPos then
+        smoothCamPos = targetPos
+    end
+    
+    -- Smooth camera movement (reduces lag/jitter significantly)
+    smoothCamPos = vector3(
+        smoothCamPos.x + (targetPos.x - smoothCamPos.x) * smoothLerpFactor,
+        smoothCamPos.y + (targetPos.y - smoothCamPos.y) * smoothLerpFactor,
+        smoothCamPos.z + (targetPos.z - smoothCamPos.z) * smoothLerpFactor
+    )
+    
+    -- Subtle floating effect
+    local time = GetGameTimer() / 1500
+    local finalPos = smoothCamPos + vector3(0.0, 0.0, math.sin(time) * 0.03)
     
     -- FOV Dynamic
     local minFov, maxFov = 50.0, 80.0
     local fov = maxFov - ((cameraRadius - zoom.min) / (zoom.max - zoom.min)) * (maxFov - minFov)
     SetCamFov(camera, fov)
     
-    -- Apply
+    -- Apply camera position and look-at
     SetCamCoord(camera, finalPos.x, finalPos.y, finalPos.z)
     PointCamAtCoord(camera, playerCoords.x, playerCoords.y, playerCoords.z)
 end

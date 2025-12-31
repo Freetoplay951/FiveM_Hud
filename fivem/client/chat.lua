@@ -452,11 +452,21 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
     end
 
     if msg:sub(1, 1) == "/" then
+        local cmd = msg:sub(2)
+        local cmdName = cmd:match("^(%S+)") or cmd
+        
+        -- Special handling for hudedit command - enable NUI focus for edit mode
+        if cmdName:lower() == "hudedit" then
+            CloseChat()
+            SetNuiFocus(true, true)
+            SendNUI("toggleEditMode", true)
+            return cb({ success = true })
+        end
+        
         -- IMPORTANT: close chat BEFORE executing commands, otherwise CloseChat() can override focus changes
         CloseChat()
 
-        local cmd = msg:sub(2)
-        if CommandExists(cmd) then
+        if CommandExists(cmdName) then
             ExecuteCommand(cmd)
         else
             TriggerEvent("hud:error", "Ausführung fehlgeschlagen", "Der Command '/" .. cmd .. "' existiert nicht.")

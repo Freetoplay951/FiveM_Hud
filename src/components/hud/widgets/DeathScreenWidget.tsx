@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Skull, Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
+import { Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DeathState } from "@/types/hud";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
@@ -7,8 +7,29 @@ import { sendNuiCallback } from "@/hooks/useNuiEvents";
 interface DeathScreenWidgetProps {
     death: DeathState;
     visible: boolean;
-    isWidget?: boolean; // When used as movable widget, don't show full overlay
+    isWidget?: boolean;
 }
+
+// Sharp SVG Skull Icon - prevents blurriness
+const SkullIcon = ({ size = 32, className = "" }: { size?: number; className?: string }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+        style={{ shapeRendering: "geometricPrecision" }}>
+        <circle cx="9" cy="12" r="1" />
+        <circle cx="15" cy="12" r="1" />
+        <path d="M8 20v2h8v-2" />
+        <path d="m12.5 17-.5-1-.5 1h1z" />
+        <path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20" />
+    </svg>
+);
 
 export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScreenWidgetProps) => {
     const {
@@ -20,14 +41,12 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
         message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
     } = death;
 
-    // Format time as MM:SS
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
     };
 
-    // Calculate progress percentage
     const waitProgress = waitTimer > 0 ? ((60 - waitTimer) / 60) * 100 : 100;
 
     const handleCallHelp = () => {
@@ -70,10 +89,9 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                         background: "radial-gradient(circle, hsl(var(--critical) / 0.2) 0%, transparent 70%)",
                         boxShadow: "0 0 30px hsl(var(--critical) / 0.4), inset 0 0 15px hsl(var(--critical) / 0.2)",
                     }}>
-                    <Skull
+                    <SkullIcon
                         size={32}
                         className="text-critical"
-                        style={{ filter: "drop-shadow(0 0 8px hsl(var(--critical)))" }}
                     />
                 </div>
             </motion.div>
@@ -290,7 +308,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                 </motion.button>
             </div>
 
-            {/* Sync Position Button - same style but smaller/subtle accent */}
+            {/* Sync Position Button */}
             <motion.button
                 onClick={handleSyncPosition}
                 whileHover={{ scale: 1.02 }}
@@ -340,7 +358,7 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
         );
     }
 
-    // Full screen overlay mode
+    // Full screen overlay mode with red overlay
     return (
         <AnimatePresence>
             {visible && isDead && (
@@ -348,19 +366,41 @@ export const DeathScreenWidget = ({ death, visible, isWidget = false }: DeathScr
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center pointer-events-auto"
-                    style={{
-                        background:
-                            "radial-gradient(ellipse at center, hsl(0 30% 8% / 0.95) 0%, hsl(0 20% 3% / 0.98) 100%)",
-                    }}>
-                    {/* Animated red vignette effect */}
+                    className="fixed inset-0 z-50 flex items-center justify-center pointer-events-auto">
+                    
+                    {/* Red screen overlay */}
                     <motion.div
                         className="absolute inset-0"
-                        animate={{ opacity: [0.3, 0.5, 0.3] }}
-                        transition={{ duration: 3, repeat: Infinity }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         style={{
-                            background:
-                                "radial-gradient(ellipse at center, transparent 40%, hsl(var(--critical) / 0.15) 100%)",
+                            background: "linear-gradient(to bottom, hsl(0 60% 10% / 0.85), hsl(0 40% 5% / 0.95))",
+                        }}
+                    />
+                    
+                    {/* Pulsing red vignette */}
+                    <motion.div
+                        className="absolute inset-0"
+                        animate={{ opacity: [0.4, 0.7, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        style={{
+                            background: "radial-gradient(ellipse at center, transparent 20%, hsl(0 70% 20% / 0.6) 100%)",
+                        }}
+                    />
+                    
+                    {/* Stronger edge vignette */}
+                    <div
+                        className="absolute inset-0"
+                        style={{
+                            background: "radial-gradient(ellipse at center, transparent 30%, hsl(0 80% 8% / 0.9) 100%)",
+                        }}
+                    />
+                    
+                    {/* Scanline effect for atmosphere */}
+                    <div
+                        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                        style={{
+                            backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(0 100% 50% / 0.1) 2px, hsl(0 100% 50% / 0.1) 4px)",
                         }}
                     />
 
