@@ -169,6 +169,21 @@ AddEventHandler('onClientResourceStart', function(resourceName)
         range = 'normal'
     })
     
+    -- Player Info Initial (Server ID)
+    local serverId = GetPlayerServerId(PlayerId())
+    SendNUI('updatePlayer', {
+        id = serverId,
+        job = 'Arbeitslos',
+        rank = ''
+    })
+    
+    -- Money Initial (defaults, will be updated by framework)
+    SendNUI('updateMoney', {
+        cash = 0,
+        bank = 0,
+        blackMoney = 0
+    })
+    
     isPlayerLoaded = true
     
     if Config.Debug then
