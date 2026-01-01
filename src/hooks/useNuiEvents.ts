@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import {
     HudState,
     VehicleState,
@@ -38,10 +38,20 @@ interface NuiEventHandlers {
 }
 
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
-    const handleMessage = useCallback(
-        (event: MessageEvent) => {
+    // Use ref to always have access to latest handlers without re-registering listener
+    const handlersRef = useRef(handlers);
+    
+    // Update ref on every render (this is cheap and doesn't cause re-registration)
+    useEffect(() => {
+        handlersRef.current = handlers;
+    });
+
+    // Register event listener ONCE on mount
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
             const { action, data } = event.data;
             const eventType = action || event.data.type;
+            const h = handlersRef.current;
 
             switch (eventType) {
                 case "ping":
@@ -49,76 +59,78 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                     sendNuiCallback("pong");
                     break;
                 case "updateHud":
-                    handlers.onUpdateHud?.(data);
+                    h.onUpdateHud?.(data);
                     break;
                 case "updateVehicle":
-                    handlers.onUpdateVehicle?.(data);
+                    h.onUpdateVehicle?.(data);
                     break;
                 case "updateMoney":
-                    handlers.onUpdateMoney?.(data);
+                    h.onUpdateMoney?.(data);
                     break;
                 case "updateVoice":
-                    handlers.onUpdateVoice?.(data);
+                    h.onUpdateVoice?.(data);
                     break;
                 case "updateLocation":
-                    handlers.onUpdateLocation?.(data);
+                    h.onUpdateLocation?.(data);
                     break;
                 case "updatePlayer":
-                    handlers.onUpdatePlayer?.(data);
+                    h.onUpdatePlayer?.(data);
                     break;
                 case "notify":
-                    handlers.onNotify?.(data);
+                    h.onNotify?.(data);
                     break;
                 case "toggleEditMode":
-                    handlers.onToggleEditMode?.(data);
+                    h.onToggleEditMode?.(data);
                     break;
                 case "setVisible":
-                    handlers.onSetVisible?.(data);
+                    h.onSetVisible?.(data);
                     break;
                 case "updateDeath":
-                    handlers.onUpdateDeath?.(data);
+                    h.onUpdateDeath?.(data);
                     break;
                 case "setVoiceEnabled":
-                    handlers.onSetVoiceEnabled?.(data);
+                    h.onSetVoiceEnabled?.(data);
                     break;
                 // New chat events
                 case "chatOpen":
-                    handlers.onChatOpen?.(data);
+                    h.onChatOpen?.(data);
                     break;
                 case "chatClose":
-                    handlers.onChatClose?.();
+                    h.onChatClose?.();
                     break;
                 case "chatCreateMessage":
-                    handlers.onChatCreateMessage?.(data);
+                    h.onChatCreateMessage?.(data);
                     break;
                 case "chatClear":
-                    handlers.onChatClear?.();
+                    h.onChatClear?.();
                     break;
                 // New team chat events
                 case "teamChatOpen":
-                    handlers.onTeamChatOpen?.(data);
+                    h.onTeamChatOpen?.(data);
                     break;
                 case "teamChatClose":
-                    handlers.onTeamChatClose?.();
+                    h.onTeamChatClose?.();
                     break;
                 case "teamChatCreateMessage":
-                    handlers.onTeamChatCreateMessage?.(data);
+                    h.onTeamChatCreateMessage?.(data);
                     break;
                 case "teamChatClear":
-                    handlers.onTeamChatClear?.();
+                    h.onTeamChatClear?.();
                     break;
                 case "updateRadio":
-                    handlers.onUpdateRadio?.(data);
+                    h.onUpdateRadio?.(data);
                     break;
             }
-        },
-        [handlers]
-    );
+        };
 
-    useEffect(() => {
         window.addEventListener("message", handleMessage);
-        return () => window.removeEventListener("message", handleMessage);
-    }, [handleMessage]);
+        console.log("[HUD DEBUG] NUI event listener registered");
+        
+        return () => {
+            window.removeEventListener("message", handleMessage);
+            console.log("[HUD DEBUG] NUI event listener removed");
+        };
+    }, []); // Empty deps = register once on mount
 };
 
 export const isNuiEnvironment = (): boolean => {
