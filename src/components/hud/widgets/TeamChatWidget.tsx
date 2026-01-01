@@ -22,12 +22,12 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
     default: { bg: "bg-primary/20", text: "text-primary", border: "border-primary/30", icon: Shield },
 };
 
-export const TeamChatWidget = ({ 
-    teamChat, 
-    onSendMessage, 
-    onClose, 
+export const TeamChatWidget = ({
+    teamChat,
+    onSendMessage,
+    onClose,
     isOpen = true,
-    editMode = false 
+    editMode = false,
 }: TeamChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,8 +62,8 @@ export const TeamChatWidget = ({
             }
         };
 
-        window.addEventListener('focus', handleFocus);
-        return () => window.removeEventListener('focus', handleFocus);
+        window.addEventListener("focus", handleFocus);
+        return () => window.removeEventListener("focus", handleFocus);
     }, [isInputActive, editMode]);
 
     const closeChat = useCallback(() => {
@@ -74,7 +74,7 @@ export const TeamChatWidget = ({
 
     const handleSend = useCallback(() => {
         if (!inputValue.trim() || !onSendMessage) return;
-        
+
         const msg = inputValue.trim();
         addToHistory(msg);
         onSendMessage(msg);
@@ -82,27 +82,30 @@ export const TeamChatWidget = ({
         closeChat();
     }, [inputValue, onSendMessage, addToHistory, closeChat]);
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        if (editMode) return;
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            if (editMode) return;
 
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
-        if (e.key === "Escape") {
-            closeChat();
-        }
-        if (e.key === "ArrowUp") {
-            e.preventDefault();
-            const prev = navigatePrevious(inputValue);
-            if (prev !== null) setInputValue(prev);
-        }
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            const next = navigateNext();
-            if (next !== null) setInputValue(next);
-        }
-    }, [editMode, handleSend, closeChat, navigatePrevious, navigateNext, inputValue]);
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+            if (e.key === "Escape") {
+                closeChat();
+            }
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                const prev = navigatePrevious(inputValue);
+                if (prev !== null) setInputValue(prev);
+            }
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                const next = navigateNext();
+                if (next !== null) setInputValue(next);
+            }
+        },
+        [editMode, handleSend, closeChat, navigatePrevious, navigateNext, inputValue]
+    );
 
     if (!teamChat.hasAccess) {
         return (
@@ -110,9 +113,11 @@ export const TeamChatWidget = ({
                 className="glass-panel rounded-lg overflow-hidden flex flex-col items-center justify-center"
                 style={{ width: "320px", height: "280px" }}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                <Lock size={32} className="text-muted-foreground/50 mb-2" />
+                animate={{ opacity: 1, y: 0 }}>
+                <Lock
+                    size={32}
+                    className="text-muted-foreground/50 mb-2"
+                />
                 <span className="text-xs text-muted-foreground">Kein Zugriff</span>
                 <span className="text-[10px] text-muted-foreground/70 mt-1 text-center px-4">
                     Nur für Team-Mitglieder
@@ -139,18 +144,35 @@ export const TeamChatWidget = ({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: isVisible || isInputActive ? 1 : 0.3, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}
-                >
+                    transition={{ duration: 0.3 }}>
                     {/* Header */}
-                    <div className={cn("flex items-center justify-between px-3 py-2 border-b", teamColor.border, teamColor.bg)}>
+                    <div
+                        className={cn(
+                            "flex items-center justify-between px-3 py-2 border-b",
+                            teamColor.border,
+                            teamColor.bg
+                        )}>
                         <div className="flex items-center gap-2">
-                            <TeamIcon size={14} className={teamColor.text} />
+                            <TeamIcon
+                                size={14}
+                                className={teamColor.text}
+                            />
                             <span className={cn("text-xs font-medium uppercase tracking-wider", teamColor.text)}>
                                 {teamChat.teamName}
                             </span>
-                            {teamChat.isAdmin && <Shield size={10} className="text-warning" />}
+                            {teamChat.isAdmin && (
+                                <Shield
+                                    size={10}
+                                    className="text-warning"
+                                />
+                            )}
                             {teamChat.unreadCount > 0 && (
-                                <span className={cn("px-1.5 py-0.5 text-[10px] rounded-full", teamColor.bg, teamColor.text)}>
+                                <span
+                                    className={cn(
+                                        "px-1.5 py-0.5 text-[10px] rounded-full",
+                                        teamColor.bg,
+                                        teamColor.text
+                                    )}>
                                     {teamChat.unreadCount}
                                 </span>
                             )}
@@ -158,8 +180,13 @@ export const TeamChatWidget = ({
                         <div className="flex items-center gap-1">
                             <span className="text-[10px] text-muted-foreground">{teamChat.onlineMembers} online</span>
                             {onClose && isInputActive && !editMode && (
-                                <button onClick={closeChat} className="p-1 rounded hover:bg-background/50 transition-colors ml-1">
-                                    <X size={12} className="text-muted-foreground" />
+                                <button
+                                    onClick={closeChat}
+                                    className="p-1 rounded hover:bg-background/50 transition-colors ml-1">
+                                    <X
+                                        size={12}
+                                        className="text-muted-foreground"
+                                    />
                                 </button>
                             )}
                         </div>
@@ -174,16 +201,24 @@ export const TeamChatWidget = ({
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 10 }}
-                                    className="text-xs leading-relaxed"
-                                >
+                                    className="text-xs leading-relaxed">
                                     <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
                                     {msg.rank && (
-                                        <span className={cn("text-[9px] px-1 py-0.5 rounded mr-1", teamColor.bg, teamColor.text)}>
+                                        <span
+                                            className={cn(
+                                                "text-[9px] px-1 py-0.5 rounded mr-1",
+                                                teamColor.bg,
+                                                teamColor.text
+                                            )}>
                                             {msg.rank}
                                         </span>
                                     )}
                                     <span className={cn("font-medium mr-1", teamColor.text)}>{msg.sender}:</span>
-                                    <span className={cn("text-foreground", msg.isImportant && "font-semibold text-warning")}>
+                                    <span
+                                        className={cn(
+                                            "text-foreground",
+                                            msg.isImportant && "font-semibold text-warning"
+                                        )}>
                                         {msg.message}
                                     </span>
                                 </motion.div>
@@ -216,8 +251,7 @@ export const TeamChatWidget = ({
                                         inputValue.trim()
                                             ? cn(teamColor.bg, teamColor.text, "hover:opacity-80")
                                             : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
-                                    )}
-                                >
+                                    )}>
                                     <Send size={12} />
                                 </button>
                             </div>

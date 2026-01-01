@@ -59,8 +59,6 @@ export interface PlayerState {
 export interface VoiceState {
     active: boolean;
     range: string; // Flexibler String für verschiedene Voice-Systeme (pma-voice, saltychat, etc.)
-    inRadio?: boolean; // Ob der Spieler im Funk ist
-    radioChannel?: string; // Funk-Kanal Name
 }
 
 export interface RadioMember {
@@ -111,7 +109,7 @@ export interface DeathState {
 }
 
 // Chat Message Types
-export type ChatMessageType = 'normal' | 'system' | 'action' | 'ooc' | 'whisper' | 'shout' | 'radio';
+export type ChatMessageType = "normal" | "system" | "action" | "ooc" | "whisper" | "shout" | "radio";
 
 export interface ChatMessage {
     id: string;
@@ -123,14 +121,14 @@ export interface ChatMessage {
 
 export interface ChatState {
     isOpen: boolean;
-    isInputActive?: boolean;  // Ob Eingabefeld aktiv ist
-    isVisible?: boolean;      // Ob Chat sichtbar ist (für Fade-Out)
+    isInputActive?: boolean; // Ob Eingabefeld aktiv ist
+    isVisible?: boolean; // Ob Chat sichtbar ist (für Fade-Out)
     messages: ChatMessage[];
     unreadCount: number;
 }
 
 // Team Chat Types (Staff only - Supporter, Admin, etc.)
-export type TeamType = 'supporter' | 'moderator' | 'admin' | 'superadmin' | 'owner';
+export type TeamType = "supporter" | "moderator" | "admin" | "superadmin" | "owner";
 
 export interface TeamChatMessage {
     id: string;
@@ -143,8 +141,8 @@ export interface TeamChatMessage {
 
 export interface TeamChatState {
     isOpen: boolean;
-    isInputActive?: boolean;  // Ob Eingabefeld aktiv ist
-    isVisible?: boolean;      // Ob Team-Chat sichtbar ist (für Fade-Out)
+    isInputActive?: boolean; // Ob Eingabefeld aktiv ist
+    isVisible?: boolean; // Ob Team-Chat sichtbar ist (für Fade-Out)
     hasAccess: boolean;
     teamType: TeamType;
     teamName: string;
