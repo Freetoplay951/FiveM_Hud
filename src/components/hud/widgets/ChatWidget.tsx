@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, SetStateAction, Dispatch } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,13 +28,21 @@ const DEMO_COMMANDS: ChatCommand[] = [
 
 interface ChatWidgetProps {
     chat: ChatState;
+    setChatState: Dispatch<SetStateAction<ChatState>>;
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
     editMode: boolean;
     autoHideDelay?: number; // Zeit in ms bis der Chat versteckt wird (default: 10000)
 }
 
-export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, autoHideDelay = 10000 }: ChatWidgetProps) => {
+export const ChatWidget = ({
+    chat,
+    setChatState,
+    onSendMessage,
+    onClose,
+    editMode,
+    autoHideDelay = 10000,
+}: ChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -228,7 +236,10 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, autoHideDel
             availableCommands.some((cmd) => cmd.command.toLowerCase() === msg.split(" ")[0].toLowerCase());
 
         if (isValidCommand) {
-            onClose();
+            setChatState((prev) => ({
+                ...prev,
+                isInputActive: false,
+            }));
         }
     }, [inputValue, onSendMessage, addToHistory, closeChat]);
 

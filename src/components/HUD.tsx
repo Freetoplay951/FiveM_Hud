@@ -1053,6 +1053,7 @@ export const HUD = () => {
                             {...widgetProps}>
                             <ChatWidget
                                 chat={chatState}
+                                setChatState={setChatState}
                                 editMode={editMode}
                                 onSendMessage={(msg) => {
                                     if (isDemoMode) {
