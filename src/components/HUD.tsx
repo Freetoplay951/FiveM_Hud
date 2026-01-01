@@ -13,6 +13,7 @@ import { CompassWidget } from "./hud/widgets/CompassWidget";
 import { NotificationContainer } from "./hud/notifications/NotificationContainer";
 import { ChatWidget } from "./hud/widgets/ChatWidget";
 import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
+import { RadioWidget } from "./hud/widgets/RadioWidget";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -29,6 +30,7 @@ import {
     DeathState,
     ChatState,
     TeamChatState,
+    RadioState,
 } from "@/types/hud";
 import { DeathScreenWidget } from "./hud/widgets/DeathScreenWidget";
 import { motion } from "framer-motion";
@@ -94,6 +96,13 @@ const DEMO_TEAM_CHAT: TeamChatState = {
     isAdmin: true,
 };
 
+// Demo Radio State
+const DEMO_RADIO: RadioState = {
+    active: false,
+    channel: "Kanal 1",
+    members: [],
+};
+
 // Demo Chat Nachrichten
 const DEMO_CHAT_MESSAGES = [
     { sender: "Max Mustermann", message: "Hey, wie geht's dir?" },
@@ -140,6 +149,7 @@ export const HUD = () => {
     const [deathState, setDeathState] = useState<DeathState>(DEMO_DEATH);
     const [chatState, setChatState] = useState<ChatState>(DEMO_CHAT);
     const [teamChatState, setTeamChatState] = useState<TeamChatState>(DEMO_TEAM_CHAT);
+    const [radioState, setRadioState] = useState<RadioState>(DEMO_RADIO);
     const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false); // For edit mode preview
     const [demoDeathTimer, setDemoDeathTimer] = useState({ respawnTimer: 14, waitTimer: 59 }); // Demo timer state
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
@@ -281,6 +291,10 @@ export const HUD = () => {
                 ...prev,
                 messages: [],
             }));
+        },
+        // Radio events
+        onUpdateRadio: (data) => {
+            setRadioState(data);
         },
     });
 
@@ -866,7 +880,38 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Location Widget */}
+            {/* Radio Widget */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("radio");
+                    if (!widget) return null;
+                    
+                    // Only show if radio is active or in edit mode
+                    const showRadio = radioState.active || editMode;
+                    if (!showRadio) return null;
+
+                    // Demo data for edit mode
+                    const radioData = editMode && !radioState.active ? {
+                        active: true,
+                        channel: "Kanal 1",
+                        members: [
+                            { id: 1, name: "Max Mustermann", talking: true },
+                            { id: 2, name: "Anna Schmidt", talking: false },
+                            { id: 3, name: "Tom Weber", talking: false },
+                        ]
+                    } : radioState;
+
+                    return (
+                        <HUDWidget
+                            id="radio"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <RadioWidget radio={radioData} />
+                        </HUDWidget>
+                    );
+                })()}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("location");

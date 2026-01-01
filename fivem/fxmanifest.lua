@@ -28,6 +28,7 @@ client_scripts {
     'client/notifications.lua',
     'client/minimap.lua',
     'client/death.lua',
+    'client/radio.lua',
     'client/chat/playerChat.lua',
     'client/chat/teamChat.lua'
 }
