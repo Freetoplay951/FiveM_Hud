@@ -85,7 +85,6 @@ end
 -- Smooth camera position tracking
 local smoothCamPos = nil
 local smoothLerpFactor = 0.08 -- Lower = smoother but slower
-
 function ProcessCamControls()
     if not camera or not playerPed then return end
     
