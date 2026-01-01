@@ -9,7 +9,7 @@ interface TeamChatWidgetProps {
     teamChat: TeamChatState;
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
-    isOpen?: boolean;
+    editMode: boolean;
 }
 
 const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; icon: typeof Shield }> = {
@@ -21,7 +21,7 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
     default: { bg: "bg-primary/20", text: "text-primary", border: "border-primary/30", icon: Shield },
 };
 
-export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true }: TeamChatWidgetProps) => {
+export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode }: TeamChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -30,8 +30,9 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true
     const { addToHistory, navigatePrevious, navigateNext, resetNavigation } = useChatHistory();
 
     const teamColor = TEAM_COLORS[teamChat.teamType] || TEAM_COLORS.default;
+
     const isVisible = teamChat.isVisible ?? true;
-    const isInputActive = teamChat.isInputActive || isOpen;
+    const isInputActive = teamChat.isInputActive || teamChat.isOpen || editMode;
     const hasMessages = teamChat.messages.length > 0;
 
     useEffect(() => {

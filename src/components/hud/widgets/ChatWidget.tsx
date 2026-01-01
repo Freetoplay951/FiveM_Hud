@@ -30,11 +30,11 @@ interface ChatWidgetProps {
     chat: ChatState;
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
-    isOpen?: boolean;
+    editMode: boolean;
     registeredCommands?: ChatCommand[];
 }
 
-export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, registeredCommands }: ChatWidgetProps) => {
+export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredCommands }: ChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -48,7 +48,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
     const { addToHistory, navigatePrevious, navigateNext, resetNavigation } = useChatHistory();
 
     const isVisible = chat.isVisible ?? true;
-    const isInputActive = chat.isInputActive || isOpen;
+    const isInputActive = chat.isInputActive || chat.isOpen || editMode;
     const hasMessages = chat.messages.length > 0;
 
     // Load commands from FiveM

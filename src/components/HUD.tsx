@@ -944,7 +944,7 @@ export const HUD = () => {
                             {...widgetProps}>
                             <ChatWidget
                                 chat={chatState}
-                                isOpen={chatState.isOpen || editMode}
+                                editMode={editMode}
                                 onSendMessage={(msg) => {
                                     if (isDemoMode) {
                                         // Demo mode: add message locally
@@ -1005,7 +1005,7 @@ export const HUD = () => {
                             {...widgetProps}>
                             <TeamChatWidget
                                 teamChat={teamChatState}
-                                isOpen={teamChatState.isOpen || editMode}
+                                editMode={editMode}
                                 onSendMessage={(msg) => {
                                     if (isDemoMode) {
                                         // Demo mode: add message locally
