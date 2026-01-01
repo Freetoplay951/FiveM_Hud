@@ -285,7 +285,7 @@ export const HUDWidget = ({
             )}
 
             {/* Widget Content */}
-            <div className={cn(!visible && editMode && "pointer-events-none")}>{children}</div>
+            <div className={cn(editMode && "pointer-events-none")}>{children}</div>
 
             {/* Resize handle */}
             {editMode && onScaleChange && (
