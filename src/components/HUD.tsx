@@ -1052,12 +1052,6 @@ export const HUD = () => {
                     const widget = getWidget("chat");
                     if (!widget) return null;
 
-                    // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
-                    const showChat = isDemoMode
-                        ? chatState.isOpen || editMode
-                        : chatState.isVisible || chatState.isOpen || editMode;
-                    if (!showChat && !editMode) return null;
-
                     return (
                         <HUDWidget
                             id="chat"
@@ -1108,17 +1102,6 @@ export const HUD = () => {
                 (() => {
                     const widget = getWidget("teamchat");
                     if (!widget) return null;
-
-                    // Hide completely in edit mode if visibility is set to 'hidden' and no access
-                    if (editMode && !teamChatState.hasAccess) {
-                        return null;
-                    }
-
-                    // In NUI mode, respect isVisible/isOpen state. In demo, use isOpen
-                    const showTeamChat = isDemoMode
-                        ? teamChatState.isOpen || editMode
-                        : teamChatState.isVisible || teamChatState.isOpen || editMode;
-                    if (!showTeamChat && !editMode) return null;
 
                     return (
                         <HUDWidget

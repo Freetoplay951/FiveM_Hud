@@ -346,7 +346,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, autoHideDel
                     className="glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col"
                     style={{ width: "320px", height: "280px" }}
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: isVisible || isInputActive ? 1 : 0.3, y: 0 }}
+                    animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.3 }}>
                     {/* Header */}
