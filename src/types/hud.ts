@@ -76,7 +76,7 @@ export interface RadioState {
 
 export interface LocationState {
     street: string;
-    heading: number;
+    heading?: number;
     area?: string;
 }
 
@@ -142,10 +142,4 @@ export interface TeamChatState {
     unreadCount: number;
     onlineMembers: number;
     isAdmin?: boolean;
-}
-
-// Compass State - dynamisch aktivierbar
-export interface CompassState {
-    enabled: boolean; // Ob Kompass aktiviert ist (z.B. durch Item)
-    heading: number;
 }

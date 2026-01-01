@@ -10,7 +10,6 @@ import {
     ChatState,
     TeamChatState,
     RadioState,
-    CompassState,
 } from "@/types/hud";
 
 interface NuiEventHandlers {
@@ -28,7 +27,6 @@ interface NuiEventHandlers {
     onUpdateChat?: (data: ChatState) => void;
     onUpdateTeamChat?: (data: TeamChatState) => void;
     onUpdateRadio?: (data: RadioState) => void;
-    onUpdateCompass?: (data: CompassState) => void;
 }
 
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
@@ -83,9 +81,6 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                     break;
                 case "updateRadio":
                     handlers.onUpdateRadio?.(data);
-                    break;
-                case "updateCompass":
-                    handlers.onUpdateCompass?.(data);
                     break;
             }
         },
