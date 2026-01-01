@@ -3,60 +3,32 @@
 -- ============================================================================
 
 local chatMessages = {}
-local chatVisible = false
+local chatOpen = false
 local chatInputActive = false
-local chatHideTimer = nil
-
--- ============================================================================
--- UTILITY
--- ============================================================================
-
-local function ResetChatHideTimer()
-    local fadeTime = (Config and Config.ChatFadeTime or 10) * 1000
-    local timerId = GetGameTimer()
-    chatHideTimer = timerId
-
-    SetTimeout(fadeTime, function()
-        if chatHideTimer == timerId and chatVisible and not chatInputActive then
-            chatVisible = false
-            SendNUI("updateChat", {
-                isOpen = false,
-                isVisible = false,
-                messages = chatMessages,
-                unreadCount = 0
-            })
-        end
-    end)
-end
 
 -- ============================================================================
 -- CHAT LOGIC
 -- ============================================================================
 
-local function SendChatMessage(msgType, sender, message)
+local function CreateChatMessage(msgType, sender, message)
     local maxMessages = Config and Config.ChatMaxMessages or 50
 
-    table.insert(chatMessages, {
+    local newMessage = {
         id = tostring(GetGameTimer()),
         type = msgType or "normal",
         sender = sender,
         message = message,
         timestamp = GetTimestamp()
-    })
+    }
+
+    table.insert(chatMessages, newMessage)
 
     if #chatMessages > maxMessages then
         table.remove(chatMessages, 1)
     end
 
-    chatVisible = true
-    ResetChatHideTimer()
-
-    SendNUI("updateChat", {
-        isOpen = true,
-        isVisible = true,
-        messages = chatMessages,
-        unreadCount = chatInputActive and 0 or 1
-    })
+    -- Send createMessage event to NUI
+    SendNUI("chatCreateMessage", newMessage)
 end
 
 -- ============================================================================
@@ -65,29 +37,20 @@ end
 
 function OpenChat()
     chatInputActive = true
-    chatVisible = true
-    chatHideTimer = nil
+    chatOpen = true
     SetNuiFocus(true, false)
 
-    SendNUI("updateChat", {
+    SendNUI("chatOpen", {
         isOpen = true,
-        isVisible = true,
-        messages = chatMessages,
-        unreadCount = 0
+        isInputActive = true
     })
 end
 
 function CloseChat()
     chatInputActive = false
     SetNuiFocus(false, false)
-    ResetChatHideTimer()
 
-    SendNUI("updateChat", {
-        isOpen = false,
-        isVisible = chatVisible,
-        messages = chatMessages,
-        unreadCount = 0
-    })
+    SendNUI("chatClose", {})
 end
 
 -- ============================================================================
@@ -128,11 +91,16 @@ end)
 -- ============================================================================
 
 RegisterNetEvent("hud:receiveChatMessage", function(msgType, sender, message)
-    SendChatMessage(msgType, sender, message)
+    CreateChatMessage(msgType, sender, message)
 end)
 
 RegisterNetEvent("hud:systemMessage", function(message)
-    SendChatMessage("system", nil, message)
+    CreateChatMessage("system", nil, message)
+end)
+
+RegisterNetEvent("hud:clearChat", function()
+    chatMessages = {}
+    SendNUI("chatClear", {})
 end)
 
 -- ============================================================================
@@ -141,9 +109,13 @@ end)
 
 exports("openChat", OpenChat)
 exports("closeChat", CloseChat)
-exports("isChatOpen", function() return chatInputActive end)
-exports("isChatVisible", function() return chatVisible end)
-exports("sendChatMessage", SendChatMessage)
+exports("isChatOpen", function() return chatOpen end)
+exports("isChatInputActive", function() return chatInputActive end)
+exports("sendChatMessage", CreateChatMessage)
 exports("sendSystemMessage", function(msg)
-    SendChatMessage("system", nil, msg)
+    CreateChatMessage("system", nil, msg)
+end)
+exports("clearChat", function()
+    chatMessages = {}
+    SendNUI("chatClear", {})
 end)

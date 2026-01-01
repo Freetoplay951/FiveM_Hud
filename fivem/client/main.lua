@@ -354,7 +354,7 @@ CreateThread(function()
         
         if isHudVisible then
             local isTalking = NetworkIsPlayerTalking(PlayerId())
-            local voiceRange = 'normal'
+            local voiceRange = 'normal' -- Unified type: whisper, normal, shout, megaphone
             
             if VoiceResource == 'pma-voice' then
                 -- pma-voice Mode holen
@@ -372,12 +372,52 @@ CreateThread(function()
                     end
                 end
             elseif VoiceResource == 'saltychat' then
-                -- SaltyChat Radio Talking
-                local success, radioTalking = pcall(function()
+                -- SaltyChat Voice Range
+                local success, range = pcall(function()
+                    return exports['saltychat']:GetVoiceRange()
+                end)
+                if success and range then
+                    if range == 1 or range == "1" then
+                        voiceRange = 'whisper'
+                    elseif range == 2 or range == "2" then
+                        voiceRange = 'normal'
+                    elseif range == 3 or range == "3" then
+                        voiceRange = 'shout'
+                    end
+                end
+                
+                -- Check for megaphone
+                local megaSuccess, isMegaphone = pcall(function()
                     return exports['saltychat']:GetRadioChannel() ~= ""
                 end)
-                if success and radioTalking then
-                    voiceRange = 'radio'
+                if megaSuccess and isMegaphone then
+                    voiceRange = 'megaphone'
+                end
+            elseif VoiceResource == 'mumble-voip' then
+                local success, mode = pcall(function()
+                    return exports['mumble-voip']:GetVoiceMode()
+                end)
+                if success and mode then
+                    if mode == 1 then
+                        voiceRange = 'whisper'
+                    elseif mode == 2 then
+                        voiceRange = 'normal'
+                    elseif mode == 3 then
+                        voiceRange = 'shout'
+                    end
+                end
+            elseif VoiceResource == 'tokovoip' then
+                local success, range = pcall(function()
+                    return exports['tokovoip_script']:getCurrentProximity()
+                end)
+                if success and range then
+                    if range == "short" then
+                        voiceRange = 'whisper'
+                    elseif range == "medium" then
+                        voiceRange = 'normal'
+                    elseif range == "long" then
+                        voiceRange = 'shout'
+                    end
                 end
             end
             
