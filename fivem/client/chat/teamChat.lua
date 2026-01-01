@@ -2,7 +2,6 @@
 -- VARIABLES
 -- ============================================================================
 
-local teamChatMessages = {}
 local teamChatOpen = false
 local teamChatInputActive = false
 
@@ -66,12 +65,6 @@ local function CreateTeamChatMessage(sender, rank, message, isImportant)
         timestamp = GetTimestamp(),
         isImportant = isImportant or false
     }
-
-    table.insert(teamChatMessages, newMessage)
-
-    if #teamChatMessages > maxMessages then
-        table.remove(teamChatMessages, 1)
-    end
 
     -- Send createMessage event to NUI
     SendNUI("teamChatCreateMessage", newMessage)
@@ -141,7 +134,6 @@ RegisterNetEvent("hud:receiveTeamChatMessage", function(sender, rank, message, i
 end)
 
 RegisterNetEvent("hud:clearTeamChat", function()
-    teamChatMessages = {}
     SendNUI("teamChatClear", {})
 end)
 
@@ -156,6 +148,5 @@ exports("isTeamChatInputActive", function() return teamChatInputActive end)
 exports("hasTeamChatAccess", function() return cachedTeamAccess end)
 exports("sendTeamChatMessage", CreateTeamChatMessage)
 exports("clearTeamChat", function()
-    teamChatMessages = {}
     SendNUI("teamChatClear", {})
 end)

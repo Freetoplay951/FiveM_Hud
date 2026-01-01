@@ -2,7 +2,6 @@
 -- VARIABLES
 -- ============================================================================
 
-local chatMessages = {}
 local chatOpen = false
 local chatInputActive = false
 
@@ -20,12 +19,6 @@ local function CreateChatMessage(msgType, sender, message)
         message = message,
         timestamp = GetTimestamp()
     }
-
-    table.insert(chatMessages, newMessage)
-
-    if #chatMessages > maxMessages then
-        table.remove(chatMessages, 1)
-    end
 
     -- Send createMessage event to NUI
     SendNUI("chatCreateMessage", newMessage)
@@ -99,7 +92,6 @@ RegisterNetEvent("hud:systemMessage", function(message)
 end)
 
 RegisterNetEvent("hud:clearChat", function()
-    chatMessages = {}
     SendNUI("chatClear", {})
 end)
 
@@ -116,6 +108,5 @@ exports("sendSystemMessage", function(msg)
     CreateChatMessage("system", nil, msg)
 end)
 exports("clearChat", function()
-    chatMessages = {}
     SendNUI("chatClear", {})
 end)
