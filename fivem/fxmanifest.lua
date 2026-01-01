@@ -17,9 +17,7 @@ files {
 -- Shared Config, Utils und Sprachen (muss zuerst geladen werden)
 shared_scripts {
     'config.lua',
-    'shared/utils.lua',
-    'langs/de.lua',
-    'langs/en.lua'
+    'shared/utils.lua'
 }
 
 -- Client Scripts
