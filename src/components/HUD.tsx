@@ -103,6 +103,16 @@ const DEMO_RADIO: RadioState = {
     members: [],
 };
 
+const DEMO_RADIO_ENABLED: RadioState = {
+    active: true,
+    channel: "Kanal 1",
+    members: [
+        { id: 1, name: "Max Mustermann", talking: true },
+        { id: 2, name: "Anna Schmidt", talking: false },
+        { id: 3, name: "Tom Weber", talking: false },
+    ],
+};
+
 // Demo Chat Nachrichten
 const DEMO_CHAT_MESSAGES = [
     { sender: "Max Mustermann", message: "Hey, wie geht's dir?" },
@@ -885,21 +895,13 @@ export const HUD = () => {
                 (() => {
                     const widget = getWidget("radio");
                     if (!widget) return null;
-                    
+
                     // Only show if radio is active or in edit mode
                     const showRadio = radioState.active || editMode;
                     if (!showRadio) return null;
 
                     // Demo data for edit mode
-                    const radioData = editMode && !radioState.active ? {
-                        active: true,
-                        channel: "Kanal 1",
-                        members: [
-                            { id: 1, name: "Max Mustermann", talking: true },
-                            { id: 2, name: "Anna Schmidt", talking: false },
-                            { id: 3, name: "Tom Weber", talking: false },
-                        ]
-                    } : radioState;
+                    const radioData = editMode && !radioState.active ? DEMO_RADIO_ENABLED : radioState;
 
                     return (
                         <HUDWidget
