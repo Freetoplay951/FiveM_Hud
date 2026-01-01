@@ -227,7 +227,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, autoHideDel
             msg.startsWith("/") &&
             availableCommands.some((cmd) => cmd.command.toLowerCase() === msg.split(" ")[0].toLowerCase());
 
-        if (isValidCommand && onClose) {
+        if (isValidCommand) {
             onClose();
         }
     }, [inputValue, onSendMessage, addToHistory, closeChat]);

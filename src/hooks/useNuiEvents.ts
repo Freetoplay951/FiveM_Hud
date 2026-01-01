@@ -25,12 +25,19 @@ interface NuiEventHandlers {
     onUpdateDeath?: (data: DeathState) => void;
     onSetVoiceEnabled?: (enabled: boolean) => void;
     // Chat events - now using createMessage pattern
-    onChatOpen?: (data: { isOpen: boolean; isInputActive: boolean }) => void;
+    onChatOpen?: (data: { isInputActive: boolean }) => void;
     onChatClose?: () => void;
     onChatCreateMessage?: (data: ChatMessage) => void;
     onChatClear?: () => void;
     // Team chat events - now using createMessage pattern
-    onTeamChatOpen?: (data: { isOpen: boolean; isInputActive: boolean; hasAccess: boolean; teamType: string; teamName: string; onlineMembers: number; isAdmin: boolean }) => void;
+    onTeamChatOpen?: (data: {
+        isInputActive: boolean;
+        hasAccess: boolean;
+        teamType: string;
+        teamName: string;
+        onlineMembers: number;
+        isAdmin: boolean;
+    }) => void;
     onTeamChatClose?: () => void;
     onTeamChatCreateMessage?: (data: TeamChatMessage) => void;
     onTeamChatClear?: () => void;
@@ -40,7 +47,7 @@ interface NuiEventHandlers {
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
     // Use ref to always have access to latest handlers without re-registering listener
     const handlersRef = useRef(handlers);
-    
+
     // Update ref on every render (this is cheap and doesn't cause re-registration)
     useEffect(() => {
         handlersRef.current = handlers;
@@ -125,7 +132,7 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
 
         window.addEventListener("message", handleMessage);
         console.log("[HUD DEBUG] NUI event listener registered");
-        
+
         return () => {
             window.removeEventListener("message", handleMessage);
             console.log("[HUD DEBUG] NUI event listener removed");

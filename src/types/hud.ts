@@ -112,7 +112,6 @@ export interface ChatMessage {
 }
 
 export interface ChatState {
-    isOpen: boolean;
     isInputActive?: boolean; // Ob Eingabefeld aktiv ist
     isVisible?: boolean; // Ob Chat sichtbar ist (für Fade-Out)
     messages: ChatMessage[];
@@ -132,7 +131,6 @@ export interface TeamChatMessage {
 }
 
 export interface TeamChatState {
-    isOpen: boolean;
     isInputActive?: boolean; // Ob Eingabefeld aktiv ist
     isVisible?: boolean; // Ob Team-Chat sichtbar ist (für Fade-Out)
     hasAccess: boolean;

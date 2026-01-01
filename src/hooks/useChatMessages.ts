@@ -6,13 +6,11 @@ const AUTO_CLOSE_DELAY = 10000; // 10 seconds
 
 interface ChatMessagesState {
     messages: ChatMessage[];
-    isOpen: boolean;
     isInputActive: boolean;
 }
 
 interface TeamChatMessagesState {
     messages: TeamChatMessage[];
-    isOpen: boolean;
     isInputActive: boolean;
     hasAccess: boolean;
     teamType: string;
@@ -28,10 +26,9 @@ interface TeamChatMessagesState {
 export const useChatMessages = () => {
     const [state, setState] = useState<ChatMessagesState>({
         messages: [],
-        isOpen: false,
         isInputActive: false,
     });
-    
+
     const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const clearAutoCloseTimer = useCallback(() => {
@@ -46,40 +43,43 @@ export const useChatMessages = () => {
         autoCloseTimerRef.current = setTimeout(() => {
             setState((prev) => ({
                 ...prev,
-                isOpen: false,
                 isInputActive: false,
             }));
         }, AUTO_CLOSE_DELAY);
     }, [clearAutoCloseTimer]);
 
     // Add a new message
-    const addMessage = useCallback((message: ChatMessage) => {
-        setState((prev) => {
-            const newMessages = [...prev.messages, message].slice(-MAX_MESSAGES);
-            return {
-                ...prev,
-                messages: newMessages,
-                isOpen: true, // Show chat when new message arrives
-            };
-        });
-        // Start auto-close timer only if input is not active
-        setState((prev) => {
-            if (!prev.isInputActive) {
-                startAutoCloseTimer();
-            }
-            return prev;
-        });
-    }, [startAutoCloseTimer]);
+    const addMessage = useCallback(
+        (message: ChatMessage) => {
+            setState((prev) => {
+                const newMessages = [...prev.messages, message].slice(-MAX_MESSAGES);
+                return {
+                    ...prev,
+                    messages: newMessages,
+                };
+            });
+            // Start auto-close timer only if input is not active
+            setState((prev) => {
+                if (!prev.isInputActive) {
+                    startAutoCloseTimer();
+                }
+                return prev;
+            });
+        },
+        [startAutoCloseTimer]
+    );
 
     // Open chat (with or without input)
-    const openChat = useCallback((withInput: boolean) => {
-        clearAutoCloseTimer();
-        setState((prev) => ({
-            ...prev,
-            isOpen: true,
-            isInputActive: withInput,
-        }));
-    }, [clearAutoCloseTimer]);
+    const openChat = useCallback(
+        (withInput: boolean) => {
+            clearAutoCloseTimer();
+            setState((prev) => ({
+                ...prev,
+                isInputActive: withInput,
+            }));
+        },
+        [clearAutoCloseTimer]
+    );
 
     // Close chat
     const closeChat = useCallback(() => {
@@ -114,7 +114,6 @@ export const useChatMessages = () => {
 
     return {
         messages: state.messages,
-        isOpen: state.isOpen,
         isInputActive: state.isInputActive,
         addMessage,
         openChat,
@@ -131,7 +130,6 @@ export const useChatMessages = () => {
 export const useTeamChatMessages = () => {
     const [state, setState] = useState<TeamChatMessagesState>({
         messages: [],
-        isOpen: false,
         isInputActive: false,
         hasAccess: false,
         teamType: "supporter",
@@ -139,7 +137,7 @@ export const useTeamChatMessages = () => {
         onlineMembers: 0,
         isAdmin: false,
     });
-    
+
     const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const clearAutoCloseTimer = useCallback(() => {
@@ -154,52 +152,55 @@ export const useTeamChatMessages = () => {
         autoCloseTimerRef.current = setTimeout(() => {
             setState((prev) => ({
                 ...prev,
-                isOpen: false,
                 isInputActive: false,
             }));
         }, AUTO_CLOSE_DELAY);
     }, [clearAutoCloseTimer]);
 
     // Add a new message
-    const addMessage = useCallback((message: TeamChatMessage) => {
-        setState((prev) => {
-            const newMessages = [...prev.messages, message].slice(-MAX_MESSAGES);
-            return {
-                ...prev,
-                messages: newMessages,
-                isOpen: true, // Show chat when new message arrives
-            };
-        });
-        // Start auto-close timer only if input is not active
-        setState((prev) => {
-            if (!prev.isInputActive) {
-                startAutoCloseTimer();
-            }
-            return prev;
-        });
-    }, [startAutoCloseTimer]);
+    const addMessage = useCallback(
+        (message: TeamChatMessage) => {
+            setState((prev) => {
+                const newMessages = [...prev.messages, message].slice(-MAX_MESSAGES);
+                return {
+                    ...prev,
+                    messages: newMessages,
+                };
+            });
+            // Start auto-close timer only if input is not active
+            setState((prev) => {
+                if (!prev.isInputActive) {
+                    startAutoCloseTimer();
+                }
+                return prev;
+            });
+        },
+        [startAutoCloseTimer]
+    );
 
     // Open team chat (with or without input)
-    const openChat = useCallback((data: { 
-        withInput: boolean; 
-        hasAccess: boolean; 
-        teamType: string; 
-        teamName: string; 
-        onlineMembers: number; 
-        isAdmin: boolean;
-    }) => {
-        clearAutoCloseTimer();
-        setState((prev) => ({
-            ...prev,
-            isOpen: true,
-            isInputActive: data.withInput,
-            hasAccess: data.hasAccess,
-            teamType: data.teamType,
-            teamName: data.teamName,
-            onlineMembers: data.onlineMembers,
-            isAdmin: data.isAdmin,
-        }));
-    }, [clearAutoCloseTimer]);
+    const openChat = useCallback(
+        (data: {
+            withInput: boolean;
+            hasAccess: boolean;
+            teamType: string;
+            teamName: string;
+            onlineMembers: number;
+            isAdmin: boolean;
+        }) => {
+            clearAutoCloseTimer();
+            setState((prev) => ({
+                ...prev,
+                isInputActive: data.withInput,
+                hasAccess: data.hasAccess,
+                teamType: data.teamType,
+                teamName: data.teamName,
+                onlineMembers: data.onlineMembers,
+                isAdmin: data.isAdmin,
+            }));
+        },
+        [clearAutoCloseTimer]
+    );
 
     // Close team chat
     const closeChat = useCallback(() => {
@@ -211,7 +212,7 @@ export const useTeamChatMessages = () => {
     }, [startAutoCloseTimer]);
 
     // Update metadata without affecting messages
-    const updateMetadata = useCallback((data: Partial<Omit<TeamChatMessagesState, 'messages'>>) => {
+    const updateMetadata = useCallback((data: Partial<Omit<TeamChatMessagesState, "messages">>) => {
         setState((prev) => ({
             ...prev,
             ...data,
@@ -235,7 +236,6 @@ export const useTeamChatMessages = () => {
 
     return {
         messages: state.messages,
-        isOpen: state.isOpen,
         isInputActive: state.isInputActive,
         hasAccess: state.hasAccess,
         teamType: state.teamType,

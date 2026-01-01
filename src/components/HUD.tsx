@@ -76,7 +76,6 @@ const DEMO_DEATH: DeathState = {
 
 // Demo Chat State (leer in Production - wird von FiveM befüllt)
 const DEMO_CHAT: ChatState = {
-    isOpen: false,
     isInputActive: false,
     isVisible: false,
     messages: [],
@@ -85,7 +84,6 @@ const DEMO_CHAT: ChatState = {
 
 // Demo Team Chat State (leer in Production - wird von FiveM befüllt)
 const DEMO_TEAM_CHAT: TeamChatState = {
-    isOpen: false,
     isInputActive: false,
     isVisible: false,
     hasAccess: true,
@@ -248,7 +246,6 @@ export const HUD = () => {
         onChatOpen: (data) => {
             setChatState((prev) => ({
                 ...prev,
-                isOpen: data.isOpen,
                 isInputActive: data.isInputActive,
             }));
         },
@@ -261,7 +258,6 @@ export const HUD = () => {
         onChatCreateMessage: (message) => {
             setChatState((prev) => ({
                 ...prev,
-                isOpen: true,
                 messages: [...prev.messages, message].slice(-50),
             }));
         },
@@ -275,7 +271,6 @@ export const HUD = () => {
         onTeamChatOpen: (data) => {
             setTeamChatState((prev) => ({
                 ...prev,
-                isOpen: data.isOpen,
                 isInputActive: data.isInputActive,
                 hasAccess: data.hasAccess,
                 teamType: data.teamType as TeamChatState["teamType"],
@@ -293,7 +288,6 @@ export const HUD = () => {
         onTeamChatCreateMessage: (message) => {
             setTeamChatState((prev) => ({
                 ...prev,
-                isOpen: true,
                 messages: [...prev.messages, message].slice(-50),
             }));
         },
@@ -428,7 +422,6 @@ export const HUD = () => {
                 };
                 setChatState((prev) => ({
                     ...prev,
-                    isOpen: true,
                     isVisible: true,
                     messages: [...prev.messages, newMsg],
                     unreadCount: prev.isInputActive ? 0 : prev.unreadCount + 1,
@@ -449,7 +442,6 @@ export const HUD = () => {
                 };
                 setTeamChatState((prev) => ({
                     ...prev,
-                    isOpen: true,
                     isVisible: true,
                     messages: [...prev.messages, newMsg],
                     unreadCount: prev.isInputActive ? 0 : prev.unreadCount + 1,
@@ -1087,7 +1079,7 @@ export const HUD = () => {
                                 }}
                                 onClose={() => {
                                     if (isDemoMode) {
-                                        setChatState((prev) => ({ ...prev, isOpen: false }));
+                                        setChatState((prev) => ({ ...prev, isInputActive: false }));
                                     } else {
                                         sendNuiCallback("closeChat");
                                     }
@@ -1140,7 +1132,7 @@ export const HUD = () => {
                                 }}
                                 onClose={() => {
                                     if (isDemoMode) {
-                                        setTeamChatState((prev) => ({ ...prev, isOpen: false }));
+                                        setTeamChatState((prev) => ({ ...prev, isInputActive: false }));
                                     } else {
                                         sendNuiCallback("closeTeamChat");
                                     }

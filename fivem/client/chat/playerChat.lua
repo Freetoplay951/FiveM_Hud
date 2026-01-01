@@ -34,7 +34,6 @@ function OpenChat()
     SetNuiFocus(true, false)
 
     SendNUI("chatOpen", {
-        isOpen = true,
         isInputActive = true
     })
 end

@@ -82,7 +82,6 @@ function OpenTeamChat()
     SetNuiFocus(true, false)
 
     SendNUI("teamChatOpen", {
-        isOpen = true,
         isInputActive = true,
         hasAccess = true,
         teamType = cachedStaffRank or "supporter",
