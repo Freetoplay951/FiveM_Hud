@@ -4,11 +4,6 @@ export interface WidgetPosition {
     y: number;
 }
 
-export interface WidgetSize {
-    width: number;
-    height: number;
-}
-
 export interface WidgetConfig {
     id: string;
     type: WidgetType;
@@ -126,15 +121,6 @@ export const getDefaultSpeedometerConfigs = (): SpeedometerConfigs => {
     };
 };
 
-export const DEFAULT_SPEEDOMETER_CONFIGS: SpeedometerConfigs = {
-    car: { position: { x: 1640, y: 860 }, scale: 1 },
-    plane: { position: { x: 1640, y: 860 }, scale: 1 },
-    boat: { position: { x: 1640, y: 860 }, scale: 1 },
-    helicopter: { position: { x: 1640, y: 860 }, scale: 1 },
-    motorcycle: { position: { x: 1640, y: 860 }, scale: 1 },
-    bicycle: { position: { x: 1640, y: 860 }, scale: 1 },
-};
-
 export const getDefaultWidgets = (): WidgetConfig[] => {
     const statusStartX = getStatusStartX();
     const statusY = getStatusY();
@@ -216,18 +202,4 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
     ];
-};
-
-export const DEFAULT_WIDGETS: WidgetConfig[] = getDefaultWidgets();
-
-export const DEFAULT_HUD_STATE: HUDLayoutState = {
-    widgets: DEFAULT_WIDGETS,
-    editMode: false,
-    snapToGrid: true,
-    gridSize: 10,
-    statusDesign: "circular",
-    hudScale: 1,
-    speedometerType: "car",
-    speedometerConfigs: DEFAULT_SPEEDOMETER_CONFIGS,
-    minimapShape: "square",
 };

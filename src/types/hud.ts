@@ -82,14 +82,6 @@ export interface LocationState {
 
 export type StatusType = "health" | "armor" | "hunger" | "thirst" | "stamina" | "stress" | "oxygen";
 
-export interface StatusConfig {
-    type: StatusType;
-    value: number;
-    icon: string;
-    color: string;
-    glowColor: string;
-}
-
 export interface NotificationData {
     id: string;
     type: "success" | "error" | "warning" | "info";

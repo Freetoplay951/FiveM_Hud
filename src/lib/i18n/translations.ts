@@ -322,8 +322,3 @@ export const translations: Record<Language, Translations> = {
 
 // Default language
 export const DEFAULT_LANGUAGE: Language = "de";
-
-// Get translation helper
-export const getTranslation = (lang: Language): Translations => {
-    return translations[lang] || translations[DEFAULT_LANGUAGE];
-};
