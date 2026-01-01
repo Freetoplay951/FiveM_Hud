@@ -31,11 +31,10 @@ interface ChatWidgetProps {
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
     editMode: boolean;
-    registeredCommands?: ChatCommand[];
     autoHideDelay?: number; // Zeit in ms bis der Chat versteckt wird (default: 10000)
 }
 
-export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredCommands, autoHideDelay = 10000 }: ChatWidgetProps) => {
+export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, autoHideDelay = 10000 }: ChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -61,7 +60,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredC
             clearTimeout(autoHideTimerRef.current);
         }
         setIsAutoHidden(false);
-        
+
         // Nur Timer starten wenn Input nicht aktiv ist
         if (!isInputActive && !editMode) {
             autoHideTimerRef.current = setTimeout(() => {
@@ -121,10 +120,9 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredC
     }, []);
 
     const availableCommands = useMemo(() => {
-        if (registeredCommands && registeredCommands.length > 0) return registeredCommands;
         if (nuiCommands.length > 0) return nuiCommands;
         return DEMO_COMMANDS;
-    }, [registeredCommands, nuiCommands]);
+    }, [nuiCommands]);
 
     const filteredCommands = useMemo(() => {
         if (!inputValue.startsWith("/")) return [];
