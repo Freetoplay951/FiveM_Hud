@@ -419,8 +419,9 @@ export const HUD = () => {
     // Demo key controls + ESC to exit edit mode
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // ESC to exit edit mode (works in both demo and FiveM)
-            if (e.key === "Escape" && editMode) {
+            if (!editMode) return;
+            // ESC or F7 to exit edit mode
+            if (e.key === "Escape" || e.key === "F7") {
                 e.preventDefault();
                 exitEditMode();
                 return;
