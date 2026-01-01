@@ -1100,6 +1100,8 @@ export const HUD = () => {
             {/* Team Chat Widget - hidden when dead, death preview, or no access */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
+                    if (!teamChatState.hasAccess) return null;
+
                     const widget = getWidget("teamchat");
                     if (!widget) return null;
 

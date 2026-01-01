@@ -156,25 +156,6 @@ export const TeamChatWidget = ({
         [handleSend, closeChat, navigatePrevious, navigateNext, inputValue]
     );
 
-    if (!teamChat.hasAccess) {
-        return (
-            <motion.div
-                className="glass-panel rounded-lg overflow-hidden flex flex-col items-center justify-center"
-                style={{ width: "320px", height: "280px" }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}>
-                <Lock
-                    size={32}
-                    className="text-muted-foreground/50 mb-2"
-                />
-                <span className="text-xs text-muted-foreground">Kein Zugriff</span>
-                <span className="text-[10px] text-muted-foreground/70 mt-1 text-center px-4">
-                    Nur für Team-Mitglieder
-                </span>
-            </motion.div>
-        );
-    }
-
     // Auto-hide: Wenn Timer abgelaufen und Input nicht aktiv, verstecken
     if (isAutoHidden && !isInputActive) {
         return null;
