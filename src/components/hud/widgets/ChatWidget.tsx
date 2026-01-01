@@ -32,17 +32,21 @@ interface ChatWidgetProps {
     onClose?: () => void;
     editMode: boolean;
     registeredCommands?: ChatCommand[];
+    autoHideDelay?: number; // Zeit in ms bis der Chat versteckt wird (default: 10000)
 }
 
-export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredCommands }: ChatWidgetProps) => {
+export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredCommands, autoHideDelay = 10000 }: ChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const [nuiCommands, setNuiCommands] = useState<ChatCommand[]>([]);
+    const [isAutoHidden, setIsAutoHidden] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const commandListRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastMessageCountRef = useRef(chat.messages.length);
 
     // Persistent chat history
     const { addToHistory, navigatePrevious, navigateNext, resetNavigation } = useChatHistory();
@@ -50,6 +54,50 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredC
     const isVisible = chat.isVisible ?? true;
     const isInputActive = chat.isInputActive || chat.isOpen || editMode;
     const hasMessages = chat.messages.length > 0;
+
+    // Auto-hide Timer Logic
+    const resetAutoHideTimer = useCallback(() => {
+        if (autoHideTimerRef.current) {
+            clearTimeout(autoHideTimerRef.current);
+        }
+        setIsAutoHidden(false);
+        
+        // Nur Timer starten wenn Input nicht aktiv ist
+        if (!isInputActive && !editMode) {
+            autoHideTimerRef.current = setTimeout(() => {
+                setIsAutoHidden(true);
+            }, autoHideDelay);
+        }
+    }, [autoHideDelay, isInputActive, editMode]);
+
+    // Reset timer wenn neue Nachrichten kommen
+    useEffect(() => {
+        if (chat.messages.length > lastMessageCountRef.current) {
+            resetAutoHideTimer();
+        }
+        lastMessageCountRef.current = chat.messages.length;
+    }, [chat.messages.length, resetAutoHideTimer]);
+
+    // Reset timer wenn Input aktiv wird oder editMode sich ändert
+    useEffect(() => {
+        if (isInputActive || editMode) {
+            if (autoHideTimerRef.current) {
+                clearTimeout(autoHideTimerRef.current);
+            }
+            setIsAutoHidden(false);
+        } else if (hasMessages) {
+            resetAutoHideTimer();
+        }
+    }, [isInputActive, editMode, hasMessages, resetAutoHideTimer]);
+
+    // Cleanup
+    useEffect(() => {
+        return () => {
+            if (autoHideTimerRef.current) {
+                clearTimeout(autoHideTimerRef.current);
+            }
+        };
+    }, []);
 
     // Load commands from FiveM
     useEffect(() => {
@@ -279,6 +327,11 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, registeredC
                 return "text-foreground";
         }
     };
+
+    // Auto-hide: Wenn Timer abgelaufen und Input nicht aktiv, verstecken
+    if (isAutoHidden && !isInputActive) {
+        return null;
+    }
 
     if (!isVisible && !isInputActive && !hasMessages) {
         return null;

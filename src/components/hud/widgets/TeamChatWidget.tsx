@@ -10,6 +10,7 @@ interface TeamChatWidgetProps {
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
     editMode: boolean;
+    autoHideDelay?: number; // Zeit in ms bis der Chat versteckt wird (default: 10000)
 }
 
 const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; icon: typeof Shield }> = {
@@ -21,11 +22,14 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
     default: { bg: "bg-primary/20", text: "text-primary", border: "border-primary/30", icon: Shield },
 };
 
-export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode }: TeamChatWidgetProps) => {
+export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode, autoHideDelay = 10000 }: TeamChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
+    const [isAutoHidden, setIsAutoHidden] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastMessageCountRef = useRef(teamChat.messages.length);
 
     const { addToHistory, navigatePrevious, navigateNext, resetNavigation } = useChatHistory();
 
@@ -34,6 +38,50 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode }: T
     const isVisible = teamChat.isVisible ?? true;
     const isInputActive = teamChat.isInputActive || teamChat.isOpen || editMode;
     const hasMessages = teamChat.messages.length > 0;
+
+    // Auto-hide Timer Logic
+    const resetAutoHideTimer = useCallback(() => {
+        if (autoHideTimerRef.current) {
+            clearTimeout(autoHideTimerRef.current);
+        }
+        setIsAutoHidden(false);
+        
+        // Nur Timer starten wenn Input nicht aktiv ist
+        if (!isInputActive && !editMode) {
+            autoHideTimerRef.current = setTimeout(() => {
+                setIsAutoHidden(true);
+            }, autoHideDelay);
+        }
+    }, [autoHideDelay, isInputActive, editMode]);
+
+    // Reset timer wenn neue Nachrichten kommen
+    useEffect(() => {
+        if (teamChat.messages.length > lastMessageCountRef.current) {
+            resetAutoHideTimer();
+        }
+        lastMessageCountRef.current = teamChat.messages.length;
+    }, [teamChat.messages.length, resetAutoHideTimer]);
+
+    // Reset timer wenn Input aktiv wird oder editMode sich ändert
+    useEffect(() => {
+        if (isInputActive || editMode) {
+            if (autoHideTimerRef.current) {
+                clearTimeout(autoHideTimerRef.current);
+            }
+            setIsAutoHidden(false);
+        } else if (hasMessages) {
+            resetAutoHideTimer();
+        }
+    }, [isInputActive, editMode, hasMessages, resetAutoHideTimer]);
+
+    // Cleanup
+    useEffect(() => {
+        return () => {
+            if (autoHideTimerRef.current) {
+                clearTimeout(autoHideTimerRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -116,6 +164,11 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode }: T
                 </span>
             </motion.div>
         );
+    }
+
+    // Auto-hide: Wenn Timer abgelaufen und Input nicht aktiv, verstecken
+    if (isAutoHidden && !isInputActive) {
+        return null;
     }
 
     if (!isVisible && !isInputActive && !hasMessages) return null;
