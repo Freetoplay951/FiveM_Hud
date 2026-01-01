@@ -80,7 +80,6 @@ const VOICE_HEIGHT = 50;
 const SPEEDOMETER_HEIGHT = 200;
 const SPEEDOMETER_WIDTH = 240;
 const MONEY_WIDGET_WIDTH = 160;
-const MONEY_WIDGET_HEIGHT_WITH_BLACK = 140;
 const BOTTOM_MARGIN = 20;
 
 // Calculate bottom-aligned Y position
@@ -184,7 +183,13 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
         { id: "voice", type: "voice", position: bottomPos(0.47, VOICE_HEIGHT), visible: true, scale: 1 },
-        { id: "radio", type: "radio", position: { x: getScreenWidth() - 200, y: 180 }, visible: true, scale: 1 },
+        {
+            id: "radio",
+            type: "radio",
+            position: { x: getScreenWidth() - 180, y: 180 },
+            visible: true,
+            scale: 0.8,
+        },
         { id: "speedometer", type: "speedometer", position: getDefaultSpeedoPos(), visible: true, scale: 1 },
         { id: "deathscreen", type: "deathscreen", position: pos(0.25, 0.15), visible: true, scale: 1 },
         {
@@ -197,7 +202,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "teamchat",
             type: "teamchat",
-            position: { x: getScreenWidth() - 340, y: 20 + MONEY_WIDGET_HEIGHT_WITH_BLACK + 10 },
+            position: { x: getScreenWidth() - 515, y: 20 },
             visible: true,
             scale: 1,
         },
