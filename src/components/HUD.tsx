@@ -831,7 +831,10 @@ export const HUD = () => {
                             visible={widget.visible}
                             scale={widget.scale}
                             {...widgetProps}>
-                            <CompassWidget heading={locationState.heading} />
+                            <CompassWidget
+                                heading={locationState.heading}
+                                editMode={editMode}
+                            />
                         </HUDWidget>
                     );
                 })()}

@@ -3,12 +3,11 @@ import { motion } from "framer-motion";
 
 interface CompassWidgetProps {
     heading: number;
-    enabled?: boolean; // Dynamisch aktivierbar (z.B. durch Item)
+    editMode: boolean;
 }
 
-export const CompassWidget = ({ heading = 0, enabled = true }: CompassWidgetProps) => {
-    // If not enabled, don't render
-    if (!enabled) {
+export const CompassWidget = ({ heading, editMode }: CompassWidgetProps) => {
+    if (heading == undefined && !editMode) {
         return null;
     }
 
