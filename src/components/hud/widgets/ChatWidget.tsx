@@ -32,17 +32,9 @@ interface ChatWidgetProps {
     onClose?: () => void;
     isOpen?: boolean;
     registeredCommands?: ChatCommand[];
-    editMode?: boolean;
 }
 
-export const ChatWidget = ({
-    chat,
-    onSendMessage,
-    onClose,
-    isOpen = true,
-    registeredCommands,
-    editMode = false,
-}: ChatWidgetProps) => {
+export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, registeredCommands }: ChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -109,7 +101,7 @@ export const ChatWidget = ({
 
     // Focus input when chat opens - with recovery after tab-out
     useEffect(() => {
-        if (!isInputActive || editMode) return;
+        if (!isInputActive) return;
 
         const focusInput = () => {
             if (inputRef.current && document.activeElement !== inputRef.current) {
@@ -122,7 +114,7 @@ export const ChatWidget = ({
 
         // Re-focus when window gains focus (after tab-out)
         const handleFocus = () => {
-            if (isInputActive && !editMode) {
+            if (isInputActive) {
                 // Small delay to ensure DOM is ready
                 setTimeout(focusInput, 50);
             }
@@ -142,7 +134,7 @@ export const ChatWidget = ({
             window.removeEventListener("focus", handleFocus);
             containerRef.current?.removeEventListener("click", handleContainerClick);
         };
-    }, [isInputActive, editMode]);
+    }, [isInputActive]);
 
     // Scroll selected command into view
     useEffect(() => {
@@ -182,15 +174,17 @@ export const ChatWidget = ({
         setInputValue("");
         setShowCommandSuggestions(false);
 
-        // Always close chat completely after sending (commands and messages)
-        closeChat();
+        const isValidCommand =
+            msg.startsWith("/") &&
+            availableCommands.some((cmd) => cmd.command.toLowerCase() === msg.split(" ")[0].toLowerCase());
+
+        if (isValidCommand && onClose) {
+            onClose();
+        }
     }, [inputValue, onSendMessage, addToHistory, closeChat]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
-            // Don't handle keys in edit mode
-            if (editMode) return;
-
             // ESC closes the chat
             if (e.key === "Escape") {
                 e.preventDefault();
@@ -254,7 +248,6 @@ export const ChatWidget = ({
             }
         },
         [
-            editMode,
             showCommandSuggestions,
             filteredCommands,
             inputValue,
@@ -296,10 +289,7 @@ export const ChatWidget = ({
             {(isVisible || isInputActive || hasMessages) && (
                 <motion.div
                     ref={containerRef}
-                    className={cn(
-                        "glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col",
-                        editMode && "pointer-events-none"
-                    )}
+                    className="glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col"
                     style={{ width: "320px", height: "280px" }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: isVisible || isInputActive ? 1 : 0.3, y: 0 }}
@@ -319,7 +309,7 @@ export const ChatWidget = ({
                                 </span>
                             )}
                         </div>
-                        {onClose && isInputActive && !editMode && (
+                        {onClose && isInputActive && (
                             <button
                                 onClick={closeChat}
                                 className="p-1 rounded hover:bg-background/50 transition-colors">
@@ -359,7 +349,7 @@ export const ChatWidget = ({
                     </div>
 
                     {/* Input */}
-                    {isInputActive && !editMode && (
+                    {isInputActive && (
                         <div className="relative px-3 py-2 border-t border-border/30 bg-background/40">
                             {/* Command Suggestions Popup */}
                             <AnimatePresence>

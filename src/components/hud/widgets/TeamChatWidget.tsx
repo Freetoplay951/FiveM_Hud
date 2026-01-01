@@ -10,7 +10,6 @@ interface TeamChatWidgetProps {
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
     isOpen?: boolean;
-    editMode?: boolean;
 }
 
 const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; icon: typeof Shield }> = {
@@ -22,13 +21,7 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
     default: { bg: "bg-primary/20", text: "text-primary", border: "border-primary/30", icon: Shield },
 };
 
-export const TeamChatWidget = ({
-    teamChat,
-    onSendMessage,
-    onClose,
-    isOpen = true,
-    editMode = false,
-}: TeamChatWidgetProps) => {
+export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, isOpen = true }: TeamChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +39,7 @@ export const TeamChatWidget = ({
     }, [teamChat.messages]);
 
     useEffect(() => {
-        if (!isInputActive || editMode) return;
+        if (!isInputActive) return;
 
         const focusInput = () => {
             if (inputRef.current && document.activeElement !== inputRef.current) {
@@ -57,14 +50,14 @@ export const TeamChatWidget = ({
         focusInput();
 
         const handleFocus = () => {
-            if (isInputActive && !editMode) {
+            if (isInputActive) {
                 setTimeout(focusInput, 50);
             }
         };
 
         window.addEventListener("focus", handleFocus);
         return () => window.removeEventListener("focus", handleFocus);
-    }, [isInputActive, editMode]);
+    }, [isInputActive]);
 
     const closeChat = useCallback(() => {
         setInputValue("");
@@ -84,8 +77,6 @@ export const TeamChatWidget = ({
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
-            if (editMode) return;
-
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
@@ -104,7 +95,7 @@ export const TeamChatWidget = ({
                 if (next !== null) setInputValue(next);
             }
         },
-        [editMode, handleSend, closeChat, navigatePrevious, navigateNext, inputValue]
+        [handleSend, closeChat, navigatePrevious, navigateNext, inputValue]
     );
 
     if (!teamChat.hasAccess) {
@@ -135,11 +126,7 @@ export const TeamChatWidget = ({
             {(isVisible || isInputActive || hasMessages) && (
                 <motion.div
                     ref={containerRef}
-                    className={cn(
-                        "glass-panel rounded-lg overflow-hidden flex flex-col border",
-                        teamColor.border,
-                        editMode && "pointer-events-none"
-                    )}
+                    className="glass-panel rounded-lg overflow-hidden flex flex-col border"
                     style={{ width: "320px", height: "280px" }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: isVisible || isInputActive ? 1 : 0.3, y: 0 }}
@@ -179,7 +166,7 @@ export const TeamChatWidget = ({
                         </div>
                         <div className="flex items-center gap-1">
                             <span className="text-[10px] text-muted-foreground">{teamChat.onlineMembers} online</span>
-                            {onClose && isInputActive && !editMode && (
+                            {onClose && isInputActive && (
                                 <button
                                     onClick={closeChat}
                                     className="p-1 rounded hover:bg-background/50 transition-colors ml-1">
@@ -228,7 +215,7 @@ export const TeamChatWidget = ({
                     </div>
 
                     {/* Input */}
-                    {isInputActive && !editMode && (
+                    {isInputActive && (
                         <div className={cn("px-3 py-2 border-t", teamColor.border, "bg-background/40")}>
                             <div className="flex items-center gap-2">
                                 <input

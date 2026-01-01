@@ -9,10 +9,9 @@ import { useTranslation } from "@/contexts/LanguageContext";
 interface DeathScreenWidgetProps {
     death: DeathState;
     visible: boolean;
-    editMode?: boolean;
 }
 
-export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScreenWidgetProps) => {
+export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) => {
     const { t } = useTranslation();
 
     const { isDead, respawnTimer, waitTimer, canCallHelp = true, canRespawn = false, message } = death;
@@ -20,19 +19,16 @@ export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScr
     const waitProgress = waitTimer > 0 ? ((60 - waitTimer) / 60) * 100 : 100;
 
     const handleCallHelp = () => {
-        if (editMode) return;
         sendNuiCallback("deathCallHelp");
     };
 
     const handleRespawn = () => {
-        if (editMode) return;
         if (canRespawn) {
             sendNuiCallback("deathRespawn");
         }
     };
 
     const handleSyncPosition = () => {
-        if (editMode) return;
         sendNuiCallback("deathSyncPosition");
     };
 
@@ -44,7 +40,7 @@ export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScr
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className={cn("flex flex-col items-center text-center z-10 p-3", editMode && "pointer-events-none")}>
+            className="flex flex-col items-center text-center z-10 p-3">
             {/* Skull Icon with Glow */}
             <motion.div
                 className="relative mb-4"
@@ -143,16 +139,16 @@ export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScr
             <p className="text-[10px] text-muted-foreground mb-4 max-w-xs">{t.death.infoText}</p>
 
             {/* Action Buttons - disabled in edit mode */}
-            <div className={cn("flex gap-2 mb-3", editMode && "opacity-50")}>
+            <div className="flex gap-2 mb-3">
                 {/* Call Help Button */}
                 <motion.button
                     onClick={handleCallHelp}
-                    disabled={!canCallHelp || editMode}
-                    whileHover={canCallHelp && !editMode ? { scale: 1.02 } : {}}
-                    whileTap={canCallHelp && !editMode ? { scale: 0.98 } : {}}
+                    disabled={!canCallHelp}
+                    whileHover={canCallHelp ? { scale: 1.02 } : {}}
+                    whileTap={canCallHelp ? { scale: 0.98 } : {}}
                     className={cn(
                         "relative flex items-center gap-2 px-3 py-2 transition-all overflow-hidden clip-corner",
-                        canCallHelp && !editMode
+                        canCallHelp
                             ? "text-primary cursor-pointer"
                             : "text-muted-foreground cursor-not-allowed opacity-40"
                     )}
@@ -176,7 +172,7 @@ export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScr
                             padding: "1px",
                         }}
                     />
-                    {canCallHelp && !editMode && (
+                    {canCallHelp && (
                         <motion.div
                             className="absolute inset-0 pointer-events-none"
                             animate={{ opacity: [0.3, 0.6, 0.3] }}
@@ -206,12 +202,12 @@ export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScr
                 {/* Respawn Button */}
                 <motion.button
                     onClick={handleRespawn}
-                    disabled={!canRespawn || editMode}
-                    whileHover={canRespawn && !editMode ? { scale: 1.02 } : {}}
-                    whileTap={canRespawn && !editMode ? { scale: 0.98 } : {}}
+                    disabled={!canRespawn}
+                    whileHover={canRespawn ? { scale: 1.02 } : {}}
+                    whileTap={canRespawn ? { scale: 0.98 } : {}}
                     className={cn(
                         "relative flex items-center gap-2 px-3 py-2 transition-all overflow-hidden",
-                        canRespawn && !editMode
+                        canRespawn
                             ? "text-foreground cursor-pointer"
                             : "text-muted-foreground cursor-not-allowed opacity-40"
                     )}
@@ -235,7 +231,7 @@ export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScr
                             padding: "1px",
                         }}
                     />
-                    {canRespawn && !editMode && (
+                    {canRespawn && (
                         <motion.div
                             className="absolute inset-0 pointer-events-none"
                             animate={{ opacity: [0.2, 0.4, 0.2] }}
@@ -266,14 +262,9 @@ export const DeathScreenWidget = ({ death, visible, editMode = false }: DeathScr
             {/* Sync Position Button */}
             <motion.button
                 onClick={handleSyncPosition}
-                disabled={editMode}
-                whileHover={!editMode ? { scale: 1.02 } : {}}
-                whileTap={!editMode ? { scale: 0.98 } : {}}
-                className={cn(
-                    "relative flex items-center gap-1.5 px-2.5 py-1.5 text-muted-foreground transition-all overflow-hidden",
-                    !editMode && "hover:text-foreground",
-                    editMode && "opacity-50"
-                )}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative flex items-center gap-1.5 px-2.5 py-1.5 text-muted-foreground transition-all overflow-hidden hover:text-foreground"
                 style={{
                     background: "linear-gradient(135deg, hsl(var(--muted) / 0.15) 0%, hsl(var(--muted) / 0.05) 100%)",
                     clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
