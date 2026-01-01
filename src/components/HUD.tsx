@@ -223,11 +223,64 @@ export const HUD = () => {
             const notifyFn = { success, error, warning, info }[data.type] || info;
             notifyFn(data.title, data.message, data.duration);
         },
-        onUpdateChat: (data) => {
-            setChatState((prev) => ({ ...prev, ...data }));
+        // Chat events - new createMessage pattern
+        onChatOpen: (data) => {
+            setChatState((prev) => ({
+                ...prev,
+                isOpen: data.isOpen,
+                isInputActive: data.isInputActive,
+            }));
         },
-        onUpdateTeamChat: (data) => {
-            setTeamChatState((prev) => ({ ...prev, ...data }));
+        onChatClose: () => {
+            setChatState((prev) => ({
+                ...prev,
+                isInputActive: false,
+            }));
+        },
+        onChatCreateMessage: (message) => {
+            setChatState((prev) => ({
+                ...prev,
+                isOpen: true,
+                messages: [...prev.messages, message].slice(-50),
+            }));
+        },
+        onChatClear: () => {
+            setChatState((prev) => ({
+                ...prev,
+                messages: [],
+            }));
+        },
+        // Team chat events - new createMessage pattern
+        onTeamChatOpen: (data) => {
+            setTeamChatState((prev) => ({
+                ...prev,
+                isOpen: data.isOpen,
+                isInputActive: data.isInputActive,
+                hasAccess: data.hasAccess,
+                teamType: data.teamType as TeamChatState["teamType"],
+                teamName: data.teamName,
+                onlineMembers: data.onlineMembers,
+                isAdmin: data.isAdmin,
+            }));
+        },
+        onTeamChatClose: () => {
+            setTeamChatState((prev) => ({
+                ...prev,
+                isInputActive: false,
+            }));
+        },
+        onTeamChatCreateMessage: (message) => {
+            setTeamChatState((prev) => ({
+                ...prev,
+                isOpen: true,
+                messages: [...prev.messages, message].slice(-50),
+            }));
+        },
+        onTeamChatClear: () => {
+            setTeamChatState((prev) => ({
+                ...prev,
+                messages: [],
+            }));
         },
     });
 
@@ -386,8 +439,9 @@ export const HUD = () => {
     }, [isDemoMode, editMode]);
 
     // Demo: Death Timer Animation (countdown when death preview is active in edit mode)
+    // Works in both demo mode and FiveM when edit mode death preview is enabled
     useEffect(() => {
-        if (!isDemoMode || !showDeathScreenPreview) {
+        if (!showDeathScreenPreview || !editMode) {
             // Reset timer when preview is turned off
             setDemoDeathTimer({ respawnTimer: 14, waitTimer: 59 });
             return;
@@ -414,7 +468,7 @@ export const HUD = () => {
         }, 1000);
 
         return () => clearInterval(timerInterval);
-    }, [isDemoMode, editMode]);
+    }, [showDeathScreenPreview, editMode, deathState.canRespawn]);
 
     // Demo key controls + ESC to exit edit mode
     useEffect(() => {
@@ -721,6 +775,19 @@ export const HUD = () => {
                     const widget = getWidget(type);
                     if (!widget) return null;
                     const value = hudState[type] ?? 100;
+
+                    // Check if framework provides this status (hide if not available)
+                    // In demo mode, all statuses are shown
+                    // In NUI mode, only show statuses that the framework supports
+                    if (!isDemoMode) {
+                        // Health and stamina are always available (native GTA)
+                        // Other statuses require framework support
+                        if (type === "hunger" && hudState.hasHunger === false) return null;
+                        if (type === "thirst" && hudState.hasThirst === false) return null;
+                        if (type === "stress" && hudState.hasStress === false) return null;
+                        if (type === "armor" && hudState.hasArmor === false) return null;
+                        if (type === "stamina" && hudState.hasStamina === false) return null;
+                    }
 
                     // Oxygen: Only show in water (or in edit mode)
                     if (type === "oxygen" && !editMode) {

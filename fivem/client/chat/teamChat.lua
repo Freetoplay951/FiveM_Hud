@@ -3,9 +3,8 @@
 -- ============================================================================
 
 local teamChatMessages = {}
-local teamChatVisible = false
+local teamChatOpen = false
 local teamChatInputActive = false
-local teamChatHideTimer = nil
 
 -- Permission Cache
 local cachedTeamAccess = false
@@ -14,33 +13,6 @@ local cachedStaffRankName = nil
 local cachedStaffRankConfig = nil
 local cachedIsAdmin = false
 local cachedOnlineCount = 0
-
--- ============================================================================
--- UTILITY
--- ============================================================================
-
-local function ResetTeamChatHideTimer()
-    local fadeTime = (Config and Config.ChatFadeTime or 10) * 1000
-    local timerId = GetGameTimer()
-    teamChatHideTimer = timerId
-
-    SetTimeout(fadeTime, function()
-        if teamChatHideTimer == timerId and teamChatVisible and not teamChatInputActive then
-            teamChatVisible = false
-            SendNUI("updateTeamChat", {
-                isOpen = false,
-                isVisible = false,
-                hasAccess = cachedTeamAccess,
-                teamType = cachedStaffRank,
-                teamName = Config and Config.TeamChatName or "Team-Chat",
-                messages = teamChatMessages,
-                unreadCount = 0,
-                onlineMembers = cachedOnlineCount,
-                isAdmin = cachedIsAdmin
-            })
-        end
-    end)
-end
 
 -- ============================================================================
 -- PERMISSIONS
@@ -77,36 +49,32 @@ end)
 -- TEAM CHAT LOGIC
 -- ============================================================================
 
-local function SendTeamChatMessage(sender, rank, message, isImportant)
+local function CreateTeamChatMessage(sender, rank, message, isImportant)
     local maxMessages = Config and Config.ChatMaxMessages or 50
 
-    table.insert(teamChatMessages, {
+    -- Use rank from config if available
+    local displayRank = rank
+    if cachedStaffRankConfig and cachedStaffRankName then
+        displayRank = cachedStaffRankName
+    end
+
+    local newMessage = {
         id = tostring(GetGameTimer()),
         sender = sender,
-        rank = rank,
+        rank = displayRank,
         message = message,
         timestamp = GetTimestamp(),
         isImportant = isImportant or false
-    })
+    }
+
+    table.insert(teamChatMessages, newMessage)
 
     if #teamChatMessages > maxMessages then
         table.remove(teamChatMessages, 1)
     end
 
-    teamChatVisible = true
-    ResetTeamChatHideTimer()
-
-    SendNUI("updateTeamChat", {
-        isOpen = true,
-        isVisible = true,
-        hasAccess = cachedTeamAccess,
-        teamType = cachedStaffRank,
-        teamName = Config and Config.TeamChatName or "Team-Chat",
-        messages = teamChatMessages,
-        unreadCount = teamChatInputActive and 0 or 1,
-        onlineMembers = cachedOnlineCount,
-        isAdmin = cachedIsAdmin
-    })
+    -- Send createMessage event to NUI
+    SendNUI("teamChatCreateMessage", newMessage)
 end
 
 -- ============================================================================
@@ -117,18 +85,15 @@ function OpenTeamChat()
     if not cachedTeamAccess then return end
 
     teamChatInputActive = true
-    teamChatVisible = true
-    teamChatHideTimer = nil
+    teamChatOpen = true
     SetNuiFocus(true, false)
 
-    SendNUI("updateTeamChat", {
+    SendNUI("teamChatOpen", {
         isOpen = true,
-        isVisible = true,
+        isInputActive = true,
         hasAccess = true,
-        teamType = cachedStaffRank,
+        teamType = cachedStaffRank or "supporter",
         teamName = Config and Config.TeamChatName or "Team-Chat",
-        messages = teamChatMessages,
-        unreadCount = 0,
         onlineMembers = cachedOnlineCount,
         isAdmin = cachedIsAdmin
     })
@@ -137,19 +102,8 @@ end
 function CloseTeamChat()
     teamChatInputActive = false
     SetNuiFocus(false, false)
-    ResetTeamChatHideTimer()
 
-    SendNUI("updateTeamChat", {
-        isOpen = false,
-        isVisible = teamChatVisible,
-        hasAccess = cachedTeamAccess,
-        teamType = cachedStaffRank,
-        teamName = Config and Config.TeamChatName or "Team-Chat",
-        messages = teamChatMessages,
-        unreadCount = 0,
-        onlineMembers = cachedOnlineCount,
-        isAdmin = cachedIsAdmin
-    })
+    SendNUI("teamChatClose", {})
 end
 
 -- ============================================================================
@@ -182,7 +136,14 @@ end)
 -- EVENTS
 -- ============================================================================
 
-RegisterNetEvent("hud:receiveTeamChatMessage", SendTeamChatMessage)
+RegisterNetEvent("hud:receiveTeamChatMessage", function(sender, rank, message, isImportant)
+    CreateTeamChatMessage(sender, rank, message, isImportant)
+end)
+
+RegisterNetEvent("hud:clearTeamChat", function()
+    teamChatMessages = {}
+    SendNUI("teamChatClear", {})
+end)
 
 -- ============================================================================
 -- EXPORTS
@@ -190,7 +151,11 @@ RegisterNetEvent("hud:receiveTeamChatMessage", SendTeamChatMessage)
 
 exports("openTeamChat", OpenTeamChat)
 exports("closeTeamChat", CloseTeamChat)
-exports("isTeamChatOpen", function() return teamChatInputActive end)
-exports("isTeamChatVisible", function() return teamChatVisible end)
+exports("isTeamChatOpen", function() return teamChatOpen end)
+exports("isTeamChatInputActive", function() return teamChatInputActive end)
 exports("hasTeamChatAccess", function() return cachedTeamAccess end)
-exports("sendTeamChatMessage", SendTeamChatMessage)
+exports("sendTeamChatMessage", CreateTeamChatMessage)
+exports("clearTeamChat", function()
+    teamChatMessages = {}
+    SendNUI("teamChatClear", {})
+end)

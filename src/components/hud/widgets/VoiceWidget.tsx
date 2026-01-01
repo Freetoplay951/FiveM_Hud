@@ -1,41 +1,49 @@
 import { motion } from "framer-motion";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Volume2 } from "lucide-react";
 import { VoiceState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 
+// Unified voice range types
+export type VoiceRangeType = "whisper" | "normal" | "shout" | "megaphone";
+
 interface VoiceWidgetProps {
     voice: VoiceState;
-    rangeConfig?: Record<string, { bars: number; color: string; label: string }>;
 }
 
-// Default Range-Konfiguration (kann via NUI überschrieben werden)
-const DEFAULT_RANGE_CONFIG: Record<string, { bars: number; color: string; label: string }> = {
-    // Standard Ranges (pma-voice, mumble-voip)
-    "whisper": { bars: 1, color: "muted-foreground", label: "Flüstern" },
-    "normal": { bars: 2, color: "warning", label: "Normal" },
-    "shout": { bars: 3, color: "critical", label: "Schreien" },
-
-    // SaltyChat Ranges (numerische Werte)
-    "1": { bars: 1, color: "muted-foreground", label: "Flüstern" },
-    "2": { bars: 2, color: "warning", label: "Normal" },
-    "3": { bars: 3, color: "critical", label: "Schreien" },
-
-    // SaltyChat alternative Namen
-    "whisper_range": { bars: 1, color: "muted-foreground", label: "Flüstern" },
-    "normal_range": { bars: 2, color: "warning", label: "Normal" },
-    "shouting": { bars: 3, color: "critical", label: "Schreien" },
-    "megaphone": { bars: 3, color: "primary", label: "Megafon" },
-
-    // TokoVOIP Ranges
-    "short": { bars: 1, color: "muted-foreground", label: "Kurz" },
-    "medium": { bars: 2, color: "warning", label: "Mittel" },
-    "long": { bars: 3, color: "critical", label: "Weit" },
+// Unified Range Configuration - only these 4 types are used
+const VOICE_RANGE_CONFIG: Record<VoiceRangeType, { bars: number; color: string; label: string }> = {
+    whisper: { bars: 1, color: "muted-foreground", label: "Flüstern" },
+    normal: { bars: 2, color: "warning", label: "Normal" },
+    shout: { bars: 3, color: "critical", label: "Schreien" },
+    megaphone: { bars: 3, color: "primary", label: "Megafon" },
 };
 
-export const VoiceWidget = ({ voice, rangeConfig }: VoiceWidgetProps) => {
-    const mergedConfig = { ...DEFAULT_RANGE_CONFIG, ...rangeConfig };
-    const rangeKey = String(voice.range);
-    const config = mergedConfig[rangeKey] || mergedConfig.normal;
+// Map legacy/external ranges to unified types
+const normalizeVoiceRange = (range: string): VoiceRangeType => {
+    const rangeLower = range.toLowerCase();
+    
+    // Direct matches
+    if (rangeLower === "whisper" || rangeLower === "whisper_range" || rangeLower === "1" || rangeLower === "short") {
+        return "whisper";
+    }
+    if (rangeLower === "normal" || rangeLower === "normal_range" || rangeLower === "2" || rangeLower === "medium") {
+        return "normal";
+    }
+    if (rangeLower === "shout" || rangeLower === "shouting" || rangeLower === "3" || rangeLower === "long") {
+        return "shout";
+    }
+    if (rangeLower === "megaphone" || rangeLower === "mega") {
+        return "megaphone";
+    }
+    
+    // Default to normal
+    return "normal";
+};
+
+export const VoiceWidget = ({ voice }: VoiceWidgetProps) => {
+    const normalizedRange = normalizeVoiceRange(voice.range);
+    const config = VOICE_RANGE_CONFIG[normalizedRange];
+    const isMegaphone = normalizedRange === "megaphone";
 
     return (
         <motion.div
@@ -44,13 +52,23 @@ export const VoiceWidget = ({ voice, rangeConfig }: VoiceWidgetProps) => {
             animate={{ opacity: 1, y: 0 }}>
             {/* Mic Icon */}
             {voice.active ? (
-                <Mic
-                    size={14}
-                    className={`text-${config.color}`}
-                    style={{
-                        filter: `drop-shadow(0 0 6px hsl(var(--${config.color})))`,
-                    }}
-                />
+                isMegaphone ? (
+                    <Volume2
+                        size={14}
+                        className={`text-${config.color}`}
+                        style={{
+                            filter: `drop-shadow(0 0 6px hsl(var(--${config.color})))`,
+                        }}
+                    />
+                ) : (
+                    <Mic
+                        size={14}
+                        className={`text-${config.color}`}
+                        style={{
+                            filter: `drop-shadow(0 0 6px hsl(var(--${config.color})))`,
+                        }}
+                    />
+                )
             ) : (
                 <MicOff
                     size={14}

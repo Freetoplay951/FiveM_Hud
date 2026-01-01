@@ -7,8 +7,8 @@ import {
     LocationState,
     NotificationData,
     DeathState,
-    ChatState,
-    TeamChatState,
+    ChatMessage,
+    TeamChatMessage,
     RadioState,
 } from "@/types/hud";
 
@@ -24,8 +24,16 @@ interface NuiEventHandlers {
     onSetVisible?: (visible: boolean) => void;
     onUpdateDeath?: (data: DeathState) => void;
     onSetVoiceEnabled?: (enabled: boolean) => void;
-    onUpdateChat?: (data: ChatState) => void;
-    onUpdateTeamChat?: (data: TeamChatState) => void;
+    // Chat events - now using createMessage pattern
+    onChatOpen?: (data: { isOpen: boolean; isInputActive: boolean }) => void;
+    onChatClose?: () => void;
+    onChatCreateMessage?: (data: ChatMessage) => void;
+    onChatClear?: () => void;
+    // Team chat events - now using createMessage pattern
+    onTeamChatOpen?: (data: { isOpen: boolean; isInputActive: boolean; hasAccess: boolean; teamType: string; teamName: string; onlineMembers: number; isAdmin: boolean }) => void;
+    onTeamChatClose?: () => void;
+    onTeamChatCreateMessage?: (data: TeamChatMessage) => void;
+    onTeamChatClear?: () => void;
     onUpdateRadio?: (data: RadioState) => void;
 }
 
@@ -73,11 +81,31 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                 case "setVoiceEnabled":
                     handlers.onSetVoiceEnabled?.(data);
                     break;
-                case "updateChat":
-                    handlers.onUpdateChat?.(data);
+                // New chat events
+                case "chatOpen":
+                    handlers.onChatOpen?.(data);
                     break;
-                case "updateTeamChat":
-                    handlers.onUpdateTeamChat?.(data);
+                case "chatClose":
+                    handlers.onChatClose?.();
+                    break;
+                case "chatCreateMessage":
+                    handlers.onChatCreateMessage?.(data);
+                    break;
+                case "chatClear":
+                    handlers.onChatClear?.();
+                    break;
+                // New team chat events
+                case "teamChatOpen":
+                    handlers.onTeamChatOpen?.(data);
+                    break;
+                case "teamChatClose":
+                    handlers.onTeamChatClose?.();
+                    break;
+                case "teamChatCreateMessage":
+                    handlers.onTeamChatCreateMessage?.(data);
+                    break;
+                case "teamChatClear":
+                    handlers.onTeamChatClear?.();
                     break;
                 case "updateRadio":
                     handlers.onUpdateRadio?.(data);
@@ -113,7 +141,18 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
             body: JSON.stringify(data ?? {}),
         });
 
-        return (await response.json()) as TResponse;
+        // Handle empty responses gracefully
+        const text = await response.text();
+        if (!text || text.trim() === "") {
+            return null;
+        }
+
+        try {
+            return JSON.parse(text) as TResponse;
+        } catch {
+            // Response is not JSON, return null
+            return null;
+        }
     } catch (error) {
         console.error("NUI Callback Error:", error);
         return null;

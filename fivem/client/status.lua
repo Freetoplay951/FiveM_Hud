@@ -33,10 +33,15 @@ CreateThread(function()
         -- Armor
         local armor = GetPedArmour(ped)
         
-        -- Status Daten
+        -- Status Daten mit Framework-Flags
         local statusData = {
             health = healthPercent,
-            armor = armor
+            armor = armor,
+            hasArmor = true, -- Always available
+            hasStamina = Config.EnableStamina or false,
+            hasHunger = false,
+            hasThirst = false,
+            hasStress = false
         }
         
         -- ================================================================
@@ -52,6 +57,7 @@ CreateThread(function()
                         local hungerStatus = status:getStatus('hunger')
                         if hungerStatus then
                             statusData.hunger = hungerStatus.percent or 100
+                            statusData.hasHunger = true
                         end
                     end
                     
@@ -59,6 +65,7 @@ CreateThread(function()
                         local thirstStatus = status:getStatus('thirst')
                         if thirstStatus then
                             statusData.thirst = thirstStatus.percent or 100
+                            statusData.hasThirst = true
                         end
                     end
                 end)
@@ -74,12 +81,15 @@ CreateThread(function()
             if PlayerData and PlayerData.metadata then
                 if Config.EnableHunger then
                     statusData.hunger = PlayerData.metadata.hunger or 100
+                    statusData.hasHunger = true
                 end
                 if Config.EnableThirst then
                     statusData.thirst = PlayerData.metadata.thirst or 100
+                    statusData.hasThirst = true
                 end
                 if Config.EnableStress then
                     statusData.stress = PlayerData.metadata.stress or 0
+                    statusData.hasStress = true
                 end
             end
         end
