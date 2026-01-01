@@ -1,5 +1,17 @@
 import { useEffect, useCallback } from "react";
-import { HudState, VehicleState, MoneyState, VoiceState, LocationState, NotificationData, DeathState, ChatState, TeamChatState } from "@/types/hud";
+import { 
+    HudState, 
+    VehicleState, 
+    MoneyState, 
+    VoiceState, 
+    LocationState, 
+    NotificationData, 
+    DeathState, 
+    ChatState, 
+    TeamChatState,
+    RadioState,
+    CompassState 
+} from "@/types/hud";
 
 interface NuiEventHandlers {
     onUpdateHud?: (data: Partial<HudState>) => void;
@@ -15,21 +27,19 @@ interface NuiEventHandlers {
     onSetVoiceEnabled?: (enabled: boolean) => void;
     onUpdateChat?: (data: ChatState) => void;
     onUpdateTeamChat?: (data: TeamChatState) => void;
+    onUpdateRadio?: (data: RadioState) => void;
+    onUpdateCompass?: (data: CompassState) => void;
 }
 
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
     const handleMessage = useCallback(
         (event: MessageEvent) => {
             const { action, data } = event.data;
-
-            // Support both 'action' (from Lua SendNUI) and 'type' (legacy)
             const eventType = action || event.data.type;
 
             switch (eventType) {
-                // Debug: Ping from Lua
                 case "ping":
                     console.log("[HUD DEBUG] Lua -> Web ping received");
-                    console.log("[HUD DEBUG] Web -> Lua pong sent");
                     sendNuiCallback("pong");
                     break;
                 case "updateHud":
@@ -71,6 +81,12 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                 case "updateTeamChat":
                     handlers.onUpdateTeamChat?.(data);
                     break;
+                case "updateRadio":
+                    handlers.onUpdateRadio?.(data);
+                    break;
+                case "updateCompass":
+                    handlers.onUpdateCompass?.(data);
+                    break;
             }
         },
         [handlers]
@@ -82,12 +98,10 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
     }, [handleMessage]);
 };
 
-// Utility to check if running in FiveM NUI
 export const isNuiEnvironment = (): boolean => {
     return typeof window !== "undefined" && window.invokeNative !== undefined;
 };
 
-// Send event back to FiveM
 export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
     eventName: string,
     data?: TPayload
@@ -111,7 +125,6 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
     }
 };
 
-// Get parent resource name (FiveM specific)
 const GetParentResourceName = (): string => {
     return window.GetParentResourceName?.() ?? "neon-hud";
 };

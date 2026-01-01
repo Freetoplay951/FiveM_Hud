@@ -3,9 +3,15 @@ import { motion } from "framer-motion";
 
 interface CompassWidgetProps {
     heading: number;
+    enabled?: boolean; // Dynamisch aktivierbar (z.B. durch Item)
 }
 
-export const CompassWidget = ({ heading = 0 }: CompassWidgetProps) => {
+export const CompassWidget = ({ heading = 0, enabled = true }: CompassWidgetProps) => {
+    // If not enabled, don't render
+    if (!enabled) {
+        return null;
+    }
+
     return (
         <div className="relative w-20 h-20">
             {/* Glass Background */}
@@ -19,20 +25,10 @@ export const CompassWidget = ({ heading = 0 }: CompassWidgetProps) => {
             </div>
 
             {/* SVG Compass */}
-            <svg
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 80 80">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80">
                 <defs>
-                    <filter
-                        id="compassGlow"
-                        x="-50%"
-                        y="-50%"
-                        width="200%"
-                        height="200%">
-                        <feGaussianBlur
-                            stdDeviation="1"
-                            result="coloredBlur"
-                        />
+                    <filter id="compassGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="1" result="coloredBlur" />
                         <feMerge>
                             <feMergeNode in="coloredBlur" />
                             <feMergeNode in="SourceGraphic" />
@@ -41,27 +37,18 @@ export const CompassWidget = ({ heading = 0 }: CompassWidgetProps) => {
                 </defs>
 
                 {/* Outer Ring */}
-                <circle
-                    cx="40"
-                    cy="40"
-                    r="36"
-                    fill="none"
-                    stroke="hsl(var(--muted) / 0.2)"
-                    strokeWidth="1"
-                />
+                <circle cx="40" cy="40" r="36" fill="none" stroke="hsl(var(--muted) / 0.2)" strokeWidth="1" />
 
                 {/* Direction Markers */}
                 {directions.map((dir, i) => {
-                    const radius = 30; // Radius from compass center
-                    const center = 40; // Center position
-                    const angleDeg = i * 45 - 90; // Start at top (-90°)
+                    const radius = 30;
+                    const center = 40;
+                    const angleDeg = i * 45 - 90;
                     const angleRad = angleDeg * (Math.PI / 180);
-
                     const x = center + radius * Math.cos(angleRad);
                     const y = center + radius * Math.sin(angleRad);
-
-                    const isCardinal = i % 2 === 0; // N, E, S, W
-                    const isActive = getDirectionFromDegree(heading) === dir; // current heading
+                    const isCardinal = i % 2 === 0;
+                    const isActive = getDirectionFromDegree(heading) === dir;
 
                     return (
                         <text
@@ -76,7 +63,8 @@ export const CompassWidget = ({ heading = 0 }: CompassWidgetProps) => {
                                 fontFamily: "Orbitron, sans-serif",
                                 fontWeight: isCardinal ? "bold" : "normal",
                                 filter: isActive ? "drop-shadow(0 0 4px hsl(var(--primary)))" : "none",
-                            }}>
+                            }}
+                        >
                             {dir}
                         </text>
                     );
@@ -86,7 +74,8 @@ export const CompassWidget = ({ heading = 0 }: CompassWidgetProps) => {
                 <motion.g
                     animate={{ rotate: heading }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                    style={{ transformOrigin: "40px 40px" }}>
+                    style={{ transformOrigin: "40px 40px" }}
+                >
                     {/* North Arrow (Red) */}
                     <polygon
                         points="40,15 37,40 43,40"
@@ -95,11 +84,7 @@ export const CompassWidget = ({ heading = 0 }: CompassWidgetProps) => {
                         style={{ filter: "drop-shadow(0 0 4px hsl(var(--critical)))" }}
                     />
                     {/* South Arrow (White) */}
-                    <polygon
-                        points="40,65 37,40 43,40"
-                        fill="hsl(var(--foreground))"
-                        opacity="0.6"
-                    />
+                    <polygon points="40,65 37,40 43,40" fill="hsl(var(--foreground))" opacity="0.6" />
                 </motion.g>
 
                 {/* Center Dot */}

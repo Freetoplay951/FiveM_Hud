@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatMessage, ChatState } from "@/types/hud";
 import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
+import { useChatHistory } from "@/hooks/useChatHistory";
 
 interface ChatCommand {
     command: string;
@@ -11,7 +12,6 @@ interface ChatCommand {
     usage?: string;
 }
 
-// Fallback Commands für Demo-Modus
 const DEMO_COMMANDS: ChatCommand[] = [
     { command: "/me", description: "Aktion ausführen", usage: "/me [text]" },
     { command: "/do", description: "Umgebungsbeschreibung", usage: "/do [text]" },
@@ -23,6 +23,7 @@ const DEMO_COMMANDS: ChatCommand[] = [
     { command: "/help", description: "Hilfe anzeigen", usage: "/help" },
     { command: "/report", description: "Report erstellen", usage: "/report [spieler] [grund]" },
     { command: "/pm", description: "Private Nachricht", usage: "/pm [id] [text]" },
+    { command: "/hudedit", description: "HUD Editor öffnen", usage: "/hudedit" },
 ];
 
 interface ChatWidgetProps {
@@ -31,26 +32,34 @@ interface ChatWidgetProps {
     onClose?: () => void;
     isOpen?: boolean;
     registeredCommands?: ChatCommand[];
+    editMode?: boolean;
 }
 
-export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, registeredCommands }: ChatWidgetProps) => {
+export const ChatWidget = ({ 
+    chat, 
+    onSendMessage, 
+    onClose, 
+    isOpen = true, 
+    registeredCommands,
+    editMode = false 
+}: ChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
-    const [messageHistory, setMessageHistory] = useState<string[]>([]);
-    const [historyIndex, setHistoryIndex] = useState(-1);
-    const [tempInput, setTempInput] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const [nuiCommands, setNuiCommands] = useState<ChatCommand[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const commandListRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Bestimme ob Chat sichtbar sein soll
+    // Persistent chat history
+    const { addToHistory, navigatePrevious, navigateNext, resetNavigation } = useChatHistory();
+
     const isVisible = chat.isVisible ?? true;
     const isInputActive = chat.isInputActive || isOpen;
     const hasMessages = chat.messages.length > 0;
 
-    // Load commands from FiveM in production
+    // Load commands from FiveM
     useEffect(() => {
         if (isNuiEnvironment()) {
             sendNuiCallback<{ success: boolean; commands: ChatCommand[] }>("getCommands").then((response) => {
@@ -60,7 +69,6 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
             });
         }
 
-        // Listen for updateCommands events from Lua
         const handleMessage = (event: MessageEvent) => {
             const { action, data } = event.data;
             if (action === "updateCommands" && Array.isArray(data)) {
@@ -72,18 +80,12 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
         return () => window.removeEventListener("message", handleMessage);
     }, []);
 
-    // Use registered commands from props, NUI, or fallback to demo
     const availableCommands = useMemo(() => {
-        if (registeredCommands && registeredCommands.length > 0) {
-            return registeredCommands;
-        }
-        if (nuiCommands.length > 0) {
-            return nuiCommands;
-        }
+        if (registeredCommands && registeredCommands.length > 0) return registeredCommands;
+        if (nuiCommands.length > 0) return nuiCommands;
         return DEMO_COMMANDS;
     }, [registeredCommands, nuiCommands]);
 
-    // Gefilterte Commands basierend auf Input
     const filteredCommands = useMemo(() => {
         if (!inputValue.startsWith("/")) return [];
         const search = inputValue.toLowerCase();
@@ -102,80 +104,102 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
         }
     }, [inputValue, filteredCommands.length]);
 
-    // Auto-scroll to bottom when new messages arrive
+    // Auto-scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [chat.messages]);
 
-    // Focus input when chat opens with input active
+    // Focus input when chat opens - with recovery after tab-out
     useEffect(() => {
-        if (isInputActive && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [isInputActive]);
+        if (!isInputActive || editMode) return;
+
+        const focusInput = () => {
+            if (inputRef.current && document.activeElement !== inputRef.current) {
+                inputRef.current.focus();
+            }
+        };
+
+        // Initial focus
+        focusInput();
+
+        // Re-focus when window gains focus (after tab-out)
+        const handleFocus = () => {
+            if (isInputActive && !editMode) {
+                // Small delay to ensure DOM is ready
+                setTimeout(focusInput, 50);
+            }
+        };
+
+        // Re-focus when clicking container
+        const handleContainerClick = (e: MouseEvent) => {
+            // Don't steal focus from buttons
+            if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+            focusInput();
+        };
+
+        window.addEventListener('focus', handleFocus);
+        containerRef.current?.addEventListener('click', handleContainerClick);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+            containerRef.current?.removeEventListener('click', handleContainerClick);
+        };
+    }, [isInputActive, editMode]);
 
     // Scroll selected command into view
     useEffect(() => {
         if (showCommandSuggestions && commandListRef.current) {
             const selectedElement = commandListRef.current.querySelector(`[data-index="${selectedCommandIndex}"]`);
-            if (selectedElement) {
-                selectedElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
-            }
+            selectedElement?.scrollIntoView({ block: "nearest", behavior: "smooth" });
         }
     }, [selectedCommandIndex, showCommandSuggestions]);
 
-    const selectCommand = (command: string) => {
-        // Wenn Command Parameter hat, füge Leerzeichen hinzu
+    const selectCommand = useCallback((command: string) => {
         const cmd = availableCommands.find((c) => c.command === command);
-        if (cmd && cmd.usage && cmd.usage.includes("[")) {
+        if (cmd?.usage?.includes("[")) {
             setInputValue(command + " ");
         } else {
             setInputValue(command);
         }
         setShowCommandSuggestions(false);
         inputRef.current?.focus();
-    };
+    }, [availableCommands]);
 
-    const handleSend = () => {
-        if (inputValue.trim() && onSendMessage) {
-            const msg = inputValue.trim();
-            // Check if it's a valid command (starts with / and exists)
-            const isValidCommand = msg.startsWith("/") && 
-                availableCommands.some((cmd) => 
-                    cmd.command.toLowerCase() === msg.split(" ")[0].toLowerCase()
-                );
-            
-            // Add to history (avoid duplicates at the end)
-            setMessageHistory((prev) => {
-                if (prev[prev.length - 1] === msg) return prev;
-                return [...prev, msg];
-            });
-            onSendMessage(msg);
-            setInputValue("");
-            setHistoryIndex(-1);
-            setTempInput("");
-            setShowCommandSuggestions(false);
-            
-            // Close chat immediately for valid commands
-            if (isValidCommand && onClose) {
-                onClose();
-            }
-        }
-    };
+    const closeChat = useCallback(() => {
+        setShowCommandSuggestions(false);
+        setInputValue("");
+        resetNavigation();
+        onClose?.();
+    }, [onClose, resetNavigation]);
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        // ESC always closes the chat
+    const handleSend = useCallback(() => {
+        if (!inputValue.trim() || !onSendMessage) return;
+        
+        const msg = inputValue.trim();
+        addToHistory(msg);
+        onSendMessage(msg);
+        setInputValue("");
+        setShowCommandSuggestions(false);
+        
+        // Always close chat completely after sending (commands and messages)
+        closeChat();
+    }, [inputValue, onSendMessage, addToHistory, closeChat]);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        // Don't handle keys in edit mode
+        if (editMode) return;
+
+        // ESC closes the chat
         if (e.key === "Escape") {
             e.preventDefault();
-            setShowCommandSuggestions(false);
-            onClose?.();
+            closeChat();
             return;
         }
 
-        // Tab closes the chat (prevents focus trap)
+        // Tab closes the chat
         if (e.key === "Tab") {
             e.preventDefault();
-            onClose?.();
+            closeChat();
             return;
         }
 
@@ -195,73 +219,67 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                 );
                 return;
             }
-            // Enter with suggestions: if input exactly matches a command, send it; otherwise select
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 const exactMatch = availableCommands.find(
                     (cmd) => cmd.command.toLowerCase() === inputValue.toLowerCase()
                 );
                 if (exactMatch) {
-                    // Exact command match - send it directly
                     handleSend();
                 } else {
-                    // Partial match - select the highlighted command
                     selectCommand(filteredCommands[selectedCommandIndex].command);
                 }
                 return;
             }
         }
 
-        // Normal behavior when no suggestions
+        // Enter to send
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+            return;
         }
-        // Arrow up - previous message (nur wenn keine Suggestions)
-        if (e.key === "ArrowUp" && messageHistory.length > 0 && !showCommandSuggestions) {
+
+        // Arrow up - previous message
+        if (e.key === "ArrowUp" && !showCommandSuggestions) {
             e.preventDefault();
-            if (historyIndex === -1) {
-                setTempInput(inputValue);
-                setHistoryIndex(messageHistory.length - 1);
-                setInputValue(messageHistory[messageHistory.length - 1]);
-            } else if (historyIndex > 0) {
-                setHistoryIndex(historyIndex - 1);
-                setInputValue(messageHistory[historyIndex - 1]);
-            }
+            const prev = navigatePrevious(inputValue);
+            if (prev !== null) setInputValue(prev);
+            return;
         }
-        // Arrow down - newer message (nur wenn keine Suggestions)
-        if (e.key === "ArrowDown" && historyIndex !== -1 && !showCommandSuggestions) {
+
+        // Arrow down - newer message
+        if (e.key === "ArrowDown" && !showCommandSuggestions) {
             e.preventDefault();
-            if (historyIndex < messageHistory.length - 1) {
-                setHistoryIndex(historyIndex + 1);
-                setInputValue(messageHistory[historyIndex + 1]);
-            } else {
-                setHistoryIndex(-1);
-                setInputValue(tempInput);
-            }
+            const next = navigateNext();
+            if (next !== null) setInputValue(next);
         }
-    };
+    }, [
+        editMode, 
+        showCommandSuggestions, 
+        filteredCommands, 
+        inputValue, 
+        availableCommands,
+        selectedCommandIndex,
+        handleSend, 
+        selectCommand, 
+        closeChat,
+        navigatePrevious,
+        navigateNext
+    ]);
 
     const getMessageColor = (type: ChatMessage["type"]) => {
         switch (type) {
-            case "system":
-                return "text-warning";
-            case "action":
-                return "text-primary";
-            case "ooc":
-                return "text-muted-foreground";
-            case "whisper":
-                return "text-muted-foreground/70 italic";
-            case "shout":
-                return "text-critical font-semibold";
-            case "radio":
-                return "text-info";
-            default:
-                return "text-foreground";
+            case "system": return "text-warning";
+            case "action": return "text-primary";
+            case "ooc": return "text-muted-foreground";
+            case "whisper": return "text-muted-foreground/70 italic";
+            case "shout": return "text-critical font-semibold";
+            case "radio": return "text-info";
+            default: return "text-foreground";
         }
     };
 
-    // Wenn nicht sichtbar und keine Eingabe aktiv, ausblenden
     if (!isVisible && !isInputActive && !hasMessages) {
         return null;
     }
@@ -270,22 +288,21 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
         <AnimatePresence>
             {(isVisible || isInputActive || hasMessages) && (
                 <motion.div
-                    className="glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col"
-                    style={{
-                        width: "320px",
-                        height: "280px",
-                    }}
+                    ref={containerRef}
+                    className={cn(
+                        "glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col",
+                        editMode && "pointer-events-none"
+                    )}
+                    style={{ width: "320px", height: "280px" }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: isVisible || isInputActive ? 1 : 0.3, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}>
+                    transition={{ duration: 0.3 }}
+                >
                     {/* Header */}
                     <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 bg-background/40">
                         <div className="flex items-center gap-2">
-                            <MessageSquare
-                                size={14}
-                                className="text-primary"
-                            />
+                            <MessageSquare size={14} className="text-primary" />
                             <span className="text-xs font-medium text-foreground uppercase tracking-wider">Chat</span>
                             {chat.unreadCount > 0 && (
                                 <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/20 text-primary">
@@ -293,14 +310,12 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                                 </span>
                             )}
                         </div>
-                        {onClose && isInputActive && (
+                        {onClose && isInputActive && !editMode && (
                             <button
-                                onClick={onClose}
-                                className="p-1 rounded hover:bg-background/50 transition-colors">
-                                <X
-                                    size={12}
-                                    className="text-muted-foreground"
-                                />
+                                onClick={closeChat}
+                                className="p-1 rounded hover:bg-background/50 transition-colors"
+                            >
+                                <X size={12} className="text-muted-foreground" />
                             </button>
                         )}
                     </div>
@@ -314,22 +329,17 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 10 }}
-                                    className="text-xs leading-relaxed">
-                                    {/* Timestamp */}
+                                    className="text-xs leading-relaxed"
+                                >
                                     <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
-
-                                    {/* Sender */}
                                     {msg.sender && (
-                                        <span
-                                            className={cn(
-                                                "font-medium mr-1",
-                                                msg.type === "system" ? "text-warning" : "text-primary"
-                                            )}>
+                                        <span className={cn(
+                                            "font-medium mr-1",
+                                            msg.type === "system" ? "text-warning" : "text-primary"
+                                        )}>
                                             {msg.sender}:
                                         </span>
                                     )}
-
-                                    {/* Message */}
                                     <span className={getMessageColor(msg.type)}>{msg.message}</span>
                                 </motion.div>
                             ))}
@@ -337,8 +347,8 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Input - nur anzeigen wenn Eingabe aktiv */}
-                    {isInputActive && (
+                    {/* Input */}
+                    {isInputActive && !editMode && (
                         <div className="relative px-3 py-2 border-t border-border/30 bg-background/40">
                             {/* Command Suggestions Popup */}
                             <AnimatePresence>
@@ -347,17 +357,15 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute bottom-full left-3 right-3 mb-1 z-50">
+                                        className="absolute bottom-full left-3 right-3 mb-1 z-50"
+                                    >
                                         <div className="rounded-lg border border-border/50 bg-card shadow-lg overflow-hidden">
                                             <div className="px-2 py-1.5 border-b border-border/30">
                                                 <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                                                     Commands
                                                 </span>
                                             </div>
-                                            <div 
-                                                ref={commandListRef}
-                                                className="max-h-[150px] overflow-y-auto py-1"
-                                            >
+                                            <div ref={commandListRef} className="max-h-[150px] overflow-y-auto py-1">
                                                 {filteredCommands.map((cmd, index) => (
                                                     <div
                                                         key={cmd.command}
@@ -368,7 +376,8 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                                                             index === selectedCommandIndex
                                                                 ? "bg-primary/20 text-foreground"
                                                                 : "hover:bg-accent/50"
-                                                        )}>
+                                                        )}
+                                                    >
                                                         <Terminal 
                                                             size={12} 
                                                             className={cn(
@@ -423,7 +432,8 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, isOpen = true, regist
                                         inputValue.trim()
                                             ? "bg-primary/20 text-primary hover:bg-primary/30"
                                             : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
-                                    )}>
+                                    )}
+                                >
                                     <Send size={12} />
                                 </button>
                             </div>
