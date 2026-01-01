@@ -7,7 +7,7 @@ import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { StatusWidget } from "./hud/widgets/StatusWidget";
 import { MoneyWidget } from "./hud/widgets/MoneyWidget";
 import { VoiceWidget } from "./hud/widgets/VoiceWidget";
-import { MinimapWidget } from "./hud/widgets/MinimapWidget";
+import { LocationWidget } from "./hud/widgets/LocationWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";
 import { CompassWidget } from "./hud/widgets/CompassWidget";
 import { NotificationContainer } from "./hud/notifications/NotificationContainer";
@@ -715,7 +715,7 @@ export const HUD = () => {
                 </div>
             )}
 
-            {/* Status Widgets - hidden when dead OR when death preview is active in edit mode */}
+            {/* Status Widgets */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 statusTypes.map((type) => {
                     const widget = getWidget(type);
@@ -744,7 +744,7 @@ export const HUD = () => {
                     );
                 })}
 
-            {/* Money Widget - hidden when dead OR when death preview is active in edit mode */}
+            {/* Money Widget */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("money");
@@ -764,7 +764,7 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Clock Widget - hidden when dead OR when death preview is active in edit mode */}
+            {/* Clock Widget */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("clock");
@@ -799,19 +799,19 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Minimap Widget - hidden when dead OR when death preview is active in edit mode */}
+            {/* Location Widget */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
-                    const widget = getWidget("minimap");
+                    const widget = getWidget("location");
                     if (!widget) return null;
                     return (
                         <HUDWidget
-                            id="minimap"
+                            id="location"
                             position={widget.position}
                             visible={widget.visible}
                             scale={widget.scale}
                             {...widgetProps}>
-                            <MinimapWidget
+                            <LocationWidget
                                 location={locationState}
                                 shape={minimapShape}
                             />
@@ -819,7 +819,7 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Compass Widget - hidden when dead OR when death preview is active in edit mode */}
+            {/* Compass Widget */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("compass");
@@ -836,7 +836,7 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Vehicle Speedometer - hidden when dead OR when death preview is active in edit mode */}
+            {/* Vehicle Speedometer */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("speedometer");
@@ -920,7 +920,7 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Chat Widget - hidden when dead OR when death preview is active in edit mode */}
+            {/* Chat Widget */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("chat");

@@ -25,7 +25,7 @@ export type WidgetType =
     | "compass"
     | "voice"
     | "radio"
-    | "minimap"
+    | "location"
     | "speedometer"
     | "notifications"
     | "deathscreen"
@@ -73,7 +73,7 @@ const getScreenWidth = () => (typeof window !== "undefined" ? window.innerWidth 
 const getScreenHeight = () => (typeof window !== "undefined" ? window.innerHeight : REFERENCE_HEIGHT);
 
 // Widget sizes for bottom alignment calculations
-const MINIMAP_HEIGHT = 200;
+const LOCATION_HEIGHT = 45;
 const STATUS_WIDGET_SIZE = 56;
 const STATUS_GAP = 8;
 const VOICE_HEIGHT = 50;
@@ -99,7 +99,7 @@ const bottomPos = (xPercent: number, widgetHeight: number, offsetX = 0): WidgetP
 });
 
 // Status icon positions
-const getStatusStartX = () => Math.round(getScreenWidth() * 0.12);
+const getStatusStartX = () => Math.round(getScreenWidth() * 0.15);
 const getStatusY = () => getBottomY(STATUS_WIDGET_SIZE);
 const getStatusSpacing = () => STATUS_WIDGET_SIZE + STATUS_GAP;
 
@@ -139,7 +139,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
         { id: "notifications", type: "notifications", position: pos(0.01, 0.25), visible: true, scale: 1 },
-        { id: "minimap", type: "minimap", position: bottomPos(0.01, MINIMAP_HEIGHT), visible: true, scale: 1 },
+        { id: "location", type: "location", position: bottomPos(0.01, LOCATION_HEIGHT), visible: true, scale: 1 },
         { id: "health", type: "health", position: { x: statusStartX, y: statusY }, visible: true, scale: 1 },
         {
             id: "armor",

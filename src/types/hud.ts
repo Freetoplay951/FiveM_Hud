@@ -76,8 +76,8 @@ export interface RadioState {
 
 export interface LocationState {
     street: string;
-    heading?: number;
     area?: string;
+    heading?: number;
 }
 
 export type StatusType = "health" | "armor" | "hunger" | "thirst" | "stamina" | "stress" | "oxygen";
