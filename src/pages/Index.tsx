@@ -6,10 +6,8 @@ const Index = () => {
     const { t } = useTranslation();
     const showDemoBackground = !isNuiEnvironment();
 
-    if (!t) {
-        return null;
-    }
-
+    // HUD rendert jetzt immer - useNuiEvents läuft also sofort
+    // Die Translations werden im HUD selbst gehandhabt
     return (
         <div
             className="min-h-screen w-full"

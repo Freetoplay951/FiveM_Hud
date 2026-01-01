@@ -635,8 +635,9 @@ export const HUD = () => {
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
-    // Wenn nicht sichtbar, nichts rendern
-    if (!isVisible) return null;
+    // Wenn nicht sichtbar oder Translations noch nicht geladen, nichts rendern
+    // WICHTIG: Dieser Check kommt NACH allen Hooks, damit useNuiEvents etc. bereits läuft
+    if (!isVisible || !t) return null;
 
     return (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
