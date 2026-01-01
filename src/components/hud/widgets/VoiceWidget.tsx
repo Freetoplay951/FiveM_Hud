@@ -1,7 +1,7 @@
-import { motion } from 'framer-motion';
-import { Mic, MicOff, Radio } from 'lucide-react';
-import { VoiceState } from '@/types/hud';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import { Mic, MicOff } from "lucide-react";
+import { VoiceState } from "@/types/hud";
+import { cn } from "@/lib/utils";
 
 interface NeonVoiceWidgetProps {
     voice: VoiceState;
@@ -11,51 +11,53 @@ interface NeonVoiceWidgetProps {
 // Default Range-Konfiguration (kann via NUI überschrieben werden)
 const DEFAULT_RANGE_CONFIG: Record<string, { bars: number; color: string; label: string }> = {
     // Standard Ranges (pma-voice, mumble-voip)
-    whisper: { bars: 1, color: 'muted-foreground', label: 'Flüstern' },
-    normal: { bars: 2, color: 'warning', label: 'Normal' },
-    shout: { bars: 3, color: 'critical', label: 'Schreien' },
-    
+    "whisper": { bars: 1, color: "muted-foreground", label: "Flüstern" },
+    "normal": { bars: 2, color: "warning", label: "Normal" },
+    "shout": { bars: 3, color: "critical", label: "Schreien" },
+
     // SaltyChat Ranges (numerische Werte)
-    '1': { bars: 1, color: 'muted-foreground', label: 'Flüstern' },
-    '2': { bars: 2, color: 'warning', label: 'Normal' },
-    '3': { bars: 3, color: 'critical', label: 'Schreien' },
-    
+    "1": { bars: 1, color: "muted-foreground", label: "Flüstern" },
+    "2": { bars: 2, color: "warning", label: "Normal" },
+    "3": { bars: 3, color: "critical", label: "Schreien" },
+
     // SaltyChat alternative Namen
-    whisper_range: { bars: 1, color: 'muted-foreground', label: 'Flüstern' },
-    normal_range: { bars: 2, color: 'warning', label: 'Normal' },
-    shouting: { bars: 3, color: 'critical', label: 'Schreien' },
-    megaphone: { bars: 3, color: 'primary', label: 'Megafon' },
-    
+    "whisper_range": { bars: 1, color: "muted-foreground", label: "Flüstern" },
+    "normal_range": { bars: 2, color: "warning", label: "Normal" },
+    "shouting": { bars: 3, color: "critical", label: "Schreien" },
+    "megaphone": { bars: 3, color: "primary", label: "Megafon" },
+
     // TokoVOIP Ranges
-    short: { bars: 1, color: 'muted-foreground', label: 'Kurz' },
-    medium: { bars: 2, color: 'warning', label: 'Mittel' },
-    long: { bars: 3, color: 'critical', label: 'Weit' },
+    "short": { bars: 1, color: "muted-foreground", label: "Kurz" },
+    "medium": { bars: 2, color: "warning", label: "Mittel" },
+    "long": { bars: 3, color: "critical", label: "Weit" },
 };
 
 export const NeonVoiceWidget = ({ voice, rangeConfig }: NeonVoiceWidgetProps) => {
     const mergedConfig = { ...DEFAULT_RANGE_CONFIG, ...rangeConfig };
     const rangeKey = String(voice.range);
     const config = mergedConfig[rangeKey] || mergedConfig.normal;
-    
+
     return (
-        <motion.div 
+        <motion.div
             className="glass-panel rounded-lg px-3 py-2 flex items-center gap-2"
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-        >
+            animate={{ opacity: 1, y: 0 }}>
             {/* Mic Icon */}
             {voice.active ? (
-                <Mic 
-                    size={14} 
+                <Mic
+                    size={14}
                     className={`text-${config.color}`}
-                    style={{ 
+                    style={{
                         filter: `drop-shadow(0 0 6px hsl(var(--${config.color})))`,
                     }}
                 />
             ) : (
-                <MicOff size={14} className="text-muted-foreground" />
+                <MicOff
+                    size={14}
+                    className="text-muted-foreground"
+                />
             )}
-            
+
             {/* Voice Bars */}
             <div className="flex items-end gap-0.5 h-4">
                 {[1, 2, 3].map((bar) => (
@@ -67,17 +69,19 @@ export const NeonVoiceWidget = ({ voice, rangeConfig }: NeonVoiceWidgetProps) =>
                         )}
                         style={{
                             height: `${bar * 4 + 4}px`,
-                            backgroundColor: bar <= config.bars 
-                                ? `hsl(var(--${config.color}))` 
-                                : 'hsl(var(--muted) / 0.3)',
-                            boxShadow: bar <= config.bars && voice.active
-                                ? `0 0 6px hsl(var(--${config.color}))`
-                                : 'none',
+                            backgroundColor:
+                                bar <= config.bars ? `hsl(var(--${config.color}))` : "hsl(var(--muted) / 0.3)",
+                            boxShadow:
+                                bar <= config.bars && voice.active ? `0 0 6px hsl(var(--${config.color}))` : "none",
                         }}
-                        animate={voice.active && bar <= config.bars ? {
-                            opacity: [0.7, 1, 0.7],
-                            scaleY: [0.9, 1, 0.9],
-                        } : {}}
+                        animate={
+                            voice.active && bar <= config.bars
+                                ? {
+                                      opacity: [0.7, 1, 0.7],
+                                      scaleY: [0.9, 1, 0.9],
+                                  }
+                                : {}
+                        }
                         transition={{
                             duration: 0.3,
                             repeat: Infinity,
@@ -86,37 +90,20 @@ export const NeonVoiceWidget = ({ voice, rangeConfig }: NeonVoiceWidgetProps) =>
                     />
                 ))}
             </div>
-            
+
             {/* Range Label */}
-            <span 
+            <span
                 className="text-[10px] text-muted-foreground uppercase tracking-wider"
-                style={voice.active ? { 
-                    color: `hsl(var(--${config.color}))`,
-                    textShadow: `0 0 6px hsl(var(--${config.color}) / 0.4)`,
-                } : {}}
-            >
+                style={
+                    voice.active
+                        ? {
+                              color: `hsl(var(--${config.color}))`,
+                              textShadow: `0 0 6px hsl(var(--${config.color}) / 0.4)`,
+                          }
+                        : {}
+                }>
                 {config.label}
             </span>
-
-            {/* Radio Indicator */}
-            {voice.inRadio && (
-                <motion.div
-                    className="flex items-center gap-1 ml-1 pl-1 border-l border-border/30"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                >
-                    <Radio 
-                        size={12} 
-                        className="text-info"
-                        style={{ filter: 'drop-shadow(0 0 4px hsl(var(--info)))' }}
-                    />
-                    {voice.radioChannel && (
-                        <span className="text-[9px] text-info">
-                            {voice.radioChannel}
-                        </span>
-                    )}
-                </motion.div>
-            )}
         </motion.div>
     );
 };
