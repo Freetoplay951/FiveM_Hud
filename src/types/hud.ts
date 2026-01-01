@@ -58,7 +58,7 @@ export interface PlayerState {
 
 export interface VoiceState {
     active: boolean;
-    range: string; // Flexibler String für verschiedene Voice-Systeme (pma-voice, saltychat, etc.)
+    range: "whisper" | "normal" | "shout" | "megaphone";
 }
 
 export interface RadioMember {
