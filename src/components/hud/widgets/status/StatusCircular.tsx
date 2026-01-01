@@ -51,7 +51,7 @@ export const StatusCircular = ({ type, value }: StatusProps) => {
                 viewBox="0 0 60 60">
                 <defs>
                     <filter
-                        id={`neonGlow-${type}`}
+                        id={`glow-${type}`}
                         x="-50%"
                         y="-50%"
                         width="200%"
@@ -88,7 +88,7 @@ export const StatusCircular = ({ type, value }: StatusProps) => {
                     initial={{ strokeDashoffset: circumference }}
                     animate={{ strokeDashoffset: circumference - progress }}
                     transition={{ duration: 0.3 }}
-                    filter={`url(#neonGlow-${type})`}
+                    filter={`url(#glow-${type})`}
                     style={{
                         filter: `drop-shadow(0 0 6px hsl(var(--${colorVar}) / 0.6))`,
                     }}

@@ -70,7 +70,7 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                             viewBox="0 0 100 100">
                             <defs>
                                 <linearGradient
-                                    id="bicycleNeonGradient"
+                                    id="bicycleGradient"
                                     x1="0%"
                                     y1="100%"
                                     x2="100%"
@@ -163,13 +163,13 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                                 transform={`rotate(${startAngle} ${svgCenter} ${svgCenter})`}
                             />
 
-                            {/* Arc Progress with Neon Effect */}
+                            {/* Arc Progress with Effect */}
                             <motion.circle
                                 cx={svgCenter}
                                 cy={svgCenter}
                                 r={svgRadius}
                                 fill="none"
-                                stroke="url(#bicycleNeonGradient)"
+                                stroke="url(#bicycleGradient)"
                                 strokeWidth="3"
                                 strokeLinecap="round"
                                 filter="url(#bicycleGlow)"

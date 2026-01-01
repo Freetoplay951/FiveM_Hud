@@ -94,7 +94,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                                         stopColor="hsl(var(--stamina))"
                                     />
                                 </linearGradient>
-                                <filter id="boatNeonGlow">
+                                <filter id="boatGlow">
                                     <feGaussianBlur
                                         stdDeviation="1.5"
                                         result="blur"
@@ -163,7 +163,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                                 stroke="url(#boatSpeedGradient)"
                                 strokeWidth="3"
                                 strokeLinecap="round"
-                                filter="url(#boatNeonGlow)"
+                                filter="url(#boatGlow)"
                                 strokeDasharray={`${progressLength} ${circumference}`}
                                 transform={`rotate(${startAngle} ${svgCenter} ${svgCenter})`}
                                 initial={{ strokeDasharray: `0 ${circumference}` }}

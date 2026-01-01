@@ -115,14 +115,14 @@ USAGE EXAMPLES
 ============================================================================
 
 -- Von anderen Client-Scripts:
-exports['neon-hud']:notify('success', 'Erfolg!', 'Aktion wurde ausgeführt', 5000)
-exports['neon-hud']:success('Titel', 'Nachricht')
-exports['neon-hud']:error('Fehler', 'Etwas ist schief gelaufen')
-exports['neon-hud']:warning('Warnung', 'Achtung!')
-exports['neon-hud']:info('Info', 'Hier ist eine Information')
+exports['rp-hud']:notify('success', 'Erfolg!', 'Aktion wurde ausgeführt', 5000)
+exports['rp-hud']:success('Titel', 'Nachricht')
+exports['rp-hud']:error('Fehler', 'Etwas ist schief gelaufen')
+exports['rp-hud']:warning('Warnung', 'Achtung!')
+exports['rp-hud']:info('Info', 'Hier ist eine Information')
 
 -- Objekt-basiert:
-exports['neon-hud']:showNotification({
+exports['rp-hud']:showNotification({
     type = 'success',
     title = 'Erfolg',
     message = 'Aktion erfolgreich',
@@ -130,7 +130,7 @@ exports['neon-hud']:showNotification({
 })
 
 -- Einfache Nachricht:
-exports['neon-hud']:showNotification('Dies ist eine einfache Nachricht')
+exports['rp-hud']:showNotification('Dies ist eine einfache Nachricht')
 
 -- Von Server-Scripts:
 TriggerClientEvent('hud:notify', source, 'success', 'Titel', 'Nachricht', 5000)

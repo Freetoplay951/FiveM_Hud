@@ -72,7 +72,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                             viewBox="0 0 100 100">
                             <defs>
                                 <linearGradient
-                                    id="speedNeonGradient"
+                                    id="speedGradient"
                                     x1="0%"
                                     y1="100%"
                                     x2="100%"
@@ -95,7 +95,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                                     />
                                 </linearGradient>
                                 <filter
-                                    id="neonGlow"
+                                    id="glow"
                                     x="-50%"
                                     y="-50%"
                                     width="200%"
@@ -169,16 +169,16 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                                 transform={`rotate(${startAngle} ${svgCenter} ${svgCenter})`}
                             />
 
-                            {/* Arc Progress with Neon Effect */}
+                            {/* Arc Progress */}
                             <motion.circle
                                 cx={svgCenter}
                                 cy={svgCenter}
                                 r={svgRadius}
                                 fill="none"
-                                stroke="url(#speedNeonGradient)"
+                                stroke="url(#speedGradient)"
                                 strokeWidth="3"
                                 strokeLinecap="round"
-                                filter="url(#neonGlow)"
+                                filter="url(#glow)"
                                 strokeDasharray={`${progressLength} ${circumference}`}
                                 transform={`rotate(${startAngle} ${svgCenter} ${svgCenter})`}
                                 initial={{ strokeDasharray: `0 ${circumference}` }}

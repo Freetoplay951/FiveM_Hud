@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { DollarSign, CreditCard, Briefcase, Banknote } from "lucide-react";
 import { MoneyState, PlayerState } from "@/types/hud";
 
-interface NeonMoneyWidgetProps {
+interface MoneyWidgetProps {
     money: MoneyState;
     player?: PlayerState;
 }
@@ -15,7 +15,7 @@ const formatMoney = (amount: number): string => {
     }).format(amount);
 };
 
-export const NeonMoneyWidget = ({ money, player }: NeonMoneyWidgetProps) => {
+export const MoneyWidget = ({ money, player }: MoneyWidgetProps) => {
     return (
         <motion.div
             className="flex flex-col gap-1"

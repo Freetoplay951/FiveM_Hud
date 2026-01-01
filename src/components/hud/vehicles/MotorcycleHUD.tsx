@@ -162,7 +162,7 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
                                 transform={`rotate(${startAngle} ${svgCenter} ${svgCenter})`}
                             />
 
-                            {/* Arc Progress with Neon Effect */}
+                            {/* Arc Progress */}
                             <motion.circle
                                 cx={svgCenter}
                                 cy={svgCenter}

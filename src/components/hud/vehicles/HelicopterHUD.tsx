@@ -77,7 +77,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                                     />
                                 </linearGradient>
                                 <filter
-                                    id="heliNeonGlow"
+                                    id="heliGlow"
                                     x="-50%"
                                     y="-50%"
                                     width="200%"
@@ -122,7 +122,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                                         y2="50"
                                         stroke="hsl(var(--primary))"
                                         strokeWidth="1.5"
-                                        filter="url(#heliNeonGlow)"
+                                        filter="url(#heliGlow)"
                                     />
 
                                     {/* Pitch ladder */}
@@ -165,7 +165,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                                             y2={y}
                                             stroke="hsl(var(--primary))"
                                             strokeWidth={angle === 0 ? 2 : 0.8}
-                                            filter={angle === 0 ? "url(#heliNeonGlow)" : undefined}
+                                            filter={angle === 0 ? "url(#heliGlow)" : undefined}
                                         />
                                     );
                                 })}
@@ -175,14 +175,14 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                                     animate={{ rotate: roll }}
                                     transition={{ type: "spring", stiffness: 120, damping: 20 }}
                                     style={{ transformOrigin: "0 0" }}
-                                    filter="url(#heliNeonGlow)"
+                                    filter="url(#heliGlow)"
                                 />
                             </g>
 
                             {/* Aircraft symbol */}
                             <g
                                 transform="translate(50, 50)"
-                                filter="url(#heliNeonGlow)">
+                                filter="url(#heliGlow)">
                                 <line
                                     x1="-18"
                                     y1="0"

@@ -1,9 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-react";
 import { NotificationData } from "@/types/hud";
-import { cn } from "@/lib/utils";
 
-interface NeonNotificationProps {
+interface NotificationProps {
     notification: NotificationData;
     onClose: (id: string) => void;
 }
@@ -15,7 +14,7 @@ const NOTIFICATION_CONFIG = {
     info: { icon: Info, color: "armor", label: "Info" },
 };
 
-export const NeonNotification = ({ notification, onClose }: NeonNotificationProps) => {
+export const Notification = ({ notification, onClose }: NotificationProps) => {
     const config = NOTIFICATION_CONFIG[notification.type];
     const Icon = config.icon;
 

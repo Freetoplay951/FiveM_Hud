@@ -5,10 +5,9 @@ import { HUDWidget } from "./hud/HUDWidget";
 import { VehicleHUDFactory } from "./hud/vehicles/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { StatusWidget } from "./hud/widgets/StatusWidget";
-import { NeonMoneyWidget } from "./hud/widgets/MoneyWidget";
-
-import { NeonVoiceWidget } from "./hud/widgets/VoiceWidget";
-import { NeonMinimapWidget } from "./hud/widgets/MinimapWidget";
+import { MoneyWidget } from "./hud/widgets/MoneyWidget";
+import { VoiceWidget } from "./hud/widgets/VoiceWidget";
+import { MinimapWidget } from "./hud/widgets/MinimapWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";
 import { CompassWidget } from "./hud/widgets/CompassWidget";
 import { NotificationContainer } from "./hud/notifications/NotificationContainer";
@@ -756,7 +755,7 @@ export const HUD = () => {
                             visible={widget.visible}
                             scale={widget.scale}
                             {...widgetProps}>
-                            <NeonMoneyWidget
+                            <MoneyWidget
                                 money={moneyState}
                                 player={playerState}
                             />
@@ -794,7 +793,7 @@ export const HUD = () => {
                             visible={widget.visible}
                             scale={widget.scale}
                             {...widgetProps}>
-                            <NeonVoiceWidget voice={voiceState} />
+                            <VoiceWidget voice={voiceState} />
                         </HUDWidget>
                     );
                 })()}
@@ -811,7 +810,7 @@ export const HUD = () => {
                             visible={widget.visible}
                             scale={widget.scale}
                             {...widgetProps}>
-                            <NeonMinimapWidget
+                            <MinimapWidget
                                 location={locationState}
                                 shape={minimapShape}
                             />

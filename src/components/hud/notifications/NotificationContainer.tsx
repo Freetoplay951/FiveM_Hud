@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { NotificationData } from "@/types/hud";
-import { NeonNotification } from "./Notification";
+import { Notification } from "./Notification";
 
 interface NotificationContainerProps {
     notifications: NotificationData[];
@@ -29,7 +29,7 @@ export const NotificationContainer = ({ notifications, onClose, isWidget = false
                             exit={{ opacity: 0, x: 100 }}
                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             style={{ zIndex: MAX_VISIBLE_NOTIFICATIONS - index }}>
-                            <NeonNotification
+                            <Notification
                                 notification={notification}
                                 onClose={onClose}
                             />
@@ -53,7 +53,7 @@ export const NotificationContainer = ({ notifications, onClose, isWidget = false
                         exit={{ opacity: 0, x: 100 }}
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                         style={{ zIndex: orderedNotifications.length - index }}>
-                        <NeonNotification
+                        <Notification
                             notification={notification}
                             onClose={onClose}
                         />

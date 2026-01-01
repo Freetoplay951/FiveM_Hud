@@ -126,5 +126,5 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
 };
 
 const GetParentResourceName = (): string => {
-    return window.GetParentResourceName?.() ?? "neon-hud";
+    return window.GetParentResourceName?.() ?? "rp-hud";
 };

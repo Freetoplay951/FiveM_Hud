@@ -3,7 +3,7 @@ import { Mic, MicOff } from "lucide-react";
 import { VoiceState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 
-interface NeonVoiceWidgetProps {
+interface VoiceWidgetProps {
     voice: VoiceState;
     rangeConfig?: Record<string, { bars: number; color: string; label: string }>;
 }
@@ -32,7 +32,7 @@ const DEFAULT_RANGE_CONFIG: Record<string, { bars: number; color: string; label:
     "long": { bars: 3, color: "critical", label: "Weit" },
 };
 
-export const NeonVoiceWidget = ({ voice, rangeConfig }: NeonVoiceWidgetProps) => {
+export const VoiceWidget = ({ voice, rangeConfig }: VoiceWidgetProps) => {
     const mergedConfig = { ...DEFAULT_RANGE_CONFIG, ...rangeConfig };
     const rangeKey = String(voice.range);
     const config = mergedConfig[rangeKey] || mergedConfig.normal;

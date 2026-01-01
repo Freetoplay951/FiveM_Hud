@@ -76,7 +76,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                     />
                                 </linearGradient>
                                 <filter
-                                    id="planeNeonGlow"
+                                    id="planeGlow"
                                     x="-50%"
                                     y="-50%"
                                     width="200%"
@@ -121,7 +121,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                         y2="50"
                                         stroke="hsl(var(--primary))"
                                         strokeWidth="1.5"
-                                        filter="url(#planeNeonGlow)"
+                                        filter="url(#planeGlow)"
                                     />
 
                                     {[-20, -10, 10, 20].map((p) => (
@@ -163,7 +163,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                             y2={y}
                                             stroke="hsl(var(--primary))"
                                             strokeWidth={angle === 0 ? 2 : 0.8}
-                                            filter={angle === 0 ? "url(#planeNeonGlow)" : undefined}
+                                            filter={angle === 0 ? "url(#planeGlow)" : undefined}
                                         />
                                     );
                                 })}
@@ -173,14 +173,14 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                     animate={{ rotate: roll }}
                                     transition={{ type: "spring", stiffness: 120, damping: 20 }}
                                     style={{ transformOrigin: "0 0" }}
-                                    filter="url(#planeNeonGlow)"
+                                    filter="url(#planeGlow)"
                                 />
                             </g>
 
                             {/* Aircraft symbol */}
                             <g
                                 transform="translate(50, 50)"
-                                filter="url(#planeNeonGlow)">
+                                filter="url(#planeGlow)">
                                 <line
                                     x1="-18"
                                     y1="0"

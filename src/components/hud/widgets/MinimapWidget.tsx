@@ -6,12 +6,12 @@ import { getDirectionFromDegree } from "@/lib/compassUtils";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
 import { cn } from "@/lib/utils";
 
-interface NeonMinimapWidgetProps {
+interface MinimapWidgetProps {
     location: LocationState;
     shape?: MinimapShape;
 }
 
-export const NeonMinimapWidget = ({ location, shape = "square" }: NeonMinimapWidgetProps) => {
+export const MinimapWidget = ({ location, shape = "square" }: MinimapWidgetProps) => {
     const { heading, street, area } = location;
     const isNui = isNuiEnvironment();
     const isRound = shape === "round";
