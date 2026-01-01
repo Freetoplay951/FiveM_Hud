@@ -1,0 +1,101 @@
+{
+    "death": {
+        "title": "BEWUSSTLOS",
+        "critical": "KRITISCH",
+        "respawnIn": "RESPAWN MÖGLICH IN",
+        "waitTime": "Wartezeit",
+        "infoText": "Warte auf den Rettungsdienst oder respawne im Krankenhaus",
+        "helpButton": "HILFE",
+        "respawnButton": "RESPAWN",
+        "syncButton": "Sync",
+        "defaultMessage": "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
+    },
+    "chat": {
+        "title": "Chat",
+        "commands": "Commands",
+        "send": "Senden",
+        "placeholder": "Nachricht eingeben..."
+    },
+    "teamChat": {
+        "title": "Team-Chat",
+        "online": "Online",
+        "noAccess": "Kein Zugriff",
+        "locked": "Gesperrt",
+        "placeholder": "Team-Nachricht..."
+    },
+    "status": {
+        "health": "Gesundheit",
+        "armor": "Rüstung",
+        "hunger": "Hunger",
+        "thirst": "Durst",
+        "stamina": "Ausdauer",
+        "stress": "Stress",
+        "oxygen": "Sauerstoff"
+    },
+    "vehicle": {
+        "speed": "Geschwindigkeit",
+        "fuel": "Kraftstoff",
+        "gear": "Gang",
+        "altitude": "Höhe",
+        "heading": "Kurs",
+        "pedaling": "Treten",
+        "stopped": "Gestoppt",
+        "anchor": "Anker",
+        "depth": "Tiefe",
+        "landingGear": "Fahrwerk",
+        "flaps": "Klappen",
+        "rpm": "Drehzahl",
+        "verticalSpeed": "Vertikalgeschwindigkeit"
+    },
+    "editMode": {
+        "title": "HUD Bearbeiten",
+        "subtitle": "Widgets ziehen & per Ecke skalieren (50%–300%).",
+        "statusDesign": "Status Design",
+        "minimapShape": "Minimap Form",
+        "speedometerType": "Tacho Typ",
+        "options": "Optionen",
+        "snapToGrid": "Am Raster ausrichten",
+        "showDeathScreen": "Death-Screen anzeigen",
+        "exitEdit": "Bearbeitung beenden",
+        "resetLayout": "Layout zurücksetzen"
+    },
+    "statusDesigns": {
+        "circular": "Kreis",
+        "bar": "Balken",
+        "vertical": "Vertikal",
+        "minimal": "Minimal",
+        "arc": "Bogen"
+    },
+    "minimapShapes": {
+        "square": "Eckig",
+        "round": "Rund"
+    },
+    "speedometerTypes": {
+        "car": "Auto",
+        "plane": "Flugzeug",
+        "boat": "Boot",
+        "helicopter": "Heli",
+        "motorcycle": "Motorrad",
+        "bicycle": "Fahrrad"
+    },
+    "general": {
+        "cash": "Bargeld",
+        "bank": "Bank",
+        "blackMoney": "Schwarzgeld",
+        "voice": "Stimme",
+        "whisper": "Flüstern",
+        "normal": "Normal",
+        "shout": "Schreien"
+    },
+    "notifications": {
+        "title": "Benachrichtigungen"
+    },
+    "demo": {
+        "title": "Demo Modus",
+        "teamChatAccess": "Team-Chat",
+        "adminRights": "Admin",
+        "teamChatVisibility": "Sichtbarkeit",
+        "hidden": "Versteckt",
+        "locked": "Gesperrt"
+    }
+}

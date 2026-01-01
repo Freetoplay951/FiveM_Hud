@@ -1,87 +1,62 @@
 import { useState, useEffect, useCallback } from "react";
-import { Language, Translations, translations, DEFAULT_LANGUAGE } from "@/lib/i18n/translations";
-import { isNuiEnvironment, sendNuiCallback } from "./useNuiEvents";
+import { Language, Locales, Translations } from "@/types/translation";
 
 const STORAGE_KEY = "hud-language";
 
 export const useLanguage = () => {
-    const [language, setLanguageState] = useState<Language>(() => {
-        // Try to get from localStorage
-        if (typeof window !== "undefined" && !isNuiEnvironment()) {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored === "de" || stored === "en") {
-                return stored;
-            }
-        }
-        return DEFAULT_LANGUAGE;
-    });
+    const [t, setT] = useState<Translations | null>(null);
+    const [languages, setLanguages] = useState<Locales | null>(null);
+    const [language, setLanguageState] = useState<Language | null>(null);
 
-    // Start with default translations, can be overwritten by Lua
-    const [t, setT] = useState<Translations>(translations[language]);
-
-    // Update translations when language changes (for demo mode)
     useEffect(() => {
-        // Only use local translations in demo mode
-        if (!isNuiEnvironment()) {
-            setT(translations[language]);
-            localStorage.setItem(STORAGE_KEY, language);
-        }
-    }, [language]);
+        const loadConfig = async () => {
+            try {
+                const res = await fetch("./langs/config.json");
+                if (!res.ok) throw new Error("Config file not found");
 
-    // Listen for language and translations from FiveM
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            const { action, data } = event.data;
+                const data: Locales = await res.json();
 
-            // Language change from Lua
-            if (action === "setLanguage" && (data === "de" || data === "en")) {
-                setLanguageState(data);
-            }
+                const stored = localStorage.getItem(STORAGE_KEY);
+                const languageKey: Language =
+                    stored && Object.keys(data.languages).includes(stored)
+                        ? (stored as Language)
+                        : data.defaultLanguage;
 
-            // Full translations object from Lua
-            if (action === "setTranslations" && data) {
-                // Merge with defaults to ensure all keys exist
-                const mergedTranslations: Translations = {
-                    ...translations[language],
-                    ...data,
-                    death: { ...translations[language].death, ...data.death },
-                    chat: { ...translations[language].chat, ...data.chat },
-                    teamChat: { ...translations[language].teamChat, ...data.teamChat },
-                    status: { ...translations[language].status, ...data.status },
-                    vehicle: { ...translations[language].vehicle, ...data.vehicle },
-                    editMode: { ...translations[language].editMode, ...data.editMode },
-                    statusDesigns: { ...translations[language].statusDesigns, ...data.statusDesigns },
-                    minimapShapes: { ...translations[language].minimapShapes, ...data.minimapShapes },
-                    speedometerTypes: { ...translations[language].speedometerTypes, ...data.speedometerTypes },
-                    general: { ...translations[language].general, ...data.general },
-                    notifications: { ...translations[language].notifications, ...data.notifications },
-                    demo: { ...translations[language].demo, ...data.demo },
-                };
-                setT(mergedTranslations);
+                console.info("Setting language to:", languageKey);
+                setLanguages(data);
+                setLanguageState(languageKey);
+            } catch (error) {
+                console.error(error);
             }
         };
 
-        window.addEventListener("message", handleMessage);
-        return () => window.removeEventListener("message", handleMessage);
+        loadConfig();
+    }, []);
+
+    useEffect(() => {
+        if (!language) return;
+
+        const loadTranslations = async () => {
+            try {
+                const res = await fetch(`./langs/${language}.json`);
+                if (!res.ok) throw new Error("Translations not found");
+
+                const translations: Translations = await res.json();
+                setT(translations);
+
+                console.log(`Loaded language ${languages?.languages[language] ?? language}`);
+                localStorage.setItem(STORAGE_KEY, language);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        loadTranslations();
     }, [language]);
 
     const setLanguage = useCallback((lang: Language) => {
         setLanguageState(lang);
-
-        // Notify FiveM of language change
-        if (isNuiEnvironment()) {
-            sendNuiCallback("setLanguage", { language: lang });
-        }
     }, []);
 
-    const toggleLanguage = useCallback(() => {
-        setLanguage(language === "de" ? "en" : "de");
-    }, [language, setLanguage]);
-
-    return {
-        language,
-        setLanguage,
-        toggleLanguage,
-        t,
-    };
+    return { t, language, languages, setLanguage };
 };

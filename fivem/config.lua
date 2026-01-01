@@ -149,11 +149,5 @@ Config.TeamChatGeneralPermission = "hud.staff"
 -- Team-Chat Name (wird oben im Chat angezeigt)
 Config.TeamChatName = "Team-Chat"
 
--- ============================================================================
--- SPRACHE / LANGUAGE
--- ============================================================================
--- Verfügbare Sprachen: 'de' (Deutsch), 'en' (English)
-Config.Language = 'de'
-
 -- Debug
 Config.Debug = true

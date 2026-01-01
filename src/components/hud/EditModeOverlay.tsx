@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { StatusDesign, SpeedometerType, MinimapShape } from "@/types/widget";
 import { PopoverContent } from "@/components/ui/popover";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { LanguageDropdown } from "../LanguageDropdown";
 
 interface EditModeOverlayProps {
     snapToGrid: boolean;
@@ -38,7 +39,7 @@ interface EditModeOverlayProps {
 const DESIGN_OPTIONS: {
     design: StatusDesign;
     icon: React.ElementType;
-    labelKey: keyof import("@/lib/i18n/translations").Translations["statusDesigns"];
+    labelKey: keyof import("@/types/translation").Translations["statusDesigns"];
 }[] = [
     { design: "circular", icon: Circle, labelKey: "circular" },
     { design: "bar", icon: BarChart3, labelKey: "bar" },
@@ -50,7 +51,7 @@ const DESIGN_OPTIONS: {
 const SPEEDOMETER_OPTIONS: {
     type: SpeedometerType;
     icon: React.ElementType;
-    labelKey: keyof import("@/lib/i18n/translations").Translations["speedometerTypes"];
+    labelKey: keyof import("@/types/translation").Translations["speedometerTypes"];
 }[] = [
     { type: "car", icon: Car, labelKey: "car" },
     { type: "plane", icon: Plane, labelKey: "plane" },
@@ -63,7 +64,7 @@ const SPEEDOMETER_OPTIONS: {
 const MINIMAP_SHAPE_OPTIONS: {
     shape: MinimapShape;
     icon: React.ElementType;
-    labelKey: keyof import("@/lib/i18n/translations").Translations["minimapShapes"];
+    labelKey: keyof import("@/types/translation").Translations["minimapShapes"];
 }[] = [
     { shape: "square", icon: Square, labelKey: "square" },
     { shape: "round", icon: Circle, labelKey: "round" },
@@ -83,7 +84,7 @@ export const EditModeOverlay = ({
     onReset,
     onExitEditMode,
 }: EditModeOverlayProps) => {
-    const { toggleLanguage, t } = useTranslation();
+    const { t } = useTranslation();
 
     return (
         <PopoverContent
@@ -98,16 +99,7 @@ export const EditModeOverlay = ({
                     <p className="text-[11px] text-muted-foreground mt-0.5">{t.editMode.subtitle}</p>
                 </div>
                 {/* Language Toggle */}
-                <button
-                    onClick={toggleLanguage}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors border border-border/30"
-                    title={t.editMode.title}>
-                    <Languages
-                        size={14}
-                        className="text-muted-foreground"
-                    />
-                    <span className="text-[10px] font-medium text-foreground uppercase">DE/EN</span>
-                </button>
+                <LanguageDropdown />
             </div>
 
             <div className="my-4 h-px bg-border/40" />

@@ -1,9 +1,14 @@
 import { HUD } from "@/components/HUD";
+import { useTranslation } from "@/contexts/LanguageContext";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
 
 const Index = () => {
-    // Nur im Demo-Modus (nicht in FiveM) den blauen Hintergrund anzeigen
+    const { t } = useTranslation();
     const showDemoBackground = !isNuiEnvironment();
+
+    if (!t) {
+        return null;
+    }
 
     return (
         <div
