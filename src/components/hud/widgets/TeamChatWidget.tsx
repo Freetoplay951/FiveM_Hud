@@ -22,7 +22,13 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
     default: { bg: "bg-primary/20", text: "text-primary", border: "border-primary/30", icon: Shield },
 };
 
-export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode, autoHideDelay = 10000 }: TeamChatWidgetProps) => {
+export const TeamChatWidget = ({
+    teamChat,
+    onSendMessage,
+    onClose,
+    editMode,
+    autoHideDelay = 10000,
+}: TeamChatWidgetProps) => {
     const [inputValue, setInputValue] = useState("");
     const [isAutoHidden, setIsAutoHidden] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,7 +42,7 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode, aut
     const teamColor = TEAM_COLORS[teamChat.teamType] || TEAM_COLORS.default;
 
     const isVisible = teamChat.isVisible ?? true;
-    const isInputActive = teamChat.isInputActive || teamChat.isOpen || editMode;
+    const isInputActive = teamChat.isInputActive || editMode;
     const hasMessages = teamChat.messages.length > 0;
 
     // Auto-hide Timer Logic
@@ -45,7 +51,7 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode, aut
             clearTimeout(autoHideTimerRef.current);
         }
         setIsAutoHidden(false);
-        
+
         // Nur Timer starten wenn Input nicht aktiv ist
         if (!isInputActive && !editMode) {
             autoHideTimerRef.current = setTimeout(() => {
@@ -86,6 +92,9 @@ export const TeamChatWidget = ({ teamChat, onSendMessage, onClose, editMode, aut
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [teamChat.messages]);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }, [teamChat.isInputActive]);
 
     useEffect(() => {
         if (!isInputActive) return;

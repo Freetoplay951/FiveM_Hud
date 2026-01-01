@@ -51,7 +51,7 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, autoHideDel
     const { addToHistory, navigatePrevious, navigateNext, resetNavigation } = useChatHistory();
 
     const isVisible = chat.isVisible ?? true;
-    const isInputActive = chat.isInputActive || chat.isOpen || editMode;
+    const isInputActive = chat.isInputActive || editMode;
     const hasMessages = chat.messages.length > 0;
 
     // Auto-hide Timer Logic
@@ -144,6 +144,9 @@ export const ChatWidget = ({ chat, onSendMessage, onClose, editMode, autoHideDel
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [chat.messages]);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }, [chat.isInputActive]);
 
     // Focus input when chat opens - with recovery after tab-out
     useEffect(() => {

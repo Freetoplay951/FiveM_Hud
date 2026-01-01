@@ -605,12 +605,14 @@ export const HUD = () => {
 
             // Chat toggle - T key
             if (e.key === "t" && !editMode) {
-                setChatState((prev) => ({ ...prev, isOpen: !prev.isOpen }));
+                e.preventDefault();
+                setChatState((prev) => ({ ...prev, isInputActive: !prev.isInputActive }));
             }
 
             // Team Chat toggle - Y key
             if (e.key === "y" && !editMode) {
-                setTeamChatState((prev) => ({ ...prev, isOpen: !prev.isOpen }));
+                e.preventDefault();
+                setTeamChatState((prev) => ({ ...prev, isInputActive: !prev.isInputActive }));
             }
         };
 
@@ -1081,6 +1083,7 @@ export const HUD = () => {
                                         };
                                         setChatState((prev) => ({
                                             ...prev,
+                                            isInputActive: false,
                                             messages: [...prev.messages, newMsg],
                                         }));
                                     } else {
@@ -1142,6 +1145,7 @@ export const HUD = () => {
                                         };
                                         setTeamChatState((prev) => ({
                                             ...prev,
+                                            isInputActive: false,
                                             messages: [...prev.messages, newMsg],
                                         }));
                                     } else {
