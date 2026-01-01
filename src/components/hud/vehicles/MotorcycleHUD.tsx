@@ -49,7 +49,7 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     className="flex flex-col items-center">
                     {/* Speedometer Circle - Compact motorcycle design */}
-                    <div className="relative w-36 h-36">
+                    <div className="relative w-44 h-44">
                         {/* Glass Background */}
                         <div className="absolute inset-0 rounded-full glass-panel overflow-hidden">
                             <div
