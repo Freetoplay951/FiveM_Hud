@@ -209,11 +209,13 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                                     className="text-stamina"
                                     style={{ filter: "drop-shadow(0 0 4px hsl(var(--stamina) / 0.6))" }}
                                 />
-                                <motion.span 
+                                <motion.span
                                     className="text-[10px] text-muted-foreground uppercase tracking-wider"
                                     animate={{ opacity: vehicle.speed > 0 ? [0.6, 1, 0.6] : 0.5 }}
                                     transition={{ duration: 0.8, repeat: vehicle.speed > 0 ? Infinity : 0 }}>
-                                    {vehicle.speed > 0 ? t.vehicle.pedaling.toUpperCase() : t.vehicle.stopped.toUpperCase()}
+                                    {vehicle.speed > 0
+                                        ? t.vehicle.pedaling.toUpperCase()
+                                        : t.vehicle.stopped.toUpperCase()}
                                 </motion.span>
                             </div>
                         </div>

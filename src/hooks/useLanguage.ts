@@ -32,12 +32,12 @@ export const useLanguage = () => {
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             const { action, data } = event.data;
-            
+
             // Language change from Lua
             if (action === "setLanguage" && (data === "de" || data === "en")) {
                 setLanguageState(data);
             }
-            
+
             // Full translations object from Lua
             if (action === "setTranslations" && data) {
                 // Merge with defaults to ensure all keys exist
@@ -67,7 +67,7 @@ export const useLanguage = () => {
 
     const setLanguage = useCallback((lang: Language) => {
         setLanguageState(lang);
-        
+
         // Notify FiveM of language change
         if (isNuiEnvironment()) {
             sendNuiCallback("setLanguage", { language: lang });

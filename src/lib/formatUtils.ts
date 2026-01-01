@@ -5,11 +5,7 @@
 /**
  * Format a number with locale support
  */
-export function formatWithLocale(
-    input: number,
-    decimalPlaces: number = 0,
-    locale?: string
-): string {
+export function formatWithLocale(input: number, decimalPlaces: number = 0, locale?: string): string {
     return input.toLocaleString(locale, {
         minimumFractionDigits: decimalPlaces,
         maximumFractionDigits: decimalPlaces,
@@ -37,7 +33,7 @@ export function clampPercent(value: number, min: number = 0, max: number = 100):
  */
 export function headingToDirection(heading: number): string {
     const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-    const index = Math.round(((heading % 360) + 360) % 360 / 45) % 8;
+    const index = Math.round((((heading % 360) + 360) % 360) / 45) % 8;
     return directions[index];
 }
 
@@ -54,11 +50,7 @@ export function formatSpeed(speed: number, unit: "kmh" | "mph" = "kmh"): string 
 /**
  * Format currency with locale support
  */
-export function formatCurrency(
-    amount: number,
-    locale?: string,
-    currency: string = "EUR"
-): string {
+export function formatCurrency(amount: number, locale?: string, currency: string = "EUR"): string {
     return amount.toLocaleString(locale, {
         style: "currency",
         currency,

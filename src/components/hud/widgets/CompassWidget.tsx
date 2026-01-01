@@ -25,10 +25,20 @@ export const CompassWidget = ({ heading = 0, enabled = true }: CompassWidgetProp
             </div>
 
             {/* SVG Compass */}
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80">
+            <svg
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 80 80">
                 <defs>
-                    <filter id="compassGlow" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur stdDeviation="1" result="coloredBlur" />
+                    <filter
+                        id="compassGlow"
+                        x="-50%"
+                        y="-50%"
+                        width="200%"
+                        height="200%">
+                        <feGaussianBlur
+                            stdDeviation="1"
+                            result="coloredBlur"
+                        />
                         <feMerge>
                             <feMergeNode in="coloredBlur" />
                             <feMergeNode in="SourceGraphic" />
@@ -37,7 +47,14 @@ export const CompassWidget = ({ heading = 0, enabled = true }: CompassWidgetProp
                 </defs>
 
                 {/* Outer Ring */}
-                <circle cx="40" cy="40" r="36" fill="none" stroke="hsl(var(--muted) / 0.2)" strokeWidth="1" />
+                <circle
+                    cx="40"
+                    cy="40"
+                    r="36"
+                    fill="none"
+                    stroke="hsl(var(--muted) / 0.2)"
+                    strokeWidth="1"
+                />
 
                 {/* Direction Markers */}
                 {directions.map((dir, i) => {
@@ -63,8 +80,7 @@ export const CompassWidget = ({ heading = 0, enabled = true }: CompassWidgetProp
                                 fontFamily: "Orbitron, sans-serif",
                                 fontWeight: isCardinal ? "bold" : "normal",
                                 filter: isActive ? "drop-shadow(0 0 4px hsl(var(--primary)))" : "none",
-                            }}
-                        >
+                            }}>
                             {dir}
                         </text>
                     );
@@ -74,8 +90,7 @@ export const CompassWidget = ({ heading = 0, enabled = true }: CompassWidgetProp
                 <motion.g
                     animate={{ rotate: heading }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                    style={{ transformOrigin: "40px 40px" }}
-                >
+                    style={{ transformOrigin: "40px 40px" }}>
                     {/* North Arrow (Red) */}
                     <polygon
                         points="40,15 37,40 43,40"
@@ -84,7 +99,11 @@ export const CompassWidget = ({ heading = 0, enabled = true }: CompassWidgetProp
                         style={{ filter: "drop-shadow(0 0 4px hsl(var(--critical)))" }}
                     />
                     {/* South Arrow (White) */}
-                    <polygon points="40,65 37,40 43,40" fill="hsl(var(--foreground))" opacity="0.6" />
+                    <polygon
+                        points="40,65 37,40 43,40"
+                        fill="hsl(var(--foreground))"
+                        opacity="0.6"
+                    />
                 </motion.g>
 
                 {/* Center Dot */}

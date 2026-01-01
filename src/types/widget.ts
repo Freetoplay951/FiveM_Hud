@@ -74,8 +74,8 @@ export const REFERENCE_WIDTH = 1920;
 export const REFERENCE_HEIGHT = 1080;
 
 // Dynamic position calculator - uses window dimensions
-const getScreenWidth = () => typeof window !== 'undefined' ? window.innerWidth : REFERENCE_WIDTH;
-const getScreenHeight = () => typeof window !== 'undefined' ? window.innerHeight : REFERENCE_HEIGHT;
+const getScreenWidth = () => (typeof window !== "undefined" ? window.innerWidth : REFERENCE_WIDTH);
+const getScreenHeight = () => (typeof window !== "undefined" ? window.innerHeight : REFERENCE_HEIGHT);
 
 // Widget sizes for bottom alignment calculations
 const MINIMAP_HEIGHT = 200;
@@ -89,8 +89,7 @@ const MONEY_WIDGET_HEIGHT_WITH_BLACK = 140;
 const BOTTOM_MARGIN = 20;
 
 // Calculate bottom-aligned Y position
-const getBottomY = (widgetHeight: number) => 
-    getScreenHeight() - BOTTOM_MARGIN - widgetHeight;
+const getBottomY = (widgetHeight: number) => getScreenHeight() - BOTTOM_MARGIN - widgetHeight;
 
 // Dynamic position helpers
 const pos = (xPercent: number, yPercent: number, offsetX = 0, offsetY = 0): WidgetPosition => ({
@@ -146,22 +145,76 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
     return [
         { id: "compass", type: "compass", position: pos(0.01, 0.02), visible: true, scale: 1 },
         { id: "clock", type: "clock", position: pos(0.47, 0.02), visible: true, scale: 1 },
-        { id: "money", type: "money", position: { x: getScreenWidth() - MONEY_WIDGET_WIDTH - 20, y: 20 }, visible: true, scale: 1 },
+        {
+            id: "money",
+            type: "money",
+            position: { x: getScreenWidth() - MONEY_WIDGET_WIDTH - 20, y: 20 },
+            visible: true,
+            scale: 1,
+        },
         { id: "notifications", type: "notifications", position: pos(0.01, 0.25), visible: true, scale: 1 },
         { id: "minimap", type: "minimap", position: bottomPos(0.01, MINIMAP_HEIGHT), visible: true, scale: 1 },
         { id: "health", type: "health", position: { x: statusStartX, y: statusY }, visible: true, scale: 1 },
-        { id: "armor", type: "armor", position: { x: statusStartX + statusSpacing, y: statusY }, visible: true, scale: 1 },
-        { id: "hunger", type: "hunger", position: { x: statusStartX + statusSpacing * 2, y: statusY }, visible: true, scale: 1 },
-        { id: "thirst", type: "thirst", position: { x: statusStartX + statusSpacing * 3, y: statusY }, visible: true, scale: 1 },
-        { id: "stamina", type: "stamina", position: { x: statusStartX + statusSpacing * 4, y: statusY }, visible: true, scale: 1 },
-        { id: "stress", type: "stress", position: { x: statusStartX + statusSpacing * 5, y: statusY }, visible: true, scale: 1 },
-        { id: "oxygen", type: "oxygen", position: { x: statusStartX + statusSpacing * 6, y: statusY }, visible: true, scale: 1 },
+        {
+            id: "armor",
+            type: "armor",
+            position: { x: statusStartX + statusSpacing, y: statusY },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "hunger",
+            type: "hunger",
+            position: { x: statusStartX + statusSpacing * 2, y: statusY },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "thirst",
+            type: "thirst",
+            position: { x: statusStartX + statusSpacing * 3, y: statusY },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "stamina",
+            type: "stamina",
+            position: { x: statusStartX + statusSpacing * 4, y: statusY },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "stress",
+            type: "stress",
+            position: { x: statusStartX + statusSpacing * 5, y: statusY },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "oxygen",
+            type: "oxygen",
+            position: { x: statusStartX + statusSpacing * 6, y: statusY },
+            visible: true,
+            scale: 1,
+        },
         { id: "voice", type: "voice", position: bottomPos(0.47, VOICE_HEIGHT), visible: true, scale: 1 },
         { id: "radio", type: "radio", position: { x: getScreenWidth() - 200, y: 180 }, visible: true, scale: 1 },
         { id: "speedometer", type: "speedometer", position: getDefaultSpeedoPos(), visible: true, scale: 1 },
         { id: "deathscreen", type: "deathscreen", position: pos(0.25, 0.15), visible: true, scale: 1 },
-        { id: "chat", type: "chat", position: pos(0.01, 0.25 + (NOTIFICATION_HEIGHT + NOTIFICATION_GAP) / getScreenHeight()), visible: true, scale: 1 },
-        { id: "teamchat", type: "teamchat", position: { x: getScreenWidth() - 340, y: 20 + MONEY_WIDGET_HEIGHT_WITH_BLACK + 10 }, visible: true, scale: 1 },
+        {
+            id: "chat",
+            type: "chat",
+            position: pos(0.01, 0.25 + (NOTIFICATION_HEIGHT + NOTIFICATION_GAP) / getScreenHeight()),
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "teamchat",
+            type: "teamchat",
+            position: { x: getScreenWidth() - 340, y: 20 + MONEY_WIDGET_HEIGHT_WITH_BLACK + 10 },
+            visible: true,
+            scale: 1,
+        },
     ];
 };
 

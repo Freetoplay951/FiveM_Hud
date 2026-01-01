@@ -1,16 +1,16 @@
 import { useEffect, useCallback } from "react";
-import { 
-    HudState, 
-    VehicleState, 
-    MoneyState, 
-    VoiceState, 
-    LocationState, 
-    NotificationData, 
-    DeathState, 
-    ChatState, 
+import {
+    HudState,
+    VehicleState,
+    MoneyState,
+    VoiceState,
+    LocationState,
+    NotificationData,
+    DeathState,
+    ChatState,
     TeamChatState,
     RadioState,
-    CompassState 
+    CompassState,
 } from "@/types/hud";
 
 interface NuiEventHandlers {
@@ -20,7 +20,7 @@ interface NuiEventHandlers {
     onUpdateVoice?: (data: VoiceState) => void;
     onUpdateLocation?: (data: LocationState) => void;
     onUpdatePlayer?: (data: { id: number; job: string; rank: string }) => void;
-    onNotify?: (data: { type: NotificationData['type']; title: string; message: string; duration?: number }) => void;
+    onNotify?: (data: { type: NotificationData["type"]; title: string; message: string; duration?: number }) => void;
     onToggleEditMode?: (enabled: boolean) => void;
     onSetVisible?: (visible: boolean) => void;
     onUpdateDeath?: (data: DeathState) => void;

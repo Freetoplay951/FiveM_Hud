@@ -35,7 +35,11 @@ interface EditModeOverlayProps {
     onExitEditMode: () => void;
 }
 
-const DESIGN_OPTIONS: { design: StatusDesign; icon: React.ElementType; labelKey: keyof import("@/lib/i18n/translations").Translations["statusDesigns"] }[] = [
+const DESIGN_OPTIONS: {
+    design: StatusDesign;
+    icon: React.ElementType;
+    labelKey: keyof import("@/lib/i18n/translations").Translations["statusDesigns"];
+}[] = [
     { design: "circular", icon: Circle, labelKey: "circular" },
     { design: "bar", icon: BarChart3, labelKey: "bar" },
     { design: "vertical", icon: AlignVerticalSpaceAround, labelKey: "vertical" },
@@ -43,7 +47,11 @@ const DESIGN_OPTIONS: { design: StatusDesign; icon: React.ElementType; labelKey:
     { design: "arc", icon: Activity, labelKey: "arc" },
 ];
 
-const SPEEDOMETER_OPTIONS: { type: SpeedometerType; icon: React.ElementType; labelKey: keyof import("@/lib/i18n/translations").Translations["speedometerTypes"] }[] = [
+const SPEEDOMETER_OPTIONS: {
+    type: SpeedometerType;
+    icon: React.ElementType;
+    labelKey: keyof import("@/lib/i18n/translations").Translations["speedometerTypes"];
+}[] = [
     { type: "car", icon: Car, labelKey: "car" },
     { type: "plane", icon: Plane, labelKey: "plane" },
     { type: "boat", icon: Ship, labelKey: "boat" },
@@ -52,7 +60,11 @@ const SPEEDOMETER_OPTIONS: { type: SpeedometerType; icon: React.ElementType; lab
     { type: "bicycle", icon: Bike, labelKey: "bicycle" },
 ];
 
-const MINIMAP_SHAPE_OPTIONS: { shape: MinimapShape; icon: React.ElementType; labelKey: keyof import("@/lib/i18n/translations").Translations["minimapShapes"] }[] = [
+const MINIMAP_SHAPE_OPTIONS: {
+    shape: MinimapShape;
+    icon: React.ElementType;
+    labelKey: keyof import("@/lib/i18n/translations").Translations["minimapShapes"];
+}[] = [
     { shape: "square", icon: Square, labelKey: "square" },
     { shape: "round", icon: Circle, labelKey: "round" },
 ];
@@ -72,7 +84,7 @@ export const EditModeOverlay = ({
     onExitEditMode,
 }: EditModeOverlayProps) => {
     const { toggleLanguage, t } = useTranslation();
-    
+
     return (
         <PopoverContent
             align="end"
@@ -83,16 +95,17 @@ export const EditModeOverlay = ({
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-sm font-semibold text-foreground">{t.editMode.title}</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {t.editMode.subtitle}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{t.editMode.subtitle}</p>
                 </div>
                 {/* Language Toggle */}
                 <button
                     onClick={toggleLanguage}
                     className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors border border-border/30"
                     title={t.editMode.title}>
-                    <Languages size={14} className="text-muted-foreground" />
+                    <Languages
+                        size={14}
+                        className="text-muted-foreground"
+                    />
                     <span className="text-[10px] font-medium text-foreground uppercase">DE/EN</span>
                 </button>
             </div>

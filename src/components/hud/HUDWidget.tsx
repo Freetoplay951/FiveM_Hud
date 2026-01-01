@@ -82,13 +82,9 @@ export const HUDWidget = ({
             // Fallback if rect is not available yet
             const fallbackScale = localScale ?? scale;
             const widgetWidth =
-                rect && rect.width > 0
-                    ? rect.width
-                    : (elementSize.w > 0 ? elementSize.w : 50) * fallbackScale;
+                rect && rect.width > 0 ? rect.width : (elementSize.w > 0 ? elementSize.w : 50) * fallbackScale;
             const widgetHeight =
-                rect && rect.height > 0
-                    ? rect.height
-                    : (elementSize.h > 0 ? elementSize.h : 50) * fallbackScale;
+                rect && rect.height > 0 ? rect.height : (elementSize.h > 0 ? elementSize.h : 50) * fallbackScale;
 
             const maxX = Math.max(0, window.innerWidth - widgetWidth);
             const maxY = Math.max(0, window.innerHeight - widgetHeight);

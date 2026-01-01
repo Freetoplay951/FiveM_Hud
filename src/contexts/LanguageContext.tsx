@@ -14,11 +14,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const languageHook = useLanguage();
 
-    return (
-        <LanguageContext.Provider value={languageHook}>
-            {children}
-        </LanguageContext.Provider>
-    );
+    return <LanguageContext.Provider value={languageHook}>{children}</LanguageContext.Provider>;
 };
 
 export const useTranslation = () => {
