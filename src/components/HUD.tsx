@@ -14,6 +14,7 @@ import { NotificationContainer } from "./hud/notifications/NotificationContainer
 import { ChatWidget } from "./hud/widgets/ChatWidget";
 import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
 import { RadioWidget } from "./hud/widgets/RadioWidget";
+import { HUDLoadingSkeleton } from "./hud/HUDLoadingSkeleton";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -635,9 +636,14 @@ export const HUD = () => {
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
-    // Wenn nicht sichtbar oder Translations noch nicht geladen, nichts rendern
+    // Wenn Translations noch nicht geladen, Loading-Skeleton zeigen
     // WICHTIG: Dieser Check kommt NACH allen Hooks, damit useNuiEvents etc. bereits läuft
-    if (!isVisible || !t) return null;
+    if (!t) {
+        return <HUDLoadingSkeleton />;
+    }
+
+    // Wenn nicht sichtbar, nichts rendern
+    if (!isVisible) return null;
 
     return (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
