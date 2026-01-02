@@ -1,14 +1,8 @@
 -- ============================================================================
--- VARIABLES
+-- FUNCTIONS
 -- ============================================================================
 
-local chatOpen = false
-local chatInputActive = false
-
--- ============================================================================
 -- CHAT LOGIC
--- ============================================================================
-
 local function CreateChatMessage(msgType, sender, message)
     local maxMessages = Config and Config.ChatMaxMessages or 50
 
@@ -23,6 +17,75 @@ local function CreateChatMessage(msgType, sender, message)
     -- Send createMessage event to NUI
     SendNUI("chatCreateMessage", newMessage)
 end
+
+local function CollectCommands()
+    local commands = GetRegisteredCommands()
+    local commandSet = {}
+    local commandList = {}
+
+    local excludedPrefixes = {"_", "sv_", "onesync_", "rateLimiter_", "adhesive_"} 
+
+    for _, cmd in ipairs(commands) do
+        local name = cmd.name
+        local skip = false
+
+        -- Interne Ressourcen ausschließen
+        if cmd.resource == "internal" or cmd.resource == "monitor" then
+            skip = true
+        end
+
+        -- Präfixe prüfen
+        for _, prefix in ipairs(excludedPrefixes) do
+            if name:match("^" .. prefix) then
+                skip = true
+                break
+            end
+        end
+
+        if not skip and type(name) == "string" then
+            local commandName = "/" .. name
+            if not commandSet[commandName] then
+                commandSet[commandName] = true
+                table.insert(commandList, {
+                    command = commandName,
+                    description = "", -- FiveM liefert keine Beschreibungen
+                    usage = commandName
+                })
+            end
+        end
+    end
+
+    -- Alphabetisch sortieren
+    table.sort(commandList, function(a, b)
+        return a.command:lower() < b.command:lower()
+    end)
+
+    return commandList
+end
+
+local function SendRegisteredCommandsToNUI()
+    local commandList = CollectCommands()
+    SendNUI("updateCommands", commandList)
+    if Config and Config.Debug then
+        print('[HUD Chat] Sent ' .. #commandList .. ' commands to NUI')
+    end
+end
+
+-- ============================================================================
+-- START HANDLER
+-- ============================================================================
+
+AddEventHandler("onClientResourceStart", function(res)
+    if res ~= GetCurrentResourceName() then return end
+    SetTextChatEnabled(false)
+end)
+
+-- ============================================================================
+-- VARIABLES
+-- ============================================================================
+
+local chatOpen = false
+local chatInputActive = false
 
 -- ============================================================================
 -- OPEN / CLOSE
@@ -76,6 +139,22 @@ end)
 RegisterNUICallback("closeChat", function(_, cb)
     CloseChat()
     cb({ success = true })
+end)
+
+RegisterNUICallback("getCommands", function(data, cb)
+    local commandList = CollectCommands()
+    cb({ success = true, commands = commandList })
+end)
+
+-- ============================================================================
+-- COMMAND SYNC
+-- ============================================================================
+
+CreateThread(function()
+    while true do
+        Wait(30000)
+        SendRegisteredCommandsToNUI()
+    end
 end)
 
 -- ============================================================================
