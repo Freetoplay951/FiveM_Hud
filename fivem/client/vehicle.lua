@@ -185,9 +185,9 @@ local function GetVehicleData(vehicle, vehicleType)
         data.pitch = rotation.x
         data.roll = rotation.y
         
-        local rearRotorHealth = GetHeliRearRotorHealth(vehicle)
+        local tailRotorHealth = Citizen.InvokeNative(0x33EE6E2B, vehicle)
         data.rotorRpm = GetVehicleCurrentRpm(vehicle)
-        data.tailRotorHealth = math.floor((rearRotorHealth / 1000) * 100)
+        data.tailRotorHealth = math.floor((tailRotorHealth / 1000) * 100)
         
         -- Engine Status
         data.engineRunning = GetIsVehicleEngineRunning(vehicle)
