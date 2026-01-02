@@ -241,6 +241,7 @@ export const TeamChatWidget = ({
                         <div className={cn("px-3 py-2 border-t", teamColor.border, "bg-background/40")}>
                             <div className="flex items-center gap-2">
                                 <input
+                                    autoFocus
                                     type="text"
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
