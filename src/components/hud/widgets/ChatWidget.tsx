@@ -213,15 +213,17 @@ export const ChatWidget = ({
                 return;
             }
 
+            const filteredCmds = filteredCommands.length;
+
             // Tab navigates commands when suggestions are open, otherwise closes chat
             if (e.key === "Tab") {
                 e.preventDefault();
-                if (showCommandSuggestions && filteredCommands.length > 0) {
+                if (showCommandSuggestions && filteredCmds > 0) {
                     // Navigate through commands with Tab (forward) and Shift+Tab (backward)
                     if (e.shiftKey) {
-                        setSelectedCommandIndex((prev) => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
+                        setSelectedCommandIndex((prev) => (prev > 0 ? prev - 1 : filteredCmds - 1));
                     } else {
-                        setSelectedCommandIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
+                        setSelectedCommandIndex((prev) => (prev < filteredCmds - 1 ? prev + 1 : 0));
                     }
                     return;
                 }
@@ -230,15 +232,15 @@ export const ChatWidget = ({
             }
 
             // Command suggestions navigation
-            if (showCommandSuggestions && filteredCommands.length > 0) {
-                if (e.key === "ArrowDown") {
+            if (showCommandSuggestions && filteredCmds > 0) {
+                if (e.key === "ArrowDown" && filteredCmds > 1) {
                     e.preventDefault();
-                    setSelectedCommandIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
+                    setSelectedCommandIndex((prev) => (prev < filteredCmds - 1 ? prev + 1 : 0));
                     return;
                 }
-                if (e.key === "ArrowUp") {
+                if (e.key === "ArrowUp" && filteredCmds > 1) {
                     e.preventDefault();
-                    setSelectedCommandIndex((prev) => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
+                    setSelectedCommandIndex((prev) => (prev > 0 ? prev - 1 : filteredCmds - 1));
                     return;
                 }
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -263,7 +265,7 @@ export const ChatWidget = ({
             }
 
             // Arrow up - previous message
-            if (e.key === "ArrowUp" && !showCommandSuggestions) {
+            if (e.key === "ArrowUp") {
                 e.preventDefault();
                 const prev = navigatePrevious(inputValue);
                 if (prev !== null) setInputValue(prev);
@@ -271,7 +273,7 @@ export const ChatWidget = ({
             }
 
             // Arrow down - newer message
-            if (e.key === "ArrowDown" && !showCommandSuggestions) {
+            if (e.key === "ArrowDown") {
                 e.preventDefault();
                 const next = navigateNext();
                 if (next !== null) setInputValue(next);
