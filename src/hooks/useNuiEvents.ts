@@ -131,7 +131,9 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
         };
 
         window.addEventListener("message", handleMessage);
+
         console.log("[HUD DEBUG] NUI event listener registered");
+        sendNuiCallback("loadedNUI");
 
         return () => {
             window.removeEventListener("message", handleMessage);

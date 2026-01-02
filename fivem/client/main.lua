@@ -109,12 +109,7 @@ end
 -- INITIALIZATION
 -- ============================================================================
 
--- Resource Start Event
-AddEventHandler('onClientResourceStart', function(resourceName)
-    if GetCurrentResourceName() ~= resourceName then
-        return
-    end
-    
+RegisterNUICallback('loadedNUI', function(data, cb)
     -- Framework und Voice erkennen
     DetectFramework()
     DetectVoiceResource()
@@ -189,6 +184,8 @@ AddEventHandler('onClientResourceStart', function(resourceName)
     if Config.Debug then
         print('[HUD] Initialized successfully')
     end
+    
+    cb({ success = true })
 end)
 
 -- ESX Player Loaded Event
