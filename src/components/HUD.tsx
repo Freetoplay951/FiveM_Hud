@@ -159,9 +159,9 @@ export const HUD = () => {
     const [chatState, setChatState] = useState<ChatState>(DEMO_CHAT);
     const [teamChatState, setTeamChatState] = useState<TeamChatState>(DEMO_TEAM_CHAT);
     const [radioState, setRadioState] = useState<RadioState>(DEMO_RADIO);
-    const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false); // For edit mode preview
-    const [demoDeathTimer, setDemoDeathTimer] = useState({ respawnTimer: 14, waitTimer: 59 }); // Demo timer state
-    const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
+    const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false);
+    const [demoDeathTimer, setDemoDeathTimer] = useState({ respawnTimer: 14, waitTimer: 59 });
+    const [isVisible, setIsVisible] = useState(!isNuiEnvironment());
     const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => !isNuiEnvironment()); // In Demo an, in FiveM aus bis Voice erkannt wird
     const [isDemoMode] = useState(!isNuiEnvironment());
     const [editMenuOpen, setEditMenuOpen] = useState(false);
