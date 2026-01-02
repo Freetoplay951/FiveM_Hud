@@ -32,7 +32,6 @@ export const TeamChatWidget = ({
     const [inputValue, setInputValue] = useState("");
     const [isAutoHidden, setIsAutoHidden] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastMessageCountRef = useRef(teamChat.messages.length);
@@ -95,27 +94,6 @@ export const TeamChatWidget = ({
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }, [teamChat.isInputActive]);
-
-    useEffect(() => {
-        if (!isInputActive) return;
-
-        const focusInput = () => {
-            if (inputRef.current && document.activeElement !== inputRef.current) {
-                inputRef.current.focus();
-            }
-        };
-
-        focusInput();
-
-        const handleFocus = () => {
-            if (isInputActive) {
-                setTimeout(focusInput, 50);
-            }
-        };
-
-        window.addEventListener("focus", handleFocus);
-        return () => window.removeEventListener("focus", handleFocus);
-    }, [isInputActive]);
 
     const closeChat = useCallback(() => {
         setInputValue("");
@@ -263,7 +241,6 @@ export const TeamChatWidget = ({
                         <div className={cn("px-3 py-2 border-t", teamColor.border, "bg-background/40")}>
                             <div className="flex items-center gap-2">
                                 <input
-                                    ref={inputRef}
                                     type="text"
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}

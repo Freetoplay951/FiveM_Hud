@@ -49,7 +49,6 @@ export const ChatWidget = ({
     const [nuiCommands, setNuiCommands] = useState<ChatCommand[]>([]);
     const [isAutoHidden, setIsAutoHidden] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
     const commandListRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -156,43 +155,6 @@ export const ChatWidget = ({
         messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }, [chat.isInputActive]);
 
-    // Focus input when chat opens - with recovery after tab-out
-    useEffect(() => {
-        if (!isInputActive) return;
-
-        const focusInput = () => {
-            if (inputRef.current && document.activeElement !== inputRef.current) {
-                inputRef.current.focus();
-            }
-        };
-
-        // Initial focus
-        focusInput();
-
-        // Re-focus when window gains focus (after tab-out)
-        const handleFocus = () => {
-            if (isInputActive) {
-                // Small delay to ensure DOM is ready
-                setTimeout(focusInput, 50);
-            }
-        };
-
-        // Re-focus when clicking container
-        const handleContainerClick = (e: MouseEvent) => {
-            // Don't steal focus from buttons
-            if ((e.target as HTMLElement).tagName === "BUTTON") return;
-            focusInput();
-        };
-
-        window.addEventListener("focus", handleFocus);
-        containerRef.current?.addEventListener("click", handleContainerClick);
-
-        return () => {
-            window.removeEventListener("focus", handleFocus);
-            containerRef.current?.removeEventListener("click", handleContainerClick);
-        };
-    }, [isInputActive]);
-
     // Scroll selected command into view
     useEffect(() => {
         if (showCommandSuggestions && commandListRef.current) {
@@ -210,7 +172,6 @@ export const ChatWidget = ({
                 setInputValue(command);
             }
             setShowCommandSuggestions(false);
-            inputRef.current?.focus();
         },
         [availableCommands]
     );
@@ -487,7 +448,6 @@ export const ChatWidget = ({
 
                             <div className="flex items-center gap-2">
                                 <input
-                                    ref={inputRef}
                                     type="text"
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
