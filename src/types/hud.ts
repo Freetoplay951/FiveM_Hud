@@ -20,6 +20,7 @@ export type VehicleType = "car" | "plane" | "boat" | "helicopter" | "motorcycle"
 export interface VehicleState {
     inVehicle: boolean;
     vehicleType: VehicleType;
+    vehicleName?: string; // Display name from FiveM
     speed: number;
     gear: number;
     fuel: number;

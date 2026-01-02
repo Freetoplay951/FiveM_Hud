@@ -971,6 +971,7 @@ export const HUD = () => {
                             {...widgetProps}>
                             <VehicleNameWidget
                                 vehicleType={editMode ? speedometerType : vehicleState.vehicleType}
+                                vehicleName={vehicleState.vehicleName}
                                 inVehicle={vehicleState.inVehicle}
                                 visible={widget.visible}
                                 editMode={editMode}
@@ -1051,6 +1052,13 @@ export const HUD = () => {
                                     ? {
                                           ...DEMO_DEATH,
                                           isDead: true,
+                                          respawnTimer: demoDeathTimer.respawnTimer,
+                                          waitTimer: demoDeathTimer.waitTimer,
+                                          canRespawn: demoDeathTimer.respawnTimer === 0,
+                                      }
+                                    : isDemoMode && deathState.isDead
+                                    ? {
+                                          ...deathState,
                                           respawnTimer: demoDeathTimer.respawnTimer,
                                           waitTimer: demoDeathTimer.waitTimer,
                                           canRespawn: demoDeathTimer.respawnTimer === 0,

@@ -2,12 +2,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Radio, User } from "lucide-react";
 import { RadioState } from "@/types/hud";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface RadioWidgetProps {
     radio: RadioState;
 }
 
 export const RadioWidget = ({ radio }: RadioWidgetProps) => {
+    const { t } = useTranslation();
+    
     if (!radio.active || radio.members.length === 0) {
         return null;
     }
@@ -25,7 +28,7 @@ export const RadioWidget = ({ radio }: RadioWidgetProps) => {
                     size={12}
                     className="text-info"
                 />
-                <span className="text-[10px] font-medium text-info uppercase tracking-wider">Funk</span>
+                <span className="text-[10px] font-medium text-info uppercase tracking-wider">{t.radio.title}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">{radio.channel}</span>
             </div>
 
@@ -98,7 +101,7 @@ export const RadioWidget = ({ radio }: RadioWidgetProps) => {
 
             {/* Footer */}
             <div className="px-3 py-1.5 border-t border-border/30 bg-background/20">
-                <span className="text-[9px] text-muted-foreground">{radio.members.length} Teilnehmer</span>
+                <span className="text-[9px] text-muted-foreground">{radio.members.length} {t.radio.participants}</span>
             </div>
         </motion.div>
     );

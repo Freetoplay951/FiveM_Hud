@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Fuel, Plane } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface PlaneHUDProps {
     vehicle: VehicleState;
@@ -9,6 +10,7 @@ interface PlaneHUDProps {
 }
 
 export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
+    const { t } = useTranslation();
     const pitch = vehicle.pitch || 0;
     const roll = vehicle.roll || 0;
     const altitude = vehicle.altitude || 0;
@@ -220,7 +222,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
 
                         {/* Speed overlay left */}
                         <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[40px]">
-                            <span className="text-[6px] text-muted-foreground block text-center">KTS</span>
+                            <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.kts}</span>
                             <motion.span
                                 className="hud-number text-[10px] text-stamina tabular-nums block text-center"
                                 style={{
@@ -235,7 +237,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
 
                         {/* Altitude overlay right */}
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[44px]">
-                            <span className="text-[6px] text-muted-foreground block text-center">ALT</span>
+                            <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.alt}</span>
                             <motion.span
                                 className={cn(
                                     "hud-number text-[10px] tabular-nums block text-center",
@@ -296,12 +298,12 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                         : "0 0 6px hsl(var(--critical))",
                                 }}
                             />
-                            <span className="text-[8px] text-muted-foreground">GEAR</span>
+                            <span className="text-[8px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
                         </div>
 
                         {/* Flaps */}
                         <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[64px]">
-                            <span className="text-[8px] text-muted-foreground">FLAPS</span>
+                            <span className="text-[8px] text-muted-foreground">{t.vehicle.flaps.toUpperCase()}</span>
                             <motion.span
                                 className="hud-number text-[10px] text-primary tabular-nums w-[28px] text-right"
                                 style={{

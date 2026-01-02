@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Fuel } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface MotorcycleHUDProps {
     vehicle: VehicleState;
@@ -9,6 +10,7 @@ interface MotorcycleHUDProps {
 }
 
 export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
+    const { t } = useTranslation();
     const maxSpeed = 250; // Motorcycles are typically a bit faster than cars
 
     const svgCenter = 50;
@@ -188,7 +190,7 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
                             <div className="absolute inset-[28%] rounded-full bg-background/80" />
 
                             <span className="relative text-[7px] text-muted-foreground uppercase tracking-wider mb-0.5">
-                                KM/H
+                                {t.vehicle.kmh}
                             </span>
 
                             <motion.span
@@ -203,7 +205,7 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
 
                             {/* Gear Display */}
                             <div className="relative flex items-center gap-1 mt-1">
-                                <span className="text-[8px] text-muted-foreground">GEAR</span>
+                                <span className="text-[8px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
                                 <span
                                     className="hud-number text-sm text-warning leading-none"
                                     style={{ textShadow: "0 0 8px hsl(var(--warning) / 0.6)" }}>

@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Fuel, Thermometer } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface VehicleHUDProps {
     vehicle: VehicleState;
@@ -9,6 +10,7 @@ interface VehicleHUDProps {
 }
 
 export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
+    const { t } = useTranslation();
     const maxSpeed = 300;
 
     const svgCenter = 50;
@@ -195,7 +197,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                             <div className="absolute inset-[25%] rounded-full bg-background/80" />
 
                             <span className="relative text-[8px] text-muted-foreground uppercase tracking-wider mb-1">
-                                KM/H
+                                {t.vehicle.kmh}
                             </span>
 
                             <motion.span
@@ -215,7 +217,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                                     className="text-muted-foreground"
                                 />
                                 <div className="flex items-center gap-1">
-                                    <span className="text-[10px] text-muted-foreground">GEAR</span>
+                                    <span className="text-[10px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
                                     <span
                                         className="hud-number text-lg text-primary leading-none"
                                         style={{ textShadow: "0 0 10px hsl(var(--primary) / 0.6)" }}>

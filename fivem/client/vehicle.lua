@@ -159,9 +159,19 @@ local function UpdateHelicopterData(vehicle, data)
 end
 
 local function GetVehicleData(vehicle, vehicleType)
+    -- Get display name from game
+    local vehicleDisplayName = GetDisplayNameFromVehicleModel(GetEntityModel(vehicle))
+    local vehicleName = GetLabelText(vehicleDisplayName)
+    
+    -- Fallback if label not found
+    if vehicleName == "NULL" or vehicleName == "" then
+        vehicleName = vehicleDisplayName
+    end
+    
     local data = {
         inVehicle = true,
         vehicleType = vehicleType,
+        vehicleName = vehicleName,
         speed = GetEntitySpeed(vehicle) * 3.6, -- m/s zu km/h
         fuel = GetVehicleFuelLevel(vehicle),
         engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10), -- 0-100

@@ -3,6 +3,7 @@ import { Fuel, Anchor, Navigation, Waves } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { getDirectionFromDegree } from "@/lib/compassUtils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface BoatHUDProps {
     vehicle: VehicleState;
@@ -10,6 +11,7 @@ interface BoatHUDProps {
 }
 
 export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
+    const { t } = useTranslation();
     const speed = vehicle.speed;
     const heading = vehicle.heading || 0;
     const anchor = vehicle.anchor || false;
@@ -189,7 +191,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                             <div className="absolute inset-[25%] rounded-full bg-background/80" />
 
                             <span className="relative text-[8px] text-muted-foreground uppercase tracking-wider mb-1">
-                                KNOTS
+                                {t.vehicle.knots}
                             </span>
 
                             <motion.span
