@@ -133,8 +133,8 @@ export const ChatWidget = ({
 
     const filteredCommands = useMemo(() => {
         if (!inputValue.startsWith("/")) return [];
-        const search = inputValue.toLowerCase();
-        return availableCommands.filter((cmd) => cmd.command.toLowerCase().startsWith(search));
+        const search = inputValue.toLowerCase().slice(1); // Remove the leading "/"
+        return availableCommands.filter((cmd) => cmd.command.toLowerCase().slice(1).includes(search));
     }, [inputValue, availableCommands]);
 
     // Show suggestions when typing a command
@@ -213,9 +213,18 @@ export const ChatWidget = ({
                 return;
             }
 
-            // Tab closes the chat
+            // Tab navigates commands when suggestions are open, otherwise closes chat
             if (e.key === "Tab") {
                 e.preventDefault();
+                if (showCommandSuggestions && filteredCommands.length > 0) {
+                    // Navigate through commands with Tab (forward) and Shift+Tab (backward)
+                    if (e.shiftKey) {
+                        setSelectedCommandIndex((prev) => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
+                    } else {
+                        setSelectedCommandIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
+                    }
+                    return;
+                }
                 closeChat();
                 return;
             }
