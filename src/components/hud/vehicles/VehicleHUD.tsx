@@ -217,7 +217,9 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                                     className="text-muted-foreground"
                                 />
                                 <div className="flex items-center gap-1">
-                                    <span className="text-[10px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
+                                    <span className="text-[10px] text-muted-foreground">
+                                        {t.vehicle.gear.toUpperCase()}
+                                    </span>
                                     <span
                                         className="hud-number text-lg text-primary leading-none"
                                         style={{ textShadow: "0 0 10px hsl(var(--primary) / 0.6)" }}>

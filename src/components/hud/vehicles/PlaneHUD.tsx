@@ -303,7 +303,9 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                         : "0 0 6px hsl(var(--critical))",
                                 }}
                             />
-                            <span className="text-[8px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
+                            <span className="text-[8px] text-muted-foreground">
+                                {t.vehicle.landingGear.toUpperCase()}
+                            </span>
                         </div>
 
                         {/* Flaps */}
