@@ -42,25 +42,20 @@ local function GetPlayerDisplayName(source)
     return name or "Unknown"
 end
 
-RegisterNetEvent('hud:sendChatMessageType', function(msgType, message)
-    local source = source
+RegisterNetEvent('hud:sendChatMessage', function(message)
     local playerName = GetPlayerDisplayName(source)
     local senderId = tonumber(source)
 
     for _, playerId in ipairs(GetPlayers()) do
         local pid = tonumber(playerId)
         if pid ~= senderId then
-            TriggerClientEvent('hud:receiveChatMessage', pid, msgType, playerName, message)
+            TriggerClientEvent('hud:receiveChatMessage', pid, "normal", playerName, message)
         end
     end
 
     if Config and Config.Debug then
-        print('[HUD Chat] [' .. msgType .. '] ' .. playerName .. ': ' .. message)
+        print('[HUD Chat] [' .. "normal" .. '] ' .. playerName .. ': ' .. message)
     end
-end)
-
-RegisterNetEvent('hud:sendChatMessage', function(message)
-    TriggerEvent('hud:sendChatMessageType', 'normal', message)
 end)
 
 -- System-Nachricht an alle senden
@@ -72,27 +67,30 @@ end
 -- TEAM CHAT SYNCHRONIZATION (Staff only)
 -- ============================================================================
 
-function SendTeamChatMessage(sender, rank, message, isImportant)
+function SendTeamChatMessage(source, rank, message, isImportant)
+    local playerName = GetPlayerDisplayName(source)
+    
     local players = GetPlayers()
     for _, playerId in ipairs(players) do
         local targetId = tonumber(playerId)
-        if HasTeamChatAccess(targetId) then
-            TriggerClientEvent('hud:receiveTeamChatMessage', targetId, sender, rank, message, isImportant or false)
+        if pid ~= senderId then
+            if HasTeamChatAccess(targetId) then
+                TriggerClientEvent('hud:receiveTeamChatMessage', targetId, playerName, rank, message, isImportant or false)
+            end
         end
     end
     
     if Config and Config.Debug then
-        print('[HUD TeamChat] [' .. rank .. '] ' .. sender .. ': ' .. message)
+        print('[HUD TeamChat] [' .. rank .. '] ' .. playerName .. ': ' .. message)
     end
 end
 
 RegisterNetEvent('hud:sendTeamChatMessage', function(message)
     local source = source
-    local playerName = GetPlayerDisplayName(source)
 
     if not HasTeamChatAccess(source) then
         if Config and Config.Debug then
-            print('[HUD TeamChat] ' .. playerName .. ' hat keine Berechtigung!')
+            print('[HUD TeamChat] ' .. GetPlayerDisplayName(source) .. ' hat keine Berechtigung!')
         end
         return
     end
@@ -107,7 +105,7 @@ RegisterNetEvent('hud:sendTeamChatMessage', function(message)
         end
     end
     
-    SendTeamChatMessage(playerName, rank, message, false)
+    SendTeamChatMessage(source, rank, message, false)
 end)
 
 -- ============================================================================
@@ -271,12 +269,5 @@ RegisterCommand('announce', function(source, args)
     if source == 0 or IsPlayerAceAllowed(source, 'command.announce') then
         local message = table.concat(args, ' ')
         SendSystemMessage('[ANKÜNDIGUNG] ' .. message)
-    end
-end, true)
-
-RegisterCommand('teamchat', function(source, args)
-    if source == 0 or IsPlayerAceAllowed(source, 'command.teamchat') then
-        local message = table.concat(args, ' ')
-        SendTeamChatMessage('Server', 'System', message, true)
     end
 end, true)

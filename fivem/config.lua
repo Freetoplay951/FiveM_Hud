@@ -5,10 +5,6 @@ Config.StatusUpdateInterval = 500      -- Wie oft Status-Werte aktualisiert werd
 Config.VehicleUpdateInterval = 100     -- Wie oft Fahrzeug-Daten aktualisiert werden
 Config.LocationUpdateInterval = 1000   -- Wie oft Location aktualisiert wird
 
--- Chat Einstellungen
-Config.ChatFadeTime = 10               -- Sekunden bis Chat ausblendet (bei Inaktivität)
-Config.ChatMaxMessages = 50            -- Maximale Anzahl Nachrichten im Verlauf
-
 -- Status Einstellungen (deaktivieren wenn Server nicht unterstützt)
 Config.EnableHunger = true
 Config.EnableThirst = true

@@ -162,7 +162,7 @@ export const HUD = () => {
     const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false);
     const [demoDeathTimer, setDemoDeathTimer] = useState({ respawnTimer: 14, waitTimer: 59 });
     const [isVisible, setIsVisible] = useState(!isNuiEnvironment());
-    const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => !isNuiEnvironment()); // In Demo an, in FiveM aus bis Voice erkannt wird
+    const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(!isNuiEnvironment());
     const [isDemoMode] = useState(!isNuiEnvironment());
     const [editMenuOpen, setEditMenuOpen] = useState(false);
 
@@ -225,9 +225,8 @@ export const HUD = () => {
         onUpdateHud: (data) => setHudState((prev) => ({ ...prev, ...data })),
         onUpdateVehicle: setVehicleState,
         onUpdateMoney: setMoneyState,
-        onUpdateVoice: (data) => {
-            setVoiceState(data);
-        },
+        onUpdateVoice: setVoiceState,
+        onUpdateRadio: setRadioState,
         onUpdateLocation: setLocationState,
         onUpdatePlayer: setPlayerState,
         onSetVisible: setIsVisible,
@@ -241,64 +240,63 @@ export const HUD = () => {
             const notifyFn = { success, error, warning, info }[data.type] || info;
             notifyFn(data.title, data.message, data.duration);
         },
-        // Chat events - new createMessage pattern
-        onChatOpen: (data) => {
-            setChatState((prev) => ({
-                ...prev,
-                isInputActive: data.isInputActive,
-            }));
+        onChatUpdate: (data) => {
+            setChatState((prev) => {
+                const nextState = { ...prev };
+
+                if (typeof data.isInputActive === "boolean") {
+                    nextState.isInputActive = data.isInputActive;
+                }
+                if (data.message) {
+                    nextState.messages = [...prev.messages, data.message].slice(-50);
+                }
+                if (data.clearChat) {
+                    nextState.messages = [];
+                    nextState.unreadCount = 0;
+                }
+
+                return nextState;
+            });
         },
-        onChatClose: () => {
-            setChatState((prev) => ({
-                ...prev,
-                isInputActive: false,
-            }));
-        },
-        onChatCreateMessage: (message) => {
-            setChatState((prev) => ({
-                ...prev,
-                messages: [...prev.messages, message].slice(-50),
-            }));
-        },
-        onChatClear: () => {
-            setChatState((prev) => ({
-                ...prev,
-                messages: [],
-            }));
-        },
-        // Team chat events - new createMessage pattern
-        onTeamChatOpen: (data) => {
-            setTeamChatState((prev) => ({
-                ...prev,
-                isInputActive: data.isInputActive,
-                hasAccess: data.hasAccess,
-                teamType: data.teamType as TeamChatState["teamType"],
-                teamName: data.teamName,
-                onlineMembers: data.onlineMembers,
-                isAdmin: data.isAdmin,
-            }));
-        },
-        onTeamChatClose: () => {
-            setTeamChatState((prev) => ({
-                ...prev,
-                isInputActive: false,
-            }));
-        },
-        onTeamChatCreateMessage: (message) => {
-            setTeamChatState((prev) => ({
-                ...prev,
-                messages: [...prev.messages, message].slice(-50),
-            }));
-        },
-        onTeamChatClear: () => {
-            setTeamChatState((prev) => ({
-                ...prev,
-                messages: [],
-            }));
-        },
-        // Radio events
-        onUpdateRadio: (data) => {
-            setRadioState(data);
+        onTeamChatUpdate: (data) => {
+            setTeamChatState((prev) => {
+                const nextState = { ...prev };
+
+                if (typeof data.isInputActive === "boolean") {
+                    nextState.isInputActive = data.isInputActive;
+                }
+
+                if (typeof data.hasAccess === "boolean") {
+                    nextState.hasAccess = data.hasAccess;
+                }
+
+                if (data.teamType) {
+                    nextState.teamType = data.teamType;
+                }
+
+                if (data.teamName) {
+                    nextState.teamName = data.teamName;
+                }
+
+                if (typeof data.onlineMembers === "number") {
+                    nextState.onlineMembers = data.onlineMembers;
+                }
+
+                if (typeof data.isAdmin === "boolean") {
+                    nextState.isAdmin = data.isAdmin;
+                }
+
+                if (data.message) {
+                    nextState.messages = [...prev.messages, data.message].slice(-50);
+                }
+
+                if (data.clearChat) {
+                    nextState.messages = [];
+                    nextState.unreadCount = 0;
+                }
+
+                return nextState;
+            });
         },
     });
 
@@ -887,6 +885,7 @@ export const HUD = () => {
 
             {/* Radio Widget */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (isDemoMode || isVoiceEnabled) &&
                 (() => {
                     const widget = getWidget("radio");
                     if (!widget) return null;

@@ -54,16 +54,13 @@ end)
 -- TEAM CHAT LOGIC
 -- ============================================================================
 
-local function CreateTeamChatMessage(sender, rank, message, isImportant)
-    local maxMessages = Config and Config.ChatMaxMessages or 50
-
-    -- Use rank from config if available
+local function CreateTeamChatMessageData(sender, rank, message, isImportant)
     local displayRank = rank
     if cachedStaffRankConfig and cachedStaffRankName then
         displayRank = cachedStaffRankName
     end
-
-    local newMessage = {
+    
+    return {
         id = tostring(GetGameTimer()),
         sender = sender,
         rank = displayRank,
@@ -71,9 +68,12 @@ local function CreateTeamChatMessage(sender, rank, message, isImportant)
         timestamp = GetTimestamp(),
         isImportant = isImportant or false
     }
+end
 
-    -- Send createMessage event to NUI
-    SendNUI("teamChatCreateMessage", newMessage)
+local function CreateTeamChatMessage(sender, rank, message, isImportant)
+    SendNUI("teamChatUpdate", {
+        message = CreateTeamChatMessageData(sender, rank, message, isImportant)
+    })
 end
 
 -- ============================================================================
@@ -82,12 +82,7 @@ end
 
 function OpenTeamChat()
     if not cachedTeamAccess then
-        SendNUI("notify", {
-            type = "error",
-            title = "Kein Zugriff",
-            message = "Nur für Team-Mitglieder.",
-            duration = 3000
-        })
+        TriggerEvent('hud:notify', 'error', 'Kein Zugriff', 'Nur für Team-Mitglieder.', 3000)
         return
     end
 
@@ -95,7 +90,7 @@ function OpenTeamChat()
     teamChatOpen = true
     SetNuiFocus(true, false)
 
-    SendNUI("teamChatOpen", {
+    SendNUI("teamChatUpdate", {
         isInputActive = true,
         hasAccess = true,
         teamType = cachedStaffRank or "supporter",
@@ -105,11 +100,19 @@ function OpenTeamChat()
     })
 end
 
-function CloseTeamChat()
+function CloseTeamChat(message)
     teamChatInputActive = false
     SetNuiFocus(false, false)
-
-    SendNUI("teamChatClose", {})
+    if message then
+        SendNUI("teamChatUpdate", {
+            isInputActive = false,
+            message = message
+        })
+    else
+        SendNUI("teamChatUpdate", {
+            isInputActive = false,
+        })
+    end
 end
 
 -- ============================================================================
@@ -128,7 +131,9 @@ RegisterCommand("closetc", CloseTeamChat, false)
 RegisterNUICallback("sendTeamChatMessage", function(data, cb)
     if data.message and data.message ~= "" and cachedTeamAccess then
         TriggerServerEvent("hud:sendTeamChatMessage", data.message)
-        CloseTeamChat()
+        
+        local name = GetPlayerName(PlayerId()) or "Unknown"
+        CloseTeamChat(CreateTeamChatMessageData(name, cachedStaffRankName, data.message, false))
     end
     cb({ success = true })
 end)
@@ -147,7 +152,9 @@ RegisterNetEvent("hud:receiveTeamChatMessage", function(sender, rank, message, i
 end)
 
 RegisterNetEvent("hud:clearTeamChat", function()
-    SendNUI("teamChatClear", {})
+    SendNUI("teamChatUpdate", {
+        clearChat = true
+    })
 end)
 
 -- ============================================================================
@@ -161,5 +168,7 @@ exports("isTeamChatInputActive", function() return teamChatInputActive end)
 exports("hasTeamChatAccess", function() return cachedTeamAccess end)
 exports("sendTeamChatMessage", CreateTeamChatMessage)
 exports("clearTeamChat", function()
-    SendNUI("teamChatClear", {})
+    SendNUI("teamChatUpdate", {
+        clearChat = true
+    })
 end)

@@ -8,8 +8,9 @@ import {
     NotificationData,
     DeathState,
     ChatMessage,
-    TeamChatMessage,
     RadioState,
+    TeamChatState,
+    TeamChatMessage,
 } from "@/types/hud";
 
 interface NuiEventHandlers {
@@ -17,6 +18,7 @@ interface NuiEventHandlers {
     onUpdateVehicle?: (data: VehicleState) => void;
     onUpdateMoney?: (data: MoneyState) => void;
     onUpdateVoice?: (data: VoiceState) => void;
+    onUpdateRadio?: (data: RadioState) => void;
     onUpdateLocation?: (data: LocationState) => void;
     onUpdatePlayer?: (data: { id: number; job: string; rank: string }) => void;
     onNotify?: (data: { type: NotificationData["type"]; title: string; message: string; duration?: number }) => void;
@@ -24,24 +26,13 @@ interface NuiEventHandlers {
     onSetVisible?: (visible: boolean) => void;
     onUpdateDeath?: (data: DeathState) => void;
     onSetVoiceEnabled?: (enabled: boolean) => void;
-    // Chat events - now using createMessage pattern
-    onChatOpen?: (data: { isInputActive: boolean }) => void;
-    onChatClose?: () => void;
-    onChatCreateMessage?: (data: ChatMessage) => void;
-    onChatClear?: () => void;
-    // Team chat events - now using createMessage pattern
-    onTeamChatOpen?: (data: {
-        isInputActive: boolean;
-        hasAccess: boolean;
-        teamType: string;
-        teamName: string;
-        onlineMembers: number;
-        isAdmin: boolean;
-    }) => void;
-    onTeamChatClose?: () => void;
-    onTeamChatCreateMessage?: (data: TeamChatMessage) => void;
-    onTeamChatClear?: () => void;
-    onUpdateRadio?: (data: RadioState) => void;
+    onChatUpdate?: (data: { isInputActive?: boolean; message?: ChatMessage; clearChat?: boolean }) => void;
+    onTeamChatUpdate?: (
+        data: Omit<Partial<TeamChatState>, "isVisible"> & {
+            message?: TeamChatMessage;
+            clearChat?: boolean;
+        }
+    ) => void;
 }
 
 export const useNuiEvents = (handlers: NuiEventHandlers) => {
@@ -77,6 +68,9 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                 case "updateVoice":
                     h.onUpdateVoice?.(data);
                     break;
+                case "updateRadio":
+                    h.onUpdateRadio?.(data);
+                    break;
                 case "updateLocation":
                     h.onUpdateLocation?.(data);
                     break;
@@ -98,34 +92,11 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                 case "setVoiceEnabled":
                     h.onSetVoiceEnabled?.(data);
                     break;
-                // New chat events
-                case "chatOpen":
-                    h.onChatOpen?.(data);
+                case "chatUpdate":
+                    h.onChatUpdate?.(data);
                     break;
-                case "chatClose":
-                    h.onChatClose?.();
-                    break;
-                case "chatCreateMessage":
-                    h.onChatCreateMessage?.(data);
-                    break;
-                case "chatClear":
-                    h.onChatClear?.();
-                    break;
-                // New team chat events
-                case "teamChatOpen":
-                    h.onTeamChatOpen?.(data);
-                    break;
-                case "teamChatClose":
-                    h.onTeamChatClose?.();
-                    break;
-                case "teamChatCreateMessage":
-                    h.onTeamChatCreateMessage?.(data);
-                    break;
-                case "teamChatClear":
-                    h.onTeamChatClear?.();
-                    break;
-                case "updateRadio":
-                    h.onUpdateRadio?.(data);
+                case "teamChatUpdate":
+                    h.onTeamChatUpdate?.(data);
                     break;
             }
         };

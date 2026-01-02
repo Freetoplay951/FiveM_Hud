@@ -2,20 +2,20 @@
 -- FUNCTIONS
 -- ============================================================================
 
--- CHAT LOGIC
-local function CreateChatMessage(msgType, sender, message)
-    local maxMessages = Config and Config.ChatMaxMessages or 50
-
-    local newMessage = {
+local function CreateChatMessageData(msgType, sender, message)
+    return {
         id = tostring(GetGameTimer()),
         type = msgType or "normal",
         sender = sender,
         message = message,
         timestamp = GetTimestamp()
     }
+end
 
-    -- Send createMessage event to NUI
-    SendNUI("chatCreateMessage", newMessage)
+local function CreateChatMessage(msgType, sender, message)
+    SendNUI("chatUpdate", {
+        message = CreateChatMessageData(msgType, sender, message)
+    })
 end
 
 local function CollectCommands()
@@ -106,16 +106,24 @@ function OpenChat()
     chatOpen = true
     SetNuiFocus(true, false)
 
-    SendNUI("chatOpen", {
+    SendNUI("chatUpdate", {
         isInputActive = true
     })
 end
 
-function CloseChat()
+function CloseChat(message)
     chatInputActive = false
     SetNuiFocus(false, false)
-
-    SendNUI("chatClose", {})
+    if message then
+        SendNUI("chatUpdate", {
+            isInputActive = false,
+            message = message
+        })
+    else
+        SendNUI("chatUpdate", {
+            isInputActive = false
+        })
+    end
 end
 
 -- ============================================================================
@@ -148,9 +156,12 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
         
         return cb({ success = true })
     end
-
+    
+    local name = GetPlayerName(PlayerId()) or "Unknown"
+    
     TriggerServerEvent("hud:sendChatMessage", msg)
-    CloseChat()
+    CloseChat(CreateChatMessageData("normal", name, msg))
+    
     cb({ success = true })
 end)
 
@@ -196,7 +207,9 @@ RegisterNetEvent("hud:systemMessage", function(message)
 end)
 
 RegisterNetEvent("hud:clearChat", function()
-    SendNUI("chatClear", {})
+    SendNUI("chatUpdate", {
+        clearChat = true
+    })
 end)
 
 -- ============================================================================
@@ -212,5 +225,7 @@ exports("sendSystemMessage", function(msg)
     CreateChatMessage("system", nil, msg)
 end)
 exports("clearChat", function()
-    SendNUI("chatClear", {})
+    SendNUI("chatUpdate", {
+        clearChat = true
+    })
 end)
