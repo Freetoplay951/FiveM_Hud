@@ -75,7 +75,15 @@ end
 -- ============================================================================
 
 function OpenTeamChat()
-    if not cachedTeamAccess then return end
+    if not cachedTeamAccess then
+        SendNUI("notify", {
+            type = "error",
+            title = "Kein Zugriff",
+            message = "Nur für Team-Mitglieder.",
+            duration = 3000
+        })
+        return
+    end
 
     teamChatInputActive = true
     teamChatOpen = true
