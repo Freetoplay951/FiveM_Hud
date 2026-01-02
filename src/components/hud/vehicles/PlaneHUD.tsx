@@ -11,6 +11,7 @@ interface PlaneHUDProps {
 
 export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
     const { t } = useTranslation();
+
     const pitch = vehicle.pitch || 0;
     const roll = vehicle.roll || 0;
     const altitude = vehicle.altitude || 0;
@@ -22,6 +23,10 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
     const fuelWarning = vehicle.fuel <= 25;
     const fuelCritical = vehicle.fuel <= 10;
     const lowAltitude = altitude < 100;
+
+    const flapsOpen = flaps === 1;
+    const flapsClosed = flaps === 0;
+    const flapsChanging = !flapsClosed && !flapsOpen;
 
     return (
         <AnimatePresence>
@@ -302,22 +307,29 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                         </div>
 
                         {/* Flaps */}
-                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-2.5 w-[68px]">
-                            <span className="text-[8px] text-muted-foreground">{t.vehicle.flaps.toUpperCase()}</span>
-                            <motion.span
-                                className="hud-number text-[10px] text-primary tabular-nums w-[28px] text-right"
+                        <div
+                            className={cn(
+                                "bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]",
+                                flapsClosed && "border-critical/50",
+                                flapsOpen && "border-stamina/50",
+                                flapsChanging && "border-warning/50"
+                            )}>
+                            <div
+                                className={cn(
+                                    "w-2 h-2 rounded-full flex-shrink-0",
+                                    flapsClosed ? "bg-critical" : !flapsOpen ? "bg-warning" : "bg-stamina"
+                                )}
                                 style={{
-                                    textShadow: "0 0 6px hsl(var(--primary) / 0.5)",
-                                    fontVariantNumeric: "tabular-nums",
+                                    boxShadow: `0 0 6px hsl(var(--${
+                                        flapsClosed ? "critical" : flapsChanging ? "warning" : "stamina"
+                                    }))`,
                                 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ type: "spring", stiffness: 100, damping: 15 }}>
-                                {flaps.toFixed(0)}%
-                            </motion.span>
+                            />
+                            <span className="text-[8px] text-muted-foreground">{t.vehicle.flaps.toUpperCase()}</span>
                         </div>
 
                         {/* Fuel */}
-                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-2.5 w-[64px]">
+                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[64px] whitespace-nowrap">
                             <Fuel
                                 size={10}
                                 className={cn(
@@ -336,7 +348,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                             />
                             <motion.span
                                 className={cn(
-                                    "hud-number text-[10px] tabular-nums w-[32px] text-right",
+                                    "hud-number text-[10px] tabular-nums text-right ml-auto",
                                     fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-stamina"
                                 )}
                                 style={{
