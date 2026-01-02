@@ -2,9 +2,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Car, Plane, Ship, Helicopter, Bike, BikeIcon } from "lucide-react";
 import { VehicleType } from "@/types/hud";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface VehicleNameWidgetProps {
     vehicleType: VehicleType;
+    vehicleName?: string; // Name from FiveM
     inVehicle: boolean;
     visible: boolean;
     editMode: boolean;
@@ -19,18 +21,12 @@ const vehicleIcons: Record<VehicleType, React.ElementType> = {
     bicycle: BikeIcon,
 };
 
-const vehicleNames: Record<VehicleType, string> = {
-    car: "Auto",
-    plane: "Flugzeug",
-    boat: "Boot",
-    helicopter: "Helikopter",
-    motorcycle: "Motorrad",
-    bicycle: "Fahrrad",
-};
-
-export const VehicleNameWidget = ({ vehicleType, inVehicle, visible, editMode }: VehicleNameWidgetProps) => {
+export const VehicleNameWidget = ({ vehicleType, vehicleName, inVehicle, visible, editMode }: VehicleNameWidgetProps) => {
+    const { t } = useTranslation();
     const Icon = vehicleIcons[vehicleType] || Car;
-    const name = vehicleNames[vehicleType] || "Fahrzeug";
+    
+    // Use vehicle name from FiveM, fallback to translated type
+    const displayName = vehicleName || t.speedometerTypes[vehicleType] || t.vehicle.unknown;
 
     // Show in edit mode or when in vehicle
     if (!visible && !editMode) return null;
@@ -56,7 +52,7 @@ export const VehicleNameWidget = ({ vehicleType, inVehicle, visible, editMode }:
                     <span
                         className="text-xs font-medium text-foreground uppercase tracking-wider"
                         style={{ fontFamily: "Orbitron, sans-serif" }}>
-                        {name}
+                        {displayName}
                     </span>
                 </motion.div>
             )}

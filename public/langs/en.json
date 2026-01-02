@@ -45,7 +45,13 @@
         "landingGear": "Landing Gear",
         "flaps": "Flaps",
         "rpm": "RPM",
-        "verticalSpeed": "Vertical Speed"
+        "verticalSpeed": "Vertical Speed",
+        "unknown": "Vehicle",
+        "kmh": "KM/H",
+        "knots": "KNOTS",
+        "kts": "KTS",
+        "alt": "ALT",
+        "rotor": "ROTOR"
     },
     "editMode": {
         "title": "Edit HUD",
@@ -85,7 +91,12 @@
         "voice": "Voice",
         "whisper": "Whisper",
         "normal": "Normal",
-        "shout": "Shout"
+        "shout": "Shout",
+        "megaphone": "Megaphone"
+    },
+    "radio": {
+        "title": "Radio",
+        "participants": "participants"
     },
     "notifications": {
         "title": "Notifications"

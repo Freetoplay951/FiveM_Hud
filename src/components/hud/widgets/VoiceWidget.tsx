@@ -2,19 +2,22 @@ import { motion } from "framer-motion";
 import { Mic, MicOff, Volume2 } from "lucide-react";
 import { VoiceState } from "@/types/hud";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface VoiceWidgetProps {
     voice: VoiceState;
 }
 
-const VOICE_RANGE_CONFIG: Record<VoiceState["range"], { bars: number; color: string; label: string }> = {
-    whisper: { bars: 1, color: "muted-foreground", label: "Flüstern" },
-    normal: { bars: 2, color: "warning", label: "Normal" },
-    shout: { bars: 3, color: "critical", label: "Schreien" },
-    megaphone: { bars: 3, color: "primary", label: "Megafon" },
-};
-
 export const VoiceWidget = ({ voice }: VoiceWidgetProps) => {
+    const { t } = useTranslation();
+    
+    const VOICE_RANGE_CONFIG: Record<VoiceState["range"], { bars: number; color: string; labelKey: keyof typeof t.general }> = {
+        whisper: { bars: 1, color: "muted-foreground", labelKey: "whisper" },
+        normal: { bars: 2, color: "warning", labelKey: "normal" },
+        shout: { bars: 3, color: "critical", labelKey: "shout" },
+        megaphone: { bars: 3, color: "primary", labelKey: "megaphone" },
+    };
+    
     const config = VOICE_RANGE_CONFIG[voice.range];
     const isMegaphone = voice.range === "megaphone";
 
@@ -93,7 +96,7 @@ export const VoiceWidget = ({ voice }: VoiceWidgetProps) => {
                           }
                         : {}
                 }>
-                {config.label}
+                {t.general[config.labelKey]}
             </span>
         </motion.div>
     );

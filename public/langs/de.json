@@ -45,7 +45,13 @@
         "landingGear": "Fahrwerk",
         "flaps": "Klappen",
         "rpm": "Drehzahl",
-        "verticalSpeed": "Vertikalgeschwindigkeit"
+        "verticalSpeed": "Vertikalgeschwindigkeit",
+        "unknown": "Fahrzeug",
+        "kmh": "KM/H",
+        "knots": "KNOTEN",
+        "kts": "KTS",
+        "alt": "HÖHE",
+        "rotor": "ROTOR"
     },
     "editMode": {
         "title": "HUD Bearbeiten",
@@ -85,7 +91,12 @@
         "voice": "Stimme",
         "whisper": "Flüstern",
         "normal": "Normal",
-        "shout": "Schreien"
+        "shout": "Schreien",
+        "megaphone": "Megafon"
+    },
+    "radio": {
+        "title": "Funk",
+        "participants": "Teilnehmer"
     },
     "notifications": {
         "title": "Benachrichtigungen"

@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Fuel, ArrowUp, ArrowDown, Gauge } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface HelicopterHUDProps {
     vehicle: VehicleState;
@@ -9,6 +10,7 @@ interface HelicopterHUDProps {
 }
 
 export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
+    const { t } = useTranslation();
     const pitch = vehicle.pitch || 0;
     const roll = vehicle.roll || 0;
     const altitude = vehicle.altitude || 0;
@@ -222,7 +224,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
 
                         {/* Speed overlay left */}
                         <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[40px]">
-                            <span className="text-[6px] text-muted-foreground block text-center">KTS</span>
+                            <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.kts}</span>
                             <motion.span
                                 className="hud-number text-[10px] text-stamina tabular-nums block text-center"
                                 style={{
@@ -237,7 +239,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
 
                         {/* Altitude overlay right */}
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[44px]">
-                            <span className="text-[6px] text-muted-foreground block text-center">ALT</span>
+                            <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.alt}</span>
                             <motion.span
                                 className={cn(
                                     "hud-number text-[10px] tabular-nums block text-center",
@@ -326,7 +328,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                                     filter: `drop-shadow(0 0 3px hsl(var(--${lowRpm ? "critical" : "primary"})))`,
                                 }}
                             />
-                            <span className="text-[8px] text-muted-foreground">ROTOR</span>
+                            <span className="text-[8px] text-muted-foreground">{t.vehicle.rotor}</span>
                             <motion.span
                                 className={cn(
                                     "hud-number text-[10px] tabular-nums text-right ml-auto",

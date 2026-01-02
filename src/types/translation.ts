@@ -53,6 +53,12 @@ export interface Translations {
         flaps: string;
         rpm: string;
         verticalSpeed: string;
+        unknown: string;
+        kmh: string;
+        knots: string;
+        kts: string;
+        alt: string;
+        rotor: string;
     };
     editMode: {
         title: string;
@@ -93,6 +99,11 @@ export interface Translations {
         whisper: string;
         normal: string;
         shout: string;
+        megaphone: string;
+    };
+    radio: {
+        title: string;
+        participants: string;
     };
     notifications: {
         title: string;
