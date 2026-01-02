@@ -310,12 +310,12 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ type: "spring", stiffness: 100, damping: 15 }}>
-                                {flaps}%
+                                {flaps.toFixed(0)}%
                             </motion.span>
                         </div>
 
                         {/* Fuel */}
-                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[56px]">
+                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-2 w-[60px]">
                             <Fuel
                                 size={10}
                                 className={cn(

@@ -10,6 +10,7 @@ import { VoiceWidget } from "./hud/widgets/VoiceWidget";
 import { LocationWidget } from "./hud/widgets/LocationWidget";
 import { ClockWidget } from "./hud/widgets/ClockWidget";
 import { CompassWidget } from "./hud/widgets/CompassWidget";
+import { VehicleNameWidget } from "./hud/widgets/VehicleNameWidget";
 import { NotificationContainer } from "./hud/notifications/NotificationContainer";
 import { ChatWidget } from "./hud/widgets/ChatWidget";
 import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
@@ -455,10 +456,12 @@ export const HUD = () => {
         };
     }, [isDemoMode, editMode]);
 
-    // Demo: Death Timer Animation (countdown when death preview is active in edit mode)
+    // Demo: Death Timer Animation (countdown when death preview is active in edit mode OR when dead in demo mode)
     // Works in both demo mode and FiveM when edit mode death preview is enabled
     useEffect(() => {
-        if (!showDeathScreenPreview || !editMode) {
+        const shouldRunTimer = (showDeathScreenPreview && editMode) || (isDemoMode && deathState.isDead);
+        
+        if (!shouldRunTimer) {
             // Reset timer when preview is turned off
             setDemoDeathTimer({ respawnTimer: 14, waitTimer: 59 });
             return;
@@ -485,7 +488,7 @@ export const HUD = () => {
         }, 1000);
 
         return () => clearInterval(timerInterval);
-    }, [showDeathScreenPreview, editMode, deathState.canRespawn]);
+    }, [showDeathScreenPreview, editMode, deathState.canRespawn, isDemoMode, deathState.isDead]);
 
     // Demo key controls + ESC to exit edit mode
     useEffect(() => {
@@ -948,6 +951,28 @@ export const HUD = () => {
                             {...widgetProps}>
                             <CompassWidget
                                 heading={locationState.heading}
+                                editMode={editMode}
+                            />
+                        </HUDWidget>
+                    );
+                })()}
+
+            {/* Vehicle Name Widget */}
+            {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
+                (() => {
+                    const widget = getWidget("vehiclename");
+                    if (!widget) return null;
+                    return (
+                        <HUDWidget
+                            id="vehiclename"
+                            position={widget.position}
+                            visible={widget.visible}
+                            scale={widget.scale}
+                            {...widgetProps}>
+                            <VehicleNameWidget
+                                vehicleType={editMode ? speedometerType : vehicleState.vehicleType}
+                                inVehicle={vehicleState.inVehicle}
+                                visible={widget.visible}
                                 editMode={editMode}
                             />
                         </HUDWidget>
