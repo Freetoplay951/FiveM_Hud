@@ -71,6 +71,16 @@ local function SendRegisteredCommandsToNUI()
     end
 end
 
+local function CommandExists(cmdName)
+    local commands = GetRegisteredCommands()
+    for _, cmd in ipairs(commands) do
+        if cmd.name == cmdName then
+            return true
+        end
+    end
+    return false
+end
+
 -- ============================================================================
 -- START HANDLER
 -- ============================================================================
@@ -126,8 +136,16 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
     if msg == "" then return cb({ success = false }) end
 
     if msg:sub(1, 1) == "/" then
-        CloseChat()
-        ExecuteCommand(msg:sub(2))
+        local cmd = msg:sub(2)
+        local cmdName = cmd:match("^(%S+)") or cmd
+        
+        if CommandExists(cmdName) then
+            CloseChat()
+            ExecuteCommand(cmdName)
+        else
+            TriggerEvent("hud:error", "Ausführung fehlgeschlagen", "Der Command '/" .. cmdName .. "' existiert nicht.")
+        end
+        
         return cb({ success = true })
     end
 
