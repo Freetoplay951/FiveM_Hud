@@ -185,8 +185,12 @@ local function GetVehicleData(vehicle, vehicleType)
         data.pitch = rotation.x
         data.roll = rotation.y
         
+        local speed = GetEntitySpeed(vehicle) * 3.6
+        local throttle = GetControlNormal(0, 71) -- W / Gas
+        local rpm = math.max(throttle, math.min(speed / 120.0, 1.0))
+        data.rotorRpm = math.floor(rpm * 100)
+
         local tailRotorHealth = Citizen.InvokeNative(0x33EE6E2B, vehicle, Citizen.ResultAsFloat())
-        data.rotorRpm = GetVehicleCurrentRpm(vehicle)
         data.tailRotorHealth = math.floor((tailRotorHealth / 1000.0) * 100)
         
         -- Engine Status
