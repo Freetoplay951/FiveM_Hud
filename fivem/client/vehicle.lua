@@ -107,6 +107,57 @@ end
 -- VEHICLE DATA COLLECTION
 -- ============================================================================
 
+vehicleRotorSpeeds = vehicleRotorSpeeds or {}
+local function UpdateHelicopterData(vehicle, data)
+    if not DoesEntityExist(vehicle) then
+        return
+    end
+
+    local velocity = GetEntityVelocity(vehicle)
+    local rotation = GetEntityRotation(vehicle, 2)
+    local coords   = GetEntityCoords(vehicle)
+
+    -- Geschwindigkeit
+    local horizontalSpeed = math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y) * 3.6
+
+    -- Basis-Daten
+    data.altitude       = math.floor(coords.z)
+    data.airspeed       = math.floor(horizontalSpeed)
+    data.verticalSpeed  = math.floor(velocity.z * 3.6)
+    data.pitch          = rotation.x
+    data.roll           = rotation.y
+    data.engineRunning  = GetIsVehicleEngineRunning(vehicle)
+
+    -- Input (Throttle / Collective)
+    local throttle = data.engineRunning and GetControlNormal(0, 71) or 0.0
+
+    -- Ziel-Rotor-Speed berechnen (0.0 – 1.0)
+    local idleSpeed    = 0.2
+    local maxSpeed     = 1.0
+    local forwardSpeed = math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
+
+    local targetRotorSpeed = idleSpeed + throttle * (maxSpeed - idleSpeed)
+    targetRotorSpeed = math.max(targetRotorSpeed, idleSpeed + forwardSpeed / 50.0)
+    targetRotorSpeed = math.min(targetRotorSpeed, 1.0)
+
+    -- Smooth Lerp: vorheriger Wert → Zielwert
+    local currentRotorSpeed = vehicleRotorSpeeds[vehicle] or idleSpeed
+    local lerpSpeed         = 0.05 -- je kleiner, desto langsamer / smoother
+
+    currentRotorSpeed = currentRotorSpeed + (targetRotorSpeed - currentRotorSpeed) * lerpSpeed
+
+    -- Animation setzen
+    SetHeliBladesSpeed(vehicle, currentRotorSpeed)
+
+    -- Speichern für HUD / NUI
+    vehicleRotorSpeeds[vehicle] = currentRotorSpeed
+    data.rotorRpm = math.floor(currentRotorSpeed * 100)
+
+    -- Tail-Rotor Health (0–100 %)
+    local tailRotorHealth = Citizen.InvokeNative(0x33EE6E2B, vehicle, Citizen.ResultAsFloat())
+    data.tailRotorHealth  = math.floor((tailRotorHealth / 1000.0) * 100)
+end
+
 local function GetVehicleData(vehicle, vehicleType)
     local data = {
         inVehicle = true,
@@ -172,29 +223,7 @@ local function GetVehicleData(vehicle, vehicleType)
     -- HELIKOPTER
     -- ================================================================
     if vehicleType == 'helicopter' then
-        local velocity = GetEntityVelocity(vehicle)
-        local rotation = GetEntityRotation(vehicle, 2)
-        local coords = GetEntityCoords(vehicle)
-        
-        -- Horizontale Geschwindigkeit
-        local horizontalSpeed = math.sqrt(velocity.x^2 + velocity.y^2) * 3.6
-        
-        data.altitude = math.floor(coords.z)
-        data.airspeed = math.floor(horizontalSpeed)
-        data.verticalSpeed = math.floor(velocity.z * 3.6)
-        data.pitch = rotation.x
-        data.roll = rotation.y
-        
-        local speed = GetEntitySpeed(vehicle) * 3.6
-        local throttle = GetControlNormal(0, 71) -- W / Gas
-        local rpm = math.max(throttle, math.min(speed / 120.0, 1.0))
-        data.rotorRpm = math.floor(rpm * 100)
-
-        local tailRotorHealth = Citizen.InvokeNative(0x33EE6E2B, vehicle, Citizen.ResultAsFloat())
-        data.tailRotorHealth = math.floor((tailRotorHealth / 1000.0) * 100)
-        
-        -- Engine Status
-        data.engineRunning = GetIsVehicleEngineRunning(vehicle)
+        UpdateHelicopterData(vehicle, data)
     end
     
     -- ================================================================
