@@ -23,7 +23,7 @@ local function CollectCommands()
     local commandSet = {}
     local commandList = {}
 
-    local excludedPrefixes = {"_", "sv_", "onesync_", "rateLimiter_", "adhesive_"} 
+    local excludedPrefixes = {"_", "-", "sv_", "onesync_", "rateLimiter_", "adhesive_"} 
 
     for _, cmd in ipairs(commands) do
         local name = cmd.name
