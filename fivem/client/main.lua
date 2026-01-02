@@ -11,6 +11,7 @@ local Framework = nil
 local FrameworkObject = nil
 local VoiceResource = nil
 local isPlayerLoaded = false
+local isNuiLoaded = false
 
 -- ============================================================================
 -- UTILITY FUNCTIONS
@@ -109,24 +110,8 @@ end
 -- INITIALIZATION
 -- ============================================================================
 
-RegisterNUICallback('loadedNUI', function(data, cb)
-    -- Framework und Voice erkennen
-    DetectFramework()
-    DetectVoiceResource()
-    
-    -- Kurz warten bis NUI geladen
-    Wait(500)
-    
-    -- Debug: Send ping to NUI to verify communication
-    if Config.Debug then
-        print('[HUD DEBUG] Lua -> Web ping sent')
-        SendNUI('ping', {})
-    end
-    
-    -- HUD anzeigen
-    SetHudVisible(true)
-    
-    -- Initiale Daten senden
+-- Initiale Daten an NUI senden
+local function SendInitialData()
     local ped = PlayerPedId()
     local coords = GetEntityCoords(ped)
     local heading = GetEntityHeading(ped)
@@ -179,13 +164,35 @@ RegisterNUICallback('loadedNUI', function(data, cb)
         blackMoney = 0
     })
     
-    isPlayerLoaded = true
+    -- HUD anzeigen
+    SetHudVisible(true)
     
     if Config.Debug then
-        print('[HUD] Initialized successfully')
+        print('[HUD] Initial data sent to NUI')
+    end
+end
+
+-- NUI Callback: NUI hat geladen
+RegisterNUICallback('loadedNUI', function(data, cb)
+    isNuiLoaded = true
+    
+    if Config.Debug then
+        print('[HUD] NUI loaded callback received')
     end
     
-    cb({ success = true })
+    -- Framework und Voice erkennen (falls noch nicht geschehen)
+    if not Framework then
+        DetectFramework()
+    end
+    if not VoiceResource then
+        DetectVoiceResource()
+    end
+    
+    -- Initiale Daten senden
+    SendInitialData()
+    isPlayerLoaded = true
+    
+    cb('ok')
 end)
 
 -- ESX Player Loaded Event
