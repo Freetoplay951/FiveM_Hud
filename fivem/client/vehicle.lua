@@ -1,5 +1,20 @@
--- Vehicle HUD Updates
--- Sendet Fahrzeug-Daten an das HUD
+-- ============================================================================
+-- FUNCTIONS
+-- ============================================================================
+
+local hashToModelName = {}
+CreateThread(function()
+    local allModels = GetAllVehicleModels()
+    for _, modelName in ipairs(allModels) do
+        local hash = GetHashKey(modelName)
+        hashToModelName[hash] = modelName
+    end
+end)
+
+local function GetSpawnNameFromVehicle(vehicle)
+    local modelHash = GetEntityModel(vehicle)
+    return hashToModelName[modelHash]
+end
 
 -- ============================================================================
 -- VARIABLES
@@ -172,6 +187,7 @@ local function GetVehicleData(vehicle, vehicleType)
         inVehicle = true,
         vehicleType = vehicleType,
         vehicleName = vehicleName,
+        vehicleSpawnName = GetSpawnNameFromVehicle(vehicle),
         speed = GetEntitySpeed(vehicle) * 3.6, -- m/s zu km/h
         fuel = GetVehicleFuelLevel(vehicle),
         engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10), -- 0-100
