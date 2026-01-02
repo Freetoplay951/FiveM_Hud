@@ -110,7 +110,6 @@ end
 -- INITIALIZATION
 -- ============================================================================
 
--- Initiale Daten an NUI senden
 local function SendInitialData()
     local ped = PlayerPedId()
     local coords = GetEntityCoords(ped)
@@ -180,7 +179,6 @@ RegisterNUICallback('loadedNUI', function(data, cb)
         print('[HUD] NUI loaded callback received')
     end
     
-    -- Framework und Voice erkennen (falls noch nicht geschehen)
     if not Framework then
         DetectFramework()
     end
@@ -188,11 +186,10 @@ RegisterNUICallback('loadedNUI', function(data, cb)
         DetectVoiceResource()
     end
     
-    -- Initiale Daten senden
     SendInitialData()
     isPlayerLoaded = true
     
-    cb('ok')
+    cb({ success = true })
 end)
 
 -- ESX Player Loaded Event

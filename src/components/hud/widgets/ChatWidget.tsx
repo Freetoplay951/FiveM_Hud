@@ -458,6 +458,10 @@ export const ChatWidget = ({
                             <div className="flex items-center gap-2">
                                 <input
                                     autoFocus={!editMode && isInputActive}
+                                    onBlur={(e) => {
+                                        if (editMode) return;
+                                        e.target.focus();
+                                    }}
                                     type="text"
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
