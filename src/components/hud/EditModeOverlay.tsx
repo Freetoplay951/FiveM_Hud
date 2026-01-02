@@ -13,7 +13,7 @@ import {
     Bike,
     Square,
     Skull,
-    Languages,
+    Motorbike,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusDesign, SpeedometerType, MinimapShape } from "@/types/widget";
@@ -57,7 +57,7 @@ const SPEEDOMETER_OPTIONS: {
     { type: "plane", icon: Plane, labelKey: "plane" },
     { type: "boat", icon: Ship, labelKey: "boat" },
     { type: "helicopter", icon: Fan, labelKey: "helicopter" },
-    { type: "motorcycle", icon: Bike, labelKey: "motorcycle" },
+    { type: "motorcycle", icon: Motorbike, labelKey: "motorcycle" },
     { type: "bicycle", icon: Bike, labelKey: "bicycle" },
 ];
 
