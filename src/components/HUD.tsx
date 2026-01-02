@@ -15,7 +15,6 @@ import { NotificationContainer } from "./hud/notifications/NotificationContainer
 import { ChatWidget } from "./hud/widgets/ChatWidget";
 import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
 import { RadioWidget } from "./hud/widgets/RadioWidget";
-import { HUDLoadingSkeleton } from "./hud/HUDLoadingSkeleton";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -165,7 +164,6 @@ export const HUD = () => {
     const [isVisible, setIsVisible] = useState(true); // HUD ist standardmäßig sichtbar!
     const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(() => !isNuiEnvironment()); // In Demo an, in FiveM aus bis Voice erkannt wird
     const [isDemoMode] = useState(!isNuiEnvironment());
-
     const [editMenuOpen, setEditMenuOpen] = useState(false);
 
     const {
@@ -460,7 +458,7 @@ export const HUD = () => {
     // Works in both demo mode and FiveM when edit mode death preview is enabled
     useEffect(() => {
         const shouldRunTimer = (showDeathScreenPreview && editMode) || (isDemoMode && deathState.isDead);
-        
+
         if (!shouldRunTimer) {
             // Reset timer when preview is turned off
             setDemoDeathTimer({ respawnTimer: 14, waitTimer: 59 });
@@ -633,14 +631,7 @@ export const HUD = () => {
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
-    // Wenn Translations noch nicht geladen, Loading-Skeleton zeigen
-    // WICHTIG: Dieser Check kommt NACH allen Hooks, damit useNuiEvents etc. bereits läuft
-    if (!t) {
-        return <HUDLoadingSkeleton />;
-    }
-
-    // Wenn nicht sichtbar, nichts rendern
-    if (!isVisible) return null;
+    if (!isVisible || !t) return null;
 
     return (
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
