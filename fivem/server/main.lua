@@ -1,5 +1,24 @@
--- Server-side HUD Functions
--- Notification Helper, Chat Sync und Server Events
+-- ============================================================================
+-- FUNCTIONS
+-- ============================================================================
+
+local function HasTeamChatAccess(source)
+    if not Config then return false end
+    
+    if Config.TeamChatGeneralPermission and IsPlayerAceAllowed(source, Config.TeamChatGeneralPermission) then
+        return true
+    end
+    
+    if Config.TeamChatRanks then
+        for _, rank in ipairs(Config.TeamChatRanks) do
+            if IsPlayerAceAllowed(source, rank.permission) then
+                return true
+            end
+        end
+    end
+    
+    return false
+end
 
 -- ============================================================================
 -- NOTIFICATION FUNCTIONS
@@ -23,30 +42,25 @@ local function GetPlayerDisplayName(source)
     return name or "Unknown"
 end
 
--- Chat-Nachricht von Client empfangen und an alle senden
-RegisterNetEvent('hud:sendChatMessage', function(message)
-    local source = source
-    local playerName = GetPlayerDisplayName(source)
-    
-    -- An alle Spieler senden (inkl. Sender)
-    TriggerClientEvent('hud:receiveChatMessage', -1, 'normal', playerName, message)
-    
-    if Config and Config.Debug then
-        print('[HUD Chat] ' .. playerName .. ': ' .. message)
-    end
-end)
-
--- Chat-Nachricht mit Typ senden (action, ooc, etc.)
 RegisterNetEvent('hud:sendChatMessageType', function(msgType, message)
     local source = source
     local playerName = GetPlayerDisplayName(source)
-    
-    -- An alle Spieler senden
-    TriggerClientEvent('hud:receiveChatMessage', -1, msgType, playerName, message)
-    
+    local senderId = tonumber(source)
+
+    for _, playerId in ipairs(GetPlayers()) do
+        local pid = tonumber(playerId)
+        if pid ~= senderId then
+            TriggerClientEvent('hud:receiveChatMessage', pid, msgType, playerName, message)
+        end
+    end
+
     if Config and Config.Debug then
         print('[HUD Chat] [' .. msgType .. '] ' .. playerName .. ': ' .. message)
     end
+end)
+
+RegisterNetEvent('hud:sendChatMessage', function(message)
+    TriggerEvent('hud:sendChatMessageType', 'normal', message)
 end)
 
 -- System-Nachricht an alle senden
@@ -58,16 +72,33 @@ end
 -- TEAM CHAT SYNCHRONIZATION (Staff only)
 -- ============================================================================
 
--- Team-Chat Nachricht empfangen und an alle Team-Mitglieder senden
+function SendTeamChatMessage(sender, rank, message, isImportant)
+    local players = GetPlayers()
+    for _, playerId in ipairs(players) do
+        local targetId = tonumber(playerId)
+        if HasTeamChatAccess(targetId) then
+            TriggerClientEvent('hud:receiveTeamChatMessage', targetId, sender, rank, message, isImportant or false)
+        end
+    end
+    
+    if Config and Config.Debug then
+        print('[HUD TeamChat] [' .. rank .. '] ' .. sender .. ': ' .. message)
+    end
+end
+
 RegisterNetEvent('hud:sendTeamChatMessage', function(message)
     local source = source
     local playerName = GetPlayerDisplayName(source)
-    
-    -- Rang des Spielers ermitteln (Server-seitig via Ace Permissions)
+
+    if not HasTeamChatAccess(source) then
+        if Config and Config.Debug then
+            print('[HUD TeamChat] ' .. playerName .. ' hat keine Berechtigung!')
+        end
+        return
+    end
+
     local rank = "Staff"
-    
-    -- Prüfe Ränge aus Config (falls vorhanden)
-    if Config and Config.TeamChatRanks then
+    if Config.TeamChatRanks then
         for _, rankConfig in ipairs(Config.TeamChatRanks) do
             if IsPlayerAceAllowed(source, rankConfig.permission) then
                 rank = rankConfig.name
@@ -76,69 +107,8 @@ RegisterNetEvent('hud:sendTeamChatMessage', function(message)
         end
     end
     
-    -- An alle Spieler senden die Team-Chat Zugriff haben
-    local players = GetPlayers()
-    for _, playerId in ipairs(players) do
-        local targetId = tonumber(playerId)
-        
-        -- Prüfen ob Spieler Zugriff auf Team-Chat hat
-        local hasAccess = false
-        
-        -- Allgemeine Permission prüfen
-        if Config and Config.TeamChatGeneralPermission then
-            if IsPlayerAceAllowed(targetId, Config.TeamChatGeneralPermission) then
-                hasAccess = true
-            end
-        end
-        
-        -- Spezifische Rang-Permissions prüfen
-        if not hasAccess and Config and Config.TeamChatRanks then
-            for _, rankConfig in ipairs(Config.TeamChatRanks) do
-                if IsPlayerAceAllowed(targetId, rankConfig.permission) then
-                    hasAccess = true
-                    break
-                end
-            end
-        end
-        
-        -- Nachricht senden wenn Zugriff
-        if hasAccess then
-            TriggerClientEvent('hud:receiveTeamChatMessage', targetId, playerName, rank, message, false)
-        end
-    end
-    
-    if Config and Config.Debug then
-        print('[HUD TeamChat] [' .. rank .. '] ' .. playerName .. ': ' .. message)
-    end
+    SendTeamChatMessage(playerName, rank, message, false)
 end)
-
--- Wichtige Team-Chat Nachricht (vom Server)
-function SendTeamChatMessage(sender, rank, message, isImportant)
-    local players = GetPlayers()
-    for _, playerId in ipairs(players) do
-        local targetId = tonumber(playerId)
-        
-        local hasAccess = false
-        if Config and Config.TeamChatGeneralPermission then
-            if IsPlayerAceAllowed(targetId, Config.TeamChatGeneralPermission) then
-                hasAccess = true
-            end
-        end
-        
-        if not hasAccess and Config and Config.TeamChatRanks then
-            for _, rankConfig in ipairs(Config.TeamChatRanks) do
-                if IsPlayerAceAllowed(targetId, rankConfig.permission) then
-                    hasAccess = true
-                    break
-                end
-            end
-        end
-        
-        if hasAccess then
-            TriggerClientEvent('hud:receiveTeamChatMessage', targetId, sender, rank, message, isImportant or false)
-        end
-    end
-end
 
 -- ============================================================================
 -- TEAM PERMISSION SYSTEM (Server-side Ace checks)
@@ -164,27 +134,6 @@ local function GetPlayerStaffRank(source)
     end
     
     return nil, nil, nil
-end
-
--- Check if player has team chat access
-local function HasTeamChatAccess(source)
-    if not Config then return false end
-    
-    if Config.TeamChatGeneralPermission then
-        if IsPlayerAceAllowed(source, Config.TeamChatGeneralPermission) then
-            return true
-        end
-    end
-    
-    if Config.TeamChatRanks then
-        for _, rank in ipairs(Config.TeamChatRanks) do
-            if IsPlayerAceAllowed(source, rank.permission) then
-                return true
-            end
-        end
-    end
-    
-    return false
 end
 
 -- Count online team members
