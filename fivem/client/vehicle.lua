@@ -284,42 +284,53 @@ end
 -- MAIN VEHICLE LOOP
 -- ============================================================================
 
-CreateThread(function()
-    while true do
-        Wait(Config and Config.VehicleUpdateInterval or 100)
+local function refreshVehicle()
+    local ped = PlayerPedId()
+    local inVehicle = IsPedInAnyVehicle(ped, false)
+    
+    if inVehicle then
+        local vehicle = GetVehiclePedIsIn(ped, false)
         
-        local ped = PlayerPedId()
-        local inVehicle = IsPedInAnyVehicle(ped, false)
+        -- Fahrzeugtyp nur neu berechnen wenn anderes Fahrzeug
+        if vehicle ~= lastVehicle then
+            cachedVehicleType = GetVehicleTypeFromModel(vehicle)
+            lastVehicle = vehicle
+        end
         
-        if inVehicle then
-            local vehicle = GetVehiclePedIsIn(ped, false)
+        -- Fahrzeug-Daten sammeln und senden
+        local vehicleData = GetVehicleData(vehicle, cachedVehicleType)
+        SendNUI('updateVehicle', vehicleData)
+        
+        wasInVehicle = true
+    else
+        -- Spieler hat Fahrzeug verlassen
+        if wasInVehicle then
+            SendNUI('updateVehicle', {
+                inVehicle = false,
+                vehicleType = 'car',
+                speed = 0
+            })
             
-            -- Fahrzeugtyp nur neu berechnen wenn anderes Fahrzeug
-            if vehicle ~= lastVehicle then
-                cachedVehicleType = GetVehicleTypeFromModel(vehicle)
-                lastVehicle = vehicle
-            end
-            
-            -- Fahrzeug-Daten sammeln und senden
-            local vehicleData = GetVehicleData(vehicle, cachedVehicleType)
-            SendNUI('updateVehicle', vehicleData)
-            
-            wasInVehicle = true
-        else
-            -- Spieler hat Fahrzeug verlassen
-            if wasInVehicle then
-                SendNUI('updateVehicle', {
-                    inVehicle = false,
-                    vehicleType = 'car',
-                    speed = 0
-                })
-                
-                wasInVehicle = false
-                lastVehicle = nil
-                cachedVehicleType = nil
-            end
+            wasInVehicle = false
+            lastVehicle = nil
+            cachedVehicleType = nil
         end
     end
+end
+
+AddEventHandler("hud:loaded", function()
+    if Config.Debug then
+        print('[HUD] Loading Vehicle System')
+    end
+    
+    refreshVehicle()
+    
+    CreateThread(function()
+        while true do
+            Wait(Config and Config.VehicleUpdateInterval or 100)
+            refreshVehicle()
+        end
+    end)
 end)
 
 -- ============================================================================
@@ -331,11 +342,12 @@ RegisterNetEvent('hud:seatbelt', function(hasSeatbelt)
     SendNUI('updateVehicle', { seatbelt = hasSeatbelt })
 end)
 
--- Compatibility mit verschiedenen Seatbelt Scripts
-CreateThread(function()
-    Wait(2000)
+
+AddEventHandler("hud:loaded", function()
+    if Config.Debug then
+        print('[HUD] Loading Seatbelt System')
+    end
     
-    -- seatbelt Resource
     if GetResourceState('seatbelt') == 'started' then
         RegisterNetEvent('seatbelt:toggle', function(hasSeatbelt)
             SendNUI('updateVehicle', { seatbelt = hasSeatbelt })
@@ -354,8 +366,15 @@ CreateThread(function()
     
     -- QB-Seatbelt
     if GetResourceState('qb-seatbelt') == 'started' then
-        RegisterNetEvent('seatbelt:client:ToggleSeatbelt', function()
-            -- Toggle - need to track state
+        local qbSeatbeltOn = false
+        RegisterNetEvent('seatbelt:client:ToggleSeatbelt', function(toggle)
+            if toggle == nil then
+                qbSeatbeltOn = not qbSeatbeltOn
+            else
+                qbSeatbeltOn = toggle
+            end
+
+            SendNUI('updateVehicle', { seatbelt = qbSeatbeltOn })
         end)
     end
 end)

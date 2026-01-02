@@ -163,7 +163,7 @@ local function SendInitialData()
         blackMoney = 0
     })
     
-    -- HUD anzeigen
+    TriggerEvent("hud:loaded")
     SetHudVisible(true)
     
     if Config.Debug then

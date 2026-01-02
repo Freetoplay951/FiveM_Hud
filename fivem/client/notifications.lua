@@ -94,21 +94,6 @@ RegisterNUICallback('dismissNotification', function(data, cb)
     cb({ success = true })
 end)
 
--- ============================================================================
--- NATIVE NOTIFICATION OVERRIDE (Optional)
--- ============================================================================
-
--- Überschreibt native GTA Notifications wenn gewünscht
-if Config and Config.OverrideNativeNotifications then
-    -- Blockiert native Notifications
-    CreateThread(function()
-        while true do
-            ThefeedPause()
-            Wait(0)
-        end
-    end)
-end
-
 --[[
 ============================================================================
 USAGE EXAMPLES

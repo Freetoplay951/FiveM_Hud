@@ -33,15 +33,21 @@ end)
 AddEventHandler("onClientResourceStart", function(res)
     if res ~= GetCurrentResourceName() then return end
     SetTextChatEnabled(false)
-    Wait(1000)
-    RequestPermissionData()
 end)
 
-CreateThread(function()
-    while true do
-        Wait(30000)
-        RequestPermissionData()
+AddEventHandler("hud:loaded", function()
+    if Config.Debug then
+        print('[HUD] Loading Permissions')
     end
+    
+    RequestPermissionData()
+    
+    CreateThread(function()
+        while true do
+            Wait(30000)
+            RequestPermissionData()
+        end
+    end)
 end)
 
 -- ============================================================================

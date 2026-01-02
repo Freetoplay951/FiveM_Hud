@@ -168,11 +168,19 @@ end)
 -- COMMAND SYNC
 -- ============================================================================
 
-CreateThread(function()
-    while true do
-        Wait(30000)
-        SendRegisteredCommandsToNUI()
+AddEventHandler("hud:loaded", function()
+    if Config.Debug then
+        print('[HUD] Loading Commands')
     end
+    
+    SendRegisteredCommandsToNUI()
+    
+    CreateThread(function()
+        while true do
+            Wait(30000)
+            SendRegisteredCommandsToNUI()
+        end
+    end)
 end)
 
 -- ============================================================================
