@@ -185,11 +185,9 @@ local function GetVehicleData(vehicle, vehicleType)
         data.pitch = rotation.x
         data.roll = rotation.y
         
-        -- Rotor Health als RPM Indikator
-        local mainRotorHealth = GetHeliMainRotorHealth(vehicle)
-        local tailRotorHealth = GetHeliTailRotorHealth(vehicle)
-        data.rotorRpm = mainRotorHealth > 0 and math.floor(mainRotorHealth * 100) or 0
-        data.tailRotorHealth = math.floor(tailRotorHealth * 100)
+        local rearRotorHealth = GetHeliRearRotorHealth(vehicle)
+        data.rotorRpm = GetVehicleCurrentRpm(vehicle)
+        data.tailRotorHealth = math.floor((rearRotorHealth / 1000) * 100)
         
         -- Engine Status
         data.engineRunning = GetIsVehicleEngineRunning(vehicle)
