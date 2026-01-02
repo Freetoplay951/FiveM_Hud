@@ -130,7 +130,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
 
     return [
         { id: "compass", type: "compass", position: pos(0.01, 0.02), visible: true, scale: 1 },
-        { id: "vehiclename", type: "vehiclename", position: pos(0.06, 0.035), visible: true, scale: 1 },
+        { id: "vehiclename", type: "vehiclename", position: pos(0.06, 0.02), visible: true, scale: 1 },
         { id: "clock", type: "clock", position: pos(0.47, 0.02), visible: true, scale: 1 },
         {
             id: "money",
