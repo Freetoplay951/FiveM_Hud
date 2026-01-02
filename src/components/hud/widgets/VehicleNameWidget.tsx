@@ -67,7 +67,7 @@ export const VehicleNameWidget = ({
                         </span>
                         {spawnName && (
                             <span
-                                className="text-[9px] text-muted-foreground font-mono leading-tight"
+                                className="text-[9px] text-muted-foreground font-mono leading-tight text-center"
                                 style={{ opacity: 0.7 }}>
                                 {spawnName}
                             </span>
