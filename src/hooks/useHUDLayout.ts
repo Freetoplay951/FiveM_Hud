@@ -28,10 +28,9 @@ const getDefaultState = (): HUDLayoutState => ({
 
 const STORAGE_KEY = "hud-layout";
 
-// Clamp position to screen bounds
 const clampPosition = (pos: WidgetPosition): WidgetPosition => ({
-    x: Math.max(0, Math.min(window.innerWidth - 50, pos.x)),
-    y: Math.max(0, Math.min(window.innerHeight - 50, pos.y)),
+    x: Math.max(0, Math.min(window.innerWidth, pos.x)),
+    y: Math.max(0, Math.min(window.innerHeight, pos.y)),
 });
 
 const clampAllWidgets = (widgets: WidgetConfig[]): WidgetConfig[] =>
@@ -58,26 +57,8 @@ const normalizeState = (raw: HUDLayoutState): HUDLayoutState => {
 
     next.widgets = clampAllWidgets(next.widgets ?? defaultState.widgets);
 
-    // Migration: TeamChat sollte immer unterhalb des Money-Widgets sein
-    // Money ist bei y=20, Höhe ca. 140px (mit Job + Schwarzgeld), also TeamChat bei y>=170
-    const MIN_TEAMCHAT_Y = 170;
-    next.widgets = next.widgets.map((w) =>
-        w.id === "teamchat" && w.position.y < MIN_TEAMCHAT_Y
-            ? { ...w, position: { ...w.position, y: MIN_TEAMCHAT_Y } }
-            : w
-    );
+    next.speedometerConfigs = clampSpeedometerConfigs(next.speedometerConfigs ?? defaultState.speedometerConfigs);
 
-    // Migration: Speedometer sollte weiter rechts sein (näher an der Ecke)
-    const defaultSpeedoX = window.innerWidth - 260; // 240px width + 20px margin
-    next.widgets = next.widgets.map((w) =>
-        w.id === "speedometer" && w.position.x < defaultSpeedoX - 50
-            ? { ...w, position: { ...w.position, x: defaultSpeedoX } }
-            : w
-    );
-
-    next.speedometerConfigs = clampSpeedometerConfigs(
-        (next.speedometerConfigs ?? defaultState.speedometerConfigs) as SpeedometerConfigs
-    );
     next.minimapShape = next.minimapShape ?? "square";
 
     return next;
