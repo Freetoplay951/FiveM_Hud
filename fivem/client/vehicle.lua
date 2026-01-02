@@ -153,11 +153,13 @@ local function GetVehicleData(vehicle, vehicleType)
         -- Geschwindigkeit = Magnitude des Velocity Vectors
         local airspeed = math.sqrt(velocity.x^2 + velocity.y^2 + velocity.z^2) * 3.6
         
+        local state = GetLandingGearState(vehicle)
+        
         data.altitude = math.floor(coords.z)
         data.airspeed = math.floor(airspeed)
         data.pitch = rotation.x
         data.roll = rotation.y
-        data.landingGear = IsVehicleLandingGearDown(vehicle)
+        data.landingGear = state == 0 or state == 2
         
         -- Flap Position (für manche Flugzeuge)
         data.flaps = GetVehicleFlightNozzlePosition(vehicle) or 0
