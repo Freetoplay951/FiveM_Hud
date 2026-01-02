@@ -972,6 +972,7 @@ export const HUD = () => {
                             <VehicleNameWidget
                                 vehicleType={editMode ? speedometerType : vehicleState.vehicleType}
                                 vehicleName={vehicleState.vehicleName}
+                                vehicleSpawnName={vehicleState.vehicleSpawnName}
                                 inVehicle={vehicleState.inVehicle}
                                 visible={widget.visible}
                                 editMode={editMode}

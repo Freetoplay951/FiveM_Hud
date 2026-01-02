@@ -302,7 +302,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                         </div>
 
                         {/* Flaps */}
-                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 w-[64px]">
+                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-2.5 w-[68px]">
                             <span className="text-[8px] text-muted-foreground">{t.vehicle.flaps.toUpperCase()}</span>
                             <motion.span
                                 className="hud-number text-[10px] text-primary tabular-nums w-[28px] text-right"
@@ -317,7 +317,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                         </div>
 
                         {/* Fuel */}
-                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-2 w-[60px]">
+                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-2.5 w-[64px]">
                             <Fuel
                                 size={10}
                                 className={cn(

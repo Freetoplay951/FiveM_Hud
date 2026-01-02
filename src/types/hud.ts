@@ -21,6 +21,7 @@ export interface VehicleState {
     inVehicle: boolean;
     vehicleType: VehicleType;
     vehicleName?: string; // Display name from FiveM
+    vehicleSpawnName?: string; // Spawn name for tx (e.g., "adder", "zentorno")
     speed: number;
     gear: number;
     fuel: number;
