@@ -239,6 +239,73 @@ exports('revivePlayer', function(playerId, healAmount)
 end)
 
 -- ============================================================================
+-- COMMAND SYNC (Server-side commands with permission check)
+-- ============================================================================
+
+local function CollectServerCommands(source)
+    local commands = GetRegisteredCommands()
+    local commandList = {}
+    local commandSet = {}
+    
+    local excludedPrefixes = {"_", "-", "sv_", "onesync_", "rateLimiter_", "adhesive_"}
+    
+    for _, cmd in ipairs(commands) do
+        local name = cmd.name
+        local skip = false
+        
+        -- Interne Ressourcen ausschließen
+        if cmd.resource == "internal" or cmd.resource == "monitor" then
+            skip = true
+        end
+        
+        -- Präfixe prüfen
+        for _, prefix in ipairs(excludedPrefixes) do
+            if name:match("^" .. prefix) then
+                skip = true
+                break
+            end
+        end
+        
+        -- Permission-Check: Hat der Spieler Zugriff auf diesen Command?
+        if not skip and type(name) == "string" then
+            -- Prüfe ob der Command restricted ist (mit ACE)
+            local hasPermission = true
+            
+            -- Wenn der Command ACE-restricted ist, prüfe die Permission
+            if cmd.aces then
+                hasPermission = IsPlayerAceAllowed(source, "command." .. name)
+            end
+            
+            if hasPermission then
+                local commandName = "/" .. name
+                if not commandSet[commandName] then
+                    commandSet[commandName] = true
+                    table.insert(commandList, {
+                        command = commandName,
+                        description = "",
+                        usage = commandName,
+                        isServerCommand = true
+                    })
+                end
+            end
+        end
+    end
+    
+    return commandList
+end
+
+RegisterNetEvent('hud:requestServerCommands', function()
+    local source = source
+    local commandList = CollectServerCommands(source)
+    
+    TriggerClientEvent('hud:serverCommandsResponse', source, commandList)
+    
+    if Config and Config.Debug then
+        print('[HUD Server] Sent ' .. #commandList .. ' commands to player ' .. source)
+    end
+end)
+
+-- ============================================================================
 -- COMMANDS
 -- ============================================================================
 
