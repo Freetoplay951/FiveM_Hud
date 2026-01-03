@@ -893,7 +893,7 @@ export const HUD = () => {
                     );
                 })()}
 
-            {/* Radio Widget */}
+            {/* Radio Widget - hidden when dead, death preview active, OR no voice system detected */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (isDemoMode || isVoiceEnabled) &&
                 (() => {
@@ -918,6 +918,8 @@ export const HUD = () => {
                         </HUDWidget>
                     );
                 })()}
+
+            {/* Location Widget */}
             {(editMode ? !showDeathScreenPreview : !deathState.isDead) &&
                 (() => {
                     const widget = getWidget("location");
