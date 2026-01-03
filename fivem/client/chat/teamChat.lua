@@ -65,7 +65,6 @@ local function CreateTeamChatMessageData(sender, rank, message, isImportant)
         sender = sender,
         rank = displayRank,
         message = message,
-        timestamp = GetTimestamp(),
         isImportant = isImportant or false
     }
 end

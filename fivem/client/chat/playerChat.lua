@@ -7,8 +7,7 @@ local function CreateChatMessageData(msgType, sender, message)
         id = tostring(GetGameTimer()),
         type = msgType or "normal",
         sender = sender,
-        message = message,
-        timestamp = GetTimestamp()
+        message = message
     }
 end
 
@@ -21,33 +20,14 @@ end
 -- Cache für Server-Commands
 local serverCommandsCache = {}
 local serverCommandsLoaded = false
-
 local function CollectLocalCommands()
     local commands = GetRegisteredCommands()
     local commandSet = {}
     local commandList = {}
 
-    local excludedPrefixes = {"_", "-", "sv_", "onesync_", "rateLimiter_", "adhesive_"} 
-
     for _, cmd in ipairs(commands) do
-        local name = cmd.name
-        local skip = false
-
-        -- Interne Ressourcen ausschließen
-        if cmd.resource == "internal" or cmd.resource == "monitor" then
-            skip = true
-        end
-
-        -- Präfixe prüfen
-        for _, prefix in ipairs(excludedPrefixes) do
-            if name:match("^" .. prefix) then
-                skip = true
-                break
-            end
-        end
-
-        if not skip and type(name) == "string" then
-            local commandName = "/" .. name
+        if not ShouldSkipCommand(cmd) then
+            local commandName = "/" .. cmd.name
             if not commandSet[commandName] then
                 commandSet[commandName] = true
                 table.insert(commandList, {
@@ -64,25 +44,18 @@ local function CollectLocalCommands()
 end
 
 local function MergeCommands(localCommands, localSet, serverCommands)
-    local merged = {}
-    
-    -- Lokale Commands hinzufügen
-    for _, cmd in ipairs(localCommands) do
-        table.insert(merged, cmd)
-    end
-    
-    -- Server-Commands hinzufügen (ohne Duplikate)
+    local merged = { table.unpack(localCommands) } -- lokale Commands direkt übernehmen
+
     for _, cmd in ipairs(serverCommands) do
         if not localSet[cmd.command] then
             table.insert(merged, cmd)
         end
     end
-    
-    -- Alphabetisch sortieren
+
     table.sort(merged, function(a, b)
         return a.command:lower() < b.command:lower()
     end)
-    
+
     return merged
 end
 
@@ -95,18 +68,6 @@ local function RequestServerCommands()
     TriggerServerEvent('hud:requestServerCommands')
 end
 
-RegisterNetEvent('hud:serverCommandsResponse', function(commands)
-    serverCommandsCache = commands or {}
-    serverCommandsLoaded = true
-    
-    if Config and Config.Debug then
-        print('[HUD Chat] Received ' .. #serverCommandsCache .. ' server commands')
-    end
-    
-    -- NUI aktualisieren
-    SendRegisteredCommandsToNUI()
-end)
-
 local function SendRegisteredCommandsToNUI()
     local commandList = CollectCommands()
     SendNUI("updateCommands", commandList)
@@ -115,13 +76,31 @@ local function SendRegisteredCommandsToNUI()
     end
 end
 
+RegisterNetEvent('hud:serverCommandsResponse', function(commands)
+    serverCommandsCache = commands or {}
+    serverCommandsLoaded = true
+    
+    if Config and Config.Debug then
+        print('[HUD Chat] Received ' .. #serverCommandsCache .. ' server commands')
+    end
+    
+    SendRegisteredCommandsToNUI()
+end)
+
 local function CommandExists(cmdName)
-    local commands = GetRegisteredCommands()
-    for _, cmd in ipairs(commands) do
+    for _, cmd in ipairs(GetRegisteredCommands() or {}) do
         if cmd.name == cmdName then
             return true
         end
     end
+
+    local prefixedName = "/" .. cmdName
+    for _, cmd in ipairs(serverCommandsCache or {}) do
+        if cmd.command == prefixedName then
+            return true
+        end
+    end
+
     return false
 end
 
@@ -193,7 +172,7 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
         
         if CommandExists(cmdName) then
             CloseChat()
-            ExecuteCommand(cmdName)
+            ExecuteCommand(cmd)
         else
             TriggerEvent("hud:error", "Ausführung fehlgeschlagen", "Der Command '/" .. cmdName .. "' existiert nicht.")
         end

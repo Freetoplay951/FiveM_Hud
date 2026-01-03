@@ -243,50 +243,23 @@ end)
 -- ============================================================================
 
 local function CollectServerCommands(source)
+    local source = source
+    
     local commands = GetRegisteredCommands()
     local commandList = {}
     local commandSet = {}
     
-    local excludedPrefixes = {"_", "-", "sv_", "onesync_", "rateLimiter_", "adhesive_"}
-    
     for _, cmd in ipairs(commands) do
-        local name = cmd.name
-        local skip = false
-        
-        -- Interne Ressourcen ausschließen
-        if cmd.resource == "internal" or cmd.resource == "monitor" then
-            skip = true
-        end
-        
-        -- Präfixe prüfen
-        for _, prefix in ipairs(excludedPrefixes) do
-            if name:match("^" .. prefix) then
-                skip = true
-                break
-            end
-        end
-        
-        -- Permission-Check: Hat der Spieler Zugriff auf diesen Command?
-        if not skip and type(name) == "string" then
-            -- Prüfe ob der Command restricted ist (mit ACE)
-            local hasPermission = true
-            
-            -- Wenn der Command ACE-restricted ist, prüfe die Permission
-            if cmd.aces then
-                hasPermission = IsPlayerAceAllowed(source, "command." .. name)
-            end
-            
-            if hasPermission then
-                local commandName = "/" .. name
-                if not commandSet[commandName] then
-                    commandSet[commandName] = true
-                    table.insert(commandList, {
-                        command = commandName,
-                        description = "",
-                        usage = commandName,
-                        isServerCommand = true
-                    })
-                end
+        if not ShouldSkipCommand(cmd, source) then
+            local commandName = "/" .. cmd.name
+            if not commandSet[commandName] then
+                commandSet[commandName] = true
+                table.insert(commandList, {
+                    command = commandName,
+                    description = "",
+                    usage = commandName,
+                    isServerCommand = true
+                })
             end
         end
     end
