@@ -48,7 +48,9 @@ export const ChatWidget = ({
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const [nuiCommands, setNuiCommands] = useState<ChatCommand[]>([]);
     const [isAutoHidden, setIsAutoHidden] = useState(false);
+    const [isUserScrolled, setIsUserScrolled] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const commandListRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const autoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -147,12 +149,34 @@ export const ChatWidget = ({
         }
     }, [inputValue, filteredCommands.length]);
 
-    // Auto-scroll to bottom
+    // Smart auto-scroll: only scroll if user is at bottom
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+        if (!isUserScrolled) {
+            messagesEndRef.current?.scrollIntoView({ behavior });
+        }
+    }, [isUserScrolled]);
+
+    // Handle scroll to detect if user manually scrolled up
+    const handleScroll = useCallback(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 30; // 30px threshold
+        setIsUserScrolled(!isAtBottom);
+    }, []);
+
+    // Auto-scroll to bottom when new messages arrive (if not manually scrolled)
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [chat.messages]);
+        scrollToBottom("smooth");
+    }, [chat.messages, scrollToBottom]);
+    
+    // Scroll to bottom when input becomes active
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+        if (chat.isInputActive) {
+            setIsUserScrolled(false); // Reset scroll state when opening input
+            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+        }
     }, [chat.isInputActive]);
 
     // Scroll selected command into view
@@ -359,7 +383,10 @@ export const ChatWidget = ({
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                    <div 
+                        ref={messagesContainerRef}
+                        onScroll={handleScroll}
+                        className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
                         <AnimatePresence initial={false}>
                             {chat.messages.map((msg) => (
                                 <motion.div
