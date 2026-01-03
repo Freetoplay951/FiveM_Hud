@@ -18,7 +18,11 @@ local function CreateChatMessage(msgType, sender, message)
     })
 end
 
-local function CollectCommands()
+-- Cache für Server-Commands
+local serverCommandsCache = {}
+local serverCommandsLoaded = false
+
+local function CollectLocalCommands()
     local commands = GetRegisteredCommands()
     local commandSet = {}
     local commandList = {}
@@ -48,20 +52,60 @@ local function CollectCommands()
                 commandSet[commandName] = true
                 table.insert(commandList, {
                     command = commandName,
-                    description = "", -- FiveM liefert keine Beschreibungen
-                    usage = commandName
+                    description = "",
+                    usage = commandName,
+                    isServerCommand = false
                 })
             end
         end
     end
 
+    return commandList, commandSet
+end
+
+local function MergeCommands(localCommands, localSet, serverCommands)
+    local merged = {}
+    
+    -- Lokale Commands hinzufügen
+    for _, cmd in ipairs(localCommands) do
+        table.insert(merged, cmd)
+    end
+    
+    -- Server-Commands hinzufügen (ohne Duplikate)
+    for _, cmd in ipairs(serverCommands) do
+        if not localSet[cmd.command] then
+            table.insert(merged, cmd)
+        end
+    end
+    
     -- Alphabetisch sortieren
-    table.sort(commandList, function(a, b)
+    table.sort(merged, function(a, b)
         return a.command:lower() < b.command:lower()
     end)
-
-    return commandList
+    
+    return merged
 end
+
+local function CollectCommands()
+    local localCommands, localSet = CollectLocalCommands()
+    return MergeCommands(localCommands, localSet, serverCommandsCache)
+end
+
+local function RequestServerCommands()
+    TriggerServerEvent('hud:requestServerCommands')
+end
+
+RegisterNetEvent('hud:serverCommandsResponse', function(commands)
+    serverCommandsCache = commands or {}
+    serverCommandsLoaded = true
+    
+    if Config and Config.Debug then
+        print('[HUD Chat] Received ' .. #serverCommandsCache .. ' server commands')
+    end
+    
+    -- NUI aktualisieren
+    SendRegisteredCommandsToNUI()
+end)
 
 local function SendRegisteredCommandsToNUI()
     local commandList = CollectCommands()
@@ -184,12 +228,17 @@ AddEventHandler("hud:loaded", function()
         print('[HUD] Loading Commands')
     end
     
+    -- Server-Commands anfordern (triggert automatisch SendRegisteredCommandsToNUI nach Response)
+    RequestServerCommands()
+    
+    -- Fallback: Lokale Commands sofort senden
     SendRegisteredCommandsToNUI()
     
+    -- Periodisch aktualisieren
     CreateThread(function()
         while true do
             Wait(30000)
-            SendRegisteredCommandsToNUI()
+            RequestServerCommands()
         end
     end)
 end)
