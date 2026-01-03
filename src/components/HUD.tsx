@@ -248,7 +248,12 @@ export const HUD = () => {
                     nextState.isInputActive = data.isInputActive;
                 }
                 if (data.message) {
-                    nextState.messages = [...prev.messages, data.message].slice(-50);
+                    // Generate timestamp in JS for accurate local time
+                    const messageWithJsTimestamp = {
+                        ...data.message,
+                        timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    };
+                    nextState.messages = [...prev.messages, messageWithJsTimestamp].slice(-50);
                 }
                 if (data.clearChat) {
                     nextState.messages = [];
@@ -287,7 +292,12 @@ export const HUD = () => {
                 }
 
                 if (data.message) {
-                    nextState.messages = [...prev.messages, data.message].slice(-50);
+                    // Generate timestamp in JS for accurate local time
+                    const messageWithJsTimestamp = {
+                        ...data.message,
+                        timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    };
+                    nextState.messages = [...prev.messages, messageWithJsTimestamp].slice(-50);
                 }
 
                 if (data.clearChat) {
