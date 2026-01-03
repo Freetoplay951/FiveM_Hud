@@ -69,13 +69,8 @@ export const useHUDLayout = () => {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             try {
-                const parsed = JSON.parse(saved);
-                // Migration: if old percent-based positions detected, reset to defaults
-                if (parsed.widgets?.[0]?.position?.xPercent !== undefined) {
-                    console.log("Migrating from percent to pixel positions...");
-                    return normalizeState(getDefaultState());
-                }
-                return normalizeState(parsed);
+                const { editMode, ...data } = JSON.parse(saved);
+                return normalizeState(data);
             } catch {
                 return normalizeState(getDefaultState());
             }
@@ -84,7 +79,8 @@ export const useHUDLayout = () => {
     });
 
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        const { editMode, ...data } = state;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }, [state]);
 
     const toggleEditMode = useCallback(() => {
