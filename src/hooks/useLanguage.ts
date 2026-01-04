@@ -7,6 +7,7 @@ export const useLanguage = () => {
     const [t, setT] = useState<Translations | null>(null);
     const [languages, setLanguages] = useState<Locales | null>(null);
     const [language, setLanguageState] = useState<Language | null>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         const loadConfig = async () => {
@@ -27,6 +28,7 @@ export const useLanguage = () => {
                 setLanguageState(languageKey);
             } catch (error) {
                 console.error(error);
+                setIsLoaded(true); // Mark as loaded even on error to prevent blocking
             }
         };
 
@@ -48,6 +50,8 @@ export const useLanguage = () => {
                 localStorage.setItem(STORAGE_KEY, language);
             } catch (error) {
                 console.error(error);
+            } finally {
+                setIsLoaded(true);
             }
         };
 
@@ -58,5 +62,5 @@ export const useLanguage = () => {
         setLanguageState(lang);
     }, []);
 
-    return { t, language, languages, setLanguage };
+    return { t, language, languages, setLanguage, isLoaded };
 };

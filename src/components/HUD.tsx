@@ -191,7 +191,7 @@ export const HUD = () => {
         getWidget,
     } = useHUDLayout();
 
-    const { t } = useTranslation();
+    const { t, isLoaded: isLanguageLoaded } = useTranslation();
 
     const { notifications, removeNotification, success, error, warning, info } = useNotifications();
 
@@ -219,6 +219,23 @@ export const HUD = () => {
     useEffect(() => {
         if (!editMode) setEditMenuOpen(false);
     }, [editMode]);
+
+    // Send AllThingsLoaded when all async data is loaded AND HUD is visible
+    const allDataLoaded = isVisible && isLanguageLoaded && t !== null;
+    const [hasSignaledReady, setHasSignaledReady] = useState(false);
+    
+    useEffect(() => {
+        if (allDataLoaded && !hasSignaledReady) {
+            // Double requestAnimationFrame ensures DOM is fully painted
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
+                    sendNuiCallback("AllThingsLoaded");
+                    setHasSignaledReady(true);
+                });
+            });
+        }
+    }, [allDataLoaded, hasSignaledReady]);
 
     // NUI Event handlers
     useNuiEvents({
