@@ -4,13 +4,13 @@ import {
     HUDLayoutState,
     ResolvedWidgetConfig,
     WidgetPosition,
-    WidgetPositionContext,
     StatusDesign,
     SpeedometerType,
     MinimapShape,
     getDefaultWidgets,
 } from "@/types/widget";
 import { resolveDefaultPositions } from "@/lib/widgetPositionResolver";
+import { StatusWidgetFlags } from "@/types/hud";
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
@@ -85,7 +85,7 @@ export const useHUDLayout = () => {
     }, [state]);
 
     // Distribute widgets using the resolver - computes all default positions in order
-    const distributeWidgets = useCallback((context?: WidgetPositionContext) => {
+    const distributeWidgets = useCallback((context?: StatusWidgetFlags) => {
         const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
 
         setState((prev) => ({
@@ -148,7 +148,7 @@ export const useHUDLayout = () => {
         sendNuiCallback("onMinimapShapeChange", { shape });
     }, []);
 
-    const resetLayout = useCallback((context?: WidgetPositionContext) => {
+    const resetLayout = useCallback((context?: StatusWidgetFlags) => {
         const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
 
         const resetWidgets = defaultWidgetConfigs.map((w) => {
@@ -171,7 +171,7 @@ export const useHUDLayout = () => {
         }));
     }, []);
 
-    const resetWidget = useCallback((id: string, context?: WidgetPositionContext) => {
+    const resetWidget = useCallback((id: string, context?: StatusWidgetFlags) => {
         const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
         if (!defaultWidget) return;
 
