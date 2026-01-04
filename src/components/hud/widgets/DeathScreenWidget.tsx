@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Skull, Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/formatUtils";
@@ -297,20 +297,26 @@ export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) =>
         </motion.div>
     );
 
+    const isVisible = visible && isDead;
+
     return (
-        <AnimatePresence>
-            {visible && isDead && (
-                <div className="relative bg-background/90 rounded-2xl border border-critical/30 overflow-hidden">
-                    <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                            background:
-                                "radial-gradient(ellipse at center, transparent 30%, hsl(0 70% 20% / 0.3) 100%)",
-                        }}
-                    />
-                    {content}
-                </div>
-            )}
-        </AnimatePresence>
+        <motion.div
+            initial={false}
+            animate={{
+                opacity: isVisible ? 1 : 0,
+                scale: isVisible ? 1 : 0.9,
+            }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="relative bg-background/90 rounded-2xl border border-critical/30 overflow-hidden"
+        >
+            <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    background:
+                        "radial-gradient(ellipse at center, transparent 30%, hsl(0 70% 20% / 0.3) 100%)",
+                }}
+            />
+            {content}
+        </motion.div>
     );
 };

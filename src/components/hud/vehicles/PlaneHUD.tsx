@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Fuel, Plane } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
@@ -29,16 +29,16 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
     const flapsChanging = !flapsClosed && !flapsOpen;
 
     return (
-        <AnimatePresence>
-            {visible && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="flex flex-col items-center">
-                    {/* Main Instrument Panel - Artificial Horizon */}
-                    <div className="relative w-44 h-44">
+        <motion.div
+            initial={false}
+            animate={{ 
+                opacity: visible ? 1 : 0, 
+                scale: visible ? 1 : 0.8 
+            }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="flex flex-col items-center">
+            {/* Main Instrument Panel - Artificial Horizon */}
+            <div className="relative w-44 h-44">
                         <div className="absolute inset-0 rounded-full glass-panel overflow-hidden" />
 
                         <svg
@@ -278,95 +278,93 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                                 </motion.span>
                             </div>
                         </div>
-                    </div>
+            </div>
 
-                    {/* Status Row - Gear, Flaps, Fuel */}
-                    <motion.div
-                        className="flex items-center gap-3 mt-2"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}>
-                        {/* Landing Gear */}
-                        <div
-                            className={cn(
-                                "bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]",
-                                !landingGear && "border-critical/50"
-                            )}>
-                            <div
-                                className={cn(
-                                    "w-2 h-2 rounded-full flex-shrink-0",
-                                    landingGear ? "bg-stamina" : "bg-critical critical-pulse"
-                                )}
-                                style={{
-                                    boxShadow: landingGear
-                                        ? "0 0 6px hsl(var(--stamina))"
-                                        : "0 0 6px hsl(var(--critical))",
-                                }}
-                            />
-                            <span className="text-[8px] text-muted-foreground">
-                                {t.vehicle.landingGear.toUpperCase()}
-                            </span>
-                        </div>
+            {/* Status Row - Gear, Flaps, Fuel */}
+            <motion.div
+                className="flex items-center gap-3 mt-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}>
+                {/* Landing Gear */}
+                <div
+                    className={cn(
+                        "bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]",
+                        !landingGear && "border-critical/50"
+                    )}>
+                    <div
+                        className={cn(
+                            "w-2 h-2 rounded-full flex-shrink-0",
+                            landingGear ? "bg-stamina" : "bg-critical critical-pulse"
+                        )}
+                        style={{
+                            boxShadow: landingGear
+                                ? "0 0 6px hsl(var(--stamina))"
+                                : "0 0 6px hsl(var(--critical))",
+                        }}
+                    />
+                    <span className="text-[8px] text-muted-foreground">
+                        {t.vehicle.landingGear.toUpperCase()}
+                    </span>
+                </div>
 
-                        {/* Flaps */}
-                        <div
-                            className={cn(
-                                "bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]",
-                                flapsClosed && "border-critical/50",
-                                flapsOpen && "border-stamina/50",
-                                flapsChanging && "border-warning/50"
-                            )}>
-                            <div
-                                className={cn(
-                                    "w-2 h-2 rounded-full flex-shrink-0",
-                                    flapsClosed ? "bg-critical" : !flapsOpen ? "bg-warning" : "bg-stamina"
-                                )}
-                                style={{
-                                    boxShadow: `0 0 6px hsl(var(--${
-                                        flapsClosed ? "critical" : flapsChanging ? "warning" : "stamina"
-                                    }))`,
-                                }}
-                            />
-                            <span className="text-[8px] text-muted-foreground">{t.vehicle.flaps.toUpperCase()}</span>
-                        </div>
+                {/* Flaps */}
+                <div
+                    className={cn(
+                        "bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[52px]",
+                        flapsClosed && "border-critical/50",
+                        flapsOpen && "border-stamina/50",
+                        flapsChanging && "border-warning/50"
+                    )}>
+                    <div
+                        className={cn(
+                            "w-2 h-2 rounded-full flex-shrink-0",
+                            flapsClosed ? "bg-critical" : !flapsOpen ? "bg-warning" : "bg-stamina"
+                        )}
+                        style={{
+                            boxShadow: `0 0 6px hsl(var(--${
+                                flapsClosed ? "critical" : flapsChanging ? "warning" : "stamina"
+                            }))`,
+                        }}
+                    />
+                    <span className="text-[8px] text-muted-foreground">{t.vehicle.flaps.toUpperCase()}</span>
+                </div>
 
-                        {/* Fuel */}
-                        <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[64px] whitespace-nowrap">
-                            <Fuel
-                                size={10}
-                                className={cn(
-                                    fuelCritical
-                                        ? "text-critical critical-pulse"
-                                        : fuelWarning
-                                        ? "text-warning"
-                                        : "text-stamina",
-                                    "flex-shrink-0"
-                                )}
-                                style={{
-                                    filter: `drop-shadow(0 0 3px hsl(var(--${
-                                        fuelCritical ? "critical" : fuelWarning ? "warning" : "stamina"
-                                    })))`,
-                                }}
-                            />
-                            <motion.span
-                                className={cn(
-                                    "hud-number text-[10px] tabular-nums text-right ml-auto",
-                                    fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-stamina"
-                                )}
-                                style={{
-                                    textShadow: `0 0 6px hsl(var(--${
-                                        fuelCritical ? "critical" : fuelWarning ? "warning" : "stamina"
-                                    }) / 0.5)`,
-                                    fontVariantNumeric: "tabular-nums",
-                                }}
-                                animate={{ opacity: 1 }}
-                                transition={{ type: "spring", stiffness: 100, damping: 15 }}>
-                                {Math.round(vehicle.fuel)}%
-                            </motion.span>
-                        </div>
-                    </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                {/* Fuel */}
+                <div className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[64px] whitespace-nowrap">
+                    <Fuel
+                        size={10}
+                        className={cn(
+                            fuelCritical
+                                ? "text-critical critical-pulse"
+                                : fuelWarning
+                                ? "text-warning"
+                                : "text-stamina",
+                            "flex-shrink-0"
+                        )}
+                        style={{
+                            filter: `drop-shadow(0 0 3px hsl(var(--${
+                                fuelCritical ? "critical" : fuelWarning ? "warning" : "stamina"
+                            })))`,
+                        }}
+                    />
+                    <motion.span
+                        className={cn(
+                            "hud-number text-[10px] tabular-nums text-right ml-auto",
+                            fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-stamina"
+                        )}
+                        style={{
+                            textShadow: `0 0 6px hsl(var(--${
+                                fuelCritical ? "critical" : fuelWarning ? "warning" : "stamina"
+                            }) / 0.5)`,
+                            fontVariantNumeric: "tabular-nums",
+                        }}
+                        animate={{ opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 100, damping: 15 }}>
+                        {Math.round(vehicle.fuel)}%
+                    </motion.span>
+                </div>
+            </motion.div>
+        </motion.div>
     );
 };
