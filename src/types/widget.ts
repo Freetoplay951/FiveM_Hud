@@ -29,7 +29,6 @@ export type WidgetType =
     | "location"
     | "speedometer"
     | "notifications"
-    | "deathscreen"
     | "chat"
     | "teamchat";
 
@@ -193,7 +192,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 0.8,
         },
         { id: "speedometer", type: "speedometer", position: getDefaultSpeedoPos(), visible: true, scale: 1 },
-        { id: "deathscreen", type: "deathscreen", position: pos(0.25, 0.15), visible: true, scale: 1 },
         {
             id: "chat",
             type: "chat",
