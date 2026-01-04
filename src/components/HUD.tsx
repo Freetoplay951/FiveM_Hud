@@ -33,7 +33,7 @@ import {
     TeamChatState,
     RadioState,
 } from "@/types/hud";
-import { DeathScreenWidget } from "./hud/widgets/DeathScreenWidget";
+import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
@@ -1048,51 +1048,22 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Death Screen Widget - always rendered */}
-            {(() => {
-                const widget = getWidget("deathscreen");
-                if (!widget) return null;
-
-                // In edit mode: only show if preview is enabled
-                // Outside edit mode: show when actually dead
-                const showDeathScreen = editMode ? showDeathScreenPreview : deathState.isDead;
-
-                return (
-                    <HUDWidget
-                        id="deathscreen"
-                        position={widget.position}
-                        visible={showDeathScreen}
-                        scale={widget.scale}
-                        editMode={editMode}
-                        snapToGrid={snapToGrid}
-                        gridSize={gridSize}
-                        onPositionChange={updateWidgetPosition}
-                        onScaleChange={updateWidgetScale}
-                        onReset={resetWidget}>
-                        <DeathScreenWidget
-                            death={
-                                editMode
-                                    ? {
-                                          ...DEMO_DEATH,
-                                          isDead: true,
-                                          respawnTimer: demoDeathTimer.respawnTimer,
-                                          waitTimer: demoDeathTimer.waitTimer,
-                                          canRespawn: demoDeathTimer.respawnTimer === 0,
-                                      }
-                                    : isDemoMode && deathState.isDead
-                                    ? {
-                                          ...deathState,
-                                          respawnTimer: demoDeathTimer.respawnTimer,
-                                          waitTimer: demoDeathTimer.waitTimer,
-                                          canRespawn: demoDeathTimer.respawnTimer === 0,
-                                      }
-                                    : deathState
-                            }
-                            visible={showDeathScreen}
-                        />
-                    </HUDWidget>
-                );
-            })()}
+            {/* Fullscreen Death Screen - rendered outside widget system */}
+            {!editMode && (
+                <FullscreenDeathScreen
+                    death={
+                        isDemoMode && deathState.isDead
+                            ? {
+                                  ...deathState,
+                                  respawnTimer: demoDeathTimer.respawnTimer,
+                                  waitTimer: demoDeathTimer.waitTimer,
+                                  canRespawn: demoDeathTimer.respawnTimer === 0,
+                              }
+                            : deathState
+                    }
+                    visible={deathState.isDead}
+                />
+            )}
 
             {/* Chat Widget - always rendered */}
             {(() => {
