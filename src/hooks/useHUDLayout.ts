@@ -7,18 +7,12 @@ import {
     WidgetPosition,
     StatusDesign,
     SpeedometerType,
-    SpeedometerConfig,
-    SpeedometerConfigs,
-    SpeedometerConfigsInput,
     MinimapShape,
     getDefaultWidgets,
-    getDefaultSpeedometerConfigs,
-    getDefaultSpeedometerConfigsInput,
 } from "@/types/widget";
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
-const defaultSpeedometerConfigsInput = getDefaultSpeedometerConfigsInput();
 
 // Get dynamic default state based on current screen size
 const getDefaultState = (): HUDLayoutState => ({
@@ -35,7 +29,6 @@ const getDefaultState = (): HUDLayoutState => ({
     statusDesign: "circular",
     hudScale: 1,
     speedometerType: "car",
-    speedometerConfigs: getDefaultSpeedometerConfigs(),
     minimapShape: "square",
     widgetsDistributed: false,
 });
@@ -53,15 +46,6 @@ const clampAllWidgets = (widgets: ResolvedWidgetConfig[]): ResolvedWidgetConfig[
         position: clampPosition(w.position),
     }));
 
-const clampSpeedometerConfigs = (configs: SpeedometerConfigs): SpeedometerConfigs => ({
-    car: { ...configs.car, position: clampPosition(configs.car.position) },
-    plane: { ...configs.plane, position: clampPosition(configs.plane.position) },
-    boat: { ...configs.boat, position: clampPosition(configs.boat.position) },
-    helicopter: { ...configs.helicopter, position: clampPosition(configs.helicopter.position) },
-    motorcycle: { ...configs.motorcycle, position: clampPosition(configs.motorcycle.position) },
-    bicycle: { ...configs.bicycle, position: clampPosition(configs.bicycle.position) },
-});
-
 const normalizeState = (raw: Partial<HUDLayoutState>): HUDLayoutState => {
     const defaultState = getDefaultState();
     const next: HUDLayoutState = {
@@ -70,7 +54,6 @@ const normalizeState = (raw: Partial<HUDLayoutState>): HUDLayoutState => {
     };
 
     next.widgets = clampAllWidgets(next.widgets ?? defaultState.widgets);
-    next.speedometerConfigs = clampSpeedometerConfigs(next.speedometerConfigs ?? defaultState.speedometerConfigs);
     next.minimapShape = next.minimapShape ?? "square";
     next.widgetsDistributed = next.widgetsDistributed ?? false;
 
@@ -115,24 +98,9 @@ export const useHUDLayout = () => {
                 return w;
             });
 
-            // Also distribute speedometer positions
-            const speedoTypes: SpeedometerType[] = ["car", "plane", "boat", "helicopter", "motorcycle", "bicycle"];
-            const distributedSpeedoConfigs = { ...prev.speedometerConfigs };
-            
-            speedoTypes.forEach((type) => {
-                const element = document.getElementById(`hud-widget-speedometer-${type}`);
-                const defaultInput = defaultSpeedometerConfigsInput[type];
-                const computedPos = defaultInput.position(type, element);
-                distributedSpeedoConfigs[type] = {
-                    ...distributedSpeedoConfigs[type],
-                    position: clampPosition(computedPos),
-                };
-            });
-
             return {
                 ...prev,
                 widgets: distributedWidgets,
-                speedometerConfigs: distributedSpeedoConfigs,
                 widgetsDistributed: true,
             };
         });
@@ -185,40 +153,6 @@ export const useHUDLayout = () => {
         sendNuiCallback("onMinimapShapeChange", { shape });
     }, []);
 
-    const updateSpeedometerConfig = useCallback((type: SpeedometerType, config: Partial<SpeedometerConfig>) => {
-        setState((prev) => ({
-            ...prev,
-            speedometerConfigs: {
-                ...prev.speedometerConfigs,
-                [type]: { ...prev.speedometerConfigs[type], ...config },
-            },
-        }));
-    }, []);
-
-    const getSpeedometerConfig = useCallback(
-        (type: SpeedometerType): SpeedometerConfig => {
-            const defaultConfigs = getDefaultSpeedometerConfigs();
-            return state.speedometerConfigs?.[type] ?? defaultConfigs[type];
-        },
-        [state.speedometerConfigs]
-    );
-
-    const resetSpeedometer = useCallback((type: SpeedometerType) => {
-        setState((prev) => {
-            const element = document.getElementById(`hud-widget-speedometer-${type}`);
-            const defaultInput = defaultSpeedometerConfigsInput[type];
-            const computedPos = defaultInput.position(type, element);
-            
-            return {
-                ...prev,
-                speedometerConfigs: {
-                    ...prev.speedometerConfigs,
-                    [type]: { position: clampPosition(computedPos), scale: 1 },
-                },
-            };
-        });
-    }, []);
-
     const resetLayout = useCallback(() => {
         // Reset to default positions using position functions
         const resetWidgets = defaultWidgetConfigs.map((w) => {
@@ -233,21 +167,9 @@ export const useHUDLayout = () => {
             };
         });
 
-        // Reset speedometer configs using position functions
-        const speedoTypes: SpeedometerType[] = ["car", "plane", "boat", "helicopter", "motorcycle", "bicycle"];
-        const resetSpeedoConfigs: SpeedometerConfigs = {} as SpeedometerConfigs;
-        
-        speedoTypes.forEach((type) => {
-            const element = document.getElementById(`hud-widget-speedometer-${type}`);
-            const defaultInput = defaultSpeedometerConfigsInput[type];
-            const computedPos = defaultInput.position(type, element);
-            resetSpeedoConfigs[type] = { position: clampPosition(computedPos), scale: 1 };
-        });
-
         setState((prev) => ({
             ...getDefaultState(),
             widgets: resetWidgets,
-            speedometerConfigs: resetSpeedoConfigs,
             editMode: true,
             snapToGrid: prev.snapToGrid,
             widgetsDistributed: true,
@@ -287,9 +209,6 @@ export const useHUDLayout = () => {
         setHudScale,
         setSpeedometerType,
         setMinimapShape,
-        updateSpeedometerConfig,
-        getSpeedometerConfig,
-        resetSpeedometer,
         resetLayout,
         resetWidget,
         getWidget,

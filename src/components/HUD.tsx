@@ -172,7 +172,6 @@ export const HUD = () => {
         gridSize,
         statusDesign,
         speedometerType,
-        speedometerConfigs,
         minimapShape,
         widgetsDistributed,
         toggleEditMode,
@@ -180,9 +179,6 @@ export const HUD = () => {
         setStatusDesign,
         setSpeedometerType,
         setMinimapShape,
-        updateSpeedometerConfig,
-        getSpeedometerConfig,
-        resetSpeedometer,
         updateWidgetPosition,
         updateWidgetScale,
         toggleWidgetVisibility,
@@ -207,7 +203,7 @@ export const HUD = () => {
         setEditMenuOpen(false);
 
         // Save layout to Lua before exiting
-        sendNuiCallback("saveLayout", { widgets, speedometerConfigs });
+        sendNuiCallback("saveLayout", { widgets });
 
         // Tell Lua to close edit mode (reset NUI focus)
         sendNuiCallback("closeEditMode");
@@ -1012,36 +1008,22 @@ export const HUD = () => {
                 const widget = getWidget("speedometer");
                 if (!widget) return null;
 
-                // Use the config for the currently active speedometer type
-                const rawType = editMode ? speedometerType : vehicleState.vehicleType;
-                const validTypes = ["car", "plane", "boat", "helicopter", "motorcycle", "bicycle"] as const;
-                const activeType = validTypes.includes(rawType as (typeof validTypes)[number])
-                    ? (rawType as (typeof validTypes)[number])
-                    : "car";
-                const currentConfig = getSpeedometerConfig(activeType);
-
                 const baseVisible = editMode ? true : !deathState.isDead;
                 const isVisible = widget.visible && baseVisible && (vehicleState.inVehicle || editMode);
 
                 return (
                     <HUDWidget
-                        id={`speedometer-${activeType}`}
-                        position={currentConfig.position}
+                        id="speedometer"
+                        position={widget.position}
                         visible={isVisible}
-                        scale={currentConfig.scale}
+                        scale={widget.scale}
                         editMode={editMode}
                         snapToGrid={snapToGrid}
                         gridSize={gridSize}
-                        onPositionChange={(id, position) => {
-                            updateSpeedometerConfig(activeType, { position });
-                        }}
+                        onPositionChange={updateWidgetPosition}
                         onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
-                        onScaleChange={(id, scale) => {
-                            updateSpeedometerConfig(activeType, { scale });
-                        }}
-                        onReset={() => {
-                            resetSpeedometer(activeType);
-                        }}>
+                        onScaleChange={updateWidgetScale}
+                        onReset={() => resetWidget("speedometer")}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
