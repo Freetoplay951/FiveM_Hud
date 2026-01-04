@@ -35,10 +35,12 @@ const getDefaultState = (): HUDLayoutState => ({
 
 const STORAGE_KEY = "hud-layout";
 
-const clampPosition = (pos: WidgetPosition): WidgetPosition => ({
-    x: Math.max(0, Math.min(window.innerWidth, pos.x)),
-    y: Math.max(0, Math.min(window.innerHeight, pos.y)),
-});
+const clampPosition = (pos: WidgetPosition): WidgetPosition => {
+    return {
+        x: Math.max(0, Math.min(window.innerWidth, pos.x)),
+        y: Math.max(0, Math.min(window.innerHeight, pos.y)),
+    };
+};
 
 const clampAllWidgets = (widgets: ResolvedWidgetConfig[]): ResolvedWidgetConfig[] =>
     widgets.map((w) => ({
@@ -87,7 +89,7 @@ export const useHUDLayout = () => {
             const distributedWidgets = prev.widgets.map((w) => {
                 const element = document.getElementById(`hud-widget-${w.id}`);
                 const defaultConfig = defaultWidgetConfigs.find((d) => d.id === w.id);
-                
+
                 if (defaultConfig) {
                     const computedPos = defaultConfig.position(w.id, element);
                     return {
