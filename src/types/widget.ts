@@ -162,7 +162,8 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "vehiclename",
             type: "vehiclename",
             position: () => {
-                return { x: MARGIN + GAP + getWidget("compass").offsetWidth, y: MARGIN };
+                const compassWidth = getWidget("compass")?.offsetWidth ?? 0;
+                return { x: MARGIN + GAP + compassWidth, y: MARGIN };
             },
             visible: true,
             scale: 1,
@@ -189,9 +190,14 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "teamchat",
             type: "teamchat",
+            // IMPORTANT: Do not depend on other widgets' current DOM positions (getBoundingClientRect)
+            // because on first load they can still be at (0,0). Use the same formula as "money".
             position: (_, widgetElement) => {
+                const moneyEl = getWidget("money");
+                const moneyWidth = moneyEl?.offsetWidth ?? 0;
+                const moneyX = getScreenWidth() - MARGIN - moneyWidth;
                 return {
-                    x: getWidget("money").getBoundingClientRect().left - GAP - widgetElement.offsetWidth,
+                    x: moneyX - GAP - widgetElement.offsetWidth,
                     y: MARGIN,
                 };
             },
@@ -202,11 +208,15 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "radio",
             type: "radio",
             position: (_, widgetElement) => {
-                const moneyWidget = getWidget("money");
-                const moneyRect = moneyWidget.getBoundingClientRect();
+                const moneyEl = getWidget("money");
+                const moneyWidth = moneyEl?.offsetWidth ?? 0;
+                const moneyHeight = moneyEl?.offsetHeight ?? 0;
+                const moneyX = getScreenWidth() - MARGIN - moneyWidth;
+                const moneyCenterX = moneyX + moneyWidth / 2;
+
                 return {
-                    x: moneyRect.left + moneyWidget.offsetWidth / 2 - (widgetElement.offsetWidth * 0.8) / 2,
-                    y: MARGIN + getWidget("money").offsetHeight + GAP,
+                    x: moneyCenterX - (widgetElement.offsetWidth * 0.8) / 2,
+                    y: MARGIN + moneyHeight + GAP,
                 };
             },
             visible: true,
@@ -225,10 +235,10 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "chat",
             type: "chat",
-            position: (_, widgetElement) => {
-                const notifyWidget = getWidget("notifications");
-                const notifyRect = notifyWidget.getBoundingClientRect();
-                return { x: MARGIN, y: notifyRect.top + GAP * 2 + notifyWidget.offsetHeight };
+            // Same reasoning as above: avoid reading notifications' current DOM top on first load.
+            position: () => {
+                const notifyHeight = getWidget("notifications")?.offsetHeight ?? 0;
+                return { x: MARGIN, y: getScreenHeight() / 4 + GAP * 2 + notifyHeight };
             },
             visible: true,
             scale: 1,
