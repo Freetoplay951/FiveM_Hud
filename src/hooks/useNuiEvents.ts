@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import {
-    HudState,
+    StatusWidgetState,
     VehicleState,
     MoneyState,
     VoiceState,
@@ -14,7 +14,7 @@ import {
 } from "@/types/hud";
 
 interface NuiEventHandlers {
-    onUpdateHud?: (data: Partial<HudState>) => void;
+    onUpdateHud?: (data: Partial<StatusWidgetState>) => void;
     onUpdateVehicle?: (data: VehicleState) => void;
     onUpdateMoney?: (data: MoneyState) => void;
     onUpdateVoice?: (data: VoiceState) => void;

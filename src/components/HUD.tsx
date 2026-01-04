@@ -20,7 +20,7 @@ import { useNuiEvents, isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiE
 import { useNotifications } from "@/hooks/useNotifications";
 import { useTranslation } from "@/contexts/LanguageContext";
 import {
-    HudState,
+    StatusWidgetState,
     VehicleState,
     MoneyState,
     VoiceState,
@@ -39,7 +39,7 @@ import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 
 // Demo values
-const DEMO_HUD: HudState = {
+const DEMO_HUD: StatusWidgetState = {
     health: 85,
     armor: 50,
     hunger: 70,
@@ -149,7 +149,7 @@ const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
 ];
 
 export const HUD = () => {
-    const [hudState, setHudState] = useState<HudState>(DEMO_HUD);
+    const [hudState, setHudState] = useState<StatusWidgetState>(DEMO_HUD);
     const [vehicleState, setVehicleState] = useState<VehicleState>(DEMO_VEHICLE);
     const [moneyState, setMoneyState] = useState<MoneyState>(DEMO_MONEY);
     const [playerState, setPlayerState] = useState<PlayerState>(DEMO_PLAYER);
@@ -238,7 +238,7 @@ export const HUD = () => {
                             showOxygen: hudState.showOxygen,
                         });
                     }
-                    
+
                     console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
                     sendNuiCallback("AllThingsLoaded");
                     setHasSignaledReady(true);

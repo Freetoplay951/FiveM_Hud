@@ -1,25 +1,15 @@
 import { PositionResolver } from "@/lib/widgetPositionResolver";
+import { StatusWidgetFlags } from "./hud";
 
 export interface WidgetPosition {
     x: number;
     y: number;
 }
 
-// Context passed to position functions for smarter positioning
-export interface WidgetPositionContext {
-    // Server-side flags for disabled widgets
-    hasHunger?: boolean;
-    hasThirst?: boolean;
-    hasStress?: boolean;
-    hasStamina?: boolean;
-    hasArmor?: boolean;
-    showOxygen?: boolean;
-}
-
 export type WidgetPositionFunction = (
     id: string,
     widgetElement: HTMLElement | null,
-    context: WidgetPositionContext | undefined,
+    context: StatusWidgetFlags | undefined,
     resolver: PositionResolver
 ) => WidgetPosition;
 
@@ -82,10 +72,7 @@ const MARGIN = 20;
 const GAP = 10;
 
 // Helper to check if a status widget is enabled based on server flags
-const isStatusWidgetEnabled = (
-    widgetId: string,
-    context?: WidgetPositionContext
-): boolean => {
+const isStatusWidgetEnabled = (widgetId: string, context?: StatusWidgetFlags): boolean => {
     if (!context) return true;
 
     switch (widgetId) {
@@ -111,7 +98,7 @@ const getStatusWidgetPosition = (
     widgetId: string,
     widgetElement: HTMLElement | null,
     startX: number,
-    context: WidgetPositionContext | undefined,
+    context: StatusWidgetFlags | undefined,
     resolver: PositionResolver
 ): WidgetPosition => {
     const statusWidgetIds = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];

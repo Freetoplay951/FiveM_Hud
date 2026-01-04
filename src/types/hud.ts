@@ -1,4 +1,4 @@
-export interface HudState {
+export interface StatusWidgetValues {
     health: number;
     armor: number;
     hunger: number;
@@ -6,14 +6,18 @@ export interface HudState {
     stamina: number;
     stress?: number;
     oxygen?: number;
-    showOxygen?: boolean;
-    // Framework-Provided Flags - wenn false/undefined, wird das Widget nicht angezeigt
+}
+
+export interface StatusWidgetFlags {
     hasHunger?: boolean;
     hasThirst?: boolean;
     hasStress?: boolean;
     hasStamina?: boolean;
     hasArmor?: boolean;
+    showOxygen?: boolean;
 }
+
+export type StatusWidgetState = StatusWidgetValues & StatusWidgetFlags;
 
 export type VehicleType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
 

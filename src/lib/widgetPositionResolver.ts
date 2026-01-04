@@ -1,4 +1,5 @@
-import { WidgetPosition, WidgetPositionContext } from "@/types/widget";
+import { StatusWidgetFlags } from "@/types/hud";
+import { WidgetPosition } from "@/types/widget";
 
 export interface WidgetSize {
     width: number;
@@ -38,11 +39,11 @@ export function resolveDefaultPositions(
         position: (
             id: string,
             element: HTMLElement | null,
-            context: WidgetPositionContext | undefined,
+            context: StatusWidgetFlags | undefined,
             resolver: PositionResolver
         ) => WidgetPosition;
     }>,
-    context?: WidgetPositionContext
+    context?: StatusWidgetFlags
 ): Map<string, WidgetRect> {
     const resolvedRects = new Map<string, WidgetRect>();
 
