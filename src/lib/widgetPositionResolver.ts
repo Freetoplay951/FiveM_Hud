@@ -7,12 +7,12 @@ export interface WidgetSize {
 }
 
 export interface WidgetRect {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    right: number;
-    bottom: number;
+    x: number; // X position of the top-left corner
+    y: number; // Y position of the top-left corner
+    width: number; // Width of the widget
+    height: number; // Height of the widget
+    right: number; // x + width → right edge of the widget
+    bottom: number; // y + height → bottom edge of the widget
 }
 
 /**
