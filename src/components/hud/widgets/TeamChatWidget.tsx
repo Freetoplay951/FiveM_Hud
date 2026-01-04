@@ -164,6 +164,9 @@ export const TeamChatWidget = ({
 
     const TeamIcon = teamColor.icon;
 
+    // Always render for size measurement
+    const shouldRender = isVisible || isInputActive || hasMessages || editMode;
+
     return (
         <motion.div
             initial={false}
@@ -172,16 +175,17 @@ export const TeamChatWidget = ({
                 pointerEvents: shouldShow ? "auto" : "none"
             }}
             transition={{ duration: 0.3 }}>
-            <AnimatePresence>
-                {(isVisible || isInputActive || hasMessages) && (
-                    <motion.div
-                    ref={containerRef}
-                    className="glass-panel rounded-lg overflow-hidden flex flex-col border"
-                    style={{ width: "320px", height: "280px" }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}>
+            <motion.div
+                ref={containerRef}
+                className="glass-panel rounded-lg overflow-hidden flex flex-col border"
+                style={{ 
+                    width: "320px", 
+                    height: "280px",
+                    visibility: shouldRender ? "visible" : "hidden"
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: shouldRender ? 1 : 0, y: shouldRender ? 0 : 20 }}
+                transition={{ duration: 0.3 }}>
                     {/* Header */}
                     <div
                         className={cn(
@@ -302,8 +306,6 @@ export const TeamChatWidget = ({
                         </div>
                     )}
                 </motion.div>
-            )}
-        </AnimatePresence>
         </motion.div>
     );
 };
