@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from "react";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import {
     HUDLayoutState,
-    WidgetConfig,
     ResolvedWidgetConfig,
     WidgetPosition,
     WidgetPositionContext,
@@ -11,6 +10,7 @@ import {
     MinimapShape,
     getDefaultWidgets,
 } from "@/types/widget";
+import { resolveDefaultPositions } from "@/lib/widgetPositionResolver";
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
@@ -84,42 +84,19 @@ export const useHUDLayout = () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }, [state]);
 
-    // Distribute widgets using DOM elements and position functions.
-    // Runs multiple passes so dependent widgets can read updated getBoundingClientRect() values.
+    // Distribute widgets using the resolver - computes all default positions in order
     const distributeWidgets = useCallback((context?: WidgetPositionContext) => {
-        const MAX_PASSES = 3;
-
-        const runPass = () => {
-            const newPositions: Record<string, WidgetPosition> = {};
-
-            for (const w of defaultWidgetConfigs) {
-                const element = document.getElementById(`hud-widget-${w.id}`);
-                const computedPos = w.position(w.id, element, context);
-                const clamped = clampPosition(computedPos);
-                newPositions[w.id] = clamped;
-
-                // Immediately update DOM so next widgets see correct rect
-                if (element) {
-                    element.style.left = `${clamped.x}px`;
-                    element.style.top = `${clamped.y}px`;
-                }
-            }
-
-            return newPositions;
-        };
-
-        // Run multiple passes to stabilize positions
-        let finalPositions: Record<string, WidgetPosition> = {};
-        for (let pass = 0; pass < MAX_PASSES; pass++) {
-            finalPositions = runPass();
-        }
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
 
         setState((prev) => ({
             ...prev,
-            widgets: prev.widgets.map((w) => ({
-                ...w,
-                position: finalPositions[w.id] ?? w.position,
-            })),
+            widgets: prev.widgets.map((w) => {
+                const rect = resolvedRects.get(w.id);
+                return {
+                    ...w,
+                    position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
+                };
+            }),
             widgetsDistributed: true,
         }));
     }, []);
@@ -172,14 +149,14 @@ export const useHUDLayout = () => {
     }, []);
 
     const resetLayout = useCallback((context?: WidgetPositionContext) => {
-        // Reset to default positions using position functions
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
+
         const resetWidgets = defaultWidgetConfigs.map((w) => {
-            const element = document.getElementById(`hud-widget-${w.id}`);
-            const computedPos = w.position(w.id, element, context);
+            const rect = resolvedRects.get(w.id);
             return {
                 id: w.id,
                 type: w.type,
-                position: clampPosition(computedPos),
+                position: rect ? clampPosition({ x: rect.x, y: rect.y }) : { x: 0, y: 0 },
                 visible: w.visible,
                 scale: w.scale ?? 1,
             };
@@ -198,13 +175,19 @@ export const useHUDLayout = () => {
         const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
         if (!defaultWidget) return;
 
-        const element = document.getElementById(`hud-widget-${id}`);
-        const computedPos = defaultWidget.position(id, element, context);
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
+        const rect = resolvedRects.get(id);
 
         setState((prev) => ({
             ...prev,
             widgets: prev.widgets.map((w) =>
-                w.id === id ? { ...w, position: clampPosition(computedPos), scale: defaultWidget.scale ?? 1 } : w
+                w.id === id
+                    ? {
+                          ...w,
+                          position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
+                          scale: defaultWidget.scale ?? 1,
+                      }
+                    : w
             ),
         }));
     }, []);
