@@ -84,29 +84,44 @@ export const useHUDLayout = () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }, [state]);
 
-    // Distribute widgets using DOM elements and position functions
+    // Distribute widgets using DOM elements and position functions.
+    // Runs multiple passes so dependent widgets can read updated getBoundingClientRect() values.
     const distributeWidgets = useCallback((context?: WidgetPositionContext) => {
-        setState((prev) => {
-            const distributedWidgets = prev.widgets.map((w) => {
+        const MAX_PASSES = 3;
+
+        const runPass = () => {
+            const newPositions: Record<string, WidgetPosition> = {};
+
+            for (const w of defaultWidgetConfigs) {
                 const element = document.getElementById(`hud-widget-${w.id}`);
-                const defaultConfig = defaultWidgetConfigs.find((d) => d.id === w.id);
+                const computedPos = w.position(w.id, element, context);
+                const clamped = clampPosition(computedPos);
+                newPositions[w.id] = clamped;
 
-                if (defaultConfig) {
-                    const computedPos = defaultConfig.position(w.id, element, context);
-                    return {
-                        ...w,
-                        position: clampPosition(computedPos),
-                    };
+                // Immediately update DOM so next widgets see correct rect
+                if (element) {
+                    element.style.left = `${clamped.x}px`;
+                    element.style.top = `${clamped.y}px`;
                 }
-                return w;
-            });
+            }
 
-            return {
-                ...prev,
-                widgets: distributedWidgets,
-                widgetsDistributed: true,
-            };
-        });
+            return newPositions;
+        };
+
+        // Run multiple passes to stabilize positions
+        let finalPositions: Record<string, WidgetPosition> = {};
+        for (let pass = 0; pass < MAX_PASSES; pass++) {
+            finalPositions = runPass();
+        }
+
+        setState((prev) => ({
+            ...prev,
+            widgets: prev.widgets.map((w) => ({
+                ...w,
+                position: finalPositions[w.id] ?? w.position,
+            })),
+            widgetsDistributed: true,
+        }));
     }, []);
 
     const toggleEditMode = useCallback(() => {
