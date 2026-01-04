@@ -38,19 +38,25 @@ export const VehicleNameWidget = ({
     // Spawn name for tx (e.g., "adder", "zentorno")
     const spawnName = vehicleSpawnName || (editMode ? "spawn_name" : undefined);
 
-    // Show in edit mode or when in vehicle
-    if (!visible && !editMode) return null;
-    if (!inVehicle && !editMode) return null;
+    // Visibility state for opacity-based hiding
+    const shouldShow = (visible || editMode) && (inVehicle || editMode);
 
     return (
-        <AnimatePresence>
-            {(inVehicle || editMode) && (
-                <motion.div
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className={cn(
+        <motion.div
+            initial={false}
+            animate={{ 
+                opacity: shouldShow ? 1 : 0,
+                pointerEvents: shouldShow ? "auto" : "none"
+            }}
+            transition={{ duration: 0.2 }}>
+            <AnimatePresence>
+                {(inVehicle || editMode) && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ duration: 0.2 }}
+                        className={cn(
                         "glass-panel border border-border/30 rounded-lg px-3 py-2 flex items-center gap-2",
                         !inVehicle && editMode && "opacity-50"
                     )}>
@@ -76,5 +82,6 @@ export const VehicleNameWidget = ({
                 </motion.div>
             )}
         </AnimatePresence>
+        </motion.div>
     );
 };
