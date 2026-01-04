@@ -339,6 +339,9 @@ export const ChatWidget = ({
     // Visibility state for opacity-based hiding
     const shouldShow = !((isAutoHidden && !isInputActive) || (!isVisible && !isInputActive && !hasMessages));
 
+    // Always render for size measurement
+    const shouldRender = isVisible || isInputActive || hasMessages || editMode;
+
     return (
         <motion.div
             initial={false}
@@ -347,16 +350,17 @@ export const ChatWidget = ({
                 pointerEvents: shouldShow ? "auto" : "none"
             }}
             transition={{ duration: 0.3 }}>
-            <AnimatePresence>
-                {(isVisible || isInputActive || hasMessages) && (
-                    <motion.div
-                    ref={containerRef}
-                    className="glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col"
-                    style={{ width: "320px", height: "280px" }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}>
+            <motion.div
+                ref={containerRef}
+                className="glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col"
+                style={{ 
+                    width: "320px", 
+                    height: "280px",
+                    visibility: shouldRender ? "visible" : "hidden"
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: shouldRender ? 1 : 0, y: shouldRender ? 0 : 20 }}
+                transition={{ duration: 0.3 }}>
                     {/* Header */}
                     <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 bg-background/40">
                         <div className="flex items-center gap-2">
@@ -514,8 +518,6 @@ export const ChatWidget = ({
                         </div>
                     )}
                 </motion.div>
-            )}
-        </AnimatePresence>
         </motion.div>
     );
 };
