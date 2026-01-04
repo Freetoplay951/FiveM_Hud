@@ -614,7 +614,7 @@ export const HUD = () => {
             }
 
             // Demo death toggle - only when NOT in edit mode
-            if (e.key === "d" && !editMode) {
+            if (e.key === "f" && !editMode) {
                 setDeathState((prev) => {
                     if (prev.isDead) {
                         return { ...prev, isDead: false };
@@ -723,7 +723,7 @@ export const HUD = () => {
             )}
 
             {/* Demo Mode Badge */}
-            {isDemoMode && !editMode && (
+            {isDemoMode && !editMode && !deathState.isDead && (
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
                     <div className="bg-destructive/80 border border-destructive/50 rounded-lg px-4 py-3 animate-fade-in-up pointer-events-auto">
                         <div className="flex flex-col gap-3">
@@ -733,32 +733,13 @@ export const HUD = () => {
                                     <span className="flex flex-col text-xs text-destructive-foreground/80 uppercase tracking-wider hud-text">
                                         <span>Vehicle: V (Typ: 1︱2︱3︱4︱5︱6)</span>
                                         <span>Edit: E</span>
-                                        <span>Death: D</span>
+                                        <span>Death: F</span>
                                         <span>Voice: R</span>
                                         <span>Notify: H︱J︱K︱L</span>
                                         <span>Chat: T</span>
                                         <span>TeamChat: Y</span>
                                     </span>
                                 </div>
-                                <button
-                                    onClick={() =>
-                                        setDeathState((prev) => ({
-                                            ...prev,
-                                            isDead: !prev.isDead,
-                                            respawnTimer: 14,
-                                            waitTimer: 59,
-                                            canCallHelp: true,
-                                            canRespawn: false,
-                                        }))
-                                    }
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                                        deathState.isDead
-                                            ? "bg-critical/80 text-white border border-critical"
-                                            : "bg-background/30 text-destructive-foreground/80 border border-destructive-foreground/30 hover:bg-background/50"
-                                    )}>
-                                    {deathState.isDead ? "Revive (D)" : "Death (D)"}
-                                </button>
                             </div>
                             {/* Permission Toggles */}
                             <div className="flex flex-wrap items-center gap-3 border-t border-destructive-foreground/20 pt-2">
