@@ -50,34 +50,6 @@ export type SpeedometerType = "car" | "plane" | "boat" | "helicopter" | "motorcy
 
 export type MinimapShape = "square" | "round";
 
-export interface SpeedometerConfigInput {
-    position: WidgetPositionFunction;
-    scale: number;
-}
-
-export interface SpeedometerConfig {
-    position: WidgetPosition;
-    scale: number;
-}
-
-export interface SpeedometerConfigsInput {
-    car: SpeedometerConfigInput;
-    plane: SpeedometerConfigInput;
-    boat: SpeedometerConfigInput;
-    helicopter: SpeedometerConfigInput;
-    motorcycle: SpeedometerConfigInput;
-    bicycle: SpeedometerConfigInput;
-}
-
-export interface SpeedometerConfigs {
-    car: SpeedometerConfig;
-    plane: SpeedometerConfig;
-    boat: SpeedometerConfig;
-    helicopter: SpeedometerConfig;
-    motorcycle: SpeedometerConfig;
-    bicycle: SpeedometerConfig;
-}
-
 export interface HUDLayoutState {
     widgets: ResolvedWidgetConfig[];
     editMode: boolean;
@@ -86,7 +58,6 @@ export interface HUDLayoutState {
     statusDesign: StatusDesign;
     hudScale: number;
     speedometerType: SpeedometerType;
-    speedometerConfigs: SpeedometerConfigs;
     minimapShape: MinimapShape;
     widgetsDistributed: boolean;
 }
@@ -135,28 +106,6 @@ const getDefaultSpeedoPos = (): WidgetPosition => ({
     y: getBottomY(SPEEDOMETER_HEIGHT),
 });
 
-export const getDefaultSpeedometerConfigsInput = (): SpeedometerConfigsInput => {
-    return {
-        car: { position: () => getDefaultSpeedoPos(), scale: 1 },
-        plane: { position: () => getDefaultSpeedoPos(), scale: 1 },
-        boat: { position: () => getDefaultSpeedoPos(), scale: 1 },
-        helicopter: { position: () => getDefaultSpeedoPos(), scale: 1 },
-        motorcycle: { position: () => getDefaultSpeedoPos(), scale: 1 },
-        bicycle: { position: () => getDefaultSpeedoPos(), scale: 1 },
-    };
-};
-
-export const getDefaultSpeedometerConfigs = (): SpeedometerConfigs => {
-    const defaultPos = getDefaultSpeedoPos();
-    return {
-        car: { position: defaultPos, scale: 1 },
-        plane: { position: defaultPos, scale: 1 },
-        boat: { position: defaultPos, scale: 1 },
-        helicopter: { position: defaultPos, scale: 1 },
-        motorcycle: { position: defaultPos, scale: 1 },
-        bicycle: { position: defaultPos, scale: 1 },
-    };
-};
 
 export const getDefaultWidgets = (): WidgetConfig[] => {
     const NOTIFICATION_HEIGHT = 180;
