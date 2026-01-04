@@ -212,6 +212,7 @@ export const HUDWidget = ({
 
     return (
         <div
+            id={`hud-widget-${id}`}
             ref={rootRef}
             className={cn(
                 "absolute pointer-events-auto select-none",
