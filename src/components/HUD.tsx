@@ -223,7 +223,7 @@ export const HUD = () => {
     // Send AllThingsLoaded when all async data is loaded AND HUD is visible
     const allDataLoaded = isVisible && isLanguageLoaded && t !== null;
     const [hasSignaledReady, setHasSignaledReady] = useState(false);
-    
+
     useEffect(() => {
         if (allDataLoaded && !hasSignaledReady) {
             // Double requestAnimationFrame ensures DOM is fully painted
