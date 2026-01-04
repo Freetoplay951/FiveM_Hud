@@ -10,10 +10,6 @@ interface RadioWidgetProps {
 
 export const RadioWidget = ({ radio }: RadioWidgetProps) => {
     const { t } = useTranslation();
-    
-    if (!radio.active || radio.members.length === 0) {
-        return null;
-    }
 
     return (
         <motion.div

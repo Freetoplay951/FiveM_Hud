@@ -32,7 +32,7 @@ export const DeathScreenWidget = ({ death, visible }: DeathScreenWidgetProps) =>
         sendNuiCallback("deathSyncPosition");
     };
 
-    if (!visible || !isDead) return null;
+    // Visibility is now controlled by the parent HUDWidget via CSS
 
     const content = (
         <motion.div

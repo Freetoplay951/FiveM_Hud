@@ -203,11 +203,12 @@ export const HUDWidget = ({
         };
     }, [isResizing, onScaleChange, id, localScale]);
 
-    if (!visible && !editMode) return null;
-
     // Display position - use local during drag, otherwise use stored position
     const displayPosition = localPosition ?? position;
     const displayScale = localScale ?? scale;
+
+    // Hidden state: not visible and not in edit mode
+    const isHidden = !visible && !editMode;
 
     return (
         <div
@@ -229,6 +230,9 @@ export const HUDWidget = ({
                 transform: `scale(${Math.round(displayScale * 100) / 100})`,
                 transformOrigin: "top left",
                 opacity: visible || editMode ? 1 : 0,
+                // Hide via visibility instead of unmounting
+                visibility: isHidden ? "hidden" : "visible",
+                pointerEvents: isHidden ? "none" : "auto",
                 // CEF Fix: Prevent black box artifacts
                 willChange: isDragging || isResizing ? "transform" : "auto",
             }}
