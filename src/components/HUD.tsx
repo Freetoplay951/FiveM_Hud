@@ -227,8 +227,16 @@ export const HUD = () => {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     // Distribute widgets to their correct positions via DOM
+                    // Pass hudState flags so disabled widgets are skipped in position calc
                     if (!widgetsDistributed) {
-                        distributeWidgets();
+                        distributeWidgets({
+                            hasHunger: hudState.hasHunger,
+                            hasThirst: hudState.hasThirst,
+                            hasStress: hudState.hasStress,
+                            hasStamina: hudState.hasStamina,
+                            hasArmor: hudState.hasArmor,
+                            showOxygen: hudState.showOxygen,
+                        });
                     }
                     
                     console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
@@ -237,7 +245,7 @@ export const HUD = () => {
                 });
             });
         }
-    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets]);
+    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets, hudState]);
 
     // NUI Event handlers
     useNuiEvents({
