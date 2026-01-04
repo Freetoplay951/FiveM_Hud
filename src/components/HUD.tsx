@@ -159,7 +159,6 @@ export const HUD = () => {
     const [chatState, setChatState] = useState<ChatState>(DEMO_CHAT);
     const [teamChatState, setTeamChatState] = useState<TeamChatState>(DEMO_TEAM_CHAT);
     const [radioState, setRadioState] = useState<RadioState>(DEMO_RADIO);
-    const [showDeathScreenPreview, setShowDeathScreenPreview] = useState(false);
     const [demoDeathTimer, setDemoDeathTimer] = useState({ respawnTimer: 14, waitTimer: 59 });
     const [isVisible, setIsVisible] = useState(!isNuiEnvironment());
     const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(!isNuiEnvironment());
@@ -482,7 +481,7 @@ export const HUD = () => {
     // Demo: Death Timer Animation (countdown when death preview is active in edit mode OR when dead in demo mode)
     // Works in both demo mode and FiveM when edit mode death preview is enabled
     useEffect(() => {
-        const shouldRunTimer = (showDeathScreenPreview && editMode) || (isDemoMode && deathState.isDead);
+        const shouldRunTimer = isDemoMode && deathState.isDead;
 
         if (!shouldRunTimer) {
             // Reset timer when preview is turned off
@@ -511,7 +510,7 @@ export const HUD = () => {
         }, 1000);
 
         return () => clearInterval(timerInterval);
-    }, [showDeathScreenPreview, editMode, deathState.canRespawn, isDemoMode, deathState.isDead]);
+    }, [editMode, deathState.canRespawn, isDemoMode, deathState.isDead]);
 
     // Demo key controls + ESC to exit edit mode
     useEffect(() => {
@@ -675,37 +674,6 @@ export const HUD = () => {
                 />
             )}
 
-            {/* Notifications - as draggable widget, always visible (even when dead) */}
-            {(() => {
-                const widget = getWidget("notifications");
-                if (!widget)
-                    return (
-                        <NotificationContainer
-                            notifications={displayedNotifications}
-                            onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
-                        />
-                    );
-                return (
-                    <HUDWidget
-                        id="notifications"
-                        position={widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        editMode={editMode}
-                        snapToGrid={snapToGrid}
-                        gridSize={gridSize}
-                        onPositionChange={updateWidgetPosition}
-                        onScaleChange={updateWidgetScale}
-                        onReset={resetWidget}>
-                        <NotificationContainer
-                            notifications={displayedNotifications}
-                            onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
-                            isWidget
-                        />
-                    </HUDWidget>
-                );
-            })()}
-
             {/* Edit Mode Button + Menu (Radix Popover) */}
             {editMode && (
                 <Popover
@@ -730,12 +698,10 @@ export const HUD = () => {
                     {/* Menu content */}
                     <EditModeOverlay
                         snapToGrid={snapToGrid}
-                        showDeathScreen={showDeathScreenPreview}
                         statusDesign={statusDesign}
                         speedometerType={speedometerType}
                         minimapShape={minimapShape}
                         onSnapToGridChange={setSnapToGrid}
-                        onShowDeathScreenChange={setShowDeathScreenPreview}
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={setMinimapShape}
@@ -813,21 +779,43 @@ export const HUD = () => {
                 </div>
             )}
 
-            {/* Status Widgets - always rendered, visibility controlled via props */}
+            {/* Notifications */}
+            {(() => {
+                const widget = getWidget("notifications");
+                if (!widget) return null;
+
+                const isDeadOverlay = deathState.isDead && !editMode;
+
+                return (
+                    <HUDWidget
+                        id="notifications"
+                        position={isDeadOverlay ? { x: 20, y: 20 } : widget.position}
+                        visible={widget.visible}
+                        scale={widget.scale}
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={updateWidgetPosition}
+                        onScaleChange={updateWidgetScale}
+                        onReset={resetWidget}
+                        className={isDeadOverlay ? "z-50" : ""}>
+                        <NotificationContainer
+                            notifications={displayedNotifications}
+                            onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
+                        />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Status Widgets */}
             {statusTypes.map((type) => {
                 const widget = getWidget(type);
                 if (!widget) return null;
+
                 const value = hudState[type] ?? 100;
 
-                // Calculate visibility based on conditions
-                let isVisible = widget.visible;
+                let isVisible = widget.visible && (editMode ? true : !deathState.isDead);
 
-                // Hidden when dead (or death preview in edit mode)
-                if (editMode ? showDeathScreenPreview : deathState.isDead) {
-                    isVisible = false;
-                }
-
-                // Check if framework provides this status (hide if not available)
                 if (!isDemoMode && isVisible) {
                     if (type === "hunger" && hudState.hasHunger === false) isVisible = false;
                     if (type === "thirst" && hudState.hasThirst === false) isVisible = false;
@@ -836,7 +824,6 @@ export const HUD = () => {
                     if (type === "stamina" && hudState.hasStamina === false) isVisible = false;
                 }
 
-                // Oxygen: Only show in water (or in edit mode)
                 if (type === "oxygen" && !editMode) {
                     if (hudState.showOxygen === false) isVisible = false;
                 }
@@ -858,11 +845,13 @@ export const HUD = () => {
                 );
             })}
 
-            {/* Money Widget - always rendered */}
+            {/* Money Widget */}
             {(() => {
                 const widget = getWidget("money");
                 if (!widget) return null;
-                const isVisible = widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead);
+
+                const isVisible = widget.visible && (editMode ? true : !deathState.isDead);
+
                 return (
                     <HUDWidget
                         id="money"
@@ -878,11 +867,13 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Clock Widget - always rendered */}
+            {/* Clock Widget */}
             {(() => {
                 const widget = getWidget("clock");
                 if (!widget) return null;
-                const isVisible = widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead);
+
+                const isVisible = widget.visible && (editMode ? true : !deathState.isDead);
+
                 return (
                     <HUDWidget
                         id="clock"
@@ -895,13 +886,15 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Voice Widget - always rendered */}
+            {/* Voice Widget */}
             {(() => {
                 const widget = getWidget("voice");
                 if (!widget) return null;
-                const baseVisible = editMode ? !showDeathScreenPreview : !deathState.isDead;
+
+                const baseVisible = editMode ? true : !deathState.isDead;
                 const voiceAvailable = isDemoMode || isVoiceEnabled;
                 const isVisible = widget.visible && baseVisible && voiceAvailable;
+
                 return (
                     <HUDWidget
                         id="voice"
@@ -914,12 +907,12 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Radio Widget - always rendered */}
+            {/* Radio Widget */}
             {(() => {
                 const widget = getWidget("radio");
                 if (!widget) return null;
 
-                const baseVisible = editMode ? !showDeathScreenPreview : !deathState.isDead;
+                const baseVisible = editMode ? true : !deathState.isDead;
                 const voiceAvailable = isDemoMode || isVoiceEnabled;
                 const showRadio = radioState.active || editMode;
                 const isVisible = widget.visible && baseVisible && voiceAvailable && showRadio;
@@ -939,11 +932,13 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Location Widget - always rendered */}
+            {/* Location Widget */}
             {(() => {
                 const widget = getWidget("location");
                 if (!widget) return null;
-                const isVisible = widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead);
+
+                const isVisible = widget.visible && (editMode ? true : !deathState.isDead);
+
                 return (
                     <HUDWidget
                         id="location"
@@ -959,15 +954,13 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Compass Widget - always rendered */}
+            {/* Compass Widget */}
             {(() => {
                 const widget = getWidget("compass");
                 if (!widget) return null;
 
                 const showCompass = locationState.heading != undefined || editMode;
-
-                const isVisible =
-                    widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead) && showCompass;
+                const isVisible = widget.visible && (editMode ? true : !deathState.isDead) && showCompass;
 
                 return (
                     <HUDWidget
@@ -981,11 +974,13 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Vehicle Name Widget - always rendered */}
+            {/* Vehicle Name Widget */}
             {(() => {
                 const widget = getWidget("vehiclename");
                 if (!widget) return null;
-                const isVisible = widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead);
+
+                const isVisible = widget.visible && (editMode ? true : !deathState.isDead);
+
                 return (
                     <HUDWidget
                         id="vehiclename"
@@ -1005,7 +1000,7 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Vehicle Speedometer - always rendered */}
+            {/* Vehicle Speedometer */}
             {(() => {
                 const widget = getWidget("speedometer");
                 if (!widget) return null;
@@ -1018,7 +1013,7 @@ export const HUD = () => {
                     : "car";
                 const currentConfig = getSpeedometerConfig(activeType);
 
-                const baseVisible = editMode ? !showDeathScreenPreview : !deathState.isDead;
+                const baseVisible = editMode ? true : !deathState.isDead;
                 const isVisible = widget.visible && baseVisible && (vehicleState.inVehicle || editMode);
 
                 return (
@@ -1048,28 +1043,12 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Fullscreen Death Screen - rendered outside widget system */}
-            {!editMode && (
-                <FullscreenDeathScreen
-                    death={
-                        isDemoMode && deathState.isDead
-                            ? {
-                                  ...deathState,
-                                  respawnTimer: demoDeathTimer.respawnTimer,
-                                  waitTimer: demoDeathTimer.waitTimer,
-                                  canRespawn: demoDeathTimer.respawnTimer === 0,
-                              }
-                            : deathState
-                    }
-                    visible={deathState.isDead}
-                />
-            )}
-
-            {/* Chat Widget - always rendered */}
+            {/* Chat Widget */}
             {(() => {
                 const widget = getWidget("chat");
                 if (!widget) return null;
-                const isVisible = widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead);
+
+                const isVisible = widget.visible && (editMode ? true : !deathState.isDead);
 
                 return (
                     <HUDWidget
@@ -1115,12 +1094,12 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Team Chat Widget - always rendered */}
+            {/* Team Chat Widget */}
             {(() => {
                 const widget = getWidget("teamchat");
                 if (!widget) return null;
 
-                const baseVisible = editMode ? !showDeathScreenPreview : !deathState.isDead;
+                const baseVisible = editMode ? true : !deathState.isDead;
                 const isVisible = widget.visible && baseVisible && teamChatState.hasAccess;
 
                 return (
@@ -1165,6 +1144,23 @@ export const HUD = () => {
                     </HUDWidget>
                 );
             })()}
+
+            {/* Fullscreen Death Screen - rendered outside widget system */}
+            {!editMode && (
+                <FullscreenDeathScreen
+                    death={
+                        isDemoMode && deathState.isDead
+                            ? {
+                                  ...deathState,
+                                  respawnTimer: demoDeathTimer.respawnTimer,
+                                  waitTimer: demoDeathTimer.waitTimer,
+                                  canRespawn: demoDeathTimer.respawnTimer === 0,
+                              }
+                            : deathState
+                    }
+                    visible={deathState.isDead}
+                />
+            )}
         </div>
     );
 };

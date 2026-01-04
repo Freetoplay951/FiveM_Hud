@@ -68,7 +68,6 @@ export interface Translations {
         speedometerType: string;
         options: string;
         snapToGrid: string;
-        showDeathScreen: string;
         exitEdit: string;
         resetLayout: string;
     };

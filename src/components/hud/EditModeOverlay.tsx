@@ -23,12 +23,10 @@ import { LanguageDropdown } from "../LanguageDropdown";
 
 interface EditModeOverlayProps {
     snapToGrid: boolean;
-    showDeathScreen: boolean;
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
     onSnapToGridChange: (value: boolean) => void;
-    onShowDeathScreenChange: (value: boolean) => void;
     onStatusDesignChange: (design: StatusDesign) => void;
     onSpeedometerTypeChange: (type: SpeedometerType) => void;
     onMinimapShapeChange: (shape: MinimapShape) => void;
@@ -72,12 +70,10 @@ const MINIMAP_SHAPE_OPTIONS: {
 
 export const EditModeOverlay = ({
     snapToGrid,
-    showDeathScreen,
     statusDesign,
     speedometerType,
     minimapShape,
     onSnapToGridChange,
-    onShowDeathScreenChange,
     onStatusDesignChange,
     onSpeedometerTypeChange,
     onMinimapShapeChange,
@@ -215,12 +211,6 @@ export const EditModeOverlay = ({
                     label={t.editMode.snapToGrid}
                     checked={snapToGrid}
                     onChange={onSnapToGridChange}
-                />
-                <ToggleOption
-                    icon={Skull}
-                    label={t.editMode.showDeathScreen}
-                    checked={showDeathScreen}
-                    onChange={onShowDeathScreenChange}
                 />
             </div>
 

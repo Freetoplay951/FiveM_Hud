@@ -61,7 +61,6 @@
         "speedometerType": "Tacho Typ",
         "options": "Optionen",
         "snapToGrid": "Am Raster ausrichten",
-        "showDeathScreen": "Death-Screen anzeigen",
         "exitEdit": "Bearbeitung beenden",
         "resetLayout": "Layout zurücksetzen"
     },

@@ -61,7 +61,6 @@
         "speedometerType": "Speedometer Type",
         "options": "Options",
         "snapToGrid": "Snap to Grid",
-        "showDeathScreen": "Show Death Screen",
         "exitEdit": "Exit Edit Mode",
         "resetLayout": "Reset Layout"
     },
