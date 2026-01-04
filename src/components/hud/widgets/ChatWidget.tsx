@@ -336,19 +336,20 @@ export const ChatWidget = ({
         }
     };
 
-    // Auto-hide: Wenn Timer abgelaufen und Input nicht aktiv, verstecken
-    if (isAutoHidden && !isInputActive) {
-        return null;
-    }
-
-    if (!isVisible && !isInputActive && !hasMessages) {
-        return null;
-    }
+    // Visibility state for opacity-based hiding
+    const shouldShow = !((isAutoHidden && !isInputActive) || (!isVisible && !isInputActive && !hasMessages));
 
     return (
-        <AnimatePresence>
-            {(isVisible || isInputActive || hasMessages) && (
-                <motion.div
+        <motion.div
+            initial={false}
+            animate={{ 
+                opacity: shouldShow ? 1 : 0,
+                pointerEvents: shouldShow ? "auto" : "none"
+            }}
+            transition={{ duration: 0.3 }}>
+            <AnimatePresence>
+                {(isVisible || isInputActive || hasMessages) && (
+                    <motion.div
                     ref={containerRef}
                     className="glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col"
                     style={{ width: "320px", height: "280px" }}
@@ -515,5 +516,6 @@ export const ChatWidget = ({
                 </motion.div>
             )}
         </AnimatePresence>
+        </motion.div>
     );
 };

@@ -9,13 +9,16 @@ import {
     SpeedometerType,
     SpeedometerConfig,
     SpeedometerConfigs,
+    SpeedometerConfigsInput,
     MinimapShape,
     getDefaultWidgets,
     getDefaultSpeedometerConfigs,
+    getDefaultSpeedometerConfigsInput,
 } from "@/types/widget";
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
+const defaultSpeedometerConfigsInput = getDefaultSpeedometerConfigsInput();
 
 // Get dynamic default state based on current screen size
 const getDefaultState = (): HUDLayoutState => ({
@@ -112,9 +115,24 @@ export const useHUDLayout = () => {
                 return w;
             });
 
+            // Also distribute speedometer positions
+            const speedoTypes: SpeedometerType[] = ["car", "plane", "boat", "helicopter", "motorcycle", "bicycle"];
+            const distributedSpeedoConfigs = { ...prev.speedometerConfigs };
+            
+            speedoTypes.forEach((type) => {
+                const element = document.getElementById(`hud-widget-speedometer-${type}`);
+                const defaultInput = defaultSpeedometerConfigsInput[type];
+                const computedPos = defaultInput.position(type, element);
+                distributedSpeedoConfigs[type] = {
+                    ...distributedSpeedoConfigs[type],
+                    position: clampPosition(computedPos),
+                };
+            });
+
             return {
                 ...prev,
                 widgets: distributedWidgets,
+                speedometerConfigs: distributedSpeedoConfigs,
                 widgetsDistributed: true,
             };
         });
@@ -187,12 +205,15 @@ export const useHUDLayout = () => {
 
     const resetSpeedometer = useCallback((type: SpeedometerType) => {
         setState((prev) => {
-            const defaultConfig = getDefaultSpeedometerConfigs()[type];
+            const element = document.getElementById(`hud-widget-speedometer-${type}`);
+            const defaultInput = defaultSpeedometerConfigsInput[type];
+            const computedPos = defaultInput.position(type, element);
+            
             return {
                 ...prev,
                 speedometerConfigs: {
                     ...prev.speedometerConfigs,
-                    [type]: { position: defaultConfig.position, scale: 1 },
+                    [type]: { position: clampPosition(computedPos), scale: 1 },
                 },
             };
         });
@@ -212,9 +233,21 @@ export const useHUDLayout = () => {
             };
         });
 
+        // Reset speedometer configs using position functions
+        const speedoTypes: SpeedometerType[] = ["car", "plane", "boat", "helicopter", "motorcycle", "bicycle"];
+        const resetSpeedoConfigs: SpeedometerConfigs = {} as SpeedometerConfigs;
+        
+        speedoTypes.forEach((type) => {
+            const element = document.getElementById(`hud-widget-speedometer-${type}`);
+            const defaultInput = defaultSpeedometerConfigsInput[type];
+            const computedPos = defaultInput.position(type, element);
+            resetSpeedoConfigs[type] = { position: clampPosition(computedPos), scale: 1 };
+        });
+
         setState((prev) => ({
             ...getDefaultState(),
             widgets: resetWidgets,
+            speedometerConfigs: resetSpeedoConfigs,
             editMode: true,
             snapToGrid: prev.snapToGrid,
             widgetsDistributed: true,
