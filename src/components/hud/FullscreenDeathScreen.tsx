@@ -276,9 +276,9 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                             {/* Subtle scan line effect */}
                                             <motion.div
                                                 className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/20 to-transparent"
-                                                animate={{ y: ["-100%", "200%"] }}
+                                                animate={{ y: ["-100%", "300%"] }}
                                                 transition={{
-                                                    duration: 2,
+                                                    duration: 2.5,
                                                     repeat: Number.POSITIVE_INFINITY,
                                                     ease: "linear",
                                                 }}
