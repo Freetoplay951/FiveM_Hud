@@ -38,18 +38,18 @@ export const VehicleNameWidget = ({
     // Spawn name for tx (e.g., "adder", "zentorno")
     const spawnName = vehicleSpawnName || (editMode ? "spawn_name" : undefined);
 
-    // Visibility state for opacity-based hiding
-    const shouldShow = (visible || editMode) && (inVehicle || editMode);
-
     // Always render content for size measurement, use opacity for visibility
     const shouldRender = inVehicle || editMode;
+
+    // Visibility state for opacity-based hiding
+    const shouldShow = (visible || editMode) && shouldRender;
 
     return (
         <motion.div
             initial={false}
-            animate={{ 
+            animate={{
                 opacity: shouldShow ? 1 : 0,
-                pointerEvents: shouldShow ? "auto" : "none"
+                pointerEvents: shouldShow ? "auto" : "none",
             }}
             transition={{ duration: 0.2 }}>
             <motion.div
