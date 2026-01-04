@@ -70,10 +70,34 @@ function getWidget(id: string) {
     return document.getElementById(`hud-widget-${id}`);
 }
 
-let lastWidget: HTMLElement | null = null;
+// Helper to calculate status widget positions in a chain
+const getStatusWidgetPosition = (
+    index: number,
+    widgetElement: HTMLElement | null,
+    startX: number
+): WidgetPosition => {
+    const statusWidgetIds = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
+    
+    let x = startX;
+    
+    // Calculate x by summing widths of all previous status widgets
+    for (let i = 0; i < index; i++) {
+        const prevWidget = document.getElementById(`hud-widget-${statusWidgetIds[i]}`);
+        if (prevWidget) {
+            x += prevWidget.offsetWidth + GAP;
+        }
+    }
+    
+    return {
+        x,
+        y: getScreenHeight() - MARGIN - (widgetElement?.offsetHeight || 0),
+    };
+};
+
 export const getDefaultWidgets = (): WidgetConfig[] => {
     const NOTIFICATION_HEIGHT = 180;
     const NOTIFICATION_GAP = 20;
+    const STATUS_START_X = 200;
 
     return [
         {
@@ -177,97 +201,49 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "health",
             type: "health",
-            position: (_, widgetElement) => {
-                lastWidget = widgetElement;
-                return {
-                    x: 200,
-                    y: getScreenHeight() - MARGIN - widgetElement.offsetHeight,
-                };
-            },
+            position: (_, widgetElement) => getStatusWidgetPosition(0, widgetElement, STATUS_START_X),
             visible: true,
             scale: 1,
         },
         {
             id: "armor",
             type: "armor",
-            position: (_, widgetElement) => {
-                const widget = lastWidget;
-                lastWidget = widgetElement;
-                return {
-                    x: widget.getBoundingClientRect().left + widget.offsetWidth + GAP,
-                    y: getScreenHeight() - MARGIN - widgetElement.offsetHeight,
-                };
-            },
+            position: (_, widgetElement) => getStatusWidgetPosition(1, widgetElement, STATUS_START_X),
             visible: true,
             scale: 1,
         },
         {
             id: "hunger",
             type: "hunger",
-            position: (_, widgetElement) => {
-                const widget = lastWidget;
-                lastWidget = widgetElement;
-                return {
-                    x: widget.getBoundingClientRect().left + widget.offsetWidth + GAP,
-                    y: getScreenHeight() - MARGIN - widgetElement.offsetHeight,
-                };
-            },
+            position: (_, widgetElement) => getStatusWidgetPosition(2, widgetElement, STATUS_START_X),
             visible: true,
             scale: 1,
         },
         {
             id: "thirst",
             type: "thirst",
-            position: (_, widgetElement) => {
-                const widget = lastWidget;
-                lastWidget = widgetElement;
-                return {
-                    x: widget.getBoundingClientRect().left + widget.offsetWidth + GAP,
-                    y: getScreenHeight() - MARGIN - widgetElement.offsetHeight,
-                };
-            },
+            position: (_, widgetElement) => getStatusWidgetPosition(3, widgetElement, STATUS_START_X),
             visible: true,
             scale: 1,
         },
         {
             id: "stamina",
             type: "stamina",
-            position: (_, widgetElement) => {
-                const widget = lastWidget;
-                lastWidget = widgetElement;
-                return {
-                    x: widget.getBoundingClientRect().left + widget.offsetWidth + GAP,
-                    y: getScreenHeight() - MARGIN - widgetElement.offsetHeight,
-                };
-            },
+            position: (_, widgetElement) => getStatusWidgetPosition(4, widgetElement, STATUS_START_X),
             visible: true,
             scale: 1,
         },
         {
             id: "stress",
             type: "stress",
-            position: (_, widgetElement) => {
-                const widget = lastWidget;
-                lastWidget = widgetElement;
-                return {
-                    x: widget.getBoundingClientRect().left + widget.offsetWidth + GAP,
-                    y: getScreenHeight() - MARGIN - widgetElement.offsetHeight,
-                };
-            },
+            position: (_, widgetElement) => getStatusWidgetPosition(5, widgetElement, STATUS_START_X),
             visible: true,
             scale: 1,
         },
         {
             id: "oxygen",
             type: "oxygen",
-            position: (_, widgetElement) => {
-                const widget = lastWidget;
-                lastWidget = widgetElement;
-                return {
-                    x: widget.getBoundingClientRect().left + widget.offsetWidth + GAP,
-                    y: getScreenHeight() - MARGIN - widgetElement.offsetHeight,
-                };
-            },
+            position: (_, widgetElement) => getStatusWidgetPosition(6, widgetElement, STATUS_START_X),
             visible: true,
             scale: 1,
         },
