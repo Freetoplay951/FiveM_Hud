@@ -821,7 +821,7 @@ export const HUD = () => {
 
                 // Calculate visibility based on conditions
                 let isVisible = widget.visible;
-                
+
                 // Hidden when dead (or death preview in edit mode)
                 if (editMode ? showDeathScreenPreview : deathState.isDead) {
                     isVisible = false;
@@ -963,7 +963,12 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("compass");
                 if (!widget) return null;
-                const isVisible = widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead);
+
+                const showCompass = locationState.heading != undefined || editMode;
+
+                const isVisible =
+                    widget.visible && (editMode ? !showDeathScreenPreview : !deathState.isDead) && showCompass;
+
                 return (
                     <HUDWidget
                         id="compass"
@@ -971,10 +976,7 @@ export const HUD = () => {
                         visible={isVisible}
                         scale={widget.scale}
                         {...widgetProps}>
-                        <CompassWidget
-                            heading={locationState.heading}
-                            editMode={editMode}
-                        />
+                        <CompassWidget heading={locationState.heading} />
                     </HUDWidget>
                 );
             })()}
@@ -1146,7 +1148,7 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("teamchat");
                 if (!widget) return null;
-                
+
                 const baseVisible = editMode ? !showDeathScreenPreview : !deathState.isDead;
                 const isVisible = widget.visible && baseVisible && teamChatState.hasAccess;
 

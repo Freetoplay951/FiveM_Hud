@@ -3,13 +3,9 @@ import { motion } from "framer-motion";
 
 interface CompassWidgetProps {
     heading: number;
-    editMode: boolean;
 }
 
-export const CompassWidget = ({ heading, editMode }: CompassWidgetProps) => {
-    // Use default heading if undefined
-    const displayHeading = heading ?? 0;
-
+export const CompassWidget = ({ heading }: CompassWidgetProps) => {
     return (
         <div className="relative w-20 h-20">
             {/* Glass Background */}
@@ -63,7 +59,7 @@ export const CompassWidget = ({ heading, editMode }: CompassWidgetProps) => {
                     const x = center + radius * Math.cos(angleRad);
                     const y = center + radius * Math.sin(angleRad);
                     const isCardinal = i % 2 === 0;
-                    const isActive = getDirectionFromDegree(displayHeading) === dir;
+                    const isActive = getDirectionFromDegree(heading) === dir;
 
                     return (
                         <text
@@ -86,7 +82,7 @@ export const CompassWidget = ({ heading, editMode }: CompassWidgetProps) => {
 
                 {/* Compass Needle */}
                 <motion.g
-                    animate={{ rotate: displayHeading }}
+                    animate={{ rotate: heading }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
                     style={{ transformOrigin: "40px 40px" }}>
                     {/* North Arrow (Red) */}
