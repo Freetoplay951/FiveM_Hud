@@ -174,6 +174,7 @@ export const HUD = () => {
         speedometerType,
         speedometerConfigs,
         minimapShape,
+        widgetsDistributed,
         toggleEditMode,
         setSnapToGrid,
         setStatusDesign,
@@ -188,6 +189,7 @@ export const HUD = () => {
         resetLayout,
         resetWidget,
         getWidget,
+        distributeWidgets,
     } = useHUDLayout();
 
     const { t, isLoaded: isLanguageLoaded } = useTranslation();
@@ -228,13 +230,18 @@ export const HUD = () => {
             // Double requestAnimationFrame ensures DOM is fully painted
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
+                    // Distribute widgets to their correct positions via DOM
+                    if (!widgetsDistributed) {
+                        distributeWidgets();
+                    }
+                    
                     console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
                     sendNuiCallback("AllThingsLoaded");
                     setHasSignaledReady(true);
                 });
             });
         }
-    }, [allDataLoaded, hasSignaledReady]);
+    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets]);
 
     // NUI Event handlers
     useNuiEvents({

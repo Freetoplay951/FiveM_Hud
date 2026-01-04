@@ -4,7 +4,19 @@ export interface WidgetPosition {
     y: number;
 }
 
+// Position function type - receives widget id and element for dynamic positioning
+export type WidgetPositionFunction = (id: string, widgetElement: HTMLElement | null) => WidgetPosition;
+
 export interface WidgetConfig {
+    id: string;
+    type: WidgetType;
+    position: WidgetPositionFunction;
+    visible: boolean;
+    scale?: number;
+}
+
+// Runtime widget config with resolved position
+export interface ResolvedWidgetConfig {
     id: string;
     type: WidgetType;
     position: WidgetPosition;
@@ -53,7 +65,7 @@ export interface SpeedometerConfigs {
 }
 
 export interface HUDLayoutState {
-    widgets: WidgetConfig[];
+    widgets: ResolvedWidgetConfig[];
     editMode: boolean;
     snapToGrid: boolean;
     gridSize: number;
@@ -62,6 +74,7 @@ export interface HUDLayoutState {
     speedometerType: SpeedometerType;
     speedometerConfigs: SpeedometerConfigs;
     minimapShape: MinimapShape;
+    widgetsDistributed: boolean;
 }
 
 // Reference resolution for positions (1920x1080)
@@ -121,88 +134,133 @@ export const getDefaultSpeedometerConfigs = (): SpeedometerConfigs => {
 };
 
 export const getDefaultWidgets = (): WidgetConfig[] => {
-    const statusStartX = getStatusStartX();
-    const statusY = getStatusY();
-    const statusSpacing = getStatusSpacing();
     const NOTIFICATION_HEIGHT = 180;
     const NOTIFICATION_GAP = 20;
 
     return [
-        { id: "compass", type: "compass", position: pos(0.01, 0.02), visible: true, scale: 1 },
-        { id: "vehiclename", type: "vehiclename", position: pos(0.06, 0.02), visible: true, scale: 1 },
-        { id: "clock", type: "clock", position: pos(0.47, 0.02), visible: true, scale: 1 },
+        { 
+            id: "compass", 
+            type: "compass", 
+            position: () => pos(0.01, 0.02), 
+            visible: true, 
+            scale: 1 
+        },
+        { 
+            id: "vehiclename", 
+            type: "vehiclename", 
+            position: () => pos(0.06, 0.02), 
+            visible: true, 
+            scale: 1 
+        },
+        { 
+            id: "clock", 
+            type: "clock", 
+            position: () => pos(0.47, 0.02), 
+            visible: true, 
+            scale: 1 
+        },
         {
             id: "money",
             type: "money",
-            position: { x: getScreenWidth() - MONEY_WIDGET_WIDTH - 20, y: 20 },
+            position: () => ({ x: getScreenWidth() - MONEY_WIDGET_WIDTH - 20, y: 20 }),
             visible: true,
             scale: 1,
         },
-        { id: "notifications", type: "notifications", position: pos(0.01, 0.25), visible: true, scale: 1 },
-        { id: "location", type: "location", position: bottomPos(0.01, LOCATION_HEIGHT), visible: true, scale: 1 },
-        { id: "health", type: "health", position: { x: statusStartX, y: statusY }, visible: true, scale: 1 },
+        { 
+            id: "notifications", 
+            type: "notifications", 
+            position: () => pos(0.01, 0.25), 
+            visible: true, 
+            scale: 1 
+        },
+        { 
+            id: "location", 
+            type: "location", 
+            position: () => bottomPos(0.01, LOCATION_HEIGHT), 
+            visible: true, 
+            scale: 1 
+        },
+        { 
+            id: "health", 
+            type: "health", 
+            position: () => ({ x: getStatusStartX(), y: getStatusY() }), 
+            visible: true, 
+            scale: 1 
+        },
         {
             id: "armor",
             type: "armor",
-            position: { x: statusStartX + statusSpacing, y: statusY },
+            position: () => ({ x: getStatusStartX() + getStatusSpacing(), y: getStatusY() }),
             visible: true,
             scale: 1,
         },
         {
             id: "hunger",
             type: "hunger",
-            position: { x: statusStartX + statusSpacing * 2, y: statusY },
+            position: () => ({ x: getStatusStartX() + getStatusSpacing() * 2, y: getStatusY() }),
             visible: true,
             scale: 1,
         },
         {
             id: "thirst",
             type: "thirst",
-            position: { x: statusStartX + statusSpacing * 3, y: statusY },
+            position: () => ({ x: getStatusStartX() + getStatusSpacing() * 3, y: getStatusY() }),
             visible: true,
             scale: 1,
         },
         {
             id: "stamina",
             type: "stamina",
-            position: { x: statusStartX + statusSpacing * 4, y: statusY },
+            position: () => ({ x: getStatusStartX() + getStatusSpacing() * 4, y: getStatusY() }),
             visible: true,
             scale: 1,
         },
         {
             id: "stress",
             type: "stress",
-            position: { x: statusStartX + statusSpacing * 5, y: statusY },
+            position: () => ({ x: getStatusStartX() + getStatusSpacing() * 5, y: getStatusY() }),
             visible: true,
             scale: 1,
         },
         {
             id: "oxygen",
             type: "oxygen",
-            position: { x: statusStartX + statusSpacing * 6, y: statusY },
+            position: () => ({ x: getStatusStartX() + getStatusSpacing() * 6, y: getStatusY() }),
             visible: true,
             scale: 1,
         },
-        { id: "voice", type: "voice", position: bottomPos(0.47, VOICE_HEIGHT), visible: true, scale: 1 },
+        { 
+            id: "voice", 
+            type: "voice", 
+            position: () => bottomPos(0.47, VOICE_HEIGHT), 
+            visible: true, 
+            scale: 1 
+        },
         {
             id: "radio",
             type: "radio",
-            position: { x: getScreenWidth() - 180, y: 180 },
+            position: () => ({ x: getScreenWidth() - 180, y: 180 }),
             visible: true,
             scale: 0.8,
         },
-        { id: "speedometer", type: "speedometer", position: getDefaultSpeedoPos(), visible: true, scale: 1 },
+        { 
+            id: "speedometer", 
+            type: "speedometer", 
+            position: () => getDefaultSpeedoPos(), 
+            visible: true, 
+            scale: 1 
+        },
         {
             id: "chat",
             type: "chat",
-            position: pos(0.01, 0.25 + (NOTIFICATION_HEIGHT + NOTIFICATION_GAP) / getScreenHeight()),
+            position: () => pos(0.01, 0.25 + (NOTIFICATION_HEIGHT + NOTIFICATION_GAP) / getScreenHeight()),
             visible: true,
             scale: 1,
         },
         {
             id: "teamchat",
             type: "teamchat",
-            position: { x: getScreenWidth() - 515, y: 20 },
+            position: () => ({ x: getScreenWidth() - 515, y: 20 }),
             visible: true,
             scale: 1,
         },
