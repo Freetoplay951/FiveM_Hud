@@ -5,6 +5,7 @@ import {
     WidgetConfig,
     ResolvedWidgetConfig,
     WidgetPosition,
+    WidgetPositionContext,
     StatusDesign,
     SpeedometerType,
     MinimapShape,
@@ -84,14 +85,14 @@ export const useHUDLayout = () => {
     }, [state]);
 
     // Distribute widgets using DOM elements and position functions
-    const distributeWidgets = useCallback(() => {
+    const distributeWidgets = useCallback((context?: WidgetPositionContext) => {
         setState((prev) => {
             const distributedWidgets = prev.widgets.map((w) => {
                 const element = document.getElementById(`hud-widget-${w.id}`);
                 const defaultConfig = defaultWidgetConfigs.find((d) => d.id === w.id);
 
                 if (defaultConfig) {
-                    const computedPos = defaultConfig.position(w.id, element);
+                    const computedPos = defaultConfig.position(w.id, element, context);
                     return {
                         ...w,
                         position: clampPosition(computedPos),
@@ -155,11 +156,11 @@ export const useHUDLayout = () => {
         sendNuiCallback("onMinimapShapeChange", { shape });
     }, []);
 
-    const resetLayout = useCallback(() => {
+    const resetLayout = useCallback((context?: WidgetPositionContext) => {
         // Reset to default positions using position functions
         const resetWidgets = defaultWidgetConfigs.map((w) => {
             const element = document.getElementById(`hud-widget-${w.id}`);
-            const computedPos = w.position(w.id, element);
+            const computedPos = w.position(w.id, element, context);
             return {
                 id: w.id,
                 type: w.type,
@@ -178,12 +179,12 @@ export const useHUDLayout = () => {
         }));
     }, []);
 
-    const resetWidget = useCallback((id: string) => {
+    const resetWidget = useCallback((id: string, context?: WidgetPositionContext) => {
         const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
         if (!defaultWidget) return;
 
         const element = document.getElementById(`hud-widget-${id}`);
-        const computedPos = defaultWidget.position(id, element);
+        const computedPos = defaultWidget.position(id, element, context);
 
         setState((prev) => ({
             ...prev,

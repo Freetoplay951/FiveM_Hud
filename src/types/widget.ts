@@ -3,7 +3,22 @@ export interface WidgetPosition {
     y: number;
 }
 
-export type WidgetPositionFunction = (id: string, widgetElement: HTMLElement | null) => WidgetPosition;
+// Context passed to position functions for smarter positioning
+export interface WidgetPositionContext {
+    // Server-side flags for disabled widgets
+    hasHunger?: boolean;
+    hasThirst?: boolean;
+    hasStress?: boolean;
+    hasStamina?: boolean;
+    hasArmor?: boolean;
+    showOxygen?: boolean;
+}
+
+export type WidgetPositionFunction = (
+    id: string,
+    widgetElement: HTMLElement | null,
+    context?: WidgetPositionContext
+) => WidgetPosition;
 
 export interface WidgetConfig {
     id: string;
@@ -70,19 +85,53 @@ function getWidget(id: string) {
     return document.getElementById(`hud-widget-${id}`);
 }
 
-// Helper to calculate status widget positions in a chain
+// Helper to check if a status widget is enabled based on server flags
+const isStatusWidgetEnabled = (
+    widgetId: string,
+    context?: WidgetPositionContext
+): boolean => {
+    if (!context) return true; // No context = assume all enabled
+    
+    switch (widgetId) {
+        case "armor":
+            return context.hasArmor !== false;
+        case "hunger":
+            return context.hasHunger !== false;
+        case "thirst":
+            return context.hasThirst !== false;
+        case "stamina":
+            return context.hasStamina !== false;
+        case "stress":
+            return context.hasStress !== false;
+        case "oxygen":
+            return context.showOxygen !== false;
+        default:
+            return true; // health is always enabled
+    }
+};
+
+// Helper to calculate status widget positions in a chain, skipping disabled widgets
 const getStatusWidgetPosition = (
-    index: number,
+    widgetId: string,
     widgetElement: HTMLElement | null,
-    startX: number
+    startX: number,
+    context?: WidgetPositionContext
 ): WidgetPosition => {
     const statusWidgetIds = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
+    const currentIndex = statusWidgetIds.indexOf(widgetId);
     
     let x = startX;
     
-    // Calculate x by summing widths of all previous status widgets
-    for (let i = 0; i < index; i++) {
-        const prevWidget = document.getElementById(`hud-widget-${statusWidgetIds[i]}`);
+    // Calculate x by summing widths of all previous ENABLED status widgets
+    for (let i = 0; i < currentIndex; i++) {
+        const prevWidgetId = statusWidgetIds[i];
+        
+        // Skip disabled widgets
+        if (!isStatusWidgetEnabled(prevWidgetId, context)) {
+            continue;
+        }
+        
+        const prevWidget = document.getElementById(`hud-widget-${prevWidgetId}`);
         if (prevWidget) {
             x += prevWidget.offsetWidth + GAP;
         }
@@ -201,49 +250,49 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "health",
             type: "health",
-            position: (_, widgetElement) => getStatusWidgetPosition(0, widgetElement, STATUS_START_X),
+            position: (_, widgetElement, context) => getStatusWidgetPosition("health", widgetElement, STATUS_START_X, context),
             visible: true,
             scale: 1,
         },
         {
             id: "armor",
             type: "armor",
-            position: (_, widgetElement) => getStatusWidgetPosition(1, widgetElement, STATUS_START_X),
+            position: (_, widgetElement, context) => getStatusWidgetPosition("armor", widgetElement, STATUS_START_X, context),
             visible: true,
             scale: 1,
         },
         {
             id: "hunger",
             type: "hunger",
-            position: (_, widgetElement) => getStatusWidgetPosition(2, widgetElement, STATUS_START_X),
+            position: (_, widgetElement, context) => getStatusWidgetPosition("hunger", widgetElement, STATUS_START_X, context),
             visible: true,
             scale: 1,
         },
         {
             id: "thirst",
             type: "thirst",
-            position: (_, widgetElement) => getStatusWidgetPosition(3, widgetElement, STATUS_START_X),
+            position: (_, widgetElement, context) => getStatusWidgetPosition("thirst", widgetElement, STATUS_START_X, context),
             visible: true,
             scale: 1,
         },
         {
             id: "stamina",
             type: "stamina",
-            position: (_, widgetElement) => getStatusWidgetPosition(4, widgetElement, STATUS_START_X),
+            position: (_, widgetElement, context) => getStatusWidgetPosition("stamina", widgetElement, STATUS_START_X, context),
             visible: true,
             scale: 1,
         },
         {
             id: "stress",
             type: "stress",
-            position: (_, widgetElement) => getStatusWidgetPosition(5, widgetElement, STATUS_START_X),
+            position: (_, widgetElement, context) => getStatusWidgetPosition("stress", widgetElement, STATUS_START_X, context),
             visible: true,
             scale: 1,
         },
         {
             id: "oxygen",
             type: "oxygen",
-            position: (_, widgetElement) => getStatusWidgetPosition(6, widgetElement, STATUS_START_X),
+            position: (_, widgetElement, context) => getStatusWidgetPosition("oxygen", widgetElement, STATUS_START_X, context),
             visible: true,
             scale: 1,
         },
