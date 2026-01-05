@@ -651,6 +651,15 @@ export const HUD = () => {
         };
     }, [editMode, isDemoMode, success, error, warning, info]);
 
+    const getStatusContext = () => ({
+        hasHunger: hudState.hasHunger,
+        hasThirst: hudState.hasThirst,
+        hasStress: hudState.hasStress,
+        hasStamina: hudState.hasStamina,
+        hasArmor: hudState.hasArmor,
+        showOxygen: hudState.showOxygen,
+    });
+
     const widgetProps = {
         editMode,
         snapToGrid,
@@ -658,7 +667,7 @@ export const HUD = () => {
         onPositionChange: updateWidgetPosition,
         onVisibilityToggle: toggleWidgetVisibility,
         onScaleChange: updateWidgetScale,
-        onReset: resetWidget,
+        onReset: (id: string) => resetWidget(id, getStatusContext()),
     };
 
     const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
@@ -716,7 +725,7 @@ export const HUD = () => {
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={setMinimapShape}
-                        onReset={resetLayout}
+                        onReset={() => resetLayout(getStatusContext())}
                         onExitEditMode={exitEditMode}
                     />
                 </Popover>
@@ -1012,7 +1021,7 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
                         onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget("speedometer")}>
+                        onReset={() => resetWidget("speedometer", getStatusContext())}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
@@ -1077,8 +1086,9 @@ export const HUD = () => {
                 const widget = getWidget("teamchat");
                 if (!widget) return null;
 
-                const baseVisible = editMode ? true : !deathState.isDead;
-                const isVisible = widget.visible && baseVisible && teamChatState.hasAccess;
+                const hasTeamAccess = isDemoMode || teamChatState.hasAccess;
+                const baseVisible = editMode ? hasTeamAccess : (!deathState.isDead && hasTeamAccess);
+                const isVisible = widget.visible && baseVisible;
 
                 return (
                     <HUDWidget
