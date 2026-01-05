@@ -7,10 +7,10 @@ interface NotificationContainerProps {
     onClose: (id: string) => void;
 }
 
-const MAX_VISIBLE_NOTIFICATIONS = 4;
+const MAX_VISIBLE_NOTIFICATIONS = 3;
 
-// Minimum size for widget measurement when no notifications are present
-const PLACEHOLDER_HEIGHT = 60;
+const NOTIFICATION_HEIGHT = 64;
+const GAP = 8;
 
 export const NotificationContainer = ({ notifications, onClose }: NotificationContainerProps) => {
     const orderedNotifications = [...notifications].slice(-MAX_VISIBLE_NOTIFICATIONS).reverse();
@@ -20,9 +20,11 @@ export const NotificationContainer = ({ notifications, onClose }: NotificationCo
     // Notifications grow downward from the widget's set position
     // Always render a minimum-sized container for widget size measurement
     return (
-        <div 
+        <div
             className="flex flex-col gap-2 pointer-events-auto min-w-[280px]"
-            style={{ minHeight: hasNotifications ? undefined : PLACEHOLDER_HEIGHT }}>
+            style={{
+                minHeight: hasNotifications ? undefined : MAX_VISIBLE_NOTIFICATIONS * (NOTIFICATION_HEIGHT + GAP) - GAP,
+            }}>
             <AnimatePresence mode="popLayout">
                 {orderedNotifications.map((notification, index) => (
                     <motion.div

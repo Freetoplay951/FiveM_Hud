@@ -138,7 +138,7 @@ const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
         id: "edit-demo-1",
         type: "info",
         title: "Info",
-        message: "Diese Notification ist nur im Edit Mode sichtbar (zum Verschieben).",
+        message: "Diese Notification ist nur im Edit Mode sichtbar.",
         duration: 0,
     },
     {
@@ -146,6 +146,13 @@ const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [
         type: "warning",
         title: "Warnung",
         message: "Zieh mich an die gewünschte Position.",
+        duration: 0,
+    },
+    {
+        id: "edit-demo-3",
+        type: "error",
+        title: "Wichtig",
+        message: "Dies ist die letzte Notifikation",
         duration: 0,
     },
 ];
@@ -810,7 +817,7 @@ export const HUD = () => {
 
                 // Server-disabled widgets are always hidden, even in edit mode
                 if (isWidgetDisabled(type)) return null;
-                
+
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
                 const isVisible = baseVisible;
 

@@ -84,12 +84,12 @@ const getStatusWidgetPosition = (
     // Calculate x by summing widths of all previous ENABLED status widgets
     for (let i = 0; i < currentIndex; i++) {
         const prevWidgetId = statusWidgetIds[i];
-        
+
         // Skip disabled widgets - they don't take up space
         if (resolver.isWidgetDisabled?.(prevWidgetId)) {
             continue;
         }
-        
+
         const prevRect = resolver.getWidgetRect(prevWidgetId);
         if (prevRect && prevRect.width > 0) {
             x = prevRect.right + GAP;
@@ -134,15 +134,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
                 return { x: resolver.screen.width - MARGIN - width, y: MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "notifications",
-            type: "notifications",
-            position: (_id, _el, resolver) => {
-                return { x: MARGIN, y: resolver.screen.height / 4 };
             },
             visible: true,
             scale: 1,
@@ -194,6 +185,17 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 const compassRect = resolver.getWidgetRect("compass");
                 const x = compassRect ? compassRect.right + GAP : MARGIN;
                 return { x, y: MARGIN };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "notifications",
+            type: "notifications",
+            position: (_id, _el, resolver) => {
+                const compassRect = resolver.getWidgetRect("compass");
+                const y = compassRect ? compassRect.bottom + GAP * 4 : MARGIN;
+                return { x: MARGIN, y };
             },
             visible: true,
             scale: 1,
