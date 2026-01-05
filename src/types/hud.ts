@@ -8,6 +8,12 @@ export interface StatusWidgetValues {
     oxygen?: number;
 }
 
+import { WidgetType } from "./widget";
+
+// Widgets that are disabled (default is enabled)
+// Example: { thirst: true, hunger: true } means thirst and hunger are disabled
+export type DisabledWidgets = Partial<Record<WidgetType, boolean>>;
+
 export interface StatusWidgetState extends StatusWidgetValues {}
 
 export type VehicleType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
