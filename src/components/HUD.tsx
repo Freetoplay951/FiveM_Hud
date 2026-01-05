@@ -778,8 +778,11 @@ export const HUD = () => {
                 </div>
             )}
 
-            {/* Notifications */}
-            {(() => {
+            {/* Only render widgets when ready (positioned) - skip check in demo mode */}
+            {(isDemoMode || hasSignaledReady) && (
+                <>
+                    {/* Notifications */}
+                    {(() => {
                 const widget = getWidget("notifications");
                 if (!widget) return null;
 
@@ -1132,6 +1135,8 @@ export const HUD = () => {
                     </HUDWidget>
                 );
             })()}
+                </>
+            )}
 
             {/* Fullscreen Death Screen - rendered outside widget system */}
             {!editMode && (
