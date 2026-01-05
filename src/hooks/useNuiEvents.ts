@@ -11,6 +11,7 @@ import {
     RadioState,
     TeamChatState,
     TeamChatMessage,
+    DisabledWidgets,
 } from "@/types/hud";
 
 interface NuiEventHandlers {
@@ -26,6 +27,7 @@ interface NuiEventHandlers {
     onSetVisible?: (visible: boolean) => void;
     onUpdateDeath?: (data: DeathState) => void;
     onSetVoiceEnabled?: (enabled: boolean) => void;
+    onUpdateDisabledWidgets?: (data: DisabledWidgets) => void;
     onChatUpdate?: (data: { isInputActive?: boolean; message?: ChatMessage; clearChat?: boolean }) => void;
     onTeamChatUpdate?: (
         data: Omit<Partial<TeamChatState>, "isVisible"> & {
@@ -91,6 +93,9 @@ export const useNuiEvents = (handlers: NuiEventHandlers) => {
                     break;
                 case "setVoiceEnabled":
                     h.onSetVoiceEnabled?.(data);
+                    break;
+                case "updateDisabledWidgets":
+                    h.onUpdateDisabledWidgets?.(data);
                     break;
                 case "chatUpdate":
                     h.onChatUpdate?.(data);
