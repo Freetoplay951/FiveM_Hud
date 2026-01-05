@@ -17,7 +17,7 @@ interface HUDWidgetProps {
     onScaleChange?: (id: string, scale: number) => void;
     onReset?: (id: string) => void;
     hasAccess?: boolean;
-    isServerDisabled?: boolean; // Widget disabled by server - completely hidden
+    disabled: boolean;
     className?: string;
 }
 
@@ -38,7 +38,7 @@ export const HUDWidget = ({
     onScaleChange,
     onReset,
     hasAccess = true,
-    isServerDisabled = false,
+    disabled,
     className,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
@@ -212,10 +212,7 @@ export const HUDWidget = ({
     const displayScale = localScale ?? scale;
 
     // Hidden state: not visible and not in edit mode, OR server disabled
-    const isHidden = isServerDisabled || (!visible && !editMode);
-
-    // Don't render at all if server disabled
-    if (isServerDisabled) return null;
+    const isHidden = !visible && !editMode;
 
     return (
         <div
@@ -237,7 +234,7 @@ export const HUDWidget = ({
                 // Round scale to avoid subpixel rendering issues
                 transform: `scale(${Math.round(displayScale * 100) / 100})`,
                 transformOrigin: "top left",
-                opacity: visible || (editMode && hasAccess) ? 1 : 0,
+                opacity: !disabled && (visible || (editMode && hasAccess)) ? 1 : 0,
                 // Hide via visibility instead of unmounting
                 visibility: isHidden ? "hidden" : "visible",
                 pointerEvents: isHidden ? "none" : "auto",

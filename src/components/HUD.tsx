@@ -175,11 +175,6 @@ export const HUD = () => {
     const [isDemoMode] = useState(!isNuiEnvironment());
     const [editMenuOpen, setEditMenuOpen] = useState(false);
 
-    // Helper to check if a widget is disabled
-    const isWidgetDisabled = (widgetId: string): boolean => {
-        return disabledWidgets[widgetId as WidgetType] === true;
-    };
-
     const {
         widgets,
         editMode,
@@ -202,6 +197,10 @@ export const HUD = () => {
         getWidget,
         distributeWidgets,
     } = useHUDLayout();
+
+    const isWidgetDisabled = (widgetId: string): boolean => {
+        return disabledWidgets[widgetId as WidgetType] === true;
+    };
 
     const { t, isLoaded: isLanguageLoaded } = useTranslation();
 
@@ -758,7 +757,7 @@ export const HUD = () => {
                                     <Switch
                                         checked={teamChatState.hasAccess}
                                         onCheckedChange={(checked) =>
-                                            setTeamChatState((prev) => ({ ...prev, hasAccess: checked }))
+                                            setTeamChatState((prev) => ({ ...prev, disabled: checked }))
                                         }
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
@@ -783,13 +782,12 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("notifications");
                 if (!widget) return null;
-                if (isWidgetDisabled("notifications")) return null;
 
                 const isDeadOverlay = deathState.isDead && !editMode;
 
                 return (
                     <HUDWidget
-                        id="notifications"
+                        id={widget.id}
                         position={isDeadOverlay ? { x: 20, y: 20 } : widget.position}
                         visible={widget.visible}
                         scale={widget.scale}
@@ -799,6 +797,7 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onScaleChange={updateWidgetScale}
                         onReset={(id) => resetWidget(id, isWidgetDisabled)}
+                        disabled={isWidgetDisabled(widget.id)}
                         className={isDeadOverlay ? "z-50" : ""}>
                         <NotificationContainer
                             notifications={displayedNotifications}
@@ -815,9 +814,6 @@ export const HUD = () => {
 
                 const value = hudState[type] ?? 100;
 
-                // Server-disabled widgets are always hidden, even in edit mode
-                if (isWidgetDisabled(type)) return null;
-
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
                 const isVisible = baseVisible;
 
@@ -828,6 +824,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <StatusWidget
                             type={type}
@@ -842,16 +839,17 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("money");
                 if (!widget) return null;
-                if (isWidgetDisabled("money")) return null;
 
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+                console.log(!isWidgetDisabled(widget.id));
 
                 return (
                     <HUDWidget
-                        id="money"
+                        id={widget.id}
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <MoneyWidget
                             money={moneyState}
@@ -865,16 +863,16 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("clock");
                 if (!widget) return null;
-                if (isWidgetDisabled("clock")) return null;
 
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
 
                 return (
                     <HUDWidget
-                        id="clock"
+                        id={widget.id}
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <ClockWidget />
                     </HUDWidget>
@@ -885,7 +883,6 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("voice");
                 if (!widget) return null;
-                if (isWidgetDisabled("voice")) return null;
 
                 const baseVisible = editMode ? true : !deathState.isDead;
                 const voiceAvailable = isDemoMode || isVoiceEnabled;
@@ -893,10 +890,11 @@ export const HUD = () => {
 
                 return (
                     <HUDWidget
-                        id="voice"
+                        id={widget.id}
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <VoiceWidget voice={voiceState} />
                     </HUDWidget>
@@ -907,7 +905,6 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("radio");
                 if (!widget) return null;
-                if (isWidgetDisabled("radio")) return null;
 
                 const baseVisible = editMode ? true : !deathState.isDead;
                 const voiceAvailable = isDemoMode || isVoiceEnabled;
@@ -919,10 +916,11 @@ export const HUD = () => {
 
                 return (
                     <HUDWidget
-                        id="radio"
+                        id={widget.id}
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <RadioWidget radio={radioData} />
                     </HUDWidget>
@@ -933,16 +931,16 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("location");
                 if (!widget) return null;
-                if (isWidgetDisabled("location")) return null;
 
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
 
                 return (
                     <HUDWidget
-                        id="location"
+                        id={widget.id}
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <LocationWidget
                             location={locationState}
@@ -956,17 +954,17 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("compass");
                 if (!widget) return null;
-                if (isWidgetDisabled("compass")) return null;
 
                 const showCompass = locationState.heading != undefined || editMode;
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead) && showCompass;
 
                 return (
                     <HUDWidget
-                        id="compass"
+                        id={widget.id}
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <CompassWidget heading={locationState.heading} />
                     </HUDWidget>
@@ -977,16 +975,16 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("vehiclename");
                 if (!widget) return null;
-                if (isWidgetDisabled("vehiclename")) return null;
 
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
 
                 return (
                     <HUDWidget
-                        id="vehiclename"
+                        id={widget.id}
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <VehicleNameWidget
                             vehicleType={editMode ? speedometerType : vehicleState.vehicleType}
@@ -1004,14 +1002,13 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("speedometer");
                 if (!widget) return null;
-                if (isWidgetDisabled("speedometer")) return null;
 
                 const baseVisible = editMode ? true : !deathState.isDead;
                 const isVisible = widget.visible && baseVisible && (vehicleState.inVehicle || editMode);
 
                 return (
                     <HUDWidget
-                        id="speedometer"
+                        id={widget.id}
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
@@ -1021,7 +1018,8 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
                         onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget("speedometer", isWidgetDisabled)}>
+                        onReset={() => resetWidget("speedometer", isWidgetDisabled)}
+                        disabled={isWidgetDisabled(widget.id)}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
@@ -1034,16 +1032,16 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("chat");
                 if (!widget) return null;
-                if (isWidgetDisabled("chat")) return null;
 
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
 
                 return (
                     <HUDWidget
-                        id="chat"
+                        id={widget.id}
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <ChatWidget
                             chat={chatState}
@@ -1086,7 +1084,6 @@ export const HUD = () => {
             {(() => {
                 const widget = getWidget("teamchat");
                 if (!widget) return null;
-                if (isWidgetDisabled("teamchat")) return null;
 
                 const hasTeamAccess = teamChatState.hasAccess;
                 const baseVisible = hasTeamAccess && (editMode || !deathState.isDead);
@@ -1094,11 +1091,12 @@ export const HUD = () => {
 
                 return (
                     <HUDWidget
-                        id="teamchat"
+                        id={widget.id}
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
                         hasAccess={hasTeamAccess}
+                        disabled={isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <TeamChatWidget
                             teamChat={teamChatState}
