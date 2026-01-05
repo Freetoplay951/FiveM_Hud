@@ -8,16 +8,15 @@ export interface StatusWidgetValues {
     oxygen?: number;
 }
 
-export interface StatusWidgetFlags {
-    hasHunger?: boolean;
-    hasThirst?: boolean;
-    hasStress?: boolean;
-    hasStamina?: boolean;
-    hasArmor?: boolean;
-    showOxygen?: boolean;
-}
+import { WidgetType } from "./widget";
 
-export type StatusWidgetState = StatusWidgetValues & StatusWidgetFlags;
+// Widgets that are disabled (default is enabled)
+// Example: { thirst: true, hunger: true } means thirst and hunger are disabled
+export type DisabledWidgets = Partial<Record<WidgetType, boolean>>;
+
+export interface StatusWidgetState extends StatusWidgetValues {
+    disabledWidgets?: DisabledWidgets;
+}
 
 export type VehicleType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
 

@@ -27,16 +27,17 @@ local function refreshStatusIcons()
     -- Armor
     local armor = GetPedArmour(ped)
     
-    -- Status Daten mit Framework-Flags
+    -- Status Daten mit disabledWidgets (default: all enabled)
     local statusData = {
         health = healthPercent,
         armor = armor,
-        hasArmor = true, -- Always available
-        hasStamina = Config.EnableStamina or false,
-        hasHunger = false,
-        hasThirst = false,
-        hasStress = false
+        disabledWidgets = {}
     }
+    
+    -- Disable widgets based on config (only add if disabled)
+    if not Config.EnableStamina then
+        statusData.disabledWidgets.stamina = true
+    end
     
     -- ================================================================
     -- ESX STATUS
@@ -51,18 +52,27 @@ local function refreshStatusIcons()
                     local hungerStatus = status:getStatus('hunger')
                     if hungerStatus then
                         statusData.hunger = hungerStatus.percent or 100
-                        statusData.hasHunger = true
+                    else
+                        statusData.disabledWidgets.hunger = true
                     end
+                else
+                    statusData.disabledWidgets.hunger = true
                 end
                 
                 if Config.EnableThirst then
                     local thirstStatus = status:getStatus('thirst')
                     if thirstStatus then
                         statusData.thirst = thirstStatus.percent or 100
-                        statusData.hasThirst = true
+                    else
+                        statusData.disabledWidgets.thirst = true
                     end
+                else
+                    statusData.disabledWidgets.thirst = true
                 end
             end)
+        else
+            statusData.disabledWidgets.hunger = true
+            statusData.disabledWidgets.thirst = true
         end
     end
     
@@ -75,16 +85,23 @@ local function refreshStatusIcons()
         if PlayerData and PlayerData.metadata then
             if Config.EnableHunger then
                 statusData.hunger = PlayerData.metadata.hunger or 100
-                statusData.hasHunger = true
+            else
+                statusData.disabledWidgets.hunger = true
             end
             if Config.EnableThirst then
                 statusData.thirst = PlayerData.metadata.thirst or 100
-                statusData.hasThirst = true
+            else
+                statusData.disabledWidgets.thirst = true
             end
             if Config.EnableStress then
                 statusData.stress = PlayerData.metadata.stress or 0
-                statusData.hasStress = true
+            else
+                statusData.disabledWidgets.stress = true
             end
+        else
+            statusData.disabledWidgets.hunger = true
+            statusData.disabledWidgets.thirst = true
+            statusData.disabledWidgets.stress = true
         end
     end
     
@@ -128,20 +145,22 @@ local function refreshStatusIcons()
     if Config.EnableOxygen then
         local isUnderwater = IsPedSwimmingUnderWater(ped)
         local isInWater = IsPedSwimming(ped)
-         if isUnderwater then
+        if isUnderwater then
             local remainingAir = GetPlayerUnderwaterTimeRemaining(PlayerId())
             local maxAir = 10.0 -- FiveM Standard
-             local oxygen = (remainingAir / maxAir) * 100
+            local oxygen = (remainingAir / maxAir) * 100
             statusData.oxygen = math.floor(math.max(0, math.min(100, oxygen)))
-            statusData.showOxygen = true
+            statusData.disabledWidgets.oxygen = false
         elseif isInWater then
             statusData.oxygen = 100
-            statusData.showOxygen = true
+            statusData.disabledWidgets.oxygen = false
         else
-            -- Nicht im Wasser - Widget ausblenden
+            -- Not in water - hide widget
             statusData.oxygen = 100
-            statusData.showOxygen = false
+            statusData.disabledWidgets.oxygen = true
         end
+    else
+        statusData.disabledWidgets.oxygen = true
     end
     
     -- Status an NUI senden
