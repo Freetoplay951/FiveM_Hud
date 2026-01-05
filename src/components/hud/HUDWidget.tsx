@@ -16,6 +16,7 @@ interface HUDWidgetProps {
     onVisibilityToggle?: (id: string) => void;
     onScaleChange?: (id: string, scale: number) => void;
     onReset?: (id: string) => void;
+    hasAccess?: boolean;
     className?: string;
 }
 
@@ -35,6 +36,7 @@ export const HUDWidget = ({
     onVisibilityToggle,
     onScaleChange,
     onReset,
+    hasAccess = true,
     className,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
@@ -230,7 +232,7 @@ export const HUDWidget = ({
                 // Round scale to avoid subpixel rendering issues
                 transform: `scale(${Math.round(displayScale * 100) / 100})`,
                 transformOrigin: "top left",
-                opacity: visible || editMode ? 1 : 0,
+                opacity: visible || (editMode && hasAccess) ? 1 : 0,
                 // Hide via visibility instead of unmounting
                 visibility: isHidden ? "hidden" : "visible",
                 pointerEvents: isHidden ? "none" : "auto",

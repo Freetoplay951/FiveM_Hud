@@ -1086,8 +1086,8 @@ export const HUD = () => {
                 const widget = getWidget("teamchat");
                 if (!widget) return null;
 
-                const hasTeamAccess = isDemoMode || teamChatState.hasAccess;
-                const baseVisible = editMode ? hasTeamAccess : (!deathState.isDead && hasTeamAccess);
+                const hasTeamAccess = teamChatState.hasAccess;
+                const baseVisible = hasTeamAccess && (editMode || !deathState.isDead);
                 const isVisible = widget.visible && baseVisible;
 
                 return (
@@ -1096,6 +1096,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
+                        hasAccess={hasTeamAccess}
                         {...widgetProps}>
                         <TeamChatWidget
                             teamChat={teamChatState}
