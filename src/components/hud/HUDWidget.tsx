@@ -17,6 +17,7 @@ interface HUDWidgetProps {
     onScaleChange?: (id: string, scale: number) => void;
     onReset?: (id: string) => void;
     hasAccess?: boolean;
+    isServerDisabled?: boolean; // Widget disabled by server - completely hidden
     className?: string;
 }
 
@@ -37,6 +38,7 @@ export const HUDWidget = ({
     onScaleChange,
     onReset,
     hasAccess = true,
+    isServerDisabled = false,
     className,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
@@ -209,8 +211,11 @@ export const HUDWidget = ({
     const displayPosition = localPosition ?? position;
     const displayScale = localScale ?? scale;
 
-    // Hidden state: not visible and not in edit mode
-    const isHidden = !visible && !editMode;
+    // Hidden state: not visible and not in edit mode, OR server disabled
+    const isHidden = isServerDisabled || (!visible && !editMode);
+
+    // Don't render at all if server disabled
+    if (isServerDisabled) return null;
 
     return (
         <div
