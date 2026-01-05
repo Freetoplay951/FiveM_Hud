@@ -227,9 +227,8 @@ export const HUD = () => {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     // Distribute widgets to their correct positions via DOM
-                    // Pass hudState flags so disabled widgets are skipped in position calc
                     if (!widgetsDistributed) {
-                        distributeWidgets(hudState.disabledWidgets ?? {});
+                        distributeWidgets();
                     }
 
                     console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
@@ -644,8 +643,6 @@ export const HUD = () => {
         };
     }, [editMode, isDemoMode, success, error, warning, info]);
 
-    const disabledWidgets = hudState.disabledWidgets ?? {};
-
     const widgetProps = {
         editMode,
         snapToGrid,
@@ -653,7 +650,7 @@ export const HUD = () => {
         onPositionChange: updateWidgetPosition,
         onVisibilityToggle: toggleWidgetVisibility,
         onScaleChange: updateWidgetScale,
-        onReset: (id: string) => resetWidget(id, disabledWidgets),
+        onReset: (id: string) => resetWidget(id),
     };
 
     const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
@@ -711,7 +708,7 @@ export const HUD = () => {
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={setMinimapShape}
-                        onReset={() => resetLayout(disabledWidgets)}
+                        onReset={() => resetLayout()}
                         onExitEditMode={exitEditMode}
                     />
                 </Popover>
@@ -802,16 +799,6 @@ export const HUD = () => {
                 const value = hudState[type] ?? 100;
 
                 let isVisible = widget.visible && (editMode ? true : !deathState.isDead);
-
-                // Check if widget is disabled via disabledWidgets
-                if (!isDemoMode && isVisible && hudState.disabledWidgets?.[type]) {
-                    isVisible = false;
-                }
-
-                // Oxygen: also check disabledWidgets
-                if (type === "oxygen" && !editMode && hudState.disabledWidgets?.oxygen) {
-                    isVisible = false;
-                }
 
                 return (
                     <HUDWidget
@@ -1005,7 +992,7 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
                         onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget("speedometer", disabledWidgets)}>
+                        onReset={() => resetWidget("speedometer")}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
