@@ -841,7 +841,6 @@ export const HUD = () => {
                 if (!widget) return null;
 
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
-                console.log(!isWidgetDisabled(widget.id));
 
                 return (
                     <HUDWidget
