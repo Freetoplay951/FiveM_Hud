@@ -1,4 +1,3 @@
-import { DisabledWidgets } from "@/types/hud";
 import { WidgetPosition } from "@/types/widget";
 
 export interface WidgetSize {
@@ -39,11 +38,9 @@ export function resolveDefaultPositions(
         position: (
             id: string,
             element: HTMLElement | null,
-            disabledWidgets: DisabledWidgets | undefined,
             resolver: PositionResolver
         ) => WidgetPosition;
-    }>,
-    disabledWidgets?: DisabledWidgets
+    }>
 ): Map<string, WidgetRect> {
     const resolvedRects = new Map<string, WidgetRect>();
 
@@ -73,7 +70,7 @@ export function resolveDefaultPositions(
         const scale = config.scale ?? 1;
 
         // Compute position using resolver (which has access to previously computed rects)
-        const pos = config.position(config.id, element, disabledWidgets, resolver);
+        const pos = config.position(config.id, element, resolver);
 
         // Store the full rect for this widget
         const rect: WidgetRect = {
