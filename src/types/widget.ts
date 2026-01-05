@@ -105,7 +105,7 @@ const getStatusWidgetPosition = (
 };
 
 export const getDefaultWidgets = (): WidgetConfig[] => {
-    const STATUS_START_X = 200;
+    const STATUS_START_X = 200 + GAP;
 
     return [
         // === Independent widgets (no dependencies) ===
