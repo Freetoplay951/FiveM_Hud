@@ -757,7 +757,7 @@ export const HUD = () => {
                                     <Switch
                                         checked={teamChatState.hasAccess}
                                         onCheckedChange={(checked) =>
-                                            setTeamChatState((prev) => ({ ...prev, disabled: checked }))
+                                            setTeamChatState((prev) => ({ ...prev, hasAccess: checked }))
                                         }
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
