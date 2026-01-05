@@ -229,7 +229,7 @@ export const HUD = () => {
                     // Distribute widgets to their correct positions via DOM
                     // Pass hudState flags so disabled widgets are skipped in position calc
                     if (!widgetsDistributed) {
-                        distributeWidgets(hudState.disabledWidgets);
+                        distributeWidgets(hudState.disabledWidgets ?? {});
                     }
 
                     console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
@@ -644,7 +644,7 @@ export const HUD = () => {
         };
     }, [editMode, isDemoMode, success, error, warning, info]);
 
-    const getDisabledWidgets = () => hudState.disabledWidgets ?? {};
+    const disabledWidgets = hudState.disabledWidgets ?? {};
 
     const widgetProps = {
         editMode,
@@ -653,7 +653,7 @@ export const HUD = () => {
         onPositionChange: updateWidgetPosition,
         onVisibilityToggle: toggleWidgetVisibility,
         onScaleChange: updateWidgetScale,
-        onReset: (id: string) => resetWidget(id, getDisabledWidgets()),
+        onReset: (id: string) => resetWidget(id, disabledWidgets),
     };
 
     const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
@@ -711,7 +711,7 @@ export const HUD = () => {
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={setMinimapShape}
-                        onReset={() => resetLayout(getDisabledWidgets())}
+                        onReset={() => resetLayout(disabledWidgets)}
                         onExitEditMode={exitEditMode}
                     />
                 </Popover>
@@ -1005,7 +1005,7 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
                         onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget("speedometer", getDisabledWidgets())}>
+                        onReset={() => resetWidget("speedometer", disabledWidgets)}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
