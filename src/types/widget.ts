@@ -1,5 +1,5 @@
 import { PositionResolver } from "@/lib/widgetPositionResolver";
-import { StatusWidgetFlags } from "./hud";
+import { DisabledWidgets } from "./hud";
 
 export interface WidgetPosition {
     x: number;
@@ -9,7 +9,7 @@ export interface WidgetPosition {
 export type WidgetPositionFunction = (
     id: string,
     widgetElement: HTMLElement | null,
-    context: StatusWidgetFlags | undefined,
+    disabledWidgets: DisabledWidgets | undefined,
     resolver: PositionResolver
 ) => WidgetPosition;
 
@@ -71,26 +71,10 @@ export const REFERENCE_HEIGHT = 1080;
 const MARGIN = 20;
 const GAP = 10;
 
-// Helper to check if a status widget is enabled based on server flags
-const isStatusWidgetEnabled = (widgetId: string, context?: StatusWidgetFlags): boolean => {
-    if (!context) return true;
-
-    switch (widgetId) {
-        case "armor":
-            return context.hasArmor !== false;
-        case "hunger":
-            return context.hasHunger !== false;
-        case "thirst":
-            return context.hasThirst !== false;
-        case "stamina":
-            return context.hasStamina !== false;
-        case "stress":
-            return context.hasStress !== false;
-        case "oxygen":
-            return context.showOxygen !== false;
-        default:
-            return true;
-    }
+// Helper to check if a widget is enabled (default: true, disabled if in disabledWidgets)
+const isWidgetEnabled = (widgetId: string, disabledWidgets?: DisabledWidgets): boolean => {
+    if (!disabledWidgets) return true;
+    return disabledWidgets[widgetId as WidgetType] !== true;
 };
 
 // Helper to calculate status widget positions in a chain, skipping disabled widgets
@@ -98,7 +82,7 @@ const getStatusWidgetPosition = (
     widgetId: string,
     widgetElement: HTMLElement | null,
     startX: number,
-    context: StatusWidgetFlags | undefined,
+    disabledWidgets: DisabledWidgets | undefined,
     resolver: PositionResolver
 ): WidgetPosition => {
     const statusWidgetIds = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
@@ -110,7 +94,7 @@ const getStatusWidgetPosition = (
     for (let i = 0; i < currentIndex; i++) {
         const prevWidgetId = statusWidgetIds[i];
 
-        if (!isStatusWidgetEnabled(prevWidgetId, context)) {
+        if (!isWidgetEnabled(prevWidgetId, disabledWidgets)) {
             continue;
         }
 
@@ -136,7 +120,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "compass",
             type: "compass",
-            position: (_id, _el, _ctx, resolver) => {
+            position: (_id, _el, _disabled, resolver) => {
                 return { x: MARGIN, y: MARGIN };
             },
             visible: true,
@@ -145,7 +129,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "clock",
             type: "clock",
-            position: (_id, el, _ctx, resolver) => {
+            position: (_id, el, _disabled, resolver) => {
                 const width = el?.offsetWidth ?? 0;
                 return { x: resolver.screen.width / 2 - width / 2, y: MARGIN };
             },
@@ -155,7 +139,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "money",
             type: "money",
-            position: (_id, el, _ctx, resolver) => {
+            position: (_id, el, _disabled, resolver) => {
                 const width = el?.offsetWidth ?? 0;
                 return { x: resolver.screen.width - MARGIN - width, y: MARGIN };
             },
@@ -165,7 +149,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "notifications",
             type: "notifications",
-            position: (_id, _el, _ctx, resolver) => {
+            position: (_id, _el, _disabled, resolver) => {
                 return { x: MARGIN, y: resolver.screen.height / 4 };
             },
             visible: true,
@@ -174,7 +158,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "location",
             type: "location",
-            position: (_id, el, _ctx, resolver) => {
+            position: (_id, el, _disabled, resolver) => {
                 const height = el?.offsetHeight ?? 0;
                 return { x: MARGIN, y: resolver.screen.height - MARGIN - height };
             },
@@ -184,7 +168,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "voice",
             type: "voice",
-            position: (_id, el, _ctx, resolver) => {
+            position: (_id, el, _disabled, resolver) => {
                 const width = el?.offsetWidth ?? 0;
                 const height = el?.offsetHeight ?? 0;
                 return {
@@ -198,7 +182,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "speedometer",
             type: "speedometer",
-            position: (_id, el, _ctx, resolver) => {
+            position: (_id, el, _disabled, resolver) => {
                 const width = el?.offsetWidth ?? 0;
                 const height = el?.offsetHeight ?? 0;
                 return {
@@ -214,7 +198,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "vehiclename",
             type: "vehiclename",
-            position: (_id, _el, _ctx, resolver) => {
+            position: (_id, _el, _disabled, resolver) => {
                 const compassRect = resolver.getWidgetRect("compass");
                 const x = compassRect ? compassRect.right + GAP : MARGIN;
                 return { x, y: MARGIN };
@@ -225,7 +209,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "teamchat",
             type: "teamchat",
-            position: (_id, el, _ctx, resolver) => {
+            position: (_id, el, _disabled, resolver) => {
                 const moneyRect = resolver.getWidgetRect("money");
                 const width = el?.offsetWidth ?? 0;
                 const x = moneyRect ? moneyRect.x - GAP - width : resolver.screen.width - MARGIN - width;
@@ -237,7 +221,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "radio",
             type: "radio",
-            position: (_id, el, _ctx, resolver) => {
+            position: (_id, el, _disabled, resolver) => {
                 const moneyRect = resolver.getWidgetRect("money");
                 const width = el?.offsetWidth ?? 0;
                 const scale = 0.8;
@@ -262,7 +246,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "chat",
             type: "chat",
-            position: (_id, _el, _ctx, resolver) => {
+            position: (_id, _el, _disabled, resolver) => {
                 const notifyRect = resolver.getWidgetRect("notifications");
                 const y = notifyRect ? notifyRect.bottom + GAP * 2 : resolver.screen.height / 4;
                 return { x: MARGIN, y };
@@ -275,49 +259,49 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "health",
             type: "health",
-            position: (_id, el, ctx, resolver) => getStatusWidgetPosition("health", el, STATUS_START_X, ctx, resolver),
+            position: (_id, el, disabled, resolver) => getStatusWidgetPosition("health", el, STATUS_START_X, disabled, resolver),
             visible: true,
             scale: 1,
         },
         {
             id: "armor",
             type: "armor",
-            position: (_id, el, ctx, resolver) => getStatusWidgetPosition("armor", el, STATUS_START_X, ctx, resolver),
+            position: (_id, el, disabled, resolver) => getStatusWidgetPosition("armor", el, STATUS_START_X, disabled, resolver),
             visible: true,
             scale: 1,
         },
         {
             id: "hunger",
             type: "hunger",
-            position: (_id, el, ctx, resolver) => getStatusWidgetPosition("hunger", el, STATUS_START_X, ctx, resolver),
+            position: (_id, el, disabled, resolver) => getStatusWidgetPosition("hunger", el, STATUS_START_X, disabled, resolver),
             visible: true,
             scale: 1,
         },
         {
             id: "thirst",
             type: "thirst",
-            position: (_id, el, ctx, resolver) => getStatusWidgetPosition("thirst", el, STATUS_START_X, ctx, resolver),
+            position: (_id, el, disabled, resolver) => getStatusWidgetPosition("thirst", el, STATUS_START_X, disabled, resolver),
             visible: true,
             scale: 1,
         },
         {
             id: "stamina",
             type: "stamina",
-            position: (_id, el, ctx, resolver) => getStatusWidgetPosition("stamina", el, STATUS_START_X, ctx, resolver),
+            position: (_id, el, disabled, resolver) => getStatusWidgetPosition("stamina", el, STATUS_START_X, disabled, resolver),
             visible: true,
             scale: 1,
         },
         {
             id: "stress",
             type: "stress",
-            position: (_id, el, ctx, resolver) => getStatusWidgetPosition("stress", el, STATUS_START_X, ctx, resolver),
+            position: (_id, el, disabled, resolver) => getStatusWidgetPosition("stress", el, STATUS_START_X, disabled, resolver),
             visible: true,
             scale: 1,
         },
         {
             id: "oxygen",
             type: "oxygen",
-            position: (_id, el, ctx, resolver) => getStatusWidgetPosition("oxygen", el, STATUS_START_X, ctx, resolver),
+            position: (_id, el, disabled, resolver) => getStatusWidgetPosition("oxygen", el, STATUS_START_X, disabled, resolver),
             visible: true,
             scale: 1,
         },

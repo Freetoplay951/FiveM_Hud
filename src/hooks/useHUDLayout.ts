@@ -10,7 +10,7 @@ import {
     getDefaultWidgets,
 } from "@/types/widget";
 import { resolveDefaultPositions } from "@/lib/widgetPositionResolver";
-import { StatusWidgetFlags } from "@/types/hud";
+import { DisabledWidgets } from "@/types/hud";
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
@@ -85,8 +85,8 @@ export const useHUDLayout = () => {
     }, [state]);
 
     // Distribute widgets using the resolver - computes all default positions in order
-    const distributeWidgets = useCallback((context?: StatusWidgetFlags) => {
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
+    const distributeWidgets = useCallback((disabledWidgets?: DisabledWidgets) => {
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, disabledWidgets);
 
         setState((prev) => ({
             ...prev,
@@ -148,8 +148,8 @@ export const useHUDLayout = () => {
         sendNuiCallback("onMinimapShapeChange", { shape });
     }, []);
 
-    const resetLayout = useCallback((context?: StatusWidgetFlags) => {
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
+    const resetLayout = useCallback((disabledWidgets?: DisabledWidgets) => {
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, disabledWidgets);
 
         const resetWidgets = defaultWidgetConfigs.map((w) => {
             const rect = resolvedRects.get(w.id);
@@ -171,11 +171,11 @@ export const useHUDLayout = () => {
         }));
     }, []);
 
-    const resetWidget = useCallback((id: string, context?: StatusWidgetFlags) => {
+    const resetWidget = useCallback((id: string, disabledWidgets?: DisabledWidgets) => {
         const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
         if (!defaultWidget) return;
 
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, context);
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, disabledWidgets);
         const rect = resolvedRects.get(id);
 
         setState((prev) => ({
