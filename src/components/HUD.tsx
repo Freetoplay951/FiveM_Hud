@@ -778,11 +778,8 @@ export const HUD = () => {
                 </div>
             )}
 
-            {/* Only render widgets when ready (positioned) - skip check in demo mode */}
-            {(isDemoMode || hasSignaledReady) && (
-                <>
-                    {/* Notifications */}
-                    {(() => {
+            {/* Notifications */}
+            {(() => {
                 const widget = getWidget("notifications");
                 if (!widget) return null;
 
@@ -800,7 +797,7 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onScaleChange={updateWidgetScale}
                         onReset={(id) => resetWidget(id, isWidgetDisabled)}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         className={isDeadOverlay ? "z-50" : ""}>
                         <NotificationContainer
                             notifications={displayedNotifications}
@@ -827,7 +824,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <StatusWidget
                             type={type}
@@ -851,7 +848,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <MoneyWidget
                             money={moneyState}
@@ -874,7 +871,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <ClockWidget />
                     </HUDWidget>
@@ -896,7 +893,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <VoiceWidget voice={voiceState} />
                     </HUDWidget>
@@ -922,7 +919,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={isVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <RadioWidget radio={radioData} />
                     </HUDWidget>
@@ -942,7 +939,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <LocationWidget
                             location={locationState}
@@ -966,7 +963,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <CompassWidget heading={locationState.heading} />
                     </HUDWidget>
@@ -986,7 +983,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <VehicleNameWidget
                             vehicleType={editMode ? speedometerType : vehicleState.vehicleType}
@@ -1021,7 +1018,7 @@ export const HUD = () => {
                         onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
                         onScaleChange={updateWidgetScale}
                         onReset={() => resetWidget("speedometer", isWidgetDisabled)}
-                        disabled={isWidgetDisabled(widget.id)}>
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
@@ -1043,7 +1040,7 @@ export const HUD = () => {
                         position={widget.position}
                         visible={baseVisible}
                         scale={widget.scale}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <ChatWidget
                             chat={chatState}
@@ -1098,7 +1095,7 @@ export const HUD = () => {
                         visible={isVisible}
                         scale={widget.scale}
                         hasAccess={hasTeamAccess}
-                        disabled={isWidgetDisabled(widget.id)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
                         <TeamChatWidget
                             teamChat={teamChatState}
@@ -1135,8 +1132,6 @@ export const HUD = () => {
                     </HUDWidget>
                 );
             })()}
-                </>
-            )}
 
             {/* Fullscreen Death Screen - rendered outside widget system */}
             {!editMode && (
