@@ -81,11 +81,17 @@ const getStatusWidgetPosition = (
 
     let x = startX;
 
-    // Calculate x by summing widths of all previous status widgets
+    // Calculate x by summing widths of all previous ENABLED status widgets
     for (let i = 0; i < currentIndex; i++) {
         const prevWidgetId = statusWidgetIds[i];
+        
+        // Skip disabled widgets - they don't take up space
+        if (resolver.isWidgetDisabled?.(prevWidgetId)) {
+            continue;
+        }
+        
         const prevRect = resolver.getWidgetRect(prevWidgetId);
-        if (prevRect) {
+        if (prevRect && prevRect.width > 0) {
             x = prevRect.right + GAP;
         }
     }

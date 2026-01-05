@@ -84,8 +84,8 @@ export const useHUDLayout = () => {
     }, [state]);
 
     // Distribute widgets using the resolver - computes all default positions in order
-    const distributeWidgets = useCallback(() => {
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs);
+    const distributeWidgets = useCallback((isWidgetDisabled?: (id: string) => boolean) => {
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
 
         setState((prev) => ({
             ...prev,
@@ -147,8 +147,8 @@ export const useHUDLayout = () => {
         sendNuiCallback("onMinimapShapeChange", { shape });
     }, []);
 
-    const resetLayout = useCallback(() => {
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs);
+    const resetLayout = useCallback((isWidgetDisabled?: (id: string) => boolean) => {
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
 
         const resetWidgets = defaultWidgetConfigs.map((w) => {
             const rect = resolvedRects.get(w.id);
@@ -170,11 +170,11 @@ export const useHUDLayout = () => {
         }));
     }, []);
 
-    const resetWidget = useCallback((id: string) => {
+    const resetWidget = useCallback((id: string, isWidgetDisabled?: (id: string) => boolean) => {
         const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
         if (!defaultWidget) return;
 
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs);
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
         const rect = resolvedRects.get(id);
 
         setState((prev) => ({

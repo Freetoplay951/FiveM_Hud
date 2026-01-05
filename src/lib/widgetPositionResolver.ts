@@ -25,6 +25,8 @@ export interface PositionResolver {
     getWidgetSize: (id: string) => WidgetSize;
     /** Get screen dimensions */
     screen: { width: number; height: number };
+    /** Check if a widget is disabled by server */
+    isWidgetDisabled?: (id: string) => boolean;
 }
 
 /**
@@ -40,7 +42,8 @@ export function resolveDefaultPositions(
             element: HTMLElement | null,
             resolver: PositionResolver
         ) => WidgetPosition;
-    }>
+    }>,
+    isWidgetDisabled?: (id: string) => boolean
 ): Map<string, WidgetRect> {
     const resolvedRects = new Map<string, WidgetRect>();
 
@@ -61,6 +64,7 @@ export function resolveDefaultPositions(
         getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
         getWidgetSize,
         screen,
+        isWidgetDisabled,
     };
 
     // Process widgets in order - earlier widgets are resolved first
