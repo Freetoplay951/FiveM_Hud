@@ -169,8 +169,8 @@ export const HUD = () => {
     const [editMenuOpen, setEditMenuOpen] = useState(false);
 
     // Helper to check if a widget is disabled
-    const isWidgetDisabled = (widgetId: WidgetType): boolean => {
-        return disabledWidgets[widgetId] === true;
+    const isWidgetDisabled = (widgetId: string): boolean => {
+        return disabledWidgets[widgetId as WidgetType] === true;
     };
 
     const {
@@ -236,7 +236,7 @@ export const HUD = () => {
                 requestAnimationFrame(() => {
                     // Distribute widgets to their correct positions via DOM
                     if (!widgetsDistributed) {
-                        distributeWidgets();
+                        distributeWidgets(isWidgetDisabled);
                     }
 
                     console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
@@ -659,7 +659,7 @@ export const HUD = () => {
         onPositionChange: updateWidgetPosition,
         onVisibilityToggle: toggleWidgetVisibility,
         onScaleChange: updateWidgetScale,
-        onReset: (id: string) => resetWidget(id),
+        onReset: (id: string) => resetWidget(id, isWidgetDisabled),
     };
 
     const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
@@ -717,7 +717,7 @@ export const HUD = () => {
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={setMinimapShape}
-                        onReset={() => resetLayout()}
+                        onReset={() => resetLayout(isWidgetDisabled)}
                         onExitEditMode={exitEditMode}
                     />
                 </Popover>
@@ -807,8 +807,11 @@ export const HUD = () => {
 
                 const value = hudState[type] ?? 100;
 
+                // Server-disabled widgets are always hidden, even in edit mode
+                if (isWidgetDisabled(type)) return null;
+                
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
-                const isVisible = baseVisible && (editMode || !isWidgetDisabled(type));
+                const isVisible = baseVisible;
 
                 return (
                     <HUDWidget
@@ -1007,7 +1010,7 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
                         onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget("speedometer")}>
+                        onReset={() => resetWidget("speedometer", isWidgetDisabled)}>
                         <VehicleHUDFactory
                             vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
                             visible={vehicleState.inVehicle || editMode}
