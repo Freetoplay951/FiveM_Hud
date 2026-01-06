@@ -20,16 +20,22 @@ local function GetClosestReviveLocation()
     local playerCoords = GetEntityCoords(PlayerPedId())
     local closestLocation = nil
     local minimumDistance = math.huge
-    
+
     for _, location in ipairs(Config.ReviveLocations) do
-        local coordsVec4 = location.coords
-        local coords = vec3(coordsVec4.x, coordsVec4.y, coordsVec4.z)
-        local distance = #(coords - playerCoords)
+        local c = location.coords
+        local locVec3 = vec3(c.x, c.y, c.z)
+        local distance = #(locVec3 - playerCoords)
 
         if distance < minimumDistance then
             minimumDistance = distance
-            closestLocation = location
+            closestLocation = vector4(c.x, c.y, c.z, c.w or 0.0)
         end
+    end
+
+    if not closestLocation then
+        local ped = PlayerPedId()
+        local fallback = GetEntityCoords(ped)
+        closestLocation = vector4(fallback.x, fallback.y, fallback.z, GetEntityHeading(ped))
     end
 
     return closestLocation
@@ -61,7 +67,7 @@ function OpenDeathScreen()
     })
     
     if Config and Config.Debug then
-        print('[HUD] Death screen aktiviert, ' .. respawnTime .. ' Sekunden')
+        print('[HUD Death] Death screen aktiviert, ' .. respawnTime .. ' Sekunden')
     end
 end
 
@@ -81,7 +87,7 @@ function CloseDeathScreen()
     })
     
     if Config and Config.Debug then
-        print('[HUD] Death screen closed')
+        print('[HUD Death] Death screen closed')
     end
 end
 
@@ -134,28 +140,61 @@ RegisterNUICallback('deathCallHelp', function(_, cb)
     cb({ success = true })
 end)
 
-RegisterNUICallback('deathRespawn', function(_, cb)
-    local coords = GetClosestReviveLocation()
+local function RespawnPlayer(opts)
     local ped = PlayerPedId()
-    
-    -- Resurrect player
-    if Config and Config.Debug then
-        print('[HUD] Reviving at coords: ' .. json.encode(coords))
+    if not ped or ped == -1 then return false end
+
+    opts = opts or {}
+
+    local x, y, z, w
+    if opts.coords then
+        x, y, z = opts.coords.x, opts.coords.y, opts.coords.z
+        w = opts.coords.w or GetEntityHeading(ped)
+    else
+        local coords = GetEntityCoords(ped)
+        x, y, z = coords.x, coords.y, coords.z
+        w = GetEntityHeading(ped)
     end
-    NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, coords.w, true, false)
-    
-    -- Restore health
-    SetEntityHealth(ped, GetEntityMaxHealth(ped))
+
+    NetworkResurrectLocalPlayer(x, y, z, w, true, false)
+    SetEntityCoordsNoOffset(ped, x, y, z, false, false, false)
+
+    local maxHealth = GetEntityMaxHealth(ped)
+    local health = opts.healAmount
+        and math.min(maxHealth, 100 + opts.healAmount)
+        or maxHealth
+
+    SetEntityHealth(ped, health)
+
     ClearPedBloodDamage(ped)
     ClearPedWetness(ped)
     ResetPedVisibleDamage(ped)
-    
-    -- Trigger framework events
-    TriggerEvent('esx_ambulancejob:respawn')
-    TriggerServerEvent('hud:playerRespawned')
-    
+
+    if opts.triggerEvents then
+        TriggerEvent('esx_ambulancejob:respawn')
+        TriggerServerEvent('hud:playerRespawned')
+    end
+
     CloseDeathScreen()
-    cb({ success = true })
+
+    return true
+end
+
+RegisterNUICallback('deathRespawn', function(_, cb)
+    local spawn = GetClosestReviveLocation()
+
+    if not spawn then
+        print('[HUD Death] ERROR: No valid revive location!')
+        cb({ success = false })
+        return
+    end
+
+    local success = RespawnPlayer({
+        coords = spawn,
+        triggerEvents = true
+    })
+
+    cb({ success = success })
 end)
 
 RegisterNUICallback('deathSyncPosition', function(_, cb)
@@ -180,24 +219,9 @@ end)
 -- ============================================================================
 
 RegisterNetEvent('hud:revivePlayer', function(healAmount)
-    local ped = PlayerPedId()
-    local coords = GetEntityCoords(ped)
-    local heading = GetEntityHeading(ped)
-    
-    -- Resurrect at current position
-    NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, heading, true, false)
-    
-    -- Set health
-    local maxHealth = GetEntityMaxHealth(ped)
-    local newHealth = healAmount and math.min(maxHealth, 100 + healAmount) or maxHealth
-    SetEntityHealth(ped, newHealth)
-    
-    -- Cleanup
-    ClearPedBloodDamage(ped)
-    ClearPedWetness(ped)
-    ResetPedVisibleDamage(ped)
-    
-    CloseDeathScreen()
+    RespawnPlayer({
+        healAmount = healAmount
+    })
 end)
 
 -- ============================================================================
