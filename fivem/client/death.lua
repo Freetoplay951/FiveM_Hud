@@ -37,48 +37,29 @@ function OpenDeathScreen()
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
     
+    local respawnTime = GetEarlyRespawnTime()
+    local bleedoutTime = GetBleedoutTime()
+    
+    -- Send initial activation with timer values - JS handles countdown
     SendNUI("updateDeath", {
         isDead = true,
-        respawnTimer = GetEarlyRespawnTime(),
-        waitTimer = GetBleedoutTime(),
+        respawnTimer = respawnTime,
+        waitTimer = bleedoutTime,
         canCallHelp = true,
         canRespawn = false,
         message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
     })
     
-    -- Start control disable loop
+    -- Control disable loop only
     CreateThread(function()
-        local respawnTime = GetEarlyRespawnTime()
-        local bleedoutTime = GetBleedoutTime()
-        local startTime = GetGameTimer()
-        local lastUpdate = 0
-        
         while deathOpen do
             Wait(0)
             DisableAllControlActions(0)
-            
-            -- Update timers every second
-            local elapsed = math.floor((GetGameTimer() - startTime) / 1000)
-            
-            if elapsed ~= lastUpdate then
-                lastUpdate = elapsed
-                local currentRespawnTimer = math.max(0, respawnTime - elapsed)
-                local currentBleedoutTimer = math.max(0, bleedoutTime - elapsed)
-                
-                SendNUI("updateDeath", {
-                    isDead = true,
-                    respawnTimer = currentRespawnTimer,
-                    waitTimer = currentBleedoutTimer,
-                    canCallHelp = true,
-                    canRespawn = currentRespawnTimer <= 0,
-                    message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
-                })
-            end
         end
     end)
     
     if Config and Config.Debug then
-        print('[HUD] Death screen opened')
+        print('[HUD] Death screen aktiviert, ' .. respawnTime .. ' Sekunden')
     end
 end
 

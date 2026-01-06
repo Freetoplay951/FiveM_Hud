@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skull, Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,11 +16,41 @@ interface FullscreenDeathScreenProps {
 
 export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenProps) => {
     const { t } = useTranslation();
+    const { isDead, respawnTimer: initialRespawnTimer, waitTimer: initialWaitTimer, canCallHelp = true, message } = death;
 
-    const { isDead, respawnTimer, waitTimer, canCallHelp = true, canRespawn = false, message } = death;
+    // Local countdown state
+    const [respawnTimer, setRespawnTimer] = useState(initialRespawnTimer);
+    const [waitTimer, setWaitTimer] = useState(initialWaitTimer);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Reset timers when death state changes (new death event)
+    useEffect(() => {
+        if (isDead && initialRespawnTimer > 0) {
+            setRespawnTimer(initialRespawnTimer);
+            setWaitTimer(initialWaitTimer);
+        }
+    }, [isDead, initialRespawnTimer, initialWaitTimer]);
+
+    // Countdown logic
+    useEffect(() => {
+        if (isDead && visible) {
+            intervalRef.current = setInterval(() => {
+                setRespawnTimer((prev) => Math.max(0, prev - 1));
+                setWaitTimer((prev) => Math.max(0, prev - 1));
+            }, 1000);
+        }
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+    }, [isDead, visible]);
+
+    const canRespawn = respawnTimer <= 0;
     const displayMessage = message || t.death.defaultMessage;
-    const waitProgress = waitTimer > 0 ? ((60 - waitTimer) / 60) * 100 : 100;
+    const waitProgress = initialWaitTimer > 0 ? ((initialWaitTimer - waitTimer) / initialWaitTimer) * 100 : 100;
 
     const handleCallHelp = () => {
         sendNuiCallback("deathCallHelp");
