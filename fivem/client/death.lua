@@ -52,6 +52,43 @@ function OpenDeathScreen()
         message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
     })
     
+    -- Keep player on ground and manage controls
+    CreateThread(function()
+        -- Load and play dead animation
+        if not HasAnimDictLoaded("dead") then
+            RequestAnimDict("dead")
+            while not HasAnimDictLoaded("dead") do
+                Wait(0)
+            end
+        end
+        TaskPlayAnim(ped, "dead", "dead_a", 1.0, 1.0, -1, 1, 0, false, false, false)
+        SetEntityInvincible(ped, true)
+        
+        while deathOpen do
+            Wait(0)
+            
+            -- Disable most controls but allow specific keys
+            DisableAllControlActions(0)
+            
+            -- Enable keyboard input for NUI (E, Enter, F5, etc.)
+            EnableControlAction(0, 46, true)   -- E key (INPUT_INTERACT)
+            EnableControlAction(0, 38, true)   -- E key alternative
+            EnableControlAction(0, 191, true)  -- Enter key (INPUT_ENTER)
+            EnableControlAction(0, 201, true)  -- Enter key alternative
+            EnableControlAction(0, 166, true)  -- F5 key
+            EnableControlAction(0, 167, true)  -- F6 key
+            
+            -- Keep player in dead animation
+            if not IsEntityPlayingAnim(ped, "dead", "dead_a", 3) then
+                TaskPlayAnim(ped, "dead", "dead_a", 1.0, 1.0, -1, 1, 0, false, false, false)
+            end
+        end
+        
+        -- Cleanup when death screen closes
+        ClearPedTasks(ped)
+        SetEntityInvincible(ped, false)
+    end)
+    
     if Config and Config.Debug then
         print('[HUD] Death screen aktiviert, ' .. respawnTime .. ' Sekunden')
     end

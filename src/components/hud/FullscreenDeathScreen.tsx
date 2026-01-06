@@ -51,6 +51,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     const canRespawn = respawnTimer <= 0;
     const displayMessage = message || t.death.defaultMessage;
     const waitProgress = initialWaitTimer > 0 ? ((initialWaitTimer - waitTimer) / initialWaitTimer) * 100 : 100;
+    const isVisible = visible && isDead;
 
     const handleCallHelp = () => {
         sendNuiCallback("deathCallHelp");
@@ -66,7 +67,31 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
         sendNuiCallback("deathSyncPosition");
     };
 
-    const isVisible = visible && isDead;
+    // Keyboard controls for death screen (works in both FiveM and demo mode)
+    useEffect(() => {
+        if (!isVisible) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // E key - Call for help
+            if (e.key.toLowerCase() === "e" && canCallHelp) {
+                e.preventDefault();
+                handleCallHelp();
+            }
+            // Enter key - Respawn
+            if (e.key === "Enter" && canRespawn) {
+                e.preventDefault();
+                handleRespawn();
+            }
+            // F5 key - Sync position
+            if (e.key === "F5") {
+                e.preventDefault();
+                handleSyncPosition();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isVisible, canCallHelp, canRespawn]);
 
     return (
         <AnimatePresence>
