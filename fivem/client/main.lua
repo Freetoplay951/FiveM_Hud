@@ -115,22 +115,33 @@ local function SendInitialData()
     local coords = GetEntityCoords(ped)
     local heading = GetEntityHeading(ped)
     
-    SendNUI('updateDisabledWidgets', Config.DisabledWidgets or {})
+    -- Allow other resources to register their status handlers BEFORE we check support
+    -- This event fires synchronously, so handlers registered here will be available
+    TriggerEvent("hud:registerHandlers")
     
-    -- Status
-    local health = GetEntityHealth(ped)
-    local maxHealth = GetEntityMaxHealth(ped)
-    local healthPercent = math.floor(((health - 100) / (maxHealth - 100)) * 100)
+    -- Small wait to ensure all handlers are registered
+    Wait(100)
     
-    SendNUI('updateHud', {
-        health = math.max(0, math.min(100, healthPercent)),
-        armor = GetPedArmour(ped),
-        hunger = 100,
-        thirst = 100,
-        stamina = 100,
-        stress = 0,
-        oxygen = 100
-    })
+    -- Merge Config.DisabledWidgets with unsupported status widgets
+    local disabledWidgets = Config.DisabledWidgets or {}
+    
+    -- Get unsupported status widgets from status.lua
+    local success, unsupportedWidgets = pcall(function()
+        return exports[GetCurrentResourceName()]:getUnsupportedStatusWidgets()
+    end)
+    
+    if success and unsupportedWidgets then
+        for widgetId, disabled in pairs(unsupportedWidgets) do
+            if disabled and disabledWidgets[widgetId] == nil then
+                disabledWidgets[widgetId] = true
+                if Config.Debug then
+                    print('[HUD] Auto-disabled unsupported widget: ' .. widgetId)
+                end
+            end
+        end
+    end
+    
+    SendNUI('updateDisabledWidgets', disabledWidgets)
     
     -- Location
     local streetHash, crossingHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
@@ -165,6 +176,7 @@ local function SendInitialData()
         blackMoney = 0
     })
     
+    -- Fire hud:loaded AFTER all initial setup
     TriggerEvent("hud:loaded")
     SetHudVisible(true)
     
