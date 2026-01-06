@@ -27,13 +27,13 @@ local function refreshStatusIcons()
     -- Armor
     local armor = GetPedArmour(ped)
     
-    -- Status Daten (nur Werte, keine disabledWidgets mehr hier)
+    -- Status Daten
     local statusData = {
         health = healthPercent,
         armor = armor
     }
     
-    -- Disabled Widgets separat tracken
+    -- Disabled widgeets
     local widgetsToDisable = {}
     
     -- Disable widgets based on config (only add if disabled)
