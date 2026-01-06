@@ -129,11 +129,49 @@ local function IsUnderwater(ped)
 end
 
 -- ============================================================================
+-- SUPPORTED STATUS CACHE
+-- ============================================================================
+
+-- Cache for supported status types (checked once at startup)
+-- Format: { hunger = true/false, thirst = true/false, stress = true/false }
+local supportedStatus = nil
+
+-- Check and cache which status types are supported
+local function CheckSupportedStatus()
+    if supportedStatus then return supportedStatus end
+    
+    local ped = PlayerPedId()
+    supportedStatus = {
+        -- Always supported (FiveM natives)
+        health = true,
+        armor = true,
+        stamina = true,
+        oxygen = true,
+        -- Framework dependent - check once
+        hunger = customStatusHandlers.hunger ~= nil or GetHunger(ped) ~= nil,
+        thirst = customStatusHandlers.thirst ~= nil or GetThirst(ped) ~= nil,
+        stress = customStatusHandlers.stress ~= nil or GetStress(ped) ~= nil,
+    }
+    
+    if Config.Debug then
+        print('[HUD] Supported status types: ' .. json.encode(supportedStatus))
+    end
+    
+    return supportedStatus
+end
+
+-- Invalidate cache (called when custom handler is registered)
+local function InvalidateSupportedStatusCache()
+    supportedStatus = nil
+end
+
+-- ============================================================================
 -- MAIN STATUS UPDATE FUNCTION
 -- ============================================================================
 
 local function refreshStatusIcons()
     local ped = PlayerPedId()
+    local supported = CheckSupportedStatus()
     local statusData = {}
     
     -- Health (always available via FiveM native)
@@ -150,18 +188,22 @@ local function refreshStatusIcons()
         statusData.armor = GetArmor(ped)
     end
     
-    -- Hunger (framework dependent)
-    if customStatusHandlers.hunger then
-        statusData.hunger = customStatusHandlers.hunger(ped)
-    else
-        statusData.hunger = GetHunger(ped)
+    -- Hunger (only if supported)
+    if supported.hunger then
+        if customStatusHandlers.hunger then
+            statusData.hunger = customStatusHandlers.hunger(ped)
+        else
+            statusData.hunger = GetHunger(ped)
+        end
     end
     
-    -- Thirst (framework dependent)
-    if customStatusHandlers.thirst then
-        statusData.thirst = customStatusHandlers.thirst(ped)
-    else
-        statusData.thirst = GetThirst(ped)
+    -- Thirst (only if supported)
+    if supported.thirst then
+        if customStatusHandlers.thirst then
+            statusData.thirst = customStatusHandlers.thirst(ped)
+        else
+            statusData.thirst = GetThirst(ped)
+        end
     end
     
     -- Stamina (always available via FiveM native)
@@ -171,11 +213,13 @@ local function refreshStatusIcons()
         statusData.stamina = GetStamina(ped)
     end
     
-    -- Stress (framework dependent)
-    if customStatusHandlers.stress then
-        statusData.stress = customStatusHandlers.stress(ped)
-    else
-        statusData.stress = GetStress(ped)
+    -- Stress (only if supported)
+    if supported.stress then
+        if customStatusHandlers.stress then
+            statusData.stress = customStatusHandlers.stress(ped)
+        else
+            statusData.stress = GetStress(ped)
+        end
     end
     
     -- Oxygen (always available via FiveM native, but only shown underwater)
@@ -192,45 +236,17 @@ local function refreshStatusIcons()
 end
 
 -- ============================================================================
--- SUPPORTED STATUS CHECK
+-- SUPPORTED STATUS CHECK (for main.lua)
 -- ============================================================================
 
 -- Returns which status widgets are NOT supported (should be disabled)
 local function GetUnsupportedStatusWidgets()
-    local ped = PlayerPedId()
+    local supported = CheckSupportedStatus()
     local unsupported = {}
     
-    -- Check each status type
-    -- Health and Armor are always supported (FiveM natives)
-    
-    -- Hunger
-    if not customStatusHandlers.hunger then
-        local hunger = GetHunger(ped)
-        if hunger == nil then
-            unsupported.hunger = true
-        end
-    end
-    
-    -- Thirst
-    if not customStatusHandlers.thirst then
-        local thirst = GetThirst(ped)
-        if thirst == nil then
-            unsupported.thirst = true
-        end
-    end
-    
-    -- Stamina is always supported (FiveM native)
-    
-    -- Stress
-    if not customStatusHandlers.stress then
-        local stress = GetStress(ped)
-        if stress == nil then
-            unsupported.stress = true
-        end
-    end
-    
-    -- Oxygen is always supported (FiveM native), but display is conditional
-    -- Don't disable it, just hide when not underwater (handled in UI)
+    if not supported.hunger then unsupported.hunger = true end
+    if not supported.thirst then unsupported.thirst = true end
+    if not supported.stress then unsupported.stress = true end
     
     return unsupported
 end
@@ -274,6 +290,7 @@ end)
 RegisterNetEvent('hud:handleStatus', function(statusType, handler)
     if type(statusType) == 'string' and type(handler) == 'function' then
         customStatusHandlers[statusType] = handler
+        InvalidateSupportedStatusCache() -- Re-check supported status
         if Config.Debug then
             print('[HUD] Custom handler registered for: ' .. statusType)
         end
@@ -288,6 +305,7 @@ end)
 exports('registerStatusHandler', function(statusType, handler)
     if type(statusType) == 'string' and type(handler) == 'function' then
         customStatusHandlers[statusType] = handler
+        InvalidateSupportedStatusCache() -- Re-check supported status
         if Config.Debug then
             print('[HUD] Custom handler registered via export for: ' .. statusType)
         end
@@ -300,6 +318,7 @@ end)
 exports('unregisterStatusHandler', function(statusType)
     if customStatusHandlers[statusType] then
         customStatusHandlers[statusType] = nil
+        InvalidateSupportedStatusCache() -- Re-check supported status
         if Config.Debug then
             print('[HUD] Custom handler unregistered for: ' .. statusType)
         end
