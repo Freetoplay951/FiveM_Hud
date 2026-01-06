@@ -27,153 +27,12 @@ local function GetHospitalCoords()
 end
 
 -- ============================================================================
--- CAMERA SYSTEM
--- ============================================================================
-
-local camera = nil
-local playerPed = nil
-local rotX = 0.0
-local rotY = math.rad(45.0)
-local cameraRadius = 5.0
-
-local zoom = {
-    min = 2.0,
-    max = 8.0,
-    step = 0.5
-}
-
--- Sync ShapeTest Result
-local function GetShapeTestResultSync(shape)
-    local handle, hit, coords, normal, entity
-    repeat
-        handle, hit, coords, normal, entity = GetShapeTestResult(shape)
-        Wait(0)
-    until handle ~= 1
-    return hit, coords
-end
-
-function StartDeathCam()
-    if camera then return end
-    
-    playerPed = PlayerPedId()
-    
-    DoScreenFadeOut(300)
-    Wait(300)
-    
-    camera = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-    SetCamActive(camera, true)
-    RenderScriptCams(true, true, 800, true, false)
-    
-    DoScreenFadeIn(800)
-end
-
-function EndDeathCam()
-    if not camera then return end
-    
-    DoScreenFadeOut(300)
-    Wait(300)
-    
-    RenderScriptCams(false, true, 500, true, false)
-    DestroyCam(camera, false)
-    
-    camera = nil
-    playerPed = nil
-    
-    DoScreenFadeIn(500)
-end
-
--- Smooth camera position tracking
-local smoothCamPos = nil
-local smoothLerpFactor = 0.08 -- Lower = smoother but slower
-function ProcessCamControls()
-    if not camera or not playerPed then return end
-    
-    local playerCoords = GetEntityCoords(playerPed)
-    
-    -- Mouse Rotation (smoother interpolation)
-    local sensitivity = 2.0
-    
-    local mouseX = GetDisabledControlNormal(0, 1)
-    local mouseY = GetDisabledControlNormal(0, 2)
-    
-    -- Apply dead zone to reduce jitter
-    if math.abs(mouseX) < 0.01 then mouseX = 0 end
-    if math.abs(mouseY) < 0.01 then mouseY = 0 end
-    
-    local targetX = rotX - mouseX * sensitivity
-    local targetY = rotY - mouseY * sensitivity
-    
-    -- Smoother lerp for rotation
-    rotX = rotX + (targetX - rotX) * 0.08
-    rotY = rotY + (targetY - rotY) * 0.08
-    
-    rotY = math.max(math.rad(15.0), math.min(math.rad(85.0), rotY))
-    
-    -- Zoom (smoother)
-    local targetRadius = cameraRadius
-    
-    if IsDisabledControlPressed(0, 14) then -- scroll up
-        targetRadius = math.min(zoom.max, targetRadius + zoom.step)
-    elseif IsDisabledControlPressed(0, 15) then -- scroll down
-        targetRadius = math.max(zoom.min, targetRadius - zoom.step)
-    end
-    
-    cameraRadius = cameraRadius + (targetRadius - cameraRadius) * 0.06
-    
-    -- Camera Direction
-    local direction = vector3(
-        math.sin(rotY) * math.cos(rotX),
-        math.sin(rotY) * math.sin(rotX),
-        math.cos(rotY)
-    )
-    
-    local desiredPos = playerCoords + direction * cameraRadius
-    
-    -- Collision Check
-    local hit, hitCoords = GetShapeTestResultSync(
-        StartShapeTestLosProbe(playerCoords, desiredPos, -1, playerPed)
-    )
-    
-    local targetPos = desiredPos
-    if hit == 1 then
-        targetPos = playerCoords + direction * (#(playerCoords - hitCoords) - 0.5)
-    end
-    
-    -- Initialize smooth position if needed
-    if not smoothCamPos then
-        smoothCamPos = targetPos
-    end
-    
-    -- Smooth camera movement (reduces lag/jitter significantly)
-    smoothCamPos = vector3(
-        smoothCamPos.x + (targetPos.x - smoothCamPos.x) * smoothLerpFactor,
-        smoothCamPos.y + (targetPos.y - smoothCamPos.y) * smoothLerpFactor,
-        smoothCamPos.z + (targetPos.z - smoothCamPos.z) * smoothLerpFactor
-    )
-    
-    -- Subtle floating effect
-    local time = GetGameTimer() / 1500
-    local finalPos = smoothCamPos + vector3(0.0, 0.0, math.sin(time) * 0.03)
-    
-    -- FOV Dynamic
-    local minFov, maxFov = 50.0, 80.0
-    local fov = maxFov - ((cameraRadius - zoom.min) / (zoom.max - zoom.min)) * (maxFov - minFov)
-    SetCamFov(camera, fov)
-    
-    -- Apply camera position and look-at
-    SetCamCoord(camera, finalPos.x, finalPos.y, finalPos.z)
-    PointCamAtCoord(camera, playerCoords.x, playerCoords.y, playerCoords.z)
-end
-
--- ============================================================================
 -- OPEN / CLOSE DEATH SCREEN
 -- ============================================================================
 
 function OpenDeathScreen()
     if deathOpen then return end
     deathOpen = true
-    
-    StartDeathCam()
     
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
@@ -192,26 +51,20 @@ function OpenDeathScreen()
         local respawnTime = GetEarlyRespawnTime()
         local bleedoutTime = GetBleedoutTime()
         local startTime = GetGameTimer()
+        local lastUpdate = 0
         
         while deathOpen do
             Wait(0)
             DisableAllControlActions(0)
             
-            -- Allow mouse & scroll for deathcam
-            EnableControlAction(0, 1, true)
-            EnableControlAction(0, 2, true)
-            EnableControlAction(0, 14, true)
-            EnableControlAction(0, 15, true)
-            
-            ProcessCamControls()
-            
             -- Update timers every second
             local elapsed = math.floor((GetGameTimer() - startTime) / 1000)
-            local currentRespawnTimer = math.max(0, respawnTime - elapsed)
-            local currentBleedoutTimer = math.max(0, bleedoutTime - elapsed)
             
-            -- Only update NUI every second
-            if elapsed % 1 == 0 then
+            if elapsed ~= lastUpdate then
+                lastUpdate = elapsed
+                local currentRespawnTimer = math.max(0, respawnTime - elapsed)
+                local currentBleedoutTimer = math.max(0, bleedoutTime - elapsed)
+                
                 SendNUI("updateDeath", {
                     isDead = true,
                     respawnTimer = currentRespawnTimer,
@@ -244,12 +97,28 @@ function CloseDeathScreen()
         canRespawn = false
     })
     
-    EndDeathCam()
-    
     if Config and Config.Debug then
         print('[HUD] Death screen closed')
     end
 end
+
+-- ============================================================================
+-- DEATH DETECTION
+-- ============================================================================
+
+AddEventHandler('gameEventTriggered', function(name, data)
+    if (name ~= "CEventNetworkEntityDamage") then
+        return
+    end
+    
+    local victim = data[1]
+    local killer = data[2]
+    local died = data[6] == 1
+    
+    if died and victim == PlayerPedId() then
+        OpenDeathScreen()
+    end
+end)
 
 -- ============================================================================
 -- DEATH EVENTS (Framework Integration)
