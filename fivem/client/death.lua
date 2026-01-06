@@ -67,7 +67,7 @@ function OpenDeathScreen()
     })
     
     if Config and Config.Debug then
-        print('[HUD Death] Death screen aktiviert, ' .. respawnTime .. ' Sekunden')
+        print('[HUD Death] Death screen activated, ' .. respawnTime .. ' seconds')
     end
 end
 

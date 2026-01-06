@@ -204,7 +204,7 @@ end)
 
 AddEventHandler("hud:loaded", function()
     if Config.Debug then
-        print('[HUD] Loading Commands')
+        print('[HUD Chat] Loading commands')
     end
     
     -- Server-Commands anfordern (triggert automatisch SendRegisteredCommandsToNUI nach Response)

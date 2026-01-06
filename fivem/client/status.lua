@@ -154,7 +154,7 @@ local function CheckSupportedStatus()
     }
     
     if Config.Debug then
-        print('[HUD] Supported status types: ' .. json.encode(supportedStatus))
+        print('[HUD Status] Supported status types: ' .. json.encode(supportedStatus))
     end
     
     return supportedStatus
@@ -263,8 +263,8 @@ end)
 
 AddEventHandler("hud:loaded", function()
     if Config.Debug then
-        print('[HUD] Loading Status Icons')
-        print('[HUD] Custom handlers registered: ' .. json.encode(customStatusHandlers))
+        print('[HUD Status] Loading status icons')
+        print('[HUD Status] Custom handlers registered: ' .. json.encode(customStatusHandlers))
     end
     
     -- Initial refresh
@@ -292,11 +292,11 @@ RegisterNetEvent('hud:handleStatus', function(statusType, handler)
         customStatusHandlers[statusType] = handler
         InvalidateSupportedStatusCache() -- Re-check supported status
         if Config.Debug then
-            print('[HUD] Custom handler registered for: ' .. statusType)
+            print('[HUD Status] Custom handler registered for: ' .. statusType)
         end
     else
         if Config.Debug then
-            print('[HUD] Invalid handler registration for: ' .. tostring(statusType))
+            print('[HUD Status] Invalid handler registration for: ' .. tostring(statusType))
         end
     end
 end)
@@ -307,7 +307,7 @@ exports('registerStatusHandler', function(statusType, handler)
         customStatusHandlers[statusType] = handler
         InvalidateSupportedStatusCache() -- Re-check supported status
         if Config.Debug then
-            print('[HUD] Custom handler registered via export for: ' .. statusType)
+            print('[HUD Status] Custom handler registered via export for: ' .. statusType)
         end
         return true
     end
@@ -320,7 +320,7 @@ exports('unregisterStatusHandler', function(statusType)
         customStatusHandlers[statusType] = nil
         InvalidateSupportedStatusCache() -- Re-check supported status
         if Config.Debug then
-            print('[HUD] Custom handler unregistered for: ' .. statusType)
+            print('[HUD Status] Custom handler unregistered for: ' .. statusType)
         end
         return true
     end
