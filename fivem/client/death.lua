@@ -117,10 +117,6 @@ AddEventHandler('esx_ambulancejob:playerDead', OpenDeathScreen)
 RegisterNetEvent('hud:openDeathScreen', OpenDeathScreen)
 RegisterNetEvent('hud:closeDeathScreen', CloseDeathScreen)
 
--- Legacy pure_deathscreen events
-RegisterNetEvent('pure_deathscreen:open', OpenDeathScreen)
-RegisterNetEvent('pure_deathscreen:close', CloseDeathScreen)
-
 -- ============================================================================
 -- NUI CALLBACKS
 -- ============================================================================
@@ -174,13 +170,6 @@ end)
 -- ============================================================================
 
 RegisterNetEvent('hud:helpCooldownUpdate', function(seconds)
-    SendNUI("updateDeath", {
-        canCallHelp = seconds <= 0
-    })
-end)
-
--- Legacy pure_deathscreen cooldown
-RegisterNetEvent('pure_deathscreen:cooldownUpdate', function(seconds)
     SendNUI("updateDeath", {
         canCallHelp = seconds <= 0
     })
