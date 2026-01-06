@@ -5,12 +5,11 @@ Config.StatusUpdateInterval = 500      -- Wie oft Status-Werte aktualisiert werd
 Config.VehicleUpdateInterval = 100     -- Wie oft Fahrzeug-Daten aktualisiert werden
 Config.LocationUpdateInterval = 1000   -- Wie oft Location aktualisiert wird
 
--- Status Einstellungen (deaktivieren wenn Server nicht unterstützt)
-Config.EnableHunger = true
-Config.EnableThirst = true
-Config.EnableStress = false            -- Nur aktivieren wenn euer Framework Stress unterstützt
-Config.EnableOxygen = true             -- Wird automatisch nur im Wasser angezeigt
-Config.EnableStamina = true
+-- Deaktivierte Widgets
+Config.DisabledWidgets = {
+    oxygen = true,
+    stress = true
+}
 
 -- Death Screen Einstellungen
 Config.EarlyRespawnTimer = 60          -- Sekunden bis Respawn möglich ist

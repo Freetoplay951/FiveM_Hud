@@ -115,6 +115,8 @@ local function SendInitialData()
     local coords = GetEntityCoords(ped)
     local heading = GetEntityHeading(ped)
     
+    SendNUI('updateDisabledWidgets', Config.DisabledWidgets or {})
+    
     -- Status
     local health = GetEntityHealth(ped)
     local maxHealth = GetEntityMaxHealth(ped)
