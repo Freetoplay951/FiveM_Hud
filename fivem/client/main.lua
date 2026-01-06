@@ -476,6 +476,94 @@ CreateThread(function()
 end)
 
 -- ============================================================================
+-- DISABLED WIDGETS
+-- ============================================================================
+
+-- Table tracking which widgets are disabled
+-- Example: { thirst = true, hunger = true } means thirst and hunger are disabled
+local disabledWidgets = {}
+
+-- Update disabled widgets state and sync to NUI
+-- @param widgets table - Table of widget IDs to disable (true = disabled, false/nil = enabled)
+-- Valid widget IDs: health, armor, hunger, thirst, stamina, stress, oxygen, 
+--                   money, clock, compass, vehiclename, voice, radio, 
+--                   location, speedometer, notifications, chat, teamchat
+function UpdateDisabledWidgets(widgets)
+    if type(widgets) ~= 'table' then
+        if Config.Debug then
+            print('[HUD] Error: UpdateDisabledWidgets expects a table')
+        end
+        return
+    end
+    
+    -- Merge with existing disabled widgets
+    for widgetId, disabled in pairs(widgets) do
+        if disabled then
+            disabledWidgets[widgetId] = true
+        else
+            disabledWidgets[widgetId] = nil
+        end
+    end
+    
+    SendNUI('updateDisabledWidgets', disabledWidgets)
+    
+    if Config.Debug then
+        print('[HUD] Disabled widgets updated: ' .. json.encode(disabledWidgets))
+    end
+end
+
+-- Set all disabled widgets at once (replaces current state)
+-- @param widgets table - Table of widget IDs to disable
+function SetDisabledWidgets(widgets)
+    if type(widgets) ~= 'table' then
+        if Config.Debug then
+            print('[HUD] Error: SetDisabledWidgets expects a table')
+        end
+        return
+    end
+    
+    disabledWidgets = {}
+    for widgetId, disabled in pairs(widgets) do
+        if disabled then
+            disabledWidgets[widgetId] = true
+        end
+    end
+    
+    SendNUI('updateDisabledWidgets', disabledWidgets)
+    
+    if Config.Debug then
+        print('[HUD] Disabled widgets set: ' .. json.encode(disabledWidgets))
+    end
+end
+
+-- Enable a specific widget
+-- @param widgetId string - The widget ID to enable
+function EnableWidget(widgetId)
+    disabledWidgets[widgetId] = nil
+    SendNUI('updateDisabledWidgets', disabledWidgets)
+    
+    if Config.Debug then
+        print('[HUD] Widget enabled: ' .. widgetId)
+    end
+end
+
+-- Disable a specific widget
+-- @param widgetId string - The widget ID to disable
+function DisableWidget(widgetId)
+    disabledWidgets[widgetId] = true
+    SendNUI('updateDisabledWidgets', disabledWidgets)
+    
+    if Config.Debug then
+        print('[HUD] Widget disabled: ' .. widgetId)
+    end
+end
+
+-- Get current disabled widgets state
+function GetDisabledWidgets()
+    return disabledWidgets
+end
+
+-- ============================================================================
 -- EXPORTS
 -- ============================================================================
 
@@ -500,6 +588,13 @@ end)
 exports('isEditMode', function()
     return isEditMode
 end)
+
+-- Widget visibility exports
+exports('updateDisabledWidgets', UpdateDisabledWidgets)
+exports('setDisabledWidgets', SetDisabledWidgets)
+exports('enableWidget', EnableWidget)
+exports('disableWidget', DisableWidget)
+exports('getDisabledWidgets', GetDisabledWidgets)
 
 exports('getFramework', function()
     return Framework
@@ -529,6 +624,23 @@ RegisterNetEvent('hud:editMode', function(enabled)
     SendNUI('toggleEditMode', isEditMode)
 end)
 
+-- Widget visibility Events
+RegisterNetEvent('hud:updateDisabledWidgets', function(widgets)
+    UpdateDisabledWidgets(widgets)
+end)
+
+RegisterNetEvent('hud:setDisabledWidgets', function(widgets)
+    SetDisabledWidgets(widgets)
+end)
+
+RegisterNetEvent('hud:enableWidget', function(widgetId)
+    EnableWidget(widgetId)
+end)
+
+RegisterNetEvent('hud:disableWidget', function(widgetId)
+    DisableWidget(widgetId)
+end)
+
 -- ============================================================================
 -- COMMANDS (Debug)
 -- ============================================================================
@@ -544,5 +656,24 @@ if Config.Debug then
         print('[HUD] Voice: ' .. (VoiceResource or 'none'))
         print('[HUD] Visible: ' .. tostring(isHudVisible))
         print('[HUD] Player Loaded: ' .. tostring(isPlayerLoaded))
+    end, false)
+    
+    -- Debug command to test widget disabling
+    RegisterCommand('hud_disable', function(source, args)
+        if args[1] then
+            DisableWidget(args[1])
+            print('[HUD] Disabled widget: ' .. args[1])
+        else
+            print('[HUD] Usage: /hud_disable <widgetId>')
+        end
+    end, false)
+    
+    RegisterCommand('hud_enable', function(source, args)
+        if args[1] then
+            EnableWidget(args[1])
+            print('[HUD] Enabled widget: ' .. args[1])
+        else
+            print('[HUD] Usage: /hud_enable <widgetId>')
+        end
     end, false)
 end
