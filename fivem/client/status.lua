@@ -27,16 +27,18 @@ local function refreshStatusIcons()
     -- Armor
     local armor = GetPedArmour(ped)
     
-    -- Status Daten mit disabledWidgets (default: all enabled)
+    -- Status Daten (nur Werte, keine disabledWidgets mehr hier)
     local statusData = {
         health = healthPercent,
-        armor = armor,
-        disabledWidgets = {}
+        armor = armor
     }
+    
+    -- Disabled Widgets separat tracken
+    local widgetsToDisable = {}
     
     -- Disable widgets based on config (only add if disabled)
     if not Config.EnableStamina then
-        statusData.disabledWidgets.stamina = true
+        widgetsToDisable.stamina = true
     end
     
     -- ================================================================
@@ -53,10 +55,10 @@ local function refreshStatusIcons()
                     if hungerStatus then
                         statusData.hunger = hungerStatus.percent or 100
                     else
-                        statusData.disabledWidgets.hunger = true
+                        widgetsToDisable.hunger = true
                     end
                 else
-                    statusData.disabledWidgets.hunger = true
+                    widgetsToDisable.hunger = true
                 end
                 
                 if Config.EnableThirst then
@@ -64,15 +66,15 @@ local function refreshStatusIcons()
                     if thirstStatus then
                         statusData.thirst = thirstStatus.percent or 100
                     else
-                        statusData.disabledWidgets.thirst = true
+                        widgetsToDisable.thirst = true
                     end
                 else
-                    statusData.disabledWidgets.thirst = true
+                    widgetsToDisable.thirst = true
                 end
             end)
         else
-            statusData.disabledWidgets.hunger = true
-            statusData.disabledWidgets.thirst = true
+            widgetsToDisable.hunger = true
+            widgetsToDisable.thirst = true
         end
     end
     
@@ -86,22 +88,22 @@ local function refreshStatusIcons()
             if Config.EnableHunger then
                 statusData.hunger = PlayerData.metadata.hunger or 100
             else
-                statusData.disabledWidgets.hunger = true
+                widgetsToDisable.hunger = true
             end
             if Config.EnableThirst then
                 statusData.thirst = PlayerData.metadata.thirst or 100
             else
-                statusData.disabledWidgets.thirst = true
+                widgetsToDisable.thirst = true
             end
             if Config.EnableStress then
                 statusData.stress = PlayerData.metadata.stress or 0
             else
-                statusData.disabledWidgets.stress = true
+                widgetsToDisable.stress = true
             end
         else
-            statusData.disabledWidgets.hunger = true
-            statusData.disabledWidgets.thirst = true
-            statusData.disabledWidgets.stress = true
+            widgetsToDisable.hunger = true
+            widgetsToDisable.thirst = true
+            widgetsToDisable.stress = true
         end
     end
     
@@ -150,21 +152,24 @@ local function refreshStatusIcons()
             local maxAir = 10.0 -- FiveM Standard
             local oxygen = (remainingAir / maxAir) * 100
             statusData.oxygen = math.floor(math.max(0, math.min(100, oxygen)))
-            statusData.disabledWidgets.oxygen = false
+            widgetsToDisable.oxygen = false
         elseif isInWater then
             statusData.oxygen = 100
-            statusData.disabledWidgets.oxygen = false
+            widgetsToDisable.oxygen = false
         else
             -- Not in water - hide widget
             statusData.oxygen = 100
-            statusData.disabledWidgets.oxygen = true
+            widgetsToDisable.oxygen = true
         end
     else
-        statusData.disabledWidgets.oxygen = true
+        widgetsToDisable.oxygen = true
     end
     
     -- Status an NUI senden
     SendNUI('updateHud', statusData)
+    
+    -- Disabled widgets separat senden
+    SendNUI('updateDisabledWidgets', widgetsToDisable)
 end
 
 -- ============================================================================
