@@ -159,7 +159,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                     }}
                                 />
                                 <div
-                                    className="relative w-32 h-32 rounded-full border-2 flex items-center justify-center backdrop-blur-sm"
+                                    className="relative w-32 h-32 rounded-full border-2 flex items-center justify-center"
                                     style={{
                                         background:
                                             "linear-gradient(135deg, hsl(var(--critical) / 0.2) 0%, hsl(var(--critical) / 0.05) 100%)",
@@ -224,7 +224,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                             <div className="w-full max-w-md mb-10">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-lg bg-critical/20 border border-critical/50 flex items-center justify-center backdrop-blur-sm shadow-[0_0_20px_hsl(var(--critical)/0.4)]">
+                                        <div className="w-9 h-9 rounded-lg bg-critical/20 border border-critical/50 flex items-center justify-center shadow-[0_0_20px_hsl(var(--critical)/0.4)]">
                                             <Heart
                                                 size={18}
                                                 className="text-critical fill-critical/40"
@@ -241,8 +241,8 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                     </span>
                                 </div>
                                 <div
-                                    className="h-3 rounded-lg overflow-hidden border border-critical/40 backdrop-blur-sm relative"
-                                    style={{ background: "hsl(var(--background) / 0.5)" }}>
+                                    className="h-3 rounded-lg overflow-hidden border border-critical/40 relative"
+                                    style={{ background: "hsl(0 0% 5% / 0.8)" }}>
                                     <motion.div
                                         className="h-full rounded-lg relative"
                                         initial={{ width: "15%" }}
@@ -287,7 +287,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                         }}
                                     />
                                     <div
-                                        className="relative px-10 py-5 rounded-2xl border-2 backdrop-blur-md w-full"
+                                        className="relative px-10 py-5 rounded-2xl border-2 w-full"
                                         style={{
                                             background:
                                                 "linear-gradient(135deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.08) 100%)",
@@ -322,9 +322,9 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
 
                             <div className="w-full max-w-md mb-8">
                                 <div
-                                    className="h-2.5 rounded-full overflow-hidden border border-primary/50 backdrop-blur-sm relative"
+                                    className="h-2.5 rounded-full overflow-hidden border border-primary/50 relative"
                                     style={{
-                                        background: "hsl(var(--background) / 0.5)",
+                                        background: "hsl(0 0% 5% / 0.8)",
                                         boxShadow: "inset 0 2px 8px hsl(0 0% 0% / 0.5)",
                                     }}>
                                     <motion.div
