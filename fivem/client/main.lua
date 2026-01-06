@@ -173,6 +173,13 @@ end
 
 -- NUI Callback: NUI hat geladen
 RegisterNUICallback('loadedNUI', function(data, cb)
+    if GetResourceState('spawnmanager') == 'started' then
+        if Config.Debug then
+            print('[HUD] Disable spawnmanager autorespawn')
+        end
+        exports['spawnmanager']:setAutoSpawn(false)
+    end
+    
     isNuiLoaded = true
     
     if Config.Debug then

@@ -52,31 +52,6 @@ function OpenDeathScreen()
         message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
     })
     
-    -- Keep player on ground and disable controls
-    CreateThread(function()
-        while deathOpen do
-            Wait(0)
-            DisableAllControlActions(0)
-            
-            -- Keep player lying on ground
-            if not IsEntityPlayingAnim(ped, "dead", "dead_a", 3) then
-                if not HasAnimDictLoaded("dead") then
-                    RequestAnimDict("dead")
-                    while not HasAnimDictLoaded("dead") do
-                        Wait(0)
-                    end
-                end
-                TaskPlayAnim(ped, "dead", "dead_a", 1.0, 1.0, -1, 1, 0, false, false, false)
-            end
-            
-            SetEntityInvincible(ped, true)
-        end
-        
-        -- Cleanup when death screen closes
-        ClearPedTasks(ped)
-        SetEntityInvincible(ped, false)
-    end)
-    
     if Config and Config.Debug then
         print('[HUD] Death screen aktiviert, ' .. respawnTime .. ' Sekunden')
     end
