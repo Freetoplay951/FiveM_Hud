@@ -15,7 +15,11 @@ Config.EnableStamina = true
 -- Death Screen Einstellungen
 Config.EarlyRespawnTimer = 60          -- Sekunden bis Respawn möglich ist
 Config.BleedoutTimer = 300             -- Sekunden bis automatischer Respawn
-Config.HospitalCoords = vector3(311.8, -593.5, 43.28) -- Pillbox Hospital
+Config.ReviveLocations = {
+    {
+        coords = vec4(341.2093, -1396.7168, 31.5093, 48.9265),
+    }
+}
 
 -- Keybinds
 Config.EditModeKey = 'F7'              -- Taste für Edit-Mode
@@ -144,6 +148,9 @@ Config.TeamChatGeneralPermission = "hud.staff"
 
 -- Team-Chat Name (wird oben im Chat angezeigt)
 Config.TeamChatName = "Team-Chat"
+
+
+Config.StopVehicleRadioOnEnter = true
 
 -- Debug
 Config.Debug = true

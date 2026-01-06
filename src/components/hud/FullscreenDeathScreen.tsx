@@ -16,11 +16,19 @@ interface FullscreenDeathScreenProps {
 
 export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenProps) => {
     const { t } = useTranslation();
-    const { isDead, respawnTimer: initialRespawnTimer, waitTimer: initialWaitTimer, canCallHelp = true, message } = death;
+    const {
+        isDead,
+        respawnTimer: initialRespawnTimer,
+        waitTimer: initialWaitTimer,
+        canCallHelp = true,
+        message,
+    } = death;
 
     // Local countdown state
     const [respawnTimer, setRespawnTimer] = useState(initialRespawnTimer);
     const [waitTimer, setWaitTimer] = useState(initialWaitTimer);
+    const [lastCallHelpTime, setLastCallHelpTime] = useState(0);
+    const [lastSyncTime, setLastSyncTime] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Reset timers when death state changes (new death event)
@@ -54,7 +62,11 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     const isVisible = visible && isDead;
 
     const handleCallHelp = () => {
-        sendNuiCallback("deathCallHelp");
+        const now = Date.now();
+        if (now - lastCallHelpTime >= 5000) {
+            sendNuiCallback("deathCallHelp");
+            setLastCallHelpTime(now);
+        }
     };
 
     const handleRespawn = () => {
@@ -64,7 +76,11 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     };
 
     const handleSyncPosition = () => {
-        sendNuiCallback("deathSyncPosition");
+        const now = Date.now();
+        if (now - lastSyncTime >= 5000) {
+            sendNuiCallback("deathSyncPosition");
+            setLastSyncTime(now);
+        }
     };
 
     // Keyboard controls for death screen (works in both FiveM and demo mode)

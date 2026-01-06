@@ -383,6 +383,33 @@ end)
 -- ANCHOR INTEGRATION
 -- ============================================================================
 
+AddEventHandler('gameEventTriggered', function(name, data)
+    if (name ~= "CEventNetworkPlayerEnteredVehicle") then
+        return
+    end
+    
+    if (Config.StopVehicleRadioOnEnter ~= true) then
+        return
+    end
+    
+    local playerId = GetPlayerFromServerId(data[1])
+    local ped = GetPlayerPed(playerId)
+    local vehicle = data[2]
+
+    if ped == PlayerPedId() and vehicle ~= 0 then
+        print(IsVehicleRadioEnabled(vehicle))
+        SetVehRadioStation(vehicle, "OFF")
+        if Config and Config.Debug then
+            print('[HUD] Radio im Fahrzeug deaktiviert')
+        end
+    end
+end)
+
+
+-- ============================================================================
+-- ANCHOR INTEGRATION
+-- ============================================================================
+
 -- Manual anchor event
 RegisterNetEvent('hud:anchor', function(anchorState)
     SendNUI('updateVehicle', { anchor = anchorState })

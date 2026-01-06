@@ -1,6 +1,3 @@
--- Death Screen Handler
--- Based on pure_deathscreen architecture
-
 -- ============================================================================
 -- STATE
 -- ============================================================================
@@ -19,11 +16,23 @@ local function GetBleedoutTime()
     return Config and Config.BleedoutTimer or 300
 end
 
-local function GetHospitalCoords()
-    if Config and Config.HospitalCoords then
-        return Config.HospitalCoords
+local function GetClosestReviveLocation()
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    local closestLocation = nil
+    local minimumDistance = math.huge
+    
+    for _, location in ipairs(Config.ReviveLocations) do
+        local coordsVec4 = location.coords
+        local coords = vec3(coordsVec4.x, coordsVec4.y, coordsVec4.z)
+        local distance = #(coords - playerCoords)
+
+        if distance < minimumDistance then
+            minimumDistance = distance
+            closestLocation = location
+        end
     end
-    return vector3(311.8, -593.5, 43.28) -- Pillbox Hospital
+
+    return closestLocation
 end
 
 -- ============================================================================
@@ -34,7 +43,7 @@ function OpenDeathScreen()
     if deathOpen then return end
     deathOpen = true
     
-    local ped = PlayerPedId()
+    ClearPedTasks(PlayerPedId())
     
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
@@ -42,7 +51,6 @@ function OpenDeathScreen()
     local respawnTime = GetEarlyRespawnTime()
     local bleedoutTime = GetBleedoutTime()
     
-    -- Send initial activation with timer values - JS handles countdown
     SendNUI("updateDeath", {
         isDead = true,
         respawnTimer = respawnTime,
@@ -51,43 +59,6 @@ function OpenDeathScreen()
         canRespawn = false,
         message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
     })
-    
-    -- Keep player on ground and manage controls
-    CreateThread(function()
-        -- Load and play dead animation
-        if not HasAnimDictLoaded("dead") then
-            RequestAnimDict("dead")
-            while not HasAnimDictLoaded("dead") do
-                Wait(0)
-            end
-        end
-        TaskPlayAnim(ped, "dead", "dead_a", 1.0, 1.0, -1, 1, 0, false, false, false)
-        SetEntityInvincible(ped, true)
-        
-        while deathOpen do
-            Wait(0)
-            
-            -- Disable most controls but allow specific keys
-            DisableAllControlActions(0)
-            
-            -- Enable keyboard input for NUI (E, Enter, F5, etc.)
-            EnableControlAction(0, 46, true)   -- E key (INPUT_INTERACT)
-            EnableControlAction(0, 38, true)   -- E key alternative
-            EnableControlAction(0, 191, true)  -- Enter key (INPUT_ENTER)
-            EnableControlAction(0, 201, true)  -- Enter key alternative
-            EnableControlAction(0, 166, true)  -- F5 key
-            EnableControlAction(0, 167, true)  -- F6 key
-            
-            -- Keep player in dead animation
-            if not IsEntityPlayingAnim(ped, "dead", "dead_a", 3) then
-                TaskPlayAnim(ped, "dead", "dead_a", 1.0, 1.0, -1, 1, 0, false, false, false)
-            end
-        end
-        
-        -- Cleanup when death screen closes
-        ClearPedTasks(ped)
-        SetEntityInvincible(ped, false)
-    end)
     
     if Config and Config.Debug then
         print('[HUD] Death screen aktiviert, ' .. respawnTime .. ' Sekunden')
@@ -168,11 +139,14 @@ RegisterNUICallback('deathCallHelp', function(_, cb)
 end)
 
 RegisterNUICallback('deathRespawn', function(_, cb)
-    local coords = GetHospitalCoords()
+    local coords = GetClosestReviveLocation()
     local ped = PlayerPedId()
     
     -- Resurrect player
-    NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, 0.0, true, false)
+    if Config and Config.Debug then
+        print('[HUD] Reviving at coords: ' .. json.encode(coords))
+    end
+    NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, coords.w, true, false)
     
     -- Restore health
     SetEntityHealth(ped, GetEntityMaxHealth(ped))
