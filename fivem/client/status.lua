@@ -168,8 +168,10 @@ local function refreshStatusIcons()
     -- Status an NUI senden
     SendNUI('updateHud', statusData)
     
-    -- Disabled widgets separat senden
-    SendNUI('updateDisabledWidgets', widgetsToDisable)
+    -- Disabled widgets nur senden wenn es welche gibt
+    if next(widgetsToDisable) ~= nil then
+        SendNUI('updateDisabledWidgets', widgetsToDisable)
+    end
 end
 
 -- ============================================================================
