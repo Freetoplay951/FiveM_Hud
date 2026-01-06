@@ -6,6 +6,7 @@ export interface StatusWidgetState {
     stamina: number;
     stress?: number;
     oxygen?: number;
+    isUnderwater?: boolean; // For conditional oxygen display
 }
 
 import { WidgetType } from "./widget";

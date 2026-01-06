@@ -814,7 +814,10 @@ export const HUD = () => {
 
                 const value = hudState[type] ?? 100;
 
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+                // Special visibility logic for oxygen: only show when underwater or in edit mode
+                const isOxygenHidden = type === "oxygen" && !editMode && !hudState.isUnderwater;
+
+                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead) && !isOxygenHidden;
                 const isVisible = baseVisible;
 
                 return (
