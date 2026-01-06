@@ -170,6 +170,9 @@ local function refreshStatusIcons()
     
     -- Disabled widgets nur senden wenn es welche gibt
     if next(widgetsToDisable) ~= nil then
+        if Config.Debug then
+            print('[HUD] Disabling the following status widgets: ' .. json.encode(widgetsToDisable))
+        end
         SendNUI('updateDisabledWidgets', widgetsToDisable)
     end
 end
