@@ -397,7 +397,6 @@ AddEventHandler('gameEventTriggered', function(name, data)
     local vehicle = data[2]
 
     if ped == PlayerPedId() and vehicle ~= 0 then
-        print(IsVehicleRadioEnabled(vehicle))
         SetVehRadioStation(vehicle, "OFF")
         if Config and Config.Debug then
             print('[HUD] Radio im Fahrzeug deaktiviert')
