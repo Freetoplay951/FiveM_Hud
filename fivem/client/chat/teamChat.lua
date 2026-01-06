@@ -37,7 +37,7 @@ end)
 
 AddEventHandler("hud:loaded", function()
     if Config.Debug then
-        print('[HUD] Loading Permissions')
+        print('[HUD TeamChat] Loading permissions')
     end
     
     RequestPermissionData()

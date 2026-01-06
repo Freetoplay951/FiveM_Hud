@@ -32,14 +32,14 @@ local function SetMinimapShapeInternal(shape)
         if HasStreamedTextureDictLoaded("circlemap") then
             SetMinimapClipType(1) -- 1 = Circle clip
             if Config.Debug then
-                print('[HUD] Minimap shape set to round')
+                print('[HUD Minimap] Shape set to round')
             end
         end
     else
-        -- Standard quadratische Minimap
+        -- Standard square minimap
         SetMinimapClipType(0) -- 0 = Square clip
         if Config.Debug then
-            print('[HUD] Minimap shape set to square')
+            print('[HUD Minimap] Shape set to square')
         end
     end
 end
@@ -73,12 +73,12 @@ AddEventHandler('onClientResourceStart', function(resourceName)
         end
         
         if Config.Debug then
-            print('[HUD] Minimap initialized and enabled with shape: ' .. (Config.MinimapShape or 'square'))
+            print('[HUD Minimap] Initialized and enabled with shape: ' .. (Config.MinimapShape or 'square'))
         end
     else
         DisplayRadar(false)
         if Config.Debug then
-            print('[HUD] Minimap hidden by config')
+            print('[HUD Minimap] Hidden by config')
         end
     end
 end)
@@ -140,7 +140,7 @@ local function SetMinimapPositionFromHUD(screenX, screenY, width, height)
     SetMinimapComponentPosition("minimap_blur", "L", "B", x, y, w, h)
     
     if Config.Debug then
-        print(string.format('[HUD] Minimap position set: x=%.3f, y=%.3f, w=%.3f, h=%.3f', x, y, w, h))
+        print(string.format('[HUD Minimap] Position set: x=%.3f, y=%.3f, w=%.3f, h=%.3f', x, y, w, h))
     end
 end
 
@@ -152,7 +152,7 @@ local function ResetMinimapPosition()
     SetMinimapComponentPosition("minimap_blur", "L", "B", 0.0, -0.047, 0.1638, 0.183)
     
     if Config.Debug then
-        print('[HUD] Minimap position reset to default')
+        print('[HUD Minimap] Position reset to default')
     end
 end
 
@@ -226,7 +226,7 @@ RegisterNUICallback("onMinimapShapeChange", function(data, cb)
     if data.shape then
         SetMinimapShapeInternal(data.shape)
         if Config.Debug then
-            print('[HUD] Minimap shape changed via Edit Mode: ' .. data.shape)
+            print('[HUD Minimap] Shape changed via edit mode: ' .. data.shape)
         end
     end
     cb({ success = true })
@@ -277,7 +277,7 @@ end)
 if Config.Debug then
     RegisterCommand("minimap_toggle", function()
         local visible = exports[GetCurrentResourceName()]:toggleMinimap()
-        print("[HUD] Minimap visible: " .. tostring(visible))
+        print("[HUD Minimap] Visible: " .. tostring(visible))
     end, false)
     
     RegisterCommand("minimap_round", function()

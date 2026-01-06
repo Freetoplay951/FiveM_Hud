@@ -66,7 +66,7 @@ local function DetectFramework()
     end
     
     if Config.Debug then
-        print('[HUD] Framework detected: ' .. (Framework or 'none'))
+        print('[HUD Core] Framework detected: ' .. (Framework or 'none'))
     end
 end
 
@@ -90,9 +90,9 @@ local function DetectVoiceResource()
     SendNUI('setVoiceEnabled', VoiceResource ~= nil)
     
     if Config.Debug then
-        print('[HUD] Voice resource detected: ' .. (VoiceResource or 'none'))
+        print('[HUD Core] Voice resource detected: ' .. (VoiceResource or 'none'))
         if not VoiceResource then
-            print('[HUD] Voice widget disabled - no voice system found')
+            print('[HUD Core] Voice widget disabled - no voice system found')
         end
     end
 end
@@ -135,7 +135,7 @@ local function SendInitialData()
             if disabled and disabledWidgets[widgetId] == nil then
                 disabledWidgets[widgetId] = true
                 if Config.Debug then
-                    print('[HUD] Auto-disabled unsupported widget: ' .. widgetId)
+                    print('[HUD Core] Auto-disabled unsupported widget: ' .. widgetId)
                 end
             end
         end
@@ -181,7 +181,7 @@ local function SendInitialData()
     SetHudVisible(true)
     
     if Config.Debug then
-        print('[HUD] Initial data sent to NUI')
+        print('[HUD Core] Initial data sent to NUI')
     end
 end
 
@@ -189,7 +189,7 @@ end
 RegisterNUICallback('loadedNUI', function(data, cb)
     if GetResourceState('spawnmanager') == 'started' then
         if Config.Debug then
-            print('[HUD] Disable spawnmanager autorespawn')
+            print('[HUD Core] Disabled spawnmanager autorespawn')
         end
         exports['spawnmanager']:setAutoSpawn(false)
     end
@@ -197,7 +197,7 @@ RegisterNUICallback('loadedNUI', function(data, cb)
     isNuiLoaded = true
     
     if Config.Debug then
-        print('[HUD] NUI loaded callback received')
+        print('[HUD Core] NUI loaded callback received')
     end
     
     if not Framework then
@@ -218,7 +218,7 @@ if IsResourceStarted('es_extended') then
     RegisterNetEvent('esx:playerLoaded', function(xPlayer)
         isPlayerLoaded = true
         if Config.Debug then
-            print('[HUD] ESX Player loaded')
+            print('[HUD Core] ESX player loaded')
         end
     end)
 end
@@ -228,7 +228,7 @@ if IsResourceStarted('qb-core') then
     RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         isPlayerLoaded = true
         if Config.Debug then
-            print('[HUD] QBCore Player loaded')
+            print('[HUD Core] QBCore player loaded')
         end
     end)
 end
@@ -243,7 +243,7 @@ RegisterCommand('hudedit', function()
     SendNUI('toggleEditMode', isEditMode)
     
     if Config.Debug then
-        print('[HUD] Edit mode: ' .. tostring(isEditMode))
+        print('[HUD Core] Edit mode: ' .. tostring(isEditMode))
     end
 end, false)
 
@@ -253,7 +253,7 @@ RegisterKeyMapping('hudedit', 'HUD Edit Mode', 'keyboard', Config.EditModeKey or
 -- NUI Callback: Edit Mode schließen
 RegisterNUICallback('closeEditMode', function(data, cb)
     if Config.Debug then
-        print('[HUD DEBUG] closeEditMode callback received from Web')
+        print('[HUD Core] closeEditMode callback received')
     end
     isEditMode = false
     SetNuiFocus(false, false)
@@ -263,18 +263,18 @@ end)
 -- NUI Callback: Layout speichern
 RegisterNUICallback('saveLayout', function(data, cb)
     if Config.Debug then
-        print('[HUD DEBUG] saveLayout callback received from Web')
-        print('[HUD DEBUG] Layout data: ' .. json.encode(data))
+        print('[HUD Core] saveLayout callback received')
+        print('[HUD Core] Layout data: ' .. json.encode(data))
     end
-    -- Layout wird im Browser localStorage gespeichert
-    -- Optional: Server-seitige Speicherung hier implementieren
+    -- Layout is saved in browser localStorage
+    -- Optional: Implement server-side storage here
     cb({ success = true })
 end)
 
 -- NUI Callback: Pong (Debug response from Web)
 RegisterNUICallback('pong', function(data, cb)
     if Config.Debug then
-        print('[HUD DEBUG] Web -> Lua pong received')
+        print('[HUD Core] Pong received from Web')
     end
     cb({ success = true })
 end)
@@ -512,7 +512,7 @@ local disabledWidgets = {}
 function UpdateDisabledWidgets(widgets)
     if type(widgets) ~= 'table' then
         if Config.Debug then
-            print('[HUD] Error: UpdateDisabledWidgets expects a table')
+            print('[HUD Widgets] Error: UpdateDisabledWidgets expects a table')
         end
         return
     end
@@ -529,7 +529,7 @@ function UpdateDisabledWidgets(widgets)
     SendNUI('updateDisabledWidgets', disabledWidgets)
     
     if Config.Debug then
-        print('[HUD] Disabled widgets updated: ' .. json.encode(disabledWidgets))
+        print('[HUD Widgets] Disabled widgets updated: ' .. json.encode(disabledWidgets))
     end
 end
 
@@ -538,7 +538,7 @@ end
 function SetDisabledWidgets(widgets)
     if type(widgets) ~= 'table' then
         if Config.Debug then
-            print('[HUD] Error: SetDisabledWidgets expects a table')
+            print('[HUD Widgets] Error: SetDisabledWidgets expects a table')
         end
         return
     end
@@ -553,7 +553,7 @@ function SetDisabledWidgets(widgets)
     SendNUI('updateDisabledWidgets', disabledWidgets)
     
     if Config.Debug then
-        print('[HUD] Disabled widgets set: ' .. json.encode(disabledWidgets))
+        print('[HUD Widgets] Disabled widgets set: ' .. json.encode(disabledWidgets))
     end
 end
 
@@ -564,7 +564,7 @@ function EnableWidget(widgetId)
     SendNUI('updateDisabledWidgets', disabledWidgets)
     
     if Config.Debug then
-        print('[HUD] Widget enabled: ' .. widgetId)
+        print('[HUD Widgets] Widget enabled: ' .. widgetId)
     end
 end
 
@@ -575,7 +575,7 @@ function DisableWidget(widgetId)
     SendNUI('updateDisabledWidgets', disabledWidgets)
     
     if Config.Debug then
-        print('[HUD] Widget disabled: ' .. widgetId)
+        print('[HUD Widgets] Widget disabled: ' .. widgetId)
     end
 end
 
@@ -669,32 +669,32 @@ end)
 if Config.Debug then
     RegisterCommand('hud_toggle', function()
         local visible = exports[GetCurrentResourceName()]:toggleHud()
-        print('[HUD] Visible: ' .. tostring(visible))
+        print('[HUD Core] Visible: ' .. tostring(visible))
     end, false)
     
     RegisterCommand('hud_info', function()
-        print('[HUD] Framework: ' .. (Framework or 'none'))
-        print('[HUD] Voice: ' .. (VoiceResource or 'none'))
-        print('[HUD] Visible: ' .. tostring(isHudVisible))
-        print('[HUD] Player Loaded: ' .. tostring(isPlayerLoaded))
+        print('[HUD Core] Framework: ' .. (Framework or 'none'))
+        print('[HUD Core] Voice: ' .. (VoiceResource or 'none'))
+        print('[HUD Core] Visible: ' .. tostring(isHudVisible))
+        print('[HUD Core] Player loaded: ' .. tostring(isPlayerLoaded))
     end, false)
     
     -- Debug command to test widget disabling
     RegisterCommand('hud_disable', function(source, args)
         if args[1] then
             DisableWidget(args[1])
-            print('[HUD] Disabled widget: ' .. args[1])
+            print('[HUD Widgets] Disabled widget: ' .. args[1])
         else
-            print('[HUD] Usage: /hud_disable <widgetId>')
+            print('[HUD Widgets] Usage: /hud_disable <widgetId>')
         end
     end, false)
     
     RegisterCommand('hud_enable', function(source, args)
         if args[1] then
             EnableWidget(args[1])
-            print('[HUD] Enabled widget: ' .. args[1])
+            print('[HUD Widgets] Enabled widget: ' .. args[1])
         else
-            print('[HUD] Usage: /hud_enable <widgetId>')
+            print('[HUD Widgets] Usage: /hud_enable <widgetId>')
         end
     end, false)
 end

@@ -320,7 +320,7 @@ end
 
 AddEventHandler("hud:loaded", function()
     if Config.Debug then
-        print('[HUD] Loading Vehicle System')
+        print('[HUD Vehicle] Loading vehicle system')
     end
     
     refreshVehicle()
@@ -345,7 +345,7 @@ end)
 
 AddEventHandler("hud:loaded", function()
     if Config.Debug then
-        print('[HUD] Loading Seatbelt System')
+        print('[HUD Vehicle] Loading seatbelt system')
     end
     
     if GetResourceState('seatbelt') == 'started' then
@@ -399,7 +399,7 @@ AddEventHandler('gameEventTriggered', function(name, data)
     if ped == PlayerPedId() and vehicle ~= 0 then
         SetVehRadioStation(vehicle, "OFF")
         if Config and Config.Debug then
-            print('[HUD] Radio im Fahrzeug deaktiviert')
+            print('[HUD Vehicle] Vehicle radio disabled')
         end
     end
 end)
