@@ -133,20 +133,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
         {
-            id: "voice",
-            type: "voice",
-            position: (_id, el, resolver) => {
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
-                return {
-                    x: resolver.screen.width / 2 - width / 2,
-                    y: resolver.screen.height - MARGIN - height,
-                };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
             id: "minimap",
             type: "minimap",
             position: (_id, el, resolver) => {
@@ -316,6 +302,30 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "oxygen",
             type: "oxygen",
             position: (_id, el, resolver) => getStatusWidgetPosition("oxygen", el, resolver),
+            visible: true,
+            scale: 1,
+        },
+
+        {
+            id: "voice",
+            type: "voice",
+            position: (_id, el, resolver) => {
+                const width = el?.offsetWidth ?? 0;
+                const height = el?.offsetHeight ?? 0;
+
+                const oxygenRect = resolver.getWidgetRect("oxygen");
+                const lastStatusX = oxygenRect.right;
+
+                const x = resolver.screen.width / 2 - width / 2;
+                let y = resolver.screen.height - MARGIN - height;
+
+                if (lastStatusX > x) y = oxygenRect.y - GAP - el.offsetHeight;
+
+                return {
+                    x,
+                    y,
+                };
+            },
             visible: true,
             scale: 1,
         },
