@@ -58,7 +58,6 @@ export interface HUDLayoutState {
     snapToGrid: boolean;
     gridSize: number;
     statusDesign: StatusDesign;
-    hudScale: number;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
     widgetsDistributed: boolean;

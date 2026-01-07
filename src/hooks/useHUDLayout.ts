@@ -27,7 +27,6 @@ const getDefaultState = (): HUDLayoutState => ({
     snapToGrid: true,
     gridSize: 10,
     statusDesign: "circular",
-    hudScale: 1,
     speedometerType: "car",
     minimapShape: "square",
     widgetsDistributed: false,
@@ -134,10 +133,6 @@ export const useHUDLayout = () => {
         setState((prev) => ({ ...prev, statusDesign: design }));
     }, []);
 
-    const setHudScale = useCallback((scale: number) => {
-        setState((prev) => ({ ...prev, hudScale: scale }));
-    }, []);
-
     const setSpeedometerType = useCallback((type: SpeedometerType) => {
         setState((prev) => ({ ...prev, speedometerType: type }));
     }, []);
@@ -224,7 +219,6 @@ export const useHUDLayout = () => {
         updateWidgetScale,
         toggleWidgetVisibility,
         setStatusDesign,
-        setHudScale,
         setSpeedometerType,
         setMinimapShape,
         resetLayout,
