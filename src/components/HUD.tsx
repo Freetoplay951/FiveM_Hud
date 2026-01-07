@@ -39,6 +39,7 @@ import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { TestWidget } from "./hud/widgets/TestWidget";
 
 // Demo values
 const DEMO_HUD: StatusWidgetState = {
@@ -996,6 +997,26 @@ export const HUD = () => {
                             visible={widget.visible}
                             editMode={editMode}
                         />
+                    </HUDWidget>
+                );
+            })()}
+
+            {/* Test Widget */}
+            {(() => {
+                const widget = getWidget("test");
+                if (!widget) return null;
+
+                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+
+                return (
+                    <HUDWidget
+                        id={widget.id}
+                        position={widget.position}
+                        visible={baseVisible}
+                        scale={widget.scale}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        {...widgetProps}>
+                        <TestWidget />
                     </HUDWidget>
                 );
             })()}

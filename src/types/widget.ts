@@ -39,6 +39,7 @@ export type WidgetType =
     | "clock"
     | "compass"
     | "vehiclename"
+    | "test"
     | "voice"
     | "radio"
     | "location"
@@ -185,6 +186,15 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 const compassRect = resolver.getWidgetRect("compass");
                 const x = compassRect ? compassRect.right + GAP : MARGIN;
                 return { x, y: MARGIN };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "test",
+            type: "test",
+            position: (_id, _el, resolver) => {
+                return { x: 500, y: 500 };
             },
             visible: true,
             scale: 1,
