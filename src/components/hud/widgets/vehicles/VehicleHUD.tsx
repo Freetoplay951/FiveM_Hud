@@ -211,30 +211,29 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                         {String(Math.round(vehicle.speed)).padStart(3, "0")}
                     </motion.span>
 
-                    {/* Gear & Body Health Status */}
-                    <div className="relative flex items-center gap-3 mt-2">
-                        {/* Body Health Indicator - Left side */}
-                        {vehicle.bodyHealth !== undefined ? (
-                            <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-                        ) : (
-                            <Thermometer
-                                size={12}
-                                className="text-muted-foreground"
-                            />
-                        )}
-                        <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-muted-foreground">
-                                {t.vehicle.gear.toUpperCase()}
-                            </span>
-                            <span
-                                className="hud-number text-lg text-primary leading-none"
-                                style={{ textShadow: "0 0 10px hsl(var(--primary) / 0.6)" }}>
-                                {vehicle.gear === 0 ? "R" : vehicle.gear}
-                            </span>
-                        </div>
-                        {/* Spacer for symmetry */}
-                        <div className="w-6 h-6" />
+                    {/* Gear Display */}
+                    <div className="relative flex items-center gap-1 mt-2">
+                        <span className="text-[10px] text-muted-foreground">
+                            {t.vehicle.gear.toUpperCase()}
+                        </span>
+                        <span
+                            className="hud-number text-lg text-primary leading-none"
+                            style={{ textShadow: "0 0 10px hsl(var(--primary) / 0.6)" }}>
+                            {vehicle.gear === 0 ? "R" : vehicle.gear}
+                        </span>
                     </div>
+                </div>
+
+                {/* Body Health Indicator - Below circle, centered */}
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
+                    {vehicle.bodyHealth !== undefined ? (
+                        <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+                    ) : (
+                        <Thermometer
+                            size={12}
+                            className="text-muted-foreground"
+                        />
+                    )}
                 </div>
             </div>
 
