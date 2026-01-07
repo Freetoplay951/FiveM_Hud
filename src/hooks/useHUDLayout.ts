@@ -146,13 +146,12 @@ export const useHUDLayout = () => {
         (force: boolean, isWidgetDisabled?: (id: string) => boolean) => {
             const defaultState = getDefaultState();
 
-            setSpeedometerType(defaultState.speedometerType);
             if (force) {
-                // speedometerType: "car",
+                setSpeedometerType(defaultState.speedometerType);
                 setMinimapShape(defaultState.minimapShape);
                 setStatusDesign(defaultState.statusDesign);
             } else {
-                // speedometerType: "car",
+                defaultState.speedometerType = state.speedometerType ?? defaultState.speedometerType;
                 defaultState.minimapShape = state.minimapShape ?? defaultState.minimapShape;
                 defaultState.statusDesign = state.statusDesign ?? defaultState.statusDesign;
             }
