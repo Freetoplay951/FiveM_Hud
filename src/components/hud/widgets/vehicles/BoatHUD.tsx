@@ -4,6 +4,7 @@ import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { getDirectionFromDegree } from "@/lib/compassUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { BodyHealthIndicator } from "./BodyHealthIndicator";
 
 interface BoatHUDProps {
     vehicle: VehicleState;
@@ -274,6 +275,11 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                     {Math.round(vehicle.fuel)}%
                 </span>
             </motion.div>
+
+            {/* Body Health Indicator */}
+            {vehicle.bodyHealth !== undefined && (
+                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+            )}
         </motion.div>
     );
 };

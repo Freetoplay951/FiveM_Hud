@@ -3,6 +3,7 @@ import { Fuel, Thermometer } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { BodyHealthIndicator } from "./BodyHealthIndicator";
 
 interface VehicleHUDProps {
     vehicle: VehicleState;
@@ -276,6 +277,11 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                     {Math.round(vehicle.fuel)}%
                 </span>
             </motion.div>
+
+            {/* Body Health Indicator - Wrench Icon */}
+            {vehicle.bodyHealth !== undefined && (
+                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+            )}
         </motion.div>
     );
 };

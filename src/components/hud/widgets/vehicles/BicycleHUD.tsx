@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Bike } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { BodyHealthIndicator } from "./BodyHealthIndicator";
 
 interface BicycleHUDProps {
     vehicle: VehicleState;
@@ -220,6 +221,11 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                     </div>
                 </div>
             </div>
+
+            {/* Body Health Indicator */}
+            {vehicle.bodyHealth !== undefined && (
+                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+            )}
         </motion.div>
     );
 };

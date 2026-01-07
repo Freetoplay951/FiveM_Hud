@@ -57,6 +57,7 @@ const DEMO_VEHICLE: VehicleState = {
     speed: 127,
     gear: 4,
     fuel: 65,
+    bodyHealth: 850, // Good condition - press B to cycle through states
 };
 const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567, blackMoney: 5000 };
 const DEMO_PLAYER: PlayerState = { id: 42, job: "LSPD", rank: "Chief" };
@@ -640,6 +641,23 @@ export const HUD = () => {
                 });
             }
 
+            // Body health toggle - B key (cycles: good -> warning -> critical -> good)
+            if (e.key === "b" && !editMode) {
+                setVehicleState((prev) => {
+                    const current = prev.bodyHealth ?? 850;
+                    // Cycle through: good (850) -> warning (550) -> critical (200) -> good (850)
+                    let newHealth: number;
+                    if (current >= 700) {
+                        newHealth = 550; // Switch to warning
+                    } else if (current >= 400) {
+                        newHealth = 200; // Switch to critical
+                    } else {
+                        newHealth = 850; // Switch to good
+                    }
+                    return { ...prev, bodyHealth: newHealth };
+                });
+            }
+
             // Chat toggle - T key
             if (e.key === "t" && !editMode) {
                 e.preventDefault();
@@ -744,6 +762,7 @@ export const HUD = () => {
                                         <span>Edit: E</span>
                                         <span>Death: F</span>
                                         <span>Voice: R</span>
+                                        <span>Body: B</span>
                                         <span>Notify: H︱J︱K︱L</span>
                                         <span>Chat: T</span>
                                         <span>TeamChat: Y</span>

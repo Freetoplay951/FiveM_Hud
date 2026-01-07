@@ -151,5 +151,19 @@ Config.TeamChatName = "Team-Chat"
 
 Config.StopVehicleRadioOnEnter = true
 
+-- ============================================================================
+-- KAROSSERIE-ZUSTAND (Body Health) KONFIGURATION
+-- ============================================================================
+-- Schwellwerte für die Ampelfarben-Anzeige des Karosserie-Zustands
+-- GetVehicleBodyHealth(vehicle) gibt Werte von 0-1000 zurück
+-- ============================================================================
+
+Config.BodyHealth = {
+    -- Ab welchem Wert wird Gelb angezeigt? (Warnung)
+    yellowThreshold = 700,  -- Unter 700 = Gelb
+    -- Ab welchem Wert wird Rot angezeigt? (Kritisch)
+    redThreshold = 400,     -- Unter 400 = Rot
+}
+
 -- Debug
 Config.Debug = true

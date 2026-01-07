@@ -191,6 +191,7 @@ local function GetVehicleData(vehicle, vehicleType)
         speed = GetEntitySpeed(vehicle) * 3.6, -- m/s zu km/h
         fuel = GetVehicleFuelLevel(vehicle),
         engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10), -- 0-100
+        bodyHealth = math.floor(GetVehicleBodyHealth(vehicle)), -- 0-1000
         heading = GetEntityHeading(vehicle)
     }
     
