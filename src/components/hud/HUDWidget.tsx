@@ -238,7 +238,7 @@ export const HUDWidget = ({
                 opacity: !disabled && (visible || (editMode && hasAccess)) ? 1 : 0,
                 // Hide via visibility instead of unmounting
                 visibility: isHidden ? "hidden" : "visible",
-                pointerEvents: isHidden ? "none" : "auto",
+                pointerEvents: isHidden || !hasAccess ? "none" : "auto",
                 // CEF Fix: Prevent black box artifacts
                 willChange: isDragging || isResizing ? "transform" : "auto",
             }}

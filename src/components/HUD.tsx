@@ -1031,24 +1031,20 @@ export const HUD = () => {
 
                 // Extract vehicle type from widget id (e.g., "speedometer-car" -> "car")
                 const vehicleType = widgetType.replace("speedometer-", "") as SpeedometerType;
-                
-                // In edit mode: show the speedometerType widget, others hidden but rendered
-                // In play mode: show only the current vehicle type
-                const isCurrentVehicle = vehicleState.vehicleType === vehicleType;
-                const isEditPreview = editMode && speedometerType === vehicleType;
-                
+
                 const baseVisible = editMode ? true : !deathState.isDead;
-                const shouldShow = widget.visible && baseVisible && (
-                    editMode 
-                        ? isEditPreview 
-                        : (vehicleState.inVehicle && isCurrentVehicle)
-                );
+                const correctVehicle = editMode
+                    ? speedometerType === vehicleType
+                    : vehicleState.inVehicle && vehicleState.vehicleType === vehicleType;
+
+                const shouldShow = widget.visible && baseVisible && correctVehicle;
 
                 return (
                     <HUDWidget
                         key={widgetType}
                         id={widget.id}
                         position={widget.position}
+                        hasAccess={correctVehicle}
                         visible={shouldShow}
                         scale={widget.scale}
                         editMode={editMode}
