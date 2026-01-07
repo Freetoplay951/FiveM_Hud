@@ -11,12 +11,14 @@ export const MinimapWidget = ({ shape = "square" }: MinimapWidgetProps) => {
     const isRound = shape === "round";
 
     // GTA Default Minimap Größen (relativ)
-    const mapWidthRel = 0.1638;
-    const mapHeightRel = 0.183;
+    const mapWidthRel = 0.15;
+    const mapHeightRel = 0.188;
 
-    // Pixel-Berechnung
-    const widthPx = window.screen.width * mapWidthRel;
-    const heightPx = window.screen.height * mapHeightRel;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const widthPx = viewportWidth * mapWidthRel;
+    const heightPx = viewportHeight * mapHeightRel;
 
     // Rund = quadratisch
     const size = isRound ? Math.min(widthPx, heightPx) : null;
