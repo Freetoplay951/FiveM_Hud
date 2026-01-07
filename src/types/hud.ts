@@ -27,6 +27,7 @@ export interface VehicleState {
     fuel: number;
     rpm?: number;
     engineOn?: boolean;
+    bodyHealth?: number; // 0-1000, GetVehicleBodyHealth(vehicle)
     // Car specific
     seatbelt?: boolean;
     lights?: "off" | "low" | "high";

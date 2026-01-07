@@ -3,6 +3,7 @@ import { Fuel, ArrowUp, ArrowDown, Gauge } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { BodyHealthIndicator } from "./BodyHealthIndicator";
 
 interface HelicopterHUDProps {
     vehicle: VehicleState;
@@ -379,6 +380,11 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                     </motion.span>
                 </div>
             </motion.div>
+
+            {/* Body Health Indicator */}
+            {vehicle.bodyHealth !== undefined && (
+                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+            )}
         </motion.div>
     );
 };
