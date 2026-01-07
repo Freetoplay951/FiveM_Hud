@@ -57,7 +57,7 @@ const DEMO_VEHICLE: VehicleState = {
     speed: 127,
     gear: 4,
     fuel: 65,
-    bodyHealth: 850, // Good condition - press B to cycle through states
+    bodyHealth: 85, // Good condition (85%) - press B to cycle through states
 };
 const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567, blackMoney: 5000 };
 const DEMO_PLAYER: PlayerState = { id: 42, job: "LSPD", rank: "Chief" };
@@ -644,15 +644,15 @@ export const HUD = () => {
             // Body health toggle - B key (cycles: good -> warning -> critical -> good)
             if (e.key === "b" && !editMode) {
                 setVehicleState((prev) => {
-                    const current = prev.bodyHealth ?? 850;
-                    // Cycle through: good (850) -> warning (550) -> critical (200) -> good (850)
+                    const current = prev.bodyHealth ?? 85;
+                    // Cycle through: good (85%) -> warning (55%) -> critical (20%) -> good (85%)
                     let newHealth: number;
-                    if (current >= 700) {
-                        newHealth = 550; // Switch to warning
-                    } else if (current >= 400) {
-                        newHealth = 200; // Switch to critical
+                    if (current >= 70) {
+                        newHealth = 55; // Switch to warning
+                    } else if (current >= 40) {
+                        newHealth = 20; // Switch to critical
                     } else {
-                        newHealth = 850; // Switch to good
+                        newHealth = 85; // Switch to good
                     }
                     return { ...prev, bodyHealth: newHealth };
                 });

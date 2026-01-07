@@ -307,12 +307,16 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                         </div>
             </div>
 
-            {/* Status Row - Rotor, Fuel */}
+            {/* Status Row - Body Health, Rotor, Fuel */}
             <motion.div
                 className="flex items-center gap-3 mt-2"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}>
+                {/* Body Health */}
+                {vehicle.bodyHealth !== undefined && (
+                    <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+                )}
                 {/* Rotor RPM */}
                 <div
                     className={cn(
@@ -380,11 +384,6 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                     </motion.span>
                 </div>
             </motion.div>
-
-            {/* Body Health Indicator */}
-            {vehicle.bodyHealth !== undefined && (
-                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-            )}
         </motion.div>
     );
 };

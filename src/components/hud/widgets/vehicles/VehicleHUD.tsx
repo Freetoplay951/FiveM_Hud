@@ -211,12 +211,17 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                         {String(Math.round(vehicle.speed)).padStart(3, "0")}
                     </motion.span>
 
-                    {/* Gear & Engine Status */}
+                    {/* Gear & Body Health Status */}
                     <div className="relative flex items-center gap-3 mt-2">
-                        <Thermometer
-                            size={12}
-                            className="text-muted-foreground"
-                        />
+                        {/* Body Health Indicator - Left side */}
+                        {vehicle.bodyHealth !== undefined ? (
+                            <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+                        ) : (
+                            <Thermometer
+                                size={12}
+                                className="text-muted-foreground"
+                            />
+                        )}
                         <div className="flex items-center gap-1">
                             <span className="text-[10px] text-muted-foreground">
                                 {t.vehicle.gear.toUpperCase()}
@@ -227,10 +232,8 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                                 {vehicle.gear === 0 ? "R" : vehicle.gear}
                             </span>
                         </div>
-                        <Thermometer
-                            size={12}
-                            className="text-muted-foreground opacity-0"
-                        />
+                        {/* Spacer for symmetry */}
+                        <div className="w-6 h-6" />
                     </div>
                 </div>
             </div>
@@ -277,11 +280,6 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                     {Math.round(vehicle.fuel)}%
                 </span>
             </motion.div>
-
-            {/* Body Health Indicator - Wrench Icon */}
-            {vehicle.bodyHealth !== undefined && (
-                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-            )}
         </motion.div>
     );
 };

@@ -281,12 +281,16 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                         </div>
             </div>
 
-            {/* Status Row - Gear, Flaps, Fuel */}
+            {/* Status Row - Body Health, Gear, Flaps, Fuel */}
             <motion.div
                 className="flex items-center gap-3 mt-2"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}>
+                {/* Body Health */}
+                {vehicle.bodyHealth !== undefined && (
+                    <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+                )}
                 {/* Landing Gear */}
                 <div
                     className={cn(
@@ -366,11 +370,6 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                     </motion.span>
                 </div>
             </motion.div>
-
-            {/* Body Health Indicator */}
-            {vehicle.bodyHealth !== undefined && (
-                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-            )}
         </motion.div>
     );
 };
