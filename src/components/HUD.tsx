@@ -994,7 +994,6 @@ export const HUD = () => {
                             vehicleName={vehicleState.vehicleName}
                             vehicleSpawnName={vehicleState.vehicleSpawnName}
                             inVehicle={vehicleState.inVehicle}
-                            visible={widget.visible}
                             editMode={editMode}
                         />
                     </HUDWidget>
@@ -1057,7 +1056,7 @@ export const HUD = () => {
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}>
                         <VehicleHUDFactory
                             vehicle={{ ...vehicleState, vehicleType }}
-                            visible={shouldShow}
+                            visible={baseVisible && correctVehicle && (editMode ? true : widget.visible)}
                         />
                     </HUDWidget>
                 );
