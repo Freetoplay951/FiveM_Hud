@@ -203,8 +203,11 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                         {String(Math.round(vehicle.speed)).padStart(2, "0")}
                     </motion.span>
 
-                    {/* Bike Icon & Status */}
+                    {/* Bike Icon, Body Health & Status */}
                     <div className="relative flex items-center gap-2 mt-2">
+                        {vehicle.bodyHealth !== undefined && (
+                            <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+                        )}
                         <Bike
                             size={14}
                             className="text-stamina"
@@ -221,11 +224,6 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                     </div>
                 </div>
             </div>
-
-            {/* Body Health Indicator */}
-            {vehicle.bodyHealth !== undefined && (
-                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-            )}
         </motion.div>
     );
 };

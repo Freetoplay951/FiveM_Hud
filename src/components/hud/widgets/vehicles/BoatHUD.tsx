@@ -208,8 +208,12 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                         {String(Math.round(speed)).padStart(3, "0")}
                     </motion.span>
 
-                    {/* Heading & Anchor Status */}
-                    <div className="relative flex items-center gap-2 mt-2 min-w-[100px] justify-center">
+                    {/* Heading, Body Health & Anchor Status */}
+                    <div className="relative flex items-center gap-2 mt-2 min-w-[120px] justify-center">
+                        {/* Body Health */}
+                        {vehicle.bodyHealth !== undefined && (
+                            <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
+                        )}
                         <Navigation
                             size={12}
                             className="text-primary flex-shrink-0"
@@ -275,11 +279,6 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                     {Math.round(vehicle.fuel)}%
                 </span>
             </motion.div>
-
-            {/* Body Health Indicator */}
-            {vehicle.bodyHealth !== undefined && (
-                <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-            )}
         </motion.div>
     );
 };
