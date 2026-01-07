@@ -148,10 +148,19 @@ export const useHUDLayout = () => {
     }, []);
 
     const resetLayout = useCallback(
-        (isWidgetDisabled?: (id: string) => boolean) => {
+        (force: boolean, isWidgetDisabled?: (id: string) => boolean) => {
             const defaultState = getDefaultState();
 
-            setMinimapShape(defaultState.minimapShape);
+            setSpeedometerType(defaultState.speedometerType);
+            if (force) {
+                // speedometerType: "car",
+                setMinimapShape(defaultState.minimapShape);
+                setStatusDesign(defaultState.statusDesign);
+            } else {
+                // speedometerType: "car",
+                defaultState.minimapShape = state.minimapShape ?? defaultState.minimapShape;
+                defaultState.statusDesign = state.statusDesign ?? defaultState.statusDesign;
+            }
 
             requestAnimationFrame(() => {
                 const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
@@ -176,7 +185,7 @@ export const useHUDLayout = () => {
                 }));
             });
         },
-        [setMinimapShape]
+        [setMinimapShape, setStatusDesign, setSpeedometerType, state]
     );
 
     const resetWidget = useCallback((id: string, isWidgetDisabled?: (id: string) => boolean) => {

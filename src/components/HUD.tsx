@@ -724,7 +724,7 @@ export const HUD = () => {
                         onStatusDesignChange={setStatusDesign}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={setMinimapShape}
-                        onReset={() => resetLayout(isWidgetDisabled)}
+                        onReset={() => resetLayout(false, isWidgetDisabled)}
                         onExitEditMode={exitEditMode}
                     />
                 </Popover>
@@ -1006,7 +1006,8 @@ export const HUD = () => {
                 const widget = getWidget("minimap");
                 if (!widget) return null;
 
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+                const isNUI = isNuiEnvironment();
+                const baseVisible = widget.visible && (editMode || !isNUI);
 
                 return (
                     <HUDWidget
