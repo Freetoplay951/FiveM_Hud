@@ -358,6 +358,7 @@ export const useHUDLayout = () => {
 
     const setStatusDesign = useCallback(
         (design: StatusDesign, isWidgetDisabled?: (id: string) => boolean) => {
+            //We also want to refresh the health element, as it's gonna change
             const affected = startAutoRelayout([...WIDGET_DEPENDENCIES["health"], "health"], isWidgetDisabled);
 
             setState((prev) => ({ ...prev, statusDesign: design }));
@@ -374,9 +375,7 @@ export const useHUDLayout = () => {
 
     const setMinimapShape = useCallback(
         (shape: MinimapShape, isWidgetDisabled?: (id: string) => boolean) => {
-            const minimapDependents = WIDGET_DEPENDENCIES["minimap"] || [];
-            // Ensure location is always included (it depends on minimap)
-            const affected = startAutoRelayout([...minimapDependents, "location"], isWidgetDisabled);
+            const affected = startAutoRelayout(WIDGET_DEPENDENCIES["minimap"] || [], isWidgetDisabled);
 
             setState((prev) => ({ ...prev, minimapShape: shape }));
             sendNuiCallback("onMinimapShapeChange", { shape });
