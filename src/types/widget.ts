@@ -43,10 +43,26 @@ export type WidgetType =
     | "voice"
     | "radio"
     | "location"
-    | "speedometer"
+    | "speedometer-car"
+    | "speedometer-plane"
+    | "speedometer-boat"
+    | "speedometer-helicopter"
+    | "speedometer-motorcycle"
+    | "speedometer-bicycle"
     | "notifications"
     | "chat"
     | "teamchat";
+
+export const VEHICLE_WIDGET_TYPES = [
+    "speedometer-car",
+    "speedometer-plane",
+    "speedometer-boat",
+    "speedometer-helicopter",
+    "speedometer-motorcycle",
+    "speedometer-bicycle",
+] as const;
+
+export type VehicleWidgetType = (typeof VEHICLE_WIDGET_TYPES)[number];
 
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 export type SpeedometerType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
@@ -145,10 +161,11 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         },
-        {
-            id: "speedometer",
-            type: "speedometer",
-            position: (_id, el, resolver) => {
+        // Vehicle speedometer widgets - all share same default position
+        ...VEHICLE_WIDGET_TYPES.map((type) => ({
+            id: type,
+            type: type as WidgetType,
+            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
                 const width = el?.offsetWidth ?? 0;
                 const height = el?.offsetHeight ?? 0;
                 return {
@@ -158,7 +175,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             },
             visible: true,
             scale: 1,
-        },
+        })),
 
         // === Dependent widgets (depend on previously defined widgets) ===
         {

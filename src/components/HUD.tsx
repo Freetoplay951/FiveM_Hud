@@ -34,7 +34,7 @@ import {
     RadioState,
     DisabledWidgets,
 } from "@/types/hud";
-import { WidgetType } from "@/types/widget";
+import { WidgetType, VEHICLE_WIDGET_TYPES, SpeedometerType } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
@@ -1024,35 +1024,48 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Vehicle Speedometer */}
-            {(() => {
-                const widget = getWidget("speedometer");
+            {/* Vehicle Speedometers - one widget per vehicle type */}
+            {VEHICLE_WIDGET_TYPES.map((widgetType) => {
+                const widget = getWidget(widgetType);
                 if (!widget) return null;
 
+                // Extract vehicle type from widget id (e.g., "speedometer-car" -> "car")
+                const vehicleType = widgetType.replace("speedometer-", "") as SpeedometerType;
+                
+                // In edit mode: show the speedometerType widget, others hidden but rendered
+                // In play mode: show only the current vehicle type
+                const isCurrentVehicle = vehicleState.vehicleType === vehicleType;
+                const isEditPreview = editMode && speedometerType === vehicleType;
+                
                 const baseVisible = editMode ? true : !deathState.isDead;
-                const isVisible = widget.visible && baseVisible && (vehicleState.inVehicle || editMode);
+                const shouldShow = widget.visible && baseVisible && (
+                    editMode 
+                        ? isEditPreview 
+                        : (vehicleState.inVehicle && isCurrentVehicle)
+                );
 
                 return (
                     <HUDWidget
+                        key={widgetType}
                         id={widget.id}
                         position={widget.position}
-                        visible={isVisible}
+                        visible={shouldShow}
                         scale={widget.scale}
                         editMode={editMode}
                         snapToGrid={snapToGrid}
                         gridSize={gridSize}
                         onPositionChange={updateWidgetPosition}
-                        onVisibilityToggle={() => toggleWidgetVisibility("speedometer")}
+                        onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
                         onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget("speedometer", isWidgetDisabled)}
+                        onReset={() => resetWidget(widgetType, isWidgetDisabled)}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}>
                         <VehicleHUDFactory
-                            vehicle={editMode ? { ...vehicleState, vehicleType: speedometerType } : vehicleState}
-                            visible={vehicleState.inVehicle || editMode}
+                            vehicle={{ ...vehicleState, vehicleType }}
+                            visible={shouldShow}
                         />
                     </HUDWidget>
                 );
-            })()}
+            })}
 
             {/* Chat Widget */}
             {(() => {
