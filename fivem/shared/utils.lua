@@ -15,7 +15,7 @@ function DebugTable(tbl, indent)
     end
 end
 
-local excludedPrefixes = { "_", "-", "sv_", "onesync_", "rateLimiter_", "adhesive_" }
+local excludedPrefixes = { "_", "+", "-", "sv_", "onesync_", "rateLimiter_", "adhesive_" }
 function ShouldSkipCommand(cmd, playerId)
     if cmd.resource == "internal" then return true end
     if type(cmd.name) ~= "string" then return true end
