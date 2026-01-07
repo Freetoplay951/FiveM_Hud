@@ -7,8 +7,8 @@ Config.LocationUpdateInterval = 1000   -- Wie oft Location aktualisiert wird
 
 -- Deaktivierte Widgets
 Config.DisabledWidgets = {
-    oxygen = true,
-    stress = true
+    -- oxygen = true,
+    -- stress = true
 }
 
 -- Death Screen Einstellungen
