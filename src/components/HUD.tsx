@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HUDWidget } from "./hud/HUDWidget";
-import { VehicleHUDFactory } from "./hud/vehicles/VehicleHUDFactory";
+import { VehicleHUDFactory } from "./hud/widgets/vehicles/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { StatusWidget } from "./hud/widgets/StatusWidget";
 import { MoneyWidget } from "./hud/widgets/MoneyWidget";
