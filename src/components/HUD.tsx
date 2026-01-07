@@ -185,6 +185,7 @@ export const HUD = () => {
         speedometerType,
         minimapShape,
         widgetsDistributed,
+        autoLayoutHiddenIds,
         toggleEditMode,
         setSnapToGrid,
         setStatusDesign,
@@ -721,9 +722,9 @@ export const HUD = () => {
                         speedometerType={speedometerType}
                         minimapShape={minimapShape}
                         onSnapToGridChange={setSnapToGrid}
-                        onStatusDesignChange={setStatusDesign}
+                        onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled)}
                         onSpeedometerTypeChange={setSpeedometerType}
-                        onMinimapShapeChange={setMinimapShape}
+                        onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled)}
                         onReset={() => resetLayout(false, isWidgetDisabled)}
                         onExitEditMode={exitEditMode}
                     />
@@ -829,6 +830,7 @@ export const HUD = () => {
                         visible={isVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        suspended={autoLayoutHiddenIds.includes(type)}
                         {...widgetProps}>
                         <StatusWidget
                             type={type}
@@ -898,6 +900,7 @@ export const HUD = () => {
                         visible={isVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        suspended={autoLayoutHiddenIds.includes(widget.id)}
                         {...widgetProps}>
                         <VoiceWidget voice={voiceState} />
                     </HUDWidget>
@@ -944,6 +947,7 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        suspended={autoLayoutHiddenIds.includes(widget.id)}
                         {...widgetProps}>
                         <LocationWidget
                             location={locationState}
@@ -1015,6 +1019,7 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        suspended={autoLayoutHiddenIds.includes(widget.id)}
                         {...widgetProps}
                         onPositionChange={undefined}
                         onScaleChange={undefined}>

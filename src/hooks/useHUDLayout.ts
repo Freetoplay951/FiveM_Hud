@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import {
     HUDLayoutState,
@@ -8,11 +8,147 @@ import {
     SpeedometerType,
     MinimapShape,
     getDefaultWidgets,
+    WidgetConfig,
 } from "@/types/widget";
-import { resolveDefaultPositions } from "@/lib/widgetPositionResolver";
+import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
+
+// Tolerance for position comparison (pixels)
+const POSITION_TOLERANCE = 5;
+
+/**
+ * Programmatically extract widget dependencies by analyzing position functions.
+ * Runs each widget's position function with a mock resolver that tracks getWidgetRect calls.
+ */
+const extractWidgetDependencies = (widgetConfigs: WidgetConfig[]): Record<string, Set<string>> => {
+    const dependencyMap: Record<string, Set<string>> = {};
+    const widgetIds = widgetConfigs.map((w) => w.id);
+
+    // Initialize all widgets with empty dependency sets
+    for (const id of widgetIds) {
+        dependencyMap[id] = new Set();
+    }
+
+    // For each widget, run its position function with a tracking resolver
+    for (const config of widgetConfigs) {
+        const trackedDeps: string[] = [];
+
+        const mockResolver: PositionResolver = {
+            getWidgetRect: (id: string) => {
+                trackedDeps.push(id);
+                // Return a mock rect - the actual values don't matter for dependency detection
+                return { x: 0, y: 0, width: 100, height: 100, right: 100, bottom: 100 };
+            },
+            getWidgetSize: () => ({ width: 100, height: 100 }),
+            screen: { width: 1920, height: 1080 },
+            isWidgetDisabled: () => false,
+        };
+
+        // Create a mock element with all properties that position functions might access
+        const mockElement = {
+            offsetWidth: 100,
+            offsetHeight: 100,
+            getBoundingClientRect: () => ({
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+                top: 0,
+                left: 0,
+                right: 100,
+                bottom: 100,
+            }),
+        } as unknown as HTMLElement;
+
+        try {
+            // Run the position function to see which widgets it queries
+            config.position(config.id, mockElement, mockResolver);
+        } catch (e) {
+            // Some position functions might fail with mock data
+            // Log for debugging but continue
+            console.debug(`Dependency extraction for ${config.id} failed:`, e);
+        }
+
+        // Record dependencies - this widget depends on the widgets it queried
+        for (const depId of trackedDeps) {
+            if (depId !== config.id) {
+                dependencyMap[config.id].add(depId);
+            }
+        }
+    }
+
+    return dependencyMap;
+};
+
+/**
+ * Build a reverse dependency map: which widgets depend ON a given widget.
+ * Also includes transitive dependencies (if A depends on B, and B depends on C,
+ * then C's dependents include both A and B).
+ */
+const buildReverseDependencyMap = (
+    directDeps: Record<string, Set<string>>,
+    widgetConfigs: WidgetConfig[]
+): Record<string, string[]> => {
+    const reverseMap: Record<string, Set<string>> = {};
+    const widgetIds = widgetConfigs.map((w) => w.id);
+    const widgetOrder = new Map(widgetIds.map((id, idx) => [id, idx]));
+
+    // Initialize
+    for (const id of widgetIds) {
+        reverseMap[id] = new Set();
+    }
+
+    // Build direct reverse dependencies
+    for (const [widgetId, deps] of Object.entries(directDeps)) {
+        for (const depId of deps) {
+            if (reverseMap[depId]) {
+                reverseMap[depId].add(widgetId);
+            }
+        }
+    }
+
+    // Expand to include transitive dependencies
+    // If minimap -> location -> something, then minimap's dependents should include location's dependents
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const [anchorId, dependents] of Object.entries(reverseMap)) {
+            const currentSize = dependents.size;
+            const toAdd: string[] = [];
+
+            for (const depId of dependents) {
+                // This dependent's dependents are also affected by the anchor
+                for (const transitiveDep of reverseMap[depId] || []) {
+                    if (!dependents.has(transitiveDep) && transitiveDep !== anchorId) {
+                        toAdd.push(transitiveDep);
+                    }
+                }
+            }
+
+            for (const id of toAdd) {
+                dependents.add(id);
+            }
+
+            if (dependents.size > currentSize) {
+                changed = true;
+            }
+        }
+    }
+
+    // Convert to sorted arrays (by widget order for consistent processing)
+    const result: Record<string, string[]> = {};
+    for (const [id, deps] of Object.entries(reverseMap)) {
+        result[id] = Array.from(deps).sort((a, b) => (widgetOrder.get(a) ?? 0) - (widgetOrder.get(b) ?? 0));
+    }
+
+    return result;
+};
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
+
+// Build the dependency maps once at module load
+const directDependencies = extractWidgetDependencies(defaultWidgetConfigs);
+const WIDGET_DEPENDENCIES = buildReverseDependencyMap(directDependencies, defaultWidgetConfigs);
 
 // Get dynamic default state based on current screen size
 const getDefaultState = (): HUDLayoutState => ({
@@ -129,18 +265,126 @@ export const useHUDLayout = () => {
         }));
     }, []);
 
-    const setStatusDesign = useCallback((design: StatusDesign) => {
-        setState((prev) => ({ ...prev, statusDesign: design }));
+    const [autoLayoutHiddenIds, setAutoLayoutHiddenIds] = useState<string[]>([]);
+    const lastDefaultRectsRef = useRef<Map<string, WidgetRect> | null>(null);
+
+    const isPositionClose = useCallback((a: WidgetPosition, b: WidgetPosition) => {
+        return Math.abs(a.x - b.x) <= POSITION_TOLERANCE && Math.abs(a.y - b.y) <= POSITION_TOLERANCE;
     }, []);
+
+    const captureDefaultRects = useCallback((isWidgetDisabled?: (id: string) => boolean) => {
+        lastDefaultRectsRef.current = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
+    }, []);
+
+    /**
+     * Auto-relayout: only move widgets that are still at their *previous* default position.
+     * This matches your requirement: do not touch widgets the user manually moved.
+     */
+    const runAutoRelayout = useCallback(
+        (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean) => {
+            // Ensure we have the "before" snapshot
+            const oldRects = lastDefaultRectsRef.current;
+            if (!oldRects) return;
+
+            // Wait for DOM to update with new sizes, then compute new defaults
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const newRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
+
+                    setState((prev) => ({
+                        ...prev,
+                        widgets: prev.widgets.map((w) => {
+                            if (!affectedWidgetIds.includes(w.id)) return w;
+
+                            const oldRect = oldRects.get(w.id);
+                            const newRect = newRects.get(w.id);
+                            if (!oldRect || !newRect) return w;
+
+                            // Only move if it was at the old default position
+                            if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y })) {
+                                return {
+                                    ...w,
+                                    position: clampPosition({ x: newRect.x, y: newRect.y }),
+                                };
+                            }
+
+                            return w;
+                        }),
+                    }));
+
+                    // Unhide after positions have been updated
+                    setAutoLayoutHiddenIds([]);
+                });
+            });
+        },
+        [isPositionClose]
+    );
+
+    /**
+     * Determine which widgets will actually be moved (are at their default position).
+     * Only those should be hidden during auto-relayout.
+     */
+    const getWidgetsToMove = useCallback(
+        (affectedWidgetIds: string[], oldRects: Map<string, WidgetRect>): string[] => {
+            return state.widgets
+                .filter((w) => {
+                    if (!affectedWidgetIds.includes(w.id)) return false;
+                    const oldRect = oldRects.get(w.id);
+                    if (!oldRect) return false;
+                    // Only include if at old default position
+                    return isPositionClose(w.position, { x: oldRect.x, y: oldRect.y });
+                })
+                .map((w) => w.id);
+        },
+        [state.widgets, isPositionClose]
+    );
+
+    const startAutoRelayout = useCallback(
+        (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean) => {
+            const uniq = Array.from(new Set(affectedWidgetIds));
+            captureDefaultRects(isWidgetDisabled);
+
+            // Only hide widgets that are actually at their default position (will be moved)
+            const oldRects = lastDefaultRectsRef.current;
+            if (oldRects) {
+                const toHide = getWidgetsToMove(uniq, oldRects);
+                setAutoLayoutHiddenIds(toHide);
+            }
+
+            return uniq;
+        },
+        [captureDefaultRects, getWidgetsToMove]
+    );
+
+    const setStatusDesign = useCallback(
+        (design: StatusDesign, isWidgetDisabled?: (id: string) => boolean) => {
+            const affected = startAutoRelayout([...WIDGET_DEPENDENCIES["health"], "health"], isWidgetDisabled);
+
+            setState((prev) => ({ ...prev, statusDesign: design }));
+
+            // After render, compute new defaults and apply (without flicker: widgets are hidden during this)
+            runAutoRelayout(affected, isWidgetDisabled);
+        },
+        [runAutoRelayout, startAutoRelayout]
+    );
 
     const setSpeedometerType = useCallback((type: SpeedometerType) => {
         setState((prev) => ({ ...prev, speedometerType: type }));
     }, []);
 
-    const setMinimapShape = useCallback((shape: MinimapShape) => {
-        setState((prev) => ({ ...prev, minimapShape: shape }));
-        sendNuiCallback("onMinimapShapeChange", { shape });
-    }, []);
+    const setMinimapShape = useCallback(
+        (shape: MinimapShape, isWidgetDisabled?: (id: string) => boolean) => {
+            const minimapDependents = WIDGET_DEPENDENCIES["minimap"] || [];
+            // Ensure location is always included (it depends on minimap)
+            const affected = startAutoRelayout([...minimapDependents, "location"], isWidgetDisabled);
+
+            setState((prev) => ({ ...prev, minimapShape: shape }));
+            sendNuiCallback("onMinimapShapeChange", { shape });
+
+            runAutoRelayout(affected, isWidgetDisabled);
+        },
+        [runAutoRelayout, startAutoRelayout]
+    );
 
     const resetLayout = useCallback(
         (force: boolean, isWidgetDisabled?: (id: string) => boolean) => {
@@ -213,6 +457,7 @@ export const useHUDLayout = () => {
 
     return {
         ...state,
+        autoLayoutHiddenIds,
         toggleEditMode,
         setSnapToGrid,
         updateWidgetPosition,

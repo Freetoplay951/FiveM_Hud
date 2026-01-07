@@ -18,6 +18,8 @@ interface HUDWidgetProps {
     onReset?: (id: string) => void;
     hasAccess?: boolean;
     disabled: boolean;
+    /** Hide the widget temporarily (used for auto-layout to prevent flicker) */
+    suspended?: boolean;
     className?: string;
 }
 
@@ -39,6 +41,7 @@ export const HUDWidget = ({
     onReset,
     hasAccess = true,
     disabled,
+    suspended = false,
     className,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
@@ -215,6 +218,8 @@ export const HUDWidget = ({
     // Hidden state: not visible and not in edit mode, OR server disabled
     const isHidden = !visible && !editMode;
 
+    const isSuspended = suspended;
+
     return (
         <div
             id={`hud-widget-${id}`}
@@ -235,10 +240,10 @@ export const HUDWidget = ({
                 // Round scale to avoid subpixel rendering issues
                 transform: `scale(${Math.round(displayScale * 100) / 100})`,
                 transformOrigin: "top left",
-                opacity: !disabled && (visible || (editMode && hasAccess)) ? 1 : 0,
+                opacity: isSuspended ? 0 : !disabled && (visible || (editMode && hasAccess)) ? 1 : 0,
                 // Hide via visibility instead of unmounting
-                visibility: isHidden ? "hidden" : "visible",
-                pointerEvents: isHidden || !hasAccess ? "none" : "auto",
+                visibility: isHidden || isSuspended ? "hidden" : "visible",
+                pointerEvents: isHidden || isSuspended || !hasAccess ? "none" : "auto",
                 // CEF Fix: Prevent black box artifacts
                 willChange: isDragging || isResizing ? "transform" : "auto",
             }}

@@ -254,12 +254,13 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             position: (_id, el, resolver) => {
                 const minimapRect = resolver.getWidgetRect("minimap");
                 const width = el?.offsetWidth ?? 0;
+                const height = el?.offsetHeight ?? 0;
 
                 if (minimapRect) {
                     const minimapCenterX = minimapRect.x + minimapRect.width / 2;
                     return {
                         x: minimapCenterX - width / 2,
-                        y: minimapRect.y - GAP - el.offsetHeight,
+                        y: minimapRect.y - GAP - height,
                     };
                 }
 
