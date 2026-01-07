@@ -225,7 +225,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
                 </div>
 
                 {/* Body Health Indicator - On the arc, bottom center */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
                     {vehicle.bodyHealth !== undefined ? (
                         <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
                     ) : (
