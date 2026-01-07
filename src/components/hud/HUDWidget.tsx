@@ -103,6 +103,7 @@ export const HUDWidget = ({
     const handleMouseDown = useCallback(
         (e: React.MouseEvent) => {
             if (!editMode) return;
+            if (!onPositionChange) return;
             if (isResizing) return;
             e.preventDefault();
             e.stopPropagation();
@@ -111,7 +112,7 @@ export const HUDWidget = ({
             widgetStartPos.current = { x: position.x, y: position.y };
             setLocalPosition({ x: position.x, y: position.y });
         },
-        [editMode, isResizing, position]
+        [editMode, onPositionChange, isResizing, position]
     );
 
     const localPositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -220,7 +221,7 @@ export const HUDWidget = ({
             ref={rootRef}
             className={cn(
                 "absolute pointer-events-auto select-none",
-                editMode && "cursor-move",
+                editMode && onPositionChange && "cursor-move",
                 editMode && "ring-2 ring-primary/50 ring-dashed rounded-lg",
                 (isDragging || isResizing) && "ring-primary z-50",
                 !visible && editMode && "opacity-40",
