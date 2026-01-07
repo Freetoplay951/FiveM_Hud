@@ -198,6 +198,7 @@ export const useHUDLayout = () => {
                           ...w,
                           position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
                           scale: defaultWidget.scale ?? 1,
+                          visible: defaultWidget.visible,
                       }
                     : w
             ),

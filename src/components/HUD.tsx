@@ -1016,7 +1016,9 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        onPositionChange={undefined}
+                        onScaleChange={undefined}>
                         <MinimapWidget shape={minimapShape} />
                     </HUDWidget>
                 );
