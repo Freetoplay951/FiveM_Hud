@@ -147,28 +147,37 @@ export const useHUDLayout = () => {
         sendNuiCallback("onMinimapShapeChange", { shape });
     }, []);
 
-    const resetLayout = useCallback((isWidgetDisabled?: (id: string) => boolean) => {
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
+    const resetLayout = useCallback(
+        (isWidgetDisabled?: (id: string) => boolean) => {
+            const defaultState = getDefaultState();
 
-        const resetWidgets = defaultWidgetConfigs.map((w) => {
-            const rect = resolvedRects.get(w.id);
-            return {
-                id: w.id,
-                type: w.type,
-                position: rect ? clampPosition({ x: rect.x, y: rect.y }) : { x: 0, y: 0 },
-                visible: w.visible,
-                scale: w.scale ?? 1,
-            };
-        });
+            setMinimapShape(defaultState.minimapShape);
 
-        setState((prev) => ({
-            ...getDefaultState(),
-            widgets: resetWidgets,
-            editMode: true,
-            snapToGrid: prev.snapToGrid,
-            widgetsDistributed: true,
-        }));
-    }, []);
+            requestAnimationFrame(() => {
+                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
+
+                const resetWidgets = defaultWidgetConfigs.map((w) => {
+                    const rect = resolvedRects.get(w.id);
+                    return {
+                        id: w.id,
+                        type: w.type,
+                        position: rect ? clampPosition({ x: rect.x, y: rect.y }) : { x: 0, y: 0 },
+                        visible: w.visible,
+                        scale: w.scale ?? 1,
+                    };
+                });
+
+                setState((prev) => ({
+                    ...defaultState,
+                    widgets: resetWidgets,
+                    editMode: true,
+                    snapToGrid: prev.snapToGrid,
+                    widgetsDistributed: true,
+                }));
+            });
+        },
+        [setMinimapShape]
+    );
 
     const resetWidget = useCallback((id: string, isWidgetDisabled?: (id: string) => boolean) => {
         const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);

@@ -39,7 +39,7 @@ import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import { TestWidget } from "./hud/widgets/TestWidget";
+import { MinimapWidget } from "./hud/widgets/MinimapWidget";
 
 // Demo values
 const DEMO_HUD: StatusWidgetState = {
@@ -1001,9 +1001,9 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Test Widget */}
+            {/* Minimap Widget */}
             {(() => {
-                const widget = getWidget("test");
+                const widget = getWidget("minimap");
                 if (!widget) return null;
 
                 const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
@@ -1016,7 +1016,7 @@ export const HUD = () => {
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...widgetProps}>
-                        <TestWidget />
+                        <MinimapWidget shape={minimapShape} />
                     </HUDWidget>
                 );
             })()}
