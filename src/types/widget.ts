@@ -51,15 +51,7 @@ export type WidgetType =
     | "speedometer-bicycle"
     | "notifications"
     | "chat"
-    | "teamchat"
-    // Helicopter sub-widgets
-    | "heli-base"
-    | "heli-speed"
-    | "heli-altitude"
-    | "heli-heading"
-    | "heli-rotor"
-    | "heli-fuel"
-    | "heli-verticalspeed";
+    | "teamchat";
 
 export const VEHICLE_WIDGET_TYPES = [
     "speedometer-car",
@@ -69,19 +61,6 @@ export const VEHICLE_WIDGET_TYPES = [
     "speedometer-motorcycle",
     "speedometer-bicycle",
 ] as const;
-
-export const HELI_WIDGET_TYPES = [
-    "heli-base",
-    "heli-speed",
-    "heli-altitude",
-    "heli-heading",
-    "heli-rotor",
-    "heli-fuel",
-    "heli-verticalspeed",
-] as const;
-
-export type VehicleWidgetType = (typeof VEHICLE_WIDGET_TYPES)[number];
-export type HeliWidgetType = (typeof HELI_WIDGET_TYPES)[number];
 
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 export type SpeedometerType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
@@ -180,8 +159,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         },
-        // Vehicle speedometer widgets - all share same default position (except helicopter which uses subwidgets)
-        ...VEHICLE_WIDGET_TYPES.filter((type) => type !== "speedometer-helicopter").map((type) => ({
+        ...VEHICLE_WIDGET_TYPES.map((type) => ({
             id: type,
             type: type as WidgetType,
             position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
@@ -195,134 +173,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         })),
-
-        // === Helicopter sub-widgets (individual movable elements) ===
-        {
-            id: "heli-base",
-            type: "heli-base" as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const width = el?.offsetWidth ?? 176; // 44*4 = 176px (w-44)
-                const height = el?.offsetHeight ?? 176;
-                return {
-                    x: resolver.screen.width - MARGIN - width,
-                    y: resolver.screen.height - MARGIN - height,
-                };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-speed",
-            type: "heli-speed" as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const heliBaseRect = resolver.getWidgetRect("heli-base");
-                const width = el?.offsetWidth ?? 40;
-                const height = el?.offsetHeight ?? 30;
-                if (heliBaseRect) {
-                    // Position: left side of the attitude indicator, vertically centered
-                    return {
-                        x: heliBaseRect.x + 8, // 8px from left edge of base
-                        y: heliBaseRect.y + heliBaseRect.height / 2 - height / 2,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN - 200, y: resolver.screen.height - MARGIN - 100 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-altitude",
-            type: "heli-altitude" as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const heliBaseRect = resolver.getWidgetRect("heli-base");
-                const width = el?.offsetWidth ?? 44;
-                const height = el?.offsetHeight ?? 30;
-                if (heliBaseRect) {
-                    // Position: right side of the attitude indicator, vertically centered
-                    return {
-                        x: heliBaseRect.x + heliBaseRect.width - width - 8, // 8px from right edge
-                        y: heliBaseRect.y + heliBaseRect.height / 2 - height / 2,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN - 50, y: resolver.screen.height - MARGIN - 100 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-heading",
-            type: "heli-heading" as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const heliBaseRect = resolver.getWidgetRect("heli-base");
-                const width = el?.offsetWidth ?? 48;
-                const height = el?.offsetHeight ?? 24;
-                if (heliBaseRect) {
-                    // Position: bottom center of the attitude indicator
-                    return {
-                        x: heliBaseRect.x + heliBaseRect.width / 2 - width / 2,
-                        y: heliBaseRect.y + heliBaseRect.height - 12 - height, // 12px from bottom
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN - 100, y: resolver.screen.height - MARGIN - 30 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-verticalspeed",
-            type: "heli-verticalspeed" as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const heliBaseRect = resolver.getWidgetRect("heli-base");
-                const width = el?.offsetWidth ?? 44;
-                const height = el?.offsetHeight ?? 20;
-                if (heliBaseRect) {
-                    // Position: right side, below altitude (bottom-right area)
-                    return {
-                        x: heliBaseRect.x + heliBaseRect.width - width - 8,
-                        y: heliBaseRect.y + heliBaseRect.height - 48 - height, // above heading
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN - 50, y: resolver.screen.height - MARGIN - 60 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-rotor",
-            type: "heli-rotor" as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const heliBaseRect = resolver.getWidgetRect("heli-base");
-                const width = el?.offsetWidth ?? 88;
-                const height = el?.offsetHeight ?? 28;
-                if (heliBaseRect) {
-                    // Position: above the attitude indicator, left side of status row
-                    return {
-                        x: heliBaseRect.x + heliBaseRect.width / 2 - width - GAP / 2,
-                        y: heliBaseRect.y - height - 8,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN - 160, y: resolver.screen.height - MARGIN - 200 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-fuel",
-            type: "heli-fuel" as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const heliRotorRect = resolver.getWidgetRect("heli-rotor");
-                if (heliRotorRect) {
-                    // Position: next to rotor widget
-                    return {
-                        x: heliRotorRect.right + GAP,
-                        y: heliRotorRect.y,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN - 64, y: resolver.screen.height - MARGIN - 200 };
-            },
-            visible: true,
-            scale: 1,
-        },
 
         // === Dependent widgets (depend on previously defined widgets) ===
         {
