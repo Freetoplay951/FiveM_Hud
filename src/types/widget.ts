@@ -477,13 +477,14 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             type: "heli-rotor",
             position: (_id, el, resolver) => {
                 const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const width = el?.offsetWidth ?? 0;
+                const rotorWidth = el?.offsetWidth ?? 0;
+                const fuelWidth = resolver.getWidgetSize("heli-fuel").width;
                 if (baseRect) {
                     const baseCenterX = baseRect.x + baseRect.width / 2;
-                    // Position below base, aligned to baseline (bottom of screen - MARGIN)
+                    const totalWidth = rotorWidth + GAP + fuelWidth;
                     return {
-                        x: baseCenterX - width - GAP / 2,
-                        y: baseRect.bottom + MARGIN,
+                        x: baseCenterX - totalWidth / 2,
+                        y: baseRect.bottom + GAP,
                     };
                 }
                 return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -494,14 +495,12 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-fuel",
             type: "heli-fuel",
-            position: (_id, el, resolver) => {
-                const baseRect = resolver.getWidgetCurrentRect("heli-base");
+            position: (_id, _el, resolver) => {
                 const rotorRect = resolver.getWidgetRect("heli-rotor");
                 if (rotorRect) {
-                    // Position to the right of rotor, aligned to baseline
                     return {
-                        x: baseRect.x + rotorRect.width + GAP,
-                        y: baseRect.bottom + MARGIN,
+                        x: rotorRect.right + GAP,
+                        y: rotorRect.y,
                     };
                 }
                 return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
