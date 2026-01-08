@@ -1,10 +1,11 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Language, Translations } from "@/types/translation";
+import { Language, Locales, Translations } from "@/types/translation";
 
 interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
+    languages: Locales;
     t: Translations;
     isLoaded: boolean;
 }
