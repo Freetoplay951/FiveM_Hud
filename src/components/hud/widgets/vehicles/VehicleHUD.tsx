@@ -45,9 +45,9 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
     return (
         <motion.div
             initial={false}
-            animate={{ 
-                opacity: visible ? 1 : 0, 
-                scale: visible ? 1 : 0.8 
+            animate={{
+                opacity: visible ? 1 : 0,
+                scale: visible ? 1 : 0.8,
             }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center">
@@ -213,9 +213,7 @@ export const VehicleHUD = ({ vehicle, visible }: VehicleHUDProps) => {
 
                     {/* Gear Display */}
                     <div className="relative flex items-center gap-1 mt-2">
-                        <span className="text-[10px] text-muted-foreground">
-                            {t.vehicle.gear.toUpperCase()}
-                        </span>
+                        <span className="text-[10px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
                         <span
                             className="hud-number text-lg text-primary leading-none"
                             style={{ textShadow: "0 0 10px hsl(var(--primary) / 0.6)" }}>
