@@ -30,6 +30,8 @@ interface HUDWidgetProps {
     onDragMove?: (deltaX: number, deltaY: number) => void;
     /** Called when drag ends */
     onDragEnd?: () => void;
+    /** Called to clear all selections */
+    onClearSelection?: () => void;
 }
 
 const MIN_SCALE = 0.5;
@@ -57,6 +59,7 @@ export const HUDWidget = ({
     onDragStart,
     onDragMove,
     onDragEnd,
+    onClearSelection,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const [elementSize, setElementSize] = useState({ w: 0, h: 0 });
@@ -158,7 +161,8 @@ export const HUDWidget = ({
             let newX = widgetStartPos.current.x + deltaX;
             let newY = widgetStartPos.current.y + deltaY;
 
-            if (snapToGrid) {
+            // Only snap to grid for single widget drag, not group drag
+            if (snapToGrid && !isSelected) {
                 newX = Math.round(newX / gridSize) * gridSize;
                 newY = Math.round(newY / gridSize) * gridSize;
             }
@@ -311,6 +315,10 @@ export const HUDWidget = ({
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onReset(id);
+                                    // Clear selection when resetting
+                                    if (onClearSelection) {
+                                        onClearSelection();
+                                    }
                                 }}
                                 className="bg-background/60 border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors"
                                 title="Position & Größe zurücksetzen">
