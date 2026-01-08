@@ -190,7 +190,15 @@ const normalizeState = (raw: Partial<HUDLayoutState>): HUDLayoutState => {
         ...raw,
     };
 
-    next.widgets = clampAllWidgets(next.widgets ?? defaultState.widgets);
+    // Merge saved widgets with default widgets (add new widgets that don't exist in saved state)
+    const savedWidgetIds = new Set((raw.widgets ?? []).map((w) => w.id));
+    const mergedWidgets = [
+        ...(raw.widgets ?? []),
+        // Add any new widgets from default config that weren't in saved state
+        ...defaultState.widgets.filter((w) => !savedWidgetIds.has(w.id)),
+    ];
+
+    next.widgets = clampAllWidgets(mergedWidgets);
     next.minimapShape = next.minimapShape ?? "square";
     next.widgetsDistributed = next.widgetsDistributed ?? false;
 

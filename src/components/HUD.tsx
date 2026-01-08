@@ -42,6 +42,13 @@ import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { MinimapWidget } from "./hud/widgets/MinimapWidget";
 import { WidgetPosition } from "@/types/widget";
+import {
+    getWidgetElement,
+    getWidgetDOMPosition,
+    setWidgetDOMPosition,
+    calcGroupClampAdjust,
+    isWidgetVisible,
+} from "@/lib/widgetUtils";
 
 // Demo values
 const DEMO_HUD: StatusWidgetState = {
@@ -728,35 +735,24 @@ export const HUD = () => {
     );
 
     const handleWidgetDragMove = useCallback((deltaX: number, deltaY: number) => {
-        // Move all selected widgets by the same delta (no grid snapping for group movement)
-        widgetStartPositionsRef.current.forEach((startPos, widgetId) => {
-            let newX = startPos.x + deltaX;
-            let newY = startPos.y + deltaY;
+        const widgetIds = Array.from(widgetStartPositionsRef.current.keys());
+        const getNewPos = (id: string) => {
+            const start = widgetStartPositionsRef.current.get(id);
+            return start ? { x: start.x + deltaX, y: start.y + deltaY } : null;
+        };
 
-            // Clamp to viewport
-            newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
-            newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
+        const { adjustX, adjustY } = calcGroupClampAdjust(widgetIds, getNewPos);
 
-            // Update DOM directly for smooth movement
-            const el = document.getElementById(`hud-widget-${widgetId}`);
-            if (el) {
-                el.style.left = `${newX}px`;
-                el.style.top = `${newY}px`;
-            }
+        widgetIds.forEach((id) => {
+            const pos = getNewPos(id);
+            if (pos) setWidgetDOMPosition(id, { x: pos.x + adjustX, y: pos.y + adjustY });
         });
     }, []);
 
     const handleWidgetDragEnd = useCallback(() => {
-        // Commit all positions
-        widgetStartPositionsRef.current.forEach((startPos, widgetId) => {
-            const el = document.getElementById(`hud-widget-${widgetId}`);
-            if (el) {
-                const newX = parseInt(el.style.left, 10);
-                const newY = parseInt(el.style.top, 10);
-                if (!isNaN(newX) && !isNaN(newY)) {
-                    updateWidgetPosition(widgetId, { x: newX, y: newY });
-                }
-            }
+        widgetStartPositionsRef.current.forEach((_, id) => {
+            const pos = getWidgetDOMPosition(id);
+            if (pos) updateWidgetPosition(id, pos);
         });
         widgetStartPositionsRef.current.clear();
     }, [updateWidgetPosition]);
@@ -811,13 +807,14 @@ export const HUD = () => {
         // Find all widgets within selection
         const newSelection = new Set(selectedWidgets);
         widgets.forEach((widget) => {
-            const el = document.getElementById(`hud-widget-${widget.id}`);
-            if (el) {
-                const rect = el.getBoundingClientRect();
-                // Check if widget overlaps with selection
-                if (rect.left < right && rect.right > left && rect.top < bottom && rect.bottom > top) {
-                    newSelection.add(widget.id);
-                }
+            if (!isWidgetVisible(widget.id)) return;
+
+            const el = getWidgetElement(widget.id);
+            if (!el) return;
+
+            const rect = el.getBoundingClientRect();
+            if (rect.left < right && rect.right > left && rect.top < bottom && rect.bottom > top) {
+                newSelection.add(widget.id);
             }
         });
 
