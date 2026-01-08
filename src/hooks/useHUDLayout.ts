@@ -420,7 +420,7 @@ export const useHUDLayout = () => {
             }
 
             requestAnimationFrame(() => {
-                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
+                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, false);
 
                 const resetWidgets = defaultWidgetConfigs.map((w) => {
                     const rect = resolvedRects.get(w.id);
