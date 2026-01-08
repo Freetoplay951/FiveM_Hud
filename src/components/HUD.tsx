@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HUDWidget } from "./hud/HUDWidget";
@@ -45,10 +45,12 @@ import {
     HeliVerticalSpeedWidget,
 } from "./hud/widgets/vehicles/helicopter";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
+import { SelectionBox } from "./hud/SelectionBox";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { MinimapWidget } from "./hud/widgets/MinimapWidget";
+import { WidgetPosition } from "@/types/widget";
 
 // Demo values
 const DEMO_HUD: StatusWidgetState = {
@@ -185,6 +187,13 @@ export const HUD = () => {
     const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(!isNuiEnvironment());
     const [isDemoMode] = useState(!isNuiEnvironment());
     const [editMenuOpen, setEditMenuOpen] = useState(false);
+    
+    // Multi-selection state
+    const [selectedWidgets, setSelectedWidgets] = useState<Set<string>>(new Set());
+    const [selectionBox, setSelectionBox] = useState<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
+    const [isSelecting, setIsSelecting] = useState(false);
+    const selectionStartRef = useRef<{ x: number; y: number } | null>(null);
+    const widgetStartPositionsRef = useRef<Map<string, WidgetPosition>>(new Map());
 
     const {
         widgets,
@@ -687,6 +696,144 @@ export const HUD = () => {
         };
     }, [editMode, isDemoMode, success, error, warning, info]);
 
+    // Multi-selection handlers
+    const handleWidgetSelect = useCallback((id: string, addToSelection: boolean) => {
+        setSelectedWidgets((prev) => {
+            const next = new Set(prev);
+            if (addToSelection) {
+                if (next.has(id)) {
+                    next.delete(id);
+                } else {
+                    next.add(id);
+                }
+            } else {
+                // Single select - clear others unless already selected
+                if (!next.has(id)) {
+                    next.clear();
+                    next.add(id);
+                }
+            }
+            return next;
+        });
+    }, []);
+
+    const handleWidgetDragStart = useCallback((id: string, startPos: WidgetPosition) => {
+        // Store starting positions for all selected widgets
+        widgetStartPositionsRef.current.clear();
+        selectedWidgets.forEach((widgetId) => {
+            const widget = getWidget(widgetId);
+            if (widget) {
+                widgetStartPositionsRef.current.set(widgetId, { ...widget.position });
+            }
+        });
+    }, [selectedWidgets, getWidget]);
+
+    const handleWidgetDragMove = useCallback((deltaX: number, deltaY: number) => {
+        // Move all selected widgets by the same delta
+        widgetStartPositionsRef.current.forEach((startPos, widgetId) => {
+            let newX = startPos.x + deltaX;
+            let newY = startPos.y + deltaY;
+            
+            if (snapToGrid) {
+                newX = Math.round(newX / gridSize) * gridSize;
+                newY = Math.round(newY / gridSize) * gridSize;
+            }
+            
+            // Clamp to viewport
+            newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
+            newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
+            
+            // Update DOM directly for smooth movement
+            const el = document.getElementById(`hud-widget-${widgetId}`);
+            if (el) {
+                el.style.left = `${newX}px`;
+                el.style.top = `${newY}px`;
+            }
+        });
+    }, [snapToGrid, gridSize]);
+
+    const handleWidgetDragEnd = useCallback(() => {
+        // Commit all positions
+        widgetStartPositionsRef.current.forEach((startPos, widgetId) => {
+            const el = document.getElementById(`hud-widget-${widgetId}`);
+            if (el) {
+                const newX = parseInt(el.style.left, 10);
+                const newY = parseInt(el.style.top, 10);
+                if (!isNaN(newX) && !isNaN(newY)) {
+                    updateWidgetPosition(widgetId, { x: newX, y: newY });
+                }
+            }
+        });
+        widgetStartPositionsRef.current.clear();
+    }, [updateWidgetPosition]);
+
+    // Selection box handlers
+    const handleSelectionStart = useCallback((e: React.MouseEvent) => {
+        if (!editMode) return;
+        // Only start selection if clicking on empty area (not on a widget)
+        if ((e.target as HTMLElement).closest('[id^="hud-widget-"]')) return;
+        
+        e.preventDefault();
+        setIsSelecting(true);
+        selectionStartRef.current = { x: e.clientX, y: e.clientY };
+        setSelectionBox({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
+        
+        // Clear selection if not holding Ctrl/Cmd
+        if (!e.ctrlKey && !e.metaKey) {
+            setSelectedWidgets(new Set());
+        }
+    }, [editMode]);
+
+    const handleSelectionMove = useCallback((e: React.MouseEvent) => {
+        if (!isSelecting || !selectionStartRef.current) return;
+        
+        setSelectionBox({
+            startX: selectionStartRef.current.x,
+            startY: selectionStartRef.current.y,
+            endX: e.clientX,
+            endY: e.clientY,
+        });
+    }, [isSelecting]);
+
+    const handleSelectionEnd = useCallback(() => {
+        if (!isSelecting || !selectionBox) {
+            setIsSelecting(false);
+            setSelectionBox(null);
+            return;
+        }
+        
+        // Calculate selection rectangle
+        const left = Math.min(selectionBox.startX, selectionBox.endX);
+        const right = Math.max(selectionBox.startX, selectionBox.endX);
+        const top = Math.min(selectionBox.startY, selectionBox.endY);
+        const bottom = Math.max(selectionBox.startY, selectionBox.endY);
+        
+        // Find all widgets within selection
+        const newSelection = new Set(selectedWidgets);
+        widgets.forEach((widget) => {
+            const el = document.getElementById(`hud-widget-${widget.id}`);
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                // Check if widget overlaps with selection
+                if (rect.left < right && rect.right > left && rect.top < bottom && rect.bottom > top) {
+                    newSelection.add(widget.id);
+                }
+            }
+        });
+        
+        setSelectedWidgets(newSelection);
+        setIsSelecting(false);
+        setSelectionBox(null);
+        selectionStartRef.current = null;
+    }, [isSelecting, selectionBox, widgets, selectedWidgets]);
+
+    // Clear selection when exiting edit mode
+    useEffect(() => {
+        if (!editMode) {
+            setSelectedWidgets(new Set());
+        }
+    }, [editMode]);
+
     const widgetProps = {
         editMode,
         snapToGrid,
@@ -696,6 +843,15 @@ export const HUD = () => {
         onScaleChange: updateWidgetScale,
         onReset: (id: string) => resetWidget(id, isWidgetDisabled),
     };
+    
+    // Enhanced widget props with multi-selection support
+    const getMultiSelectProps = (id: string) => ({
+        isSelected: selectedWidgets.has(id),
+        onSelect: handleWidgetSelect,
+        onDragStart: selectedWidgets.has(id) ? handleWidgetDragStart : undefined,
+        onDragMove: selectedWidgets.has(id) && selectedWidgets.size > 1 ? handleWidgetDragMove : undefined,
+        onDragEnd: selectedWidgets.has(id) && selectedWidgets.size > 1 ? handleWidgetDragEnd : undefined,
+    });
 
     const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
 
@@ -705,7 +861,24 @@ export const HUD = () => {
     if (!isVisible || !t) return null;
 
     return (
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div 
+            className={cn("fixed inset-0 overflow-hidden", editMode ? "pointer-events-auto" : "pointer-events-none")}
+            onMouseDown={handleSelectionStart}
+            onMouseMove={handleSelectionMove}
+            onMouseUp={handleSelectionEnd}
+            onMouseLeave={handleSelectionEnd}>
+            
+            {/* Selection Box */}
+            {selectionBox && (
+                <SelectionBox
+                    startX={selectionBox.startX}
+                    startY={selectionBox.startY}
+                    endX={selectionBox.endX}
+                    endY={selectionBox.endY}
+                    isActive={isSelecting}
+                />
+            )}
+            
             {/* Grid overlay when in edit mode */}
             {editMode && snapToGrid && (
                 <motion.div
@@ -859,7 +1032,8 @@ export const HUD = () => {
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         suspended={autoLayoutHiddenIds.includes(type)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(type)}>
                         <StatusWidget
                             type={type}
                             value={value}
@@ -883,7 +1057,8 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <MoneyWidget
                             money={moneyState}
                             player={playerState}
@@ -906,7 +1081,8 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <ClockWidget />
                     </HUDWidget>
                 );
@@ -929,7 +1105,8 @@ export const HUD = () => {
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         suspended={autoLayoutHiddenIds.includes(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <VoiceWidget voice={voiceState} />
                     </HUDWidget>
                 );
@@ -955,7 +1132,8 @@ export const HUD = () => {
                         visible={isVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <RadioWidget radio={radioData} />
                     </HUDWidget>
                 );
@@ -976,7 +1154,8 @@ export const HUD = () => {
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         suspended={autoLayoutHiddenIds.includes(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <LocationWidget
                             location={locationState}
                             shape={minimapShape}
@@ -1000,7 +1179,8 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <CompassWidget heading={locationState.heading} />
                     </HUDWidget>
                 );
@@ -1020,7 +1200,8 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <VehicleNameWidget
                             vehicleType={editMode ? speedometerType : vehicleState.vehicleType}
                             vehicleName={vehicleState.vehicleName}
@@ -1086,7 +1267,8 @@ export const HUD = () => {
                         onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
                         onScaleChange={updateWidgetScale}
                         onReset={() => resetWidget(widgetType, isWidgetDisabled)}
-                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}>
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        {...getMultiSelectProps(widget.id)}>
                         <VehicleHUDFactory
                             vehicle={{ ...vehicleState, vehicleType }}
                             visible={baseVisible && correctVehicle && (editMode ? true : widget.visible)}
@@ -1146,7 +1328,8 @@ export const HUD = () => {
                         onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
                         onScaleChange={updateWidgetScale}
                         onReset={() => resetWidget(widgetType, isWidgetDisabled)}
-                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}>
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        {...getMultiSelectProps(widget.id)}>
                         {renderHeliWidget()}
                     </HUDWidget>
                 );
@@ -1166,7 +1349,8 @@ export const HUD = () => {
                         visible={baseVisible}
                         scale={widget.scale}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <ChatWidget
                             chat={chatState}
                             setChatState={setChatState}

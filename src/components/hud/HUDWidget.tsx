@@ -21,6 +21,15 @@ interface HUDWidgetProps {
     /** Hide the widget temporarily (used for auto-layout to prevent flicker) */
     suspended?: boolean;
     className?: string;
+    /** Multi-selection support */
+    isSelected?: boolean;
+    onSelect?: (id: string, addToSelection: boolean) => void;
+    /** Called when this widget starts being dragged (for multi-selection group drag) */
+    onDragStart?: (id: string, startPos: WidgetPosition) => void;
+    /** Called during drag with delta from start */
+    onDragMove?: (deltaX: number, deltaY: number) => void;
+    /** Called when drag ends */
+    onDragEnd?: () => void;
 }
 
 const MIN_SCALE = 0.5;
@@ -43,6 +52,11 @@ export const HUDWidget = ({
     disabled,
     suspended = false,
     className,
+    isSelected = false,
+    onSelect,
+    onDragStart,
+    onDragMove,
+    onDragEnd,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const [elementSize, setElementSize] = useState({ w: 0, h: 0 });
@@ -110,12 +124,23 @@ export const HUDWidget = ({
             if (isResizing) return;
             e.preventDefault();
             e.stopPropagation();
+            
+            // Handle selection with Ctrl/Cmd key for multi-select
+            if (onSelect) {
+                onSelect(id, e.ctrlKey || e.metaKey);
+            }
+            
             setIsDragging(true);
             dragStartPos.current = { x: e.clientX, y: e.clientY };
             widgetStartPos.current = { x: position.x, y: position.y };
             setLocalPosition({ x: position.x, y: position.y });
+            
+            // Notify parent about drag start for multi-selection
+            if (onDragStart) {
+                onDragStart(id, position);
+            }
         },
-        [editMode, onPositionChange, isResizing, position]
+        [editMode, onPositionChange, isResizing, position, onSelect, onDragStart, id]
     );
 
     const localPositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -124,8 +149,11 @@ export const HUDWidget = ({
         if (!isDragging) return;
 
         const handleMouseMove = (e: MouseEvent) => {
-            let newX = widgetStartPos.current.x + (e.clientX - dragStartPos.current.x);
-            let newY = widgetStartPos.current.y + (e.clientY - dragStartPos.current.y);
+            const deltaX = e.clientX - dragStartPos.current.x;
+            const deltaY = e.clientY - dragStartPos.current.y;
+            
+            let newX = widgetStartPos.current.x + deltaX;
+            let newY = widgetStartPos.current.y + deltaY;
 
             if (snapToGrid) {
                 newX = Math.round(newX / gridSize) * gridSize;
@@ -139,6 +167,11 @@ export const HUDWidget = ({
                 rootRef.current.style.left = `${clamped.x}px`;
                 rootRef.current.style.top = `${clamped.y}px`;
             }
+            
+            // Notify parent about drag movement for multi-selection
+            if (onDragMove && isSelected) {
+                onDragMove(deltaX, deltaY);
+            }
         };
 
         const handleMouseUp = () => {
@@ -149,6 +182,11 @@ export const HUDWidget = ({
             localPositionRef.current = null;
             setLocalPosition(null);
             setIsDragging(false);
+            
+            // Notify parent drag ended
+            if (onDragEnd) {
+                onDragEnd();
+            }
         };
 
         window.addEventListener("mousemove", handleMouseMove);
@@ -158,7 +196,7 @@ export const HUDWidget = ({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport]);
+    }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport, onDragMove, onDragEnd, isSelected]);
 
     const handleResizeMouseDown = (e: React.MouseEvent) => {
         if (!editMode) return;
@@ -227,7 +265,8 @@ export const HUDWidget = ({
             className={cn(
                 "absolute pointer-events-auto select-none",
                 editMode && onPositionChange && "cursor-move",
-                editMode && "ring-2 ring-primary/50 ring-dashed rounded-lg",
+                editMode && !isSelected && "ring-2 ring-primary/50 ring-dashed rounded-lg",
+                editMode && isSelected && "ring-2 ring-warning ring-solid rounded-lg",
                 (isDragging || isResizing) && "ring-primary z-50",
                 !visible && editMode && "opacity-40",
                 !isDragging && !isResizing && "transition-opacity duration-200",
