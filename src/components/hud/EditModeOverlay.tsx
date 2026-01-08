@@ -87,7 +87,7 @@ export const EditModeOverlay = ({
             align="end"
             side="left"
             sideOffset={12}
-            className="w-[360px] rounded-2xl border-border/40 bg-background/95 z-[9999]"
+            className="w-[360px] rounded-2xl border-border/40 bg-background/95"
             style={{ boxShadow: "0 0 40px hsl(var(--primary) / 0.2)" }}
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}>
