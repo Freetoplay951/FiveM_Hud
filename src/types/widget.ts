@@ -293,14 +293,15 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
                 const heliBaseRect = resolver.getWidgetRect("heli-base");
                 const width = el?.offsetWidth ?? 88;
+                const height = el?.offsetHeight ?? 28;
                 if (heliBaseRect) {
-                    // Position: below the attitude indicator, left side of status row
+                    // Position: above the attitude indicator, left side of status row
                     return {
                         x: heliBaseRect.x + heliBaseRect.width / 2 - width - GAP / 2,
-                        y: heliBaseRect.y + heliBaseRect.height + 8,
+                        y: heliBaseRect.y - height - 8,
                     };
                 }
-                return { x: resolver.screen.width - MARGIN - 160, y: resolver.screen.height - MARGIN - 8 };
+                return { x: resolver.screen.width - MARGIN - 160, y: resolver.screen.height - MARGIN - 200 };
             },
             visible: true,
             scale: 1,
@@ -309,16 +310,15 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "heli-fuel",
             type: "heli-fuel" as WidgetType,
             position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const heliBaseRect = resolver.getWidgetRect("heli-base");
                 const heliRotorRect = resolver.getWidgetRect("heli-rotor");
-                if (heliBaseRect && heliRotorRect) {
+                if (heliRotorRect) {
                     // Position: next to rotor widget
                     return {
                         x: heliRotorRect.right + GAP,
                         y: heliRotorRect.y,
                     };
                 }
-                return { x: resolver.screen.width - MARGIN - 64, y: resolver.screen.height - MARGIN - 8 };
+                return { x: resolver.screen.width - MARGIN - 64, y: resolver.screen.height - MARGIN - 200 };
             },
             visible: true,
             scale: 1,
