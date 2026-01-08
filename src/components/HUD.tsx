@@ -903,7 +903,9 @@ export const HUD = () => {
                             className="fixed top-4 right-4 pointer-events-auto bg-background/80 border border-primary/30 rounded-lg p-2 hover:bg-primary/20 transition-colors z-40"
                             style={{
                                 boxShadow: "0 0 15px hsl(var(--primary) / 0.4)",
-                            }}>
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}>
                             <Settings
                                 size={18}
                                 className={"text-primary"}
