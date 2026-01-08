@@ -120,15 +120,18 @@ export const HUDWidget = ({
     const handleMouseDown = useCallback(
         (e: React.MouseEvent) => {
             if (!editMode) return;
-            if (!onPositionChange) return;
-            if (isResizing) return;
-            e.preventDefault();
-            e.stopPropagation();
             
-            // Handle selection with Ctrl/Cmd key for multi-select
+            // Always handle selection first, even for non-movable widgets
             if (onSelect) {
                 onSelect(id, e.ctrlKey || e.metaKey);
             }
+            
+            // Only handle dragging if position change is allowed
+            if (!onPositionChange) return;
+            if (isResizing) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
             
             setIsDragging(true);
             dragStartPos.current = { x: e.clientX, y: e.clientY };
@@ -266,10 +269,10 @@ export const HUDWidget = ({
                 "absolute pointer-events-auto select-none",
                 editMode && onPositionChange && "cursor-move",
                 editMode && !isSelected && "ring-2 ring-primary/50 ring-dashed rounded-lg",
-                editMode && isSelected && "ring-2 ring-warning ring-solid rounded-lg",
-                (isDragging || isResizing) && "ring-primary z-50",
+                editMode && isSelected && "ring-[3px] ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
+                (isDragging || isResizing) && "z-50",
                 !visible && editMode && "opacity-40",
-                !isDragging && !isResizing && "transition-opacity duration-200",
+                !isDragging && !isResizing && "transition-all duration-200",
                 className
             )}
             style={{
@@ -285,6 +288,10 @@ export const HUDWidget = ({
                 pointerEvents: isHidden || isSuspended || !hasAccess ? "none" : "auto",
                 // CEF Fix: Prevent black box artifacts
                 willChange: isDragging || isResizing ? "transform" : "auto",
+                // Selected state background glow
+                ...(isSelected && editMode ? { 
+                    backgroundColor: "hsl(var(--warning) / 0.1)",
+                } : {}),
             }}
             onMouseDown={handleMouseDown}>
             {/* Edit Mode Controls */}
