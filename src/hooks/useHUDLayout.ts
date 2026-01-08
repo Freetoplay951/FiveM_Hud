@@ -171,6 +171,7 @@ const getDefaultState = (): HUDLayoutState => ({
     speedometerType: "car",
     minimapShape: "square",
     widgetsDistributed: false,
+    heliSimpleMode: false,
 });
 
 const STORAGE_KEY = "hud-layout";
@@ -479,6 +480,10 @@ export const useHUDLayout = () => {
         [state.widgets]
     );
 
+    const setHeliSimpleMode = useCallback((enabled: boolean) => {
+        setState((prev) => ({ ...prev, heliSimpleMode: enabled }));
+    }, []);
+
     return {
         ...state,
         autoLayoutHiddenIds,
@@ -490,6 +495,7 @@ export const useHUDLayout = () => {
         setStatusDesign,
         setSpeedometerType,
         setMinimapShape,
+        setHeliSimpleMode,
         resetLayout,
         resetWidget,
         getWidget,

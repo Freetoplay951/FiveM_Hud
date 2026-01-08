@@ -92,6 +92,7 @@ export interface HUDLayoutState {
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
     widgetsDistributed: boolean;
+    heliSimpleMode: boolean;
 }
 
 const MARGIN = 20;

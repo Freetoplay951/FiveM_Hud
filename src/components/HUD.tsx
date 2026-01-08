@@ -216,6 +216,7 @@ export const HUD = () => {
         statusDesign,
         speedometerType,
         minimapShape,
+        heliSimpleMode,
         widgetsDistributed,
         autoLayoutHiddenIds,
         toggleEditMode,
@@ -223,6 +224,7 @@ export const HUD = () => {
         setStatusDesign,
         setSpeedometerType,
         setMinimapShape,
+        setHeliSimpleMode,
         updateWidgetPosition,
         updateWidgetScale,
         toggleWidgetVisibility,
@@ -924,16 +926,17 @@ export const HUD = () => {
                         </button>
                     </PopoverTrigger>
 
-                    {/* Menu content */}
                     <EditModeOverlay
                         snapToGrid={snapToGrid}
                         statusDesign={statusDesign}
                         speedometerType={speedometerType}
                         minimapShape={minimapShape}
+                        heliSimpleMode={heliSimpleMode}
                         onSnapToGridChange={setSnapToGrid}
                         onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled)}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled)}
+                        onHeliSimpleModeChange={setHeliSimpleMode}
                         onReset={() => resetLayout(false, isWidgetDisabled, hasSignaledReady)}
                         onExitEditMode={exitEditMode}
                     />
@@ -1372,6 +1375,10 @@ export const HUD = () => {
                     }
                 };
 
+                // In Simple Mode: only heli-base is draggable, others follow
+                const isBaseWidget = widgetType === "heli-base";
+                const canDrag = !heliSimpleMode || isBaseWidget;
+
                 return (
                     <HUDWidget
                         key={widgetType}
@@ -1383,12 +1390,12 @@ export const HUD = () => {
                         editMode={editMode}
                         snapToGrid={snapToGrid}
                         gridSize={gridSize}
-                        onPositionChange={updateWidgetPosition}
-                        onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
-                        onScaleChange={updateWidgetScale}
-                        onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+                        onPositionChange={canDrag ? updateWidgetPosition : undefined}
+                        onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
+                        onScaleChange={canDrag ? updateWidgetScale : undefined}
+                        onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...getMultiSelectProps(widget.id)}>
+                        {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
                         {renderWidgetContent()}
                     </HUDWidget>
                 );

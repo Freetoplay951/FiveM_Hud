@@ -14,6 +14,7 @@ import {
     Square,
     Skull,
     Motorbike,
+    Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusDesign, SpeedometerType, MinimapShape } from "@/types/widget";
@@ -26,10 +27,12 @@ interface EditModeOverlayProps {
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
+    heliSimpleMode: boolean;
     onSnapToGridChange: (value: boolean) => void;
     onStatusDesignChange: (design: StatusDesign) => void;
     onSpeedometerTypeChange: (type: SpeedometerType) => void;
     onMinimapShapeChange: (shape: MinimapShape) => void;
+    onHeliSimpleModeChange: (enabled: boolean) => void;
     onReset: () => void;
     onExitEditMode: () => void;
 }
@@ -73,10 +76,12 @@ export const EditModeOverlay = ({
     statusDesign,
     speedometerType,
     minimapShape,
+    heliSimpleMode,
     onSnapToGridChange,
     onStatusDesignChange,
     onSpeedometerTypeChange,
     onMinimapShapeChange,
+    onHeliSimpleModeChange,
     onReset,
     onExitEditMode,
 }: EditModeOverlayProps) => {
@@ -214,6 +219,14 @@ export const EditModeOverlay = ({
                     checked={snapToGrid}
                     onChange={onSnapToGridChange}
                 />
+                {speedometerType === "helicopter" && (
+                    <ToggleOption
+                        icon={Layers}
+                        label={t.editMode.heliSimpleMode}
+                        checked={heliSimpleMode}
+                        onChange={onHeliSimpleModeChange}
+                    />
+                )}
             </div>
 
             {/* Actions */}
