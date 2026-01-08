@@ -1405,7 +1405,8 @@ export const HUD = () => {
                         scale={widget.scale}
                         hasAccess={hasTeamAccess}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...widgetProps}>
+                        {...widgetProps}
+                        {...getMultiSelectProps(widget.id)}>
                         <TeamChatWidget
                             teamChat={teamChatState}
                             editMode={editMode}

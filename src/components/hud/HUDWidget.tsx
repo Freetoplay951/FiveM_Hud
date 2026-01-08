@@ -272,7 +272,6 @@ export const HUDWidget = ({
                 editMode && isSelected && "ring-[3px] ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
                 (isDragging || isResizing) && "z-50",
                 !visible && editMode && "opacity-40",
-                !isDragging && !isResizing && "transition-all duration-200",
                 className
             )}
             style={{
