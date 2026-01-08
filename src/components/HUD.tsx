@@ -701,17 +701,15 @@ export const HUD = () => {
         setSelectedWidgets((prev) => {
             const next = new Set(prev);
             if (addToSelection) {
+                // Ctrl/Cmd click - toggle selection
                 if (next.has(id)) {
                     next.delete(id);
                 } else {
                     next.add(id);
                 }
             } else {
-                // Single select - clear others unless already selected
-                if (!next.has(id)) {
-                    next.clear();
-                    next.add(id);
-                }
+                // Normal click - clear selection (no highlighting for single widget interaction)
+                next.clear();
             }
             return next;
         });
@@ -729,15 +727,10 @@ export const HUD = () => {
     }, [selectedWidgets, getWidget]);
 
     const handleWidgetDragMove = useCallback((deltaX: number, deltaY: number) => {
-        // Move all selected widgets by the same delta
+        // Move all selected widgets by the same delta (no grid snapping for group movement)
         widgetStartPositionsRef.current.forEach((startPos, widgetId) => {
             let newX = startPos.x + deltaX;
             let newY = startPos.y + deltaY;
-            
-            if (snapToGrid) {
-                newX = Math.round(newX / gridSize) * gridSize;
-                newY = Math.round(newY / gridSize) * gridSize;
-            }
             
             // Clamp to viewport
             newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
@@ -750,7 +743,7 @@ export const HUD = () => {
                 el.style.top = `${newY}px`;
             }
         });
-    }, [snapToGrid, gridSize]);
+    }, []);
 
     const handleWidgetDragEnd = useCallback(() => {
         // Commit all positions

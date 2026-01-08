@@ -333,6 +333,10 @@ export const HUDWidget = ({
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onVisibilityToggle(id);
+                                    // Clear selection when toggling visibility
+                                    if (onClearSelection) {
+                                        onClearSelection();
+                                    }
                                 }}
                                 className="bg-background/60 border border-border/30 rounded p-1 hover:bg-muted/30 transition-colors">
                                 {visible ? (
