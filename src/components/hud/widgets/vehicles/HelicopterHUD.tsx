@@ -3,7 +3,7 @@ import { Fuel, ArrowUp, ArrowDown, Gauge } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { BodyHealthIndicator } from "./BodyHealthIndicator";
+import { BodyHealthIndicator } from "./shared/BodyHealthIndicator";
 
 interface HelicopterHUDProps {
     vehicle: VehicleState;
@@ -28,283 +28,279 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
     return (
         <motion.div
             initial={false}
-            animate={{ 
-                opacity: visible ? 1 : 0, 
-                scale: visible ? 1 : 0.8 
+            animate={{
+                opacity: visible ? 1 : 0,
+                scale: visible ? 1 : 0.8,
             }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center">
             {/* Main Attitude Indicator */}
             <div className="relative w-44 h-44">
-                        <div className="absolute inset-0 rounded-full glass-panel overflow-hidden" />
+                <div className="absolute inset-0 rounded-full glass-panel overflow-hidden" />
 
-                        <svg
-                            className="absolute inset-0 w-full h-full"
-                            viewBox="0 0 100 100">
-                            <defs>
-                                <clipPath id="heliHorizonClip">
-                                    <circle
-                                        cx="50"
-                                        cy="50"
-                                        r="40"
-                                    />
-                                </clipPath>
-                                <linearGradient
-                                    id="heliSkyGradient"
-                                    x1="0%"
-                                    y1="0%"
-                                    x2="0%"
-                                    y2="100%">
-                                    <stop
-                                        offset="0%"
-                                        stopColor="hsl(210 70% 25%)"
-                                    />
-                                    <stop
-                                        offset="50%"
-                                        stopColor="hsl(210 50% 45%)"
-                                    />
-                                </linearGradient>
-                                <linearGradient
-                                    id="heliGroundGradient"
-                                    x1="0%"
-                                    y1="0%"
-                                    x2="0%"
-                                    y2="100%">
-                                    <stop
-                                        offset="50%"
-                                        stopColor="hsl(25 45% 25%)"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        stopColor="hsl(25 35% 15%)"
-                                    />
-                                </linearGradient>
-                                <filter
-                                    id="heliGlow"
-                                    x="-50%"
-                                    y="-50%"
-                                    width="200%"
-                                    height="200%">
-                                    <feGaussianBlur
-                                        stdDeviation="1.5"
-                                        result="coloredBlur"
-                                    />
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur" />
-                                        <feMergeNode in="SourceGraphic" />
-                                    </feMerge>
-                                </filter>
-                            </defs>
-
-                            <g clipPath="url(#heliHorizonClip)">
-                                <motion.g
-                                    animate={{
-                                        rotate: -roll,
-                                        y: pitch * 0.6,
-                                    }}
-                                    transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                                    style={{ transformOrigin: "50px 50px" }}>
-                                    <rect
-                                        x="-50"
-                                        y="-50"
-                                        width="200"
-                                        height="100"
-                                        fill="url(#heliSkyGradient)"
-                                    />
-                                    <rect
-                                        x="-50"
-                                        y="50"
-                                        width="200"
-                                        height="100"
-                                        fill="url(#heliGroundGradient)"
-                                    />
-                                    <line
-                                        x1="-50"
-                                        y1="50"
-                                        x2="150"
-                                        y2="50"
-                                        stroke="hsl(var(--primary))"
-                                        strokeWidth="1.5"
-                                        filter="url(#heliGlow)"
-                                    />
-
-                                    {/* Pitch ladder */}
-                                    {[-30, -20, -10, 10, 20, 30].map((p) => (
-                                        <g
-                                            key={p}
-                                            transform={`translate(0, ${-p * 1.5})`}>
-                                            <line
-                                                x1="30"
-                                                y1="50"
-                                                x2="42"
-                                                y2="50"
-                                                stroke="hsl(var(--foreground) / 0.6)"
-                                                strokeWidth="0.5"
-                                            />
-                                            <line
-                                                x1="58"
-                                                y1="50"
-                                                x2="70"
-                                                y2="50"
-                                                stroke="hsl(var(--foreground) / 0.6)"
-                                                strokeWidth="0.5"
-                                            />
-                                        </g>
-                                    ))}
-                                </motion.g>
-                            </g>
-
-                            {/* Roll scale */}
-                            <g transform="translate(50, 50)">
-                                {[-45, -30, -15, 0, 15, 30, 45].map((angle) => {
-                                    const x = 38 * Math.sin((angle * Math.PI) / 180);
-                                    const y = -38 * Math.cos((angle * Math.PI) / 180);
-                                    return (
-                                        <line
-                                            key={angle}
-                                            x1={x * 0.92}
-                                            y1={y * 0.92}
-                                            x2={x}
-                                            y2={y}
-                                            stroke="hsl(var(--primary))"
-                                            strokeWidth={angle === 0 ? 2 : 0.8}
-                                            filter={angle === 0 ? "url(#heliGlow)" : undefined}
-                                        />
-                                    );
-                                })}
-                                <motion.polygon
-                                    points="0,-36 -2.5,-41 2.5,-41"
-                                    fill="hsl(var(--warning))"
-                                    animate={{ rotate: roll }}
-                                    transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                                    style={{ transformOrigin: "0 0" }}
-                                    filter="url(#heliGlow)"
-                                />
-                            </g>
-
-                            {/* Aircraft symbol */}
-                            <g
-                                transform="translate(50, 50)"
-                                filter="url(#heliGlow)">
-                                <line
-                                    x1="-18"
-                                    y1="0"
-                                    x2="-6"
-                                    y2="0"
-                                    stroke="hsl(var(--warning))"
-                                    strokeWidth="2.5"
-                                />
-                                <line
-                                    x1="6"
-                                    y1="0"
-                                    x2="18"
-                                    y2="0"
-                                    stroke="hsl(var(--warning))"
-                                    strokeWidth="2.5"
-                                />
-                                <circle
-                                    cx="0"
-                                    cy="0"
-                                    r="2.5"
-                                    fill="none"
-                                    stroke="hsl(var(--warning))"
-                                    strokeWidth="2.5"
-                                />
-                            </g>
-
-                            {/* Outer ring */}
+                <svg
+                    className="absolute inset-0 w-full h-full"
+                    viewBox="0 0 100 100">
+                    <defs>
+                        <clipPath id="heliHorizonClip">
                             <circle
                                 cx="50"
                                 cy="50"
-                                r="44"
-                                fill="none"
-                                stroke="hsl(var(--primary) / 0.3)"
-                                strokeWidth="1"
+                                r="40"
                             />
-                        </svg>
+                        </clipPath>
+                        <linearGradient
+                            id="heliSkyGradient"
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%">
+                            <stop
+                                offset="0%"
+                                stopColor="hsl(210 70% 25%)"
+                            />
+                            <stop
+                                offset="50%"
+                                stopColor="hsl(210 50% 45%)"
+                            />
+                        </linearGradient>
+                        <linearGradient
+                            id="heliGroundGradient"
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%">
+                            <stop
+                                offset="50%"
+                                stopColor="hsl(25 45% 25%)"
+                            />
+                            <stop
+                                offset="100%"
+                                stopColor="hsl(25 35% 15%)"
+                            />
+                        </linearGradient>
+                        <filter
+                            id="heliGlow"
+                            x="-50%"
+                            y="-50%"
+                            width="200%"
+                            height="200%">
+                            <feGaussianBlur
+                                stdDeviation="1.5"
+                                result="coloredBlur"
+                            />
+                            <feMerge>
+                                <feMergeNode in="coloredBlur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
 
-                        {/* Speed overlay left */}
-                        <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[40px]">
-                            <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.kts}</span>
-                            <motion.span
-                                className="hud-number text-[10px] text-stamina tabular-nums block text-center"
-                                style={{
-                                    textShadow: "0 0 6px hsl(var(--stamina) / 0.6)",
-                                    fontVariantNumeric: "tabular-nums",
-                                }}
-                                animate={{ opacity: 1 }}
-                                transition={{ type: "spring", stiffness: 100, damping: 15 }}>
-                                {String(Math.round(airspeed)).padStart(3, "0")}
-                            </motion.span>
-                        </div>
+                    <g clipPath="url(#heliHorizonClip)">
+                        <motion.g
+                            animate={{
+                                rotate: -roll,
+                                y: pitch * 0.6,
+                            }}
+                            transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                            style={{ transformOrigin: "50px 50px" }}>
+                            <rect
+                                x="-50"
+                                y="-50"
+                                width="200"
+                                height="100"
+                                fill="url(#heliSkyGradient)"
+                            />
+                            <rect
+                                x="-50"
+                                y="50"
+                                width="200"
+                                height="100"
+                                fill="url(#heliGroundGradient)"
+                            />
+                            <line
+                                x1="-50"
+                                y1="50"
+                                x2="150"
+                                y2="50"
+                                stroke="hsl(var(--primary))"
+                                strokeWidth="1.5"
+                                filter="url(#heliGlow)"
+                            />
 
-                        {/* Altitude overlay right */}
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[44px]">
-                            <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.alt}</span>
-                            <motion.span
-                                className={cn(
-                                    "hud-number text-[10px] tabular-nums block text-center",
-                                    lowAltitude ? "text-warning" : "text-armor"
-                                )}
-                                style={{
-                                    textShadow: `0 0 6px hsl(var(--${lowAltitude ? "warning" : "armor"}) / 0.6)`,
-                                    fontVariantNumeric: "tabular-nums",
-                                }}
-                                animate={{ opacity: 1 }}
-                                transition={{ type: "spring", stiffness: 100, damping: 15 }}>
-                                {String(Math.round(altitude)).padStart(4, "0")}
-                            </motion.span>
-                        </div>
+                            {/* Pitch ladder */}
+                            {[-30, -20, -10, 10, 20, 30].map((p) => (
+                                <g
+                                    key={p}
+                                    transform={`translate(0, ${-p * 1.5})`}>
+                                    <line
+                                        x1="30"
+                                        y1="50"
+                                        x2="42"
+                                        y2="50"
+                                        stroke="hsl(var(--foreground) / 0.6)"
+                                        strokeWidth="0.5"
+                                    />
+                                    <line
+                                        x1="58"
+                                        y1="50"
+                                        x2="70"
+                                        y2="50"
+                                        stroke="hsl(var(--foreground) / 0.6)"
+                                        strokeWidth="0.5"
+                                    />
+                                </g>
+                            ))}
+                        </motion.g>
+                    </g>
 
-                        {/* Vertical speed indicator right-bottom */}
-                        <div className="absolute right-2 bottom-12 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 flex items-center gap-0.5 w-[44px]">
-                            {verticalSpeed > 0 ? (
-                                <ArrowUp
-                                    size={8}
-                                    className="text-stamina flex-shrink-0"
-                                    style={{ filter: "drop-shadow(0 0 2px hsl(var(--stamina)))" }}
+                    {/* Roll scale */}
+                    <g transform="translate(50, 50)">
+                        {[-45, -30, -15, 0, 15, 30, 45].map((angle) => {
+                            const x = 38 * Math.sin((angle * Math.PI) / 180);
+                            const y = -38 * Math.cos((angle * Math.PI) / 180);
+                            return (
+                                <line
+                                    key={angle}
+                                    x1={x * 0.92}
+                                    y1={y * 0.92}
+                                    x2={x}
+                                    y2={y}
+                                    stroke="hsl(var(--primary))"
+                                    strokeWidth={angle === 0 ? 2 : 0.8}
+                                    filter={angle === 0 ? "url(#heliGlow)" : undefined}
                                 />
-                            ) : verticalSpeed < 0 ? (
-                                <ArrowDown
-                                    size={8}
-                                    className="text-warning flex-shrink-0"
-                                    style={{ filter: "drop-shadow(0 0 2px hsl(var(--warning)))" }}
-                                />
-                            ) : (
-                                <div className="w-2" />
-                            )}
-                            <motion.span
-                                className={cn(
-                                    "hud-number text-[8px] tabular-nums",
-                                    verticalSpeed > 0
-                                        ? "text-stamina"
-                                        : verticalSpeed < 0
-                                        ? "text-warning"
-                                        : "text-foreground"
-                                )}
-                                style={{ fontVariantNumeric: "tabular-nums" }}
-                                animate={{ opacity: 1 }}
-                                transition={{ type: "spring", stiffness: 100, damping: 15 }}>
-                                {verticalSpeed >= 0 ? "+" : ""}
-                                {String(Math.round(verticalSpeed)).padStart(2, "0")}
-                            </motion.span>
-                        </div>
+                            );
+                        })}
+                        <motion.polygon
+                            points="0,-36 -2.5,-41 2.5,-41"
+                            fill="hsl(var(--warning))"
+                            animate={{ rotate: roll }}
+                            transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                            style={{ transformOrigin: "0 0" }}
+                            filter="url(#heliGlow)"
+                        />
+                    </g>
 
-                        {/* Heading bottom */}
-                        <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-                            <div className="bg-background/85 border border-white/20 rounded px-2 py-0.5 flex items-center gap-1 w-[48px] justify-center">
-                                <motion.span
-                                    className="hud-number text-[10px] text-primary tabular-nums"
-                                    style={{
-                                        textShadow: "0 0 6px hsl(var(--primary) / 0.6)",
-                                        fontVariantNumeric: "tabular-nums",
-                                    }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ type: "spring", stiffness: 100, damping: 15 }}>
-                                    {String(Math.round(heading)).padStart(3, "0")}°
-                                </motion.span>
-                            </div>
-                        </div>
+                    {/* Aircraft symbol */}
+                    <g
+                        transform="translate(50, 50)"
+                        filter="url(#heliGlow)">
+                        <line
+                            x1="-18"
+                            y1="0"
+                            x2="-6"
+                            y2="0"
+                            stroke="hsl(var(--warning))"
+                            strokeWidth="2.5"
+                        />
+                        <line
+                            x1="6"
+                            y1="0"
+                            x2="18"
+                            y2="0"
+                            stroke="hsl(var(--warning))"
+                            strokeWidth="2.5"
+                        />
+                        <circle
+                            cx="0"
+                            cy="0"
+                            r="2.5"
+                            fill="none"
+                            stroke="hsl(var(--warning))"
+                            strokeWidth="2.5"
+                        />
+                    </g>
+
+                    {/* Outer ring */}
+                    <circle
+                        cx="50"
+                        cy="50"
+                        r="44"
+                        fill="none"
+                        stroke="hsl(var(--primary) / 0.3)"
+                        strokeWidth="1"
+                    />
+                </svg>
+
+                {/* Speed overlay left */}
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[40px]">
+                    <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.kts}</span>
+                    <motion.span
+                        className="hud-number text-[10px] text-stamina tabular-nums block text-center"
+                        style={{
+                            textShadow: "0 0 6px hsl(var(--stamina) / 0.6)",
+                            fontVariantNumeric: "tabular-nums",
+                        }}
+                        animate={{ opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 100, damping: 15 }}>
+                        {String(Math.round(airspeed)).padStart(3, "0")}
+                    </motion.span>
+                </div>
+
+                {/* Altitude overlay right */}
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 w-[44px]">
+                    <span className="text-[6px] text-muted-foreground block text-center">{t.vehicle.alt}</span>
+                    <motion.span
+                        className={cn(
+                            "hud-number text-[10px] tabular-nums block text-center",
+                            lowAltitude ? "text-warning" : "text-armor"
+                        )}
+                        style={{
+                            textShadow: `0 0 6px hsl(var(--${lowAltitude ? "warning" : "armor"}) / 0.6)`,
+                            fontVariantNumeric: "tabular-nums",
+                        }}
+                        animate={{ opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 100, damping: 15 }}>
+                        {String(Math.round(altitude)).padStart(4, "0")}
+                    </motion.span>
+                </div>
+
+                {/* Vertical speed indicator right-bottom */}
+                <div className="absolute right-2 bottom-12 bg-background/85 border border-white/20 rounded px-1.5 py-0.5 flex items-center gap-0.5 w-[44px]">
+                    {verticalSpeed > 0 ? (
+                        <ArrowUp
+                            size={8}
+                            className="text-stamina flex-shrink-0"
+                            style={{ filter: "drop-shadow(0 0 2px hsl(var(--stamina)))" }}
+                        />
+                    ) : verticalSpeed < 0 ? (
+                        <ArrowDown
+                            size={8}
+                            className="text-warning flex-shrink-0"
+                            style={{ filter: "drop-shadow(0 0 2px hsl(var(--warning)))" }}
+                        />
+                    ) : (
+                        <div className="w-2" />
+                    )}
+                    <motion.span
+                        className={cn(
+                            "hud-number text-[8px] tabular-nums",
+                            verticalSpeed > 0 ? "text-stamina" : verticalSpeed < 0 ? "text-warning" : "text-foreground"
+                        )}
+                        style={{ fontVariantNumeric: "tabular-nums" }}
+                        animate={{ opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 100, damping: 15 }}>
+                        {verticalSpeed >= 0 ? "+" : ""}
+                        {String(Math.round(verticalSpeed)).padStart(2, "0")}
+                    </motion.span>
+                </div>
+
+                {/* Heading bottom */}
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center">
+                    <div className="bg-background/85 border border-white/20 rounded px-2 py-0.5 flex items-center gap-1 w-[48px] justify-center">
+                        <motion.span
+                            className="hud-number text-[10px] text-primary tabular-nums"
+                            style={{
+                                textShadow: "0 0 6px hsl(var(--primary) / 0.6)",
+                                fontVariantNumeric: "tabular-nums",
+                            }}
+                            animate={{ opacity: 1 }}
+                            transition={{ type: "spring", stiffness: 100, damping: 15 }}>
+                            {String(Math.round(heading)).padStart(3, "0")}°
+                        </motion.span>
+                    </div>
+                </div>
             </div>
 
             {/* Status Row - Body Health, Rotor, Fuel */}
@@ -314,9 +310,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}>
                 {/* Body Health */}
-                {vehicle.bodyHealth !== undefined && (
-                    <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-                )}
+                {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                 {/* Rotor RPM */}
                 <div
                     className={cn(
@@ -325,10 +319,7 @@ export const HelicopterHUD = ({ vehicle, visible }: HelicopterHUDProps) => {
                     )}>
                     <Gauge
                         size={10}
-                        className={cn(
-                            lowRpm ? "text-critical critical-pulse" : "text-primary",
-                            "flex-shrink-0"
-                        )}
+                        className={cn(lowRpm ? "text-critical critical-pulse" : "text-primary", "flex-shrink-0")}
                         style={{
                             filter: `drop-shadow(0 0 3px hsl(var(--${lowRpm ? "critical" : "primary"})))`,
                         }}

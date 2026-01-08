@@ -4,7 +4,7 @@ import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { getDirectionFromDegree } from "@/lib/compassUtils";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { BodyHealthIndicator } from "./BodyHealthIndicator";
+import { BodyHealthIndicator } from "./shared/BodyHealthIndicator";
 
 interface BoatHUDProps {
     vehicle: VehicleState;
@@ -50,9 +50,9 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
     return (
         <motion.div
             initial={false}
-            animate={{ 
-                opacity: visible ? 1 : 0, 
-                scale: visible ? 1 : 0.8 
+            animate={{
+                opacity: visible ? 1 : 0,
+                scale: visible ? 1 : 0.8,
             }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center">
@@ -211,9 +211,7 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                     {/* Heading, Body Health & Anchor Status */}
                     <div className="relative flex items-center gap-2 mt-2 min-w-[120px] justify-center">
                         {/* Body Health */}
-                        {vehicle.bodyHealth !== undefined && (
-                            <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-                        )}
+                        {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                         <Navigation
                             size={12}
                             className="text-primary flex-shrink-0"

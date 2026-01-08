@@ -3,7 +3,7 @@ import { Fuel, Thermometer } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { BodyHealthIndicator } from "./BodyHealthIndicator";
+import { BodyHealthIndicator } from "./shared/BodyHealthIndicator";
 
 interface VehicleHUDProps {
     vehicle: VehicleState;

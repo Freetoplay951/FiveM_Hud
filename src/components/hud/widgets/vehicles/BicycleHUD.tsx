@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Bike } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { BodyHealthIndicator } from "./BodyHealthIndicator";
+import { BodyHealthIndicator } from "./shared/BodyHealthIndicator";
 
 interface BicycleHUDProps {
     vehicle: VehicleState;
@@ -41,9 +41,9 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
     return (
         <motion.div
             initial={false}
-            animate={{ 
-                opacity: visible ? 1 : 0, 
-                scale: visible ? 1 : 0.8 
+            animate={{
+                opacity: visible ? 1 : 0,
+                scale: visible ? 1 : 0.8,
             }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center">
@@ -205,9 +205,7 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
 
                     {/* Bike Icon, Body Health & Status */}
                     <div className="relative flex items-center gap-2 mt-2">
-                        {vehicle.bodyHealth !== undefined && (
-                            <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-                        )}
+                        {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                         <Bike
                             size={14}
                             className="text-stamina"
@@ -217,9 +215,7 @@ export const BicycleHUD = ({ vehicle, visible }: BicycleHUDProps) => {
                             className="text-[10px] text-muted-foreground uppercase tracking-wider"
                             animate={{ opacity: vehicle.speed > 0 ? [0.6, 1, 0.6] : 0.5 }}
                             transition={{ duration: 0.8, repeat: vehicle.speed > 0 ? Infinity : 0 }}>
-                            {vehicle.speed > 0
-                                ? t.vehicle.pedaling.toUpperCase()
-                                : t.vehicle.stopped.toUpperCase()}
+                            {vehicle.speed > 0 ? t.vehicle.pedaling.toUpperCase() : t.vehicle.stopped.toUpperCase()}
                         </motion.span>
                     </div>
                 </div>

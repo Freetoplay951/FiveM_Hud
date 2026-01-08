@@ -3,7 +3,7 @@ import { Fuel } from "lucide-react";
 import { VehicleState } from "@/types/hud";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { BodyHealthIndicator } from "./BodyHealthIndicator";
+import { BodyHealthIndicator } from "./shared/BodyHealthIndicator";
 
 interface MotorcycleHUDProps {
     vehicle: VehicleState;
@@ -45,9 +45,9 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
     return (
         <motion.div
             initial={false}
-            animate={{ 
-                opacity: visible ? 1 : 0, 
-                scale: visible ? 1 : 0.8 
+            animate={{
+                opacity: visible ? 1 : 0,
+                scale: visible ? 1 : 0.8,
             }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center">
@@ -206,9 +206,7 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
 
                     {/* Gear & Body Health Display */}
                     <div className="relative flex items-center gap-2 mt-1">
-                        {vehicle.bodyHealth !== undefined && (
-                            <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />
-                        )}
+                        {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                         <span className="text-[8px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
                         <span
                             className="hud-number text-sm text-warning leading-none"
