@@ -281,7 +281,7 @@ export const PlaneHUD = ({ vehicle, visible }: PlaneHUDProps) => {
                 </div>
 
                 {/* Body Health Indicator - Centered between outer and inner circle */}
-                <div className="absolute bottom-[12.5%] left-1/2 -translate-x-1/2 translate-y-1/2">
+                <div className="absolute bottom-[27.5%] left-1/2 -translate-x-1/2 translate-y-1/2 rounded-full glass-panel border-none">
                     {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                 </div>
             </div>
