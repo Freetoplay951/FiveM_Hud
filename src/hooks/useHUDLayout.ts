@@ -38,9 +38,14 @@ const extractWidgetDependencies = (widgetConfigs: WidgetConfig[]): Record<string
                 // Return a mock rect - the actual values don't matter for dependency detection
                 return { x: 0, y: 0, width: 100, height: 100, right: 100, bottom: 100 };
             },
+            getWidgetCurrentRect: (id: string) => {
+                trackedDeps.push(id);
+                return { x: 0, y: 0, width: 100, height: 100, right: 100, bottom: 100 };
+            },
             getWidgetSize: () => ({ width: 100, height: 100 }),
             screen: { width: 1920, height: 1080 },
             isWidgetDisabled: () => false,
+            hasSignaledReady: false,
         };
 
         // Create a mock element with all properties that position functions might access
@@ -227,8 +232,8 @@ export const useHUDLayout = () => {
     }, [state]);
 
     // Distribute widgets using the resolver - computes all default positions in order
-    const distributeWidgets = useCallback((isWidgetDisabled?: (id: string) => boolean) => {
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
+    const distributeWidgets = useCallback((isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
 
         setState((prev) => ({
             ...prev,
@@ -280,16 +285,23 @@ export const useHUDLayout = () => {
         return Math.abs(a.x - b.x) <= POSITION_TOLERANCE && Math.abs(a.y - b.y) <= POSITION_TOLERANCE;
     }, []);
 
-    const captureDefaultRects = useCallback((isWidgetDisabled?: (id: string) => boolean) => {
-        lastDefaultRectsRef.current = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
-    }, []);
+    const captureDefaultRects = useCallback(
+        (isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+            lastDefaultRectsRef.current = resolveDefaultPositions(
+                defaultWidgetConfigs,
+                isWidgetDisabled,
+                hasSignaledReady
+            );
+        },
+        []
+    );
 
     /**
      * Auto-relayout: only move widgets that are still at their *previous* default position.
      * This matches your requirement: do not touch widgets the user manually moved.
      */
     const runAutoRelayout = useCallback(
-        (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean) => {
+        (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
             // Ensure we have the "before" snapshot
             const oldRects = lastDefaultRectsRef.current;
             if (!oldRects) return;
@@ -297,7 +309,7 @@ export const useHUDLayout = () => {
             // Wait for DOM to update with new sizes, then compute new defaults
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    const newRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
+                    const newRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
 
                     setState((prev) => ({
                         ...prev,
@@ -394,7 +406,7 @@ export const useHUDLayout = () => {
     );
 
     const resetLayout = useCallback(
-        (force: boolean, isWidgetDisabled?: (id: string) => boolean) => {
+        (force: boolean, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
             const defaultState = getDefaultState();
 
             if (force) {
@@ -408,7 +420,7 @@ export const useHUDLayout = () => {
             }
 
             requestAnimationFrame(() => {
-                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
+                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
 
                 const resetWidgets = defaultWidgetConfigs.map((w) => {
                     const rect = resolvedRects.get(w.id);
@@ -433,27 +445,32 @@ export const useHUDLayout = () => {
         [setMinimapShape, setStatusDesign, setSpeedometerType, state]
     );
 
-    const resetWidget = useCallback((id: string, isWidgetDisabled?: (id: string) => boolean) => {
-        const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
-        if (!defaultWidget) return;
+    const resetWidget = useCallback(
+        (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+            const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
+            if (!defaultWidget) return;
 
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled);
-        const rect = resolvedRects.get(id);
+            // getWidgetCurrentRect in the position functions will automatically
+            // get the current DOM position of anchor widgets like heli-base
+            const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
+            const rect = resolvedRects.get(id);
 
-        setState((prev) => ({
-            ...prev,
-            widgets: prev.widgets.map((w) =>
-                w.id === id
-                    ? {
-                          ...w,
-                          position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
-                          scale: defaultWidget.scale ?? 1,
-                          visible: defaultWidget.visible,
-                      }
-                    : w
-            ),
-        }));
-    }, []);
+            setState((prev) => ({
+                ...prev,
+                widgets: prev.widgets.map((w) =>
+                    w.id === id
+                        ? {
+                              ...w,
+                              position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
+                              scale: defaultWidget.scale ?? 1,
+                              visible: defaultWidget.visible,
+                          }
+                        : w
+                ),
+            }));
+        },
+        []
+    );
 
     const getWidget = useCallback(
         (id: string): ResolvedWidgetConfig | undefined => {

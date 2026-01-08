@@ -15,6 +15,16 @@ import { NotificationContainer } from "./hud/notifications/NotificationContainer
 import { ChatWidget } from "./hud/widgets/ChatWidget";
 import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
 import { RadioWidget } from "./hud/widgets/RadioWidget";
+import {
+    HeliBaseWidget,
+    HeliKtsWidget,
+    HeliAltitudeWidget,
+    HeliVSpeedWidget,
+    HeliHeadingWidget,
+    HeliRotorWidget,
+    HeliFuelWidget,
+    HeliWarningWidget,
+} from "./hud/widgets/vehicles/helicopter";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -34,7 +44,7 @@ import {
     RadioState,
     DisabledWidgets,
 } from "@/types/hud";
-import { WidgetType, VEHICLE_WIDGET_TYPES, SpeedometerType } from "@/types/widget";
+import { WidgetType, VEHICLE_WIDGET_TYPES, HELI_SUBWIDGET_TYPES, SpeedometerType } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { SelectionBox } from "./hud/SelectionBox";
 import { motion } from "framer-motion";
@@ -266,7 +276,7 @@ export const HUD = () => {
                 requestAnimationFrame(() => {
                     // Distribute widgets to their correct positions via DOM
                     if (!widgetsDistributed) {
-                        distributeWidgets(isWidgetDisabled);
+                        distributeWidgets(isWidgetDisabled, false);
                     }
 
                     console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
@@ -697,7 +707,7 @@ export const HUD = () => {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keypress", handleKeyPress);
         };
-    }, [editMode, isDemoMode, success, error, warning, info]);
+    }, [editMode, isDemoMode, success, error, warning, info, enterEditMode, exitEditMode]);
 
     // Multi-selection handlers
     const handleWidgetSelect = useCallback((id: string, addToSelection: boolean) => {
@@ -838,7 +848,7 @@ export const HUD = () => {
         onPositionChange: updateWidgetPosition,
         onVisibilityToggle: toggleWidgetVisibility,
         onScaleChange: updateWidgetScale,
-        onReset: (id: string) => resetWidget(id, isWidgetDisabled),
+        onReset: (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
     };
 
     // Enhanced widget props with multi-selection support
@@ -924,7 +934,7 @@ export const HUD = () => {
                         onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled)}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled)}
-                        onReset={() => resetLayout(false, isWidgetDisabled)}
+                        onReset={() => resetLayout(false, isWidgetDisabled, hasSignaledReady)}
                         onExitEditMode={exitEditMode}
                     />
                 </Popover>
@@ -998,7 +1008,7 @@ export const HUD = () => {
                         gridSize={gridSize}
                         onPositionChange={updateWidgetPosition}
                         onScaleChange={updateWidgetScale}
-                        onReset={(id) => resetWidget(id, isWidgetDisabled)}
+                        onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         className={isDeadOverlay ? "z-50" : ""}
                         {...getMultiSelectProps(widget.id)}>
@@ -1266,13 +1276,120 @@ export const HUD = () => {
                         onPositionChange={updateWidgetPosition}
                         onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
                         onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget(widgetType, isWidgetDisabled)}
+                        onReset={() => resetWidget(widgetType, isWidgetDisabled, hasSignaledReady)}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...getMultiSelectProps(widget.id)}>
                         <VehicleHUDFactory
                             vehicle={{ ...vehicleState, vehicleType }}
                             visible={baseVisible && correctVehicle && (editMode ? true : widget.visible)}
                         />
+                    </HUDWidget>
+                );
+            })}
+
+            {/* Helicopter Subwidgets - Separate movable widgets for helicopter HUD elements */}
+            {HELI_SUBWIDGET_TYPES.map((widgetType) => {
+                const widget = getWidget(widgetType);
+                if (!widget) return null;
+
+                const isHelicopter = editMode
+                    ? speedometerType === "helicopter"
+                    : vehicleState.inVehicle && vehicleState.vehicleType === "helicopter";
+
+                const baseVisible = editMode ? true : !deathState.isDead;
+                const shouldShow = widget.visible && baseVisible && isHelicopter;
+
+                // Get vehicle data
+                const airspeed = vehicleState.airspeed || vehicleState.speed;
+                const altitude = vehicleState.altitude || 0;
+                const verticalSpeed = vehicleState.verticalSpeed || 0;
+                const heading = vehicleState.heading || 0;
+                const rotorRpm = vehicleState.rotorRpm || 100;
+                const fuel = vehicleState.fuel;
+                const bodyHealth = vehicleState.bodyHealth;
+
+                // Render the appropriate widget content based on type
+                const renderWidgetContent = () => {
+                    switch (widgetType) {
+                        case "heli-base":
+                            return (
+                                <HeliBaseWidget
+                                    vehicle={vehicleState}
+                                    visible={shouldShow}
+                                />
+                            );
+                        case "heli-kts":
+                            return (
+                                <HeliKtsWidget
+                                    airspeed={airspeed}
+                                    visible={shouldShow}
+                                />
+                            );
+                        case "heli-altitude":
+                            return (
+                                <HeliAltitudeWidget
+                                    altitude={altitude}
+                                    visible={shouldShow}
+                                />
+                            );
+                        case "heli-vspeed":
+                            return (
+                                <HeliVSpeedWidget
+                                    verticalSpeed={verticalSpeed}
+                                    visible={shouldShow}
+                                />
+                            );
+                        case "heli-heading":
+                            return (
+                                <HeliHeadingWidget
+                                    heading={heading}
+                                    visible={shouldShow}
+                                />
+                            );
+                        case "heli-rotor":
+                            return (
+                                <HeliRotorWidget
+                                    rotorRpm={rotorRpm}
+                                    visible={shouldShow}
+                                />
+                            );
+                        case "heli-fuel":
+                            return (
+                                <HeliFuelWidget
+                                    fuel={fuel}
+                                    visible={shouldShow}
+                                />
+                            );
+                        case "heli-warning":
+                            return (
+                                <HeliWarningWidget
+                                    bodyHealth={bodyHealth}
+                                    visible={shouldShow}
+                                />
+                            );
+                        default:
+                            return null;
+                    }
+                };
+
+                return (
+                    <HUDWidget
+                        key={widgetType}
+                        id={widget.id}
+                        position={widget.position}
+                        hasAccess={isHelicopter}
+                        visible={shouldShow}
+                        scale={widget.scale}
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={updateWidgetPosition}
+                        onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
+                        onScaleChange={updateWidgetScale}
+                        onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        {...getMultiSelectProps(widget.id)}>
+                        {renderWidgetContent()}
                     </HUDWidget>
                 );
             })}

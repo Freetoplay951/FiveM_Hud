@@ -2,7 +2,6 @@ import { VehicleState } from "@/types/hud";
 import { VehicleHUD } from "./VehicleHUD";
 import { PlaneHUD } from "./PlaneHUD";
 import { BoatHUD } from "./BoatHUD";
-import { HelicopterHUD } from "./HelicopterHUD";
 import { MotorcycleHUD } from "./MotorcycleHUD";
 import { BicycleHUD } from "./BicycleHUD";
 
@@ -28,12 +27,9 @@ export const VehicleHUDFactory = ({ vehicle, visible }: VehicleHUDFactoryProps) 
                 />
             );
         case "helicopter":
-            return (
-                <HelicopterHUD
-                    vehicle={vehicle}
-                    visible={visible}
-                />
-            );
+            // Helicopter is now rendered via separate subwidgets (heli-base, heli-kts, etc.)
+            // Return null here to avoid double rendering
+            return null;
         case "motorcycle":
             return (
                 <MotorcycleHUD
