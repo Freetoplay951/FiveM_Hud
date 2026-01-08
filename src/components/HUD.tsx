@@ -187,10 +187,15 @@ export const HUD = () => {
     const [isVoiceEnabled, setIsVoiceEnabled] = useState<boolean>(!isNuiEnvironment());
     const [isDemoMode] = useState(!isNuiEnvironment());
     const [editMenuOpen, setEditMenuOpen] = useState(false);
-    
+
     // Multi-selection state
     const [selectedWidgets, setSelectedWidgets] = useState<Set<string>>(new Set());
-    const [selectionBox, setSelectionBox] = useState<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
+    const [selectionBox, setSelectionBox] = useState<{
+        startX: number;
+        startY: number;
+        endX: number;
+        endY: number;
+    } | null>(null);
     const [isSelecting, setIsSelecting] = useState(false);
     const selectionStartRef = useRef<{ x: number; y: number } | null>(null);
     const widgetStartPositionsRef = useRef<Map<string, WidgetPosition>>(new Map());
@@ -709,33 +714,38 @@ export const HUD = () => {
                 }
             } else {
                 // Normal click - clear selection (no highlighting for single widget interaction)
-                next.clear();
+                if (!next.has(id)) {
+                    next.clear();
+                }
             }
             return next;
         });
     }, []);
 
-    const handleWidgetDragStart = useCallback((id: string, startPos: WidgetPosition) => {
-        // Store starting positions for all selected widgets
-        widgetStartPositionsRef.current.clear();
-        selectedWidgets.forEach((widgetId) => {
-            const widget = getWidget(widgetId);
-            if (widget) {
-                widgetStartPositionsRef.current.set(widgetId, { ...widget.position });
-            }
-        });
-    }, [selectedWidgets, getWidget]);
+    const handleWidgetDragStart = useCallback(
+        (id: string, startPos: WidgetPosition) => {
+            // Store starting positions for all selected widgets
+            widgetStartPositionsRef.current.clear();
+            selectedWidgets.forEach((widgetId) => {
+                const widget = getWidget(widgetId);
+                if (widget) {
+                    widgetStartPositionsRef.current.set(widgetId, { ...widget.position });
+                }
+            });
+        },
+        [selectedWidgets, getWidget]
+    );
 
     const handleWidgetDragMove = useCallback((deltaX: number, deltaY: number) => {
         // Move all selected widgets by the same delta (no grid snapping for group movement)
         widgetStartPositionsRef.current.forEach((startPos, widgetId) => {
             let newX = startPos.x + deltaX;
             let newY = startPos.y + deltaY;
-            
+
             // Clamp to viewport
             newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
             newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
-            
+
             // Update DOM directly for smooth movement
             const el = document.getElementById(`hud-widget-${widgetId}`);
             if (el) {
@@ -761,32 +771,38 @@ export const HUD = () => {
     }, [updateWidgetPosition]);
 
     // Selection box handlers
-    const handleSelectionStart = useCallback((e: React.MouseEvent) => {
-        if (!editMode) return;
-        // Only start selection if clicking on empty area (not on a widget)
-        if ((e.target as HTMLElement).closest('[id^="hud-widget-"]')) return;
-        
-        e.preventDefault();
-        setIsSelecting(true);
-        selectionStartRef.current = { x: e.clientX, y: e.clientY };
-        setSelectionBox({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
-        
-        // Clear selection if not holding Ctrl/Cmd
-        if (!e.ctrlKey && !e.metaKey) {
-            setSelectedWidgets(new Set());
-        }
-    }, [editMode]);
+    const handleSelectionStart = useCallback(
+        (e: React.MouseEvent) => {
+            if (!editMode) return;
+            // Only start selection if clicking on empty area (not on a widget)
+            if ((e.target as HTMLElement).closest('[id^="hud-widget-"]')) return;
 
-    const handleSelectionMove = useCallback((e: React.MouseEvent) => {
-        if (!isSelecting || !selectionStartRef.current) return;
-        
-        setSelectionBox({
-            startX: selectionStartRef.current.x,
-            startY: selectionStartRef.current.y,
-            endX: e.clientX,
-            endY: e.clientY,
-        });
-    }, [isSelecting]);
+            e.preventDefault();
+            setIsSelecting(true);
+            selectionStartRef.current = { x: e.clientX, y: e.clientY };
+            setSelectionBox({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
+
+            // Clear selection if not holding Ctrl/Cmd
+            if (!e.ctrlKey && !e.metaKey) {
+                setSelectedWidgets(new Set());
+            }
+        },
+        [editMode]
+    );
+
+    const handleSelectionMove = useCallback(
+        (e: React.MouseEvent) => {
+            if (!isSelecting || !selectionStartRef.current) return;
+
+            setSelectionBox({
+                startX: selectionStartRef.current.x,
+                startY: selectionStartRef.current.y,
+                endX: e.clientX,
+                endY: e.clientY,
+            });
+        },
+        [isSelecting]
+    );
 
     const handleSelectionEnd = useCallback(() => {
         if (!isSelecting || !selectionBox) {
@@ -794,13 +810,13 @@ export const HUD = () => {
             setSelectionBox(null);
             return;
         }
-        
+
         // Calculate selection rectangle
         const left = Math.min(selectionBox.startX, selectionBox.endX);
         const right = Math.max(selectionBox.startX, selectionBox.endX);
         const top = Math.min(selectionBox.startY, selectionBox.endY);
         const bottom = Math.max(selectionBox.startY, selectionBox.endY);
-        
+
         // Find all widgets within selection
         const newSelection = new Set(selectedWidgets);
         widgets.forEach((widget) => {
@@ -813,7 +829,7 @@ export const HUD = () => {
                 }
             }
         });
-        
+
         setSelectedWidgets(newSelection);
         setIsSelecting(false);
         setSelectionBox(null);
@@ -836,7 +852,7 @@ export const HUD = () => {
         onScaleChange: updateWidgetScale,
         onReset: (id: string) => resetWidget(id, isWidgetDisabled),
     };
-    
+
     // Enhanced widget props with multi-selection support
     const getMultiSelectProps = (id: string) => ({
         isSelected: selectedWidgets.has(id),
@@ -855,13 +871,12 @@ export const HUD = () => {
     if (!isVisible || !t) return null;
 
     return (
-        <div 
+        <div
             className={cn("fixed inset-0 overflow-hidden", editMode ? "pointer-events-auto" : "pointer-events-none")}
             onMouseDown={handleSelectionStart}
             onMouseMove={handleSelectionMove}
             onMouseUp={handleSelectionEnd}
             onMouseLeave={handleSelectionEnd}>
-            
             {/* Selection Box */}
             {selectionBox && (
                 <SelectionBox
@@ -872,7 +887,7 @@ export const HUD = () => {
                     isActive={isSelecting}
                 />
             )}
-            
+
             {/* Grid overlay when in edit mode */}
             {editMode && snapToGrid && (
                 <motion.div
@@ -1286,22 +1301,57 @@ export const HUD = () => {
                 // Render the appropriate heli sub-widget based on type
                 const renderHeliWidget = () => {
                     const visible = baseVisible && isHelicopter && (editMode ? true : widget.visible);
-                    
+
                     switch (widgetType) {
                         case "heli-base":
-                            return <HeliBaseWidget vehicle={vehicleState} visible={visible} />;
+                            return (
+                                <HeliBaseWidget
+                                    vehicle={vehicleState}
+                                    visible={visible}
+                                />
+                            );
                         case "heli-speed":
-                            return <HeliSpeedWidget vehicle={vehicleState} visible={visible} />;
+                            return (
+                                <HeliSpeedWidget
+                                    vehicle={vehicleState}
+                                    visible={visible}
+                                />
+                            );
                         case "heli-altitude":
-                            return <HeliAltitudeWidget vehicle={vehicleState} visible={visible} />;
+                            return (
+                                <HeliAltitudeWidget
+                                    vehicle={vehicleState}
+                                    visible={visible}
+                                />
+                            );
                         case "heli-heading":
-                            return <HeliHeadingWidget vehicle={vehicleState} visible={visible} />;
+                            return (
+                                <HeliHeadingWidget
+                                    vehicle={vehicleState}
+                                    visible={visible}
+                                />
+                            );
                         case "heli-rotor":
-                            return <HeliRotorWidget vehicle={vehicleState} visible={visible} />;
+                            return (
+                                <HeliRotorWidget
+                                    vehicle={vehicleState}
+                                    visible={visible}
+                                />
+                            );
                         case "heli-fuel":
-                            return <HeliFuelWidget vehicle={vehicleState} visible={visible} />;
+                            return (
+                                <HeliFuelWidget
+                                    vehicle={vehicleState}
+                                    visible={visible}
+                                />
+                            );
                         case "heli-verticalspeed":
-                            return <HeliVerticalSpeedWidget vehicle={vehicleState} visible={visible} />;
+                            return (
+                                <HeliVerticalSpeedWidget
+                                    vehicle={vehicleState}
+                                    visible={visible}
+                                />
+                            );
                         default:
                             return null;
                     }
