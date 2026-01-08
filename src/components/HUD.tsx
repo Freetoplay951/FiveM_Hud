@@ -851,6 +851,7 @@ export const HUD = () => {
         onDragStart: selectedWidgets.has(id) ? handleWidgetDragStart : undefined,
         onDragMove: selectedWidgets.has(id) && selectedWidgets.size > 1 ? handleWidgetDragMove : undefined,
         onDragEnd: selectedWidgets.has(id) && selectedWidgets.size > 1 ? handleWidgetDragEnd : undefined,
+        onClearSelection: () => setSelectedWidgets(new Set()),
     });
 
     const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
