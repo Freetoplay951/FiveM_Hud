@@ -1291,115 +1291,132 @@ export const HUD = () => {
             })}
 
             {/* Helicopter Subwidgets - Separate movable widgets for helicopter HUD elements */}
-            {HELI_SUBWIDGET_TYPES.map((widgetType) => {
-                const widget = getWidget(widgetType);
-                if (!widget) return null;
+            {(() => {
+                return HELI_SUBWIDGET_TYPES.map((widgetType) => {
+                    const widget = getWidget(widgetType);
+                    if (!widget) return null;
 
-                const isHelicopter = editMode
-                    ? speedometerType === "helicopter"
-                    : vehicleState.inVehicle && vehicleState.vehicleType === "helicopter";
+                    const isHelicopter = editMode
+                        ? speedometerType === "helicopter"
+                        : vehicleState.inVehicle && vehicleState.vehicleType === "helicopter";
 
-                const baseVisible = editMode ? true : !deathState.isDead;
-                const shouldShow = widget.visible && baseVisible && isHelicopter;
+                    const baseVisible = editMode ? true : !deathState.isDead;
+                    const shouldShow = widget.visible && baseVisible && isHelicopter;
 
-                // Get vehicle data
-                const airspeed = vehicleState.airspeed || vehicleState.speed;
-                const altitude = vehicleState.altitude || 0;
-                const verticalSpeed = vehicleState.verticalSpeed || 0;
-                const heading = vehicleState.heading || 0;
-                const rotorRpm = vehicleState.rotorRpm || 100;
-                const fuel = vehicleState.fuel;
-                const bodyHealth = vehicleState.bodyHealth;
+                    // Get vehicle data
+                    const airspeed = vehicleState.airspeed || vehicleState.speed;
+                    const altitude = vehicleState.altitude || 0;
+                    const verticalSpeed = vehicleState.verticalSpeed || 0;
+                    const heading = vehicleState.heading || 0;
+                    const rotorRpm = vehicleState.rotorRpm || 100;
+                    const fuel = vehicleState.fuel;
+                    const bodyHealth = vehicleState.bodyHealth;
 
-                // Render the appropriate widget content based on type
-                const renderWidgetContent = () => {
-                    switch (widgetType) {
-                        case "heli-base":
-                            return (
-                                <HeliBaseWidget
-                                    vehicle={vehicleState}
-                                    visible={shouldShow}
-                                />
-                            );
-                        case "heli-kts":
-                            return (
-                                <HeliKtsWidget
-                                    airspeed={airspeed}
-                                    visible={shouldShow}
-                                />
-                            );
-                        case "heli-altitude":
-                            return (
-                                <HeliAltitudeWidget
-                                    altitude={altitude}
-                                    visible={shouldShow}
-                                />
-                            );
-                        case "heli-vspeed":
-                            return (
-                                <HeliVSpeedWidget
-                                    verticalSpeed={verticalSpeed}
-                                    visible={shouldShow}
-                                />
-                            );
-                        case "heli-heading":
-                            return (
-                                <HeliHeadingWidget
-                                    heading={heading}
-                                    visible={shouldShow}
-                                />
-                            );
-                        case "heli-rotor":
-                            return (
-                                <HeliRotorWidget
-                                    rotorRpm={rotorRpm}
-                                    visible={shouldShow}
-                                />
-                            );
-                        case "heli-fuel":
-                            return (
-                                <HeliFuelWidget
-                                    fuel={fuel}
-                                    visible={shouldShow}
-                                />
-                            );
-                        case "heli-warning":
-                            return (
-                                <HeliWarningWidget
-                                    bodyHealth={bodyHealth}
-                                    visible={shouldShow}
-                                />
-                            );
-                        default:
-                            return null;
-                    }
-                };
+                    // Render the appropriate widget content based on type
+                    const renderWidgetContent = () => {
+                        switch (widgetType) {
+                            case "heli-base":
+                                return (
+                                    <HeliBaseWidget
+                                        vehicle={vehicleState}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            case "heli-kts":
+                                return (
+                                    <HeliKtsWidget
+                                        airspeed={airspeed}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            case "heli-altitude":
+                                return (
+                                    <HeliAltitudeWidget
+                                        altitude={altitude}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            case "heli-vspeed":
+                                return (
+                                    <HeliVSpeedWidget
+                                        verticalSpeed={verticalSpeed}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            case "heli-heading":
+                                return (
+                                    <HeliHeadingWidget
+                                        heading={heading}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            case "heli-rotor":
+                                return (
+                                    <HeliRotorWidget
+                                        rotorRpm={rotorRpm}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            case "heli-fuel":
+                                return (
+                                    <HeliFuelWidget
+                                        fuel={fuel}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            case "heli-warning":
+                                return (
+                                    <HeliWarningWidget
+                                        bodyHealth={bodyHealth}
+                                        visible={shouldShow}
+                                    />
+                                );
+                            default:
+                                return null;
+                        }
+                    };
 
-                // In Simple Mode: only heli-base is draggable, others follow
-                const isBaseWidget = widgetType === "heli-base";
-                const canDrag = !heliSimpleMode || isBaseWidget;
+                    // In Simple Mode: only heli-base is draggable, others follow
+                    const isBaseWidget = widgetType === "heli-base";
+                    const canDrag = !heliSimpleMode || isBaseWidget;
 
-                return (
-                    <HUDWidget
-                        key={widgetType}
-                        id={widget.id}
-                        position={widget.position}
-                        hasAccess={isHelicopter}
-                        visible={shouldShow}
-                        scale={widget.scale}
-                        editMode={editMode}
-                        snapToGrid={snapToGrid}
-                        gridSize={gridSize}
-                        onPositionChange={canDrag ? updateWidgetPosition : undefined}
-                        onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
-                        onScaleChange={canDrag ? updateWidgetScale : undefined}
-                        onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
-                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
-                        {renderWidgetContent()}
-                    </HUDWidget>
-                );
-            })}
+                    // Handle base widget position change - in simple mode, reset sub-widgets after drag
+                    const handleBasePositionChange = (id: string, newPosition: WidgetPosition) => {
+                        updateWidgetPosition(id, newPosition);
+
+                        if (heliSimpleMode) {
+                            // Reset all sub-widgets so they recalculate relative to new base position
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+                                resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                            });
+                        }
+                    };
+
+                    return (
+                        <HUDWidget
+                            key={widgetType}
+                            id={widget.id}
+                            position={widget.position}
+                            hasAccess={isHelicopter}
+                            visible={shouldShow}
+                            scale={widget.scale}
+                            editMode={editMode}
+                            snapToGrid={snapToGrid}
+                            gridSize={gridSize}
+                            onPositionChange={
+                                canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
+                            }
+                            onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
+                            onScaleChange={canDrag ? updateWidgetScale : undefined}
+                            onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
+                            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                            {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
+                            {renderWidgetContent()}
+                        </HUDWidget>
+                    );
+                });
+            })()}
 
             {/* Chat Widget */}
             {(() => {

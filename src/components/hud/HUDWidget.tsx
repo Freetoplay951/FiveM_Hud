@@ -123,24 +123,24 @@ export const HUDWidget = ({
     const handleMouseDown = useCallback(
         (e: React.MouseEvent) => {
             if (!editMode) return;
-            
+
             // Always handle selection first, even for non-movable widgets
             if (onSelect) {
                 onSelect(id, e.ctrlKey || e.metaKey);
             }
-            
+
             // Only handle dragging if position change is allowed
             if (!onPositionChange) return;
             if (isResizing) return;
-            
+
             e.preventDefault();
             e.stopPropagation();
-            
+
             setIsDragging(true);
             dragStartPos.current = { x: e.clientX, y: e.clientY };
             widgetStartPos.current = { x: position.x, y: position.y };
             setLocalPosition({ x: position.x, y: position.y });
-            
+
             // Notify parent about drag start for multi-selection
             if (onDragStart) {
                 onDragStart(id, position);
@@ -157,7 +157,7 @@ export const HUDWidget = ({
         const handleMouseMove = (e: MouseEvent) => {
             const deltaX = e.clientX - dragStartPos.current.x;
             const deltaY = e.clientY - dragStartPos.current.y;
-            
+
             let newX = widgetStartPos.current.x + deltaX;
             let newY = widgetStartPos.current.y + deltaY;
 
@@ -174,7 +174,7 @@ export const HUDWidget = ({
                 rootRef.current.style.left = `${clamped.x}px`;
                 rootRef.current.style.top = `${clamped.y}px`;
             }
-            
+
             // Notify parent about drag movement for multi-selection
             if (onDragMove && isSelected) {
                 onDragMove(deltaX, deltaY);
@@ -189,7 +189,7 @@ export const HUDWidget = ({
             localPositionRef.current = null;
             setLocalPosition(null);
             setIsDragging(false);
-            
+
             // Notify parent drag ended
             if (onDragEnd) {
                 onDragEnd();
@@ -265,6 +265,8 @@ export const HUDWidget = ({
 
     const isSuspended = suspended;
 
+    const isSubWidget = !(onPositionChange || onVisibilityToggle || onScaleChange || onReset);
+
     return (
         <div
             id={`hud-widget-${id}`}
@@ -273,7 +275,9 @@ export const HUDWidget = ({
                 "absolute pointer-events-auto select-none",
                 editMode && onPositionChange && "cursor-move",
                 editMode && !isSelected && "ring-2 ring-primary/50 ring-dashed rounded-lg",
-                editMode && isSelected && "ring-[3px] ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
+                editMode &&
+                    isSelected &&
+                    "ring-[3px] ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
                 (isDragging || isResizing) && "z-50",
                 !visible && editMode && "opacity-40",
                 className
@@ -288,26 +292,33 @@ export const HUDWidget = ({
                 opacity: isSuspended ? 0 : !disabled && (visible || (editMode && hasAccess)) ? 1 : 0,
                 // Hide via visibility instead of unmounting
                 visibility: isHidden || isSuspended ? "hidden" : "visible",
-                pointerEvents: isHidden || isSuspended || !hasAccess ? "none" : "auto",
+                pointerEvents: isHidden || isSubWidget || isSuspended || !hasAccess ? "none" : "auto",
+                zIndex: 10,
                 // CEF Fix: Prevent black box artifacts
                 willChange: isDragging || isResizing ? "transform" : "auto",
                 // Selected state background glow
-                ...(isSelected && editMode ? { 
-                    backgroundColor: "hsl(var(--warning) / 0.1)",
-                } : {}),
+                ...(isSelected && editMode
+                    ? {
+                          backgroundColor: "hsl(var(--warning) / 0.1)",
+                      }
+                    : {}),
             }}
             onMouseDown={handleMouseDown}>
             {/* Edit Mode Controls */}
             {editMode && (
                 <div className="absolute -top-7 left-0 right-0 flex items-center justify-between gap-1">
-                    <div className="flex items-center gap-1 bg-background/60 border border-border/30 rounded px-1 py-0.5">
-                        <GripVertical
-                            size={10}
-                            className="text-muted-foreground"
-                        />
-                        <span className="text-[8px] text-muted-foreground uppercase">{id}</span>
-                        <span className="text-[8px] text-muted-foreground ml-1">{Math.round(displayScale * 100)}%</span>
-                    </div>
+                    {!isSubWidget && (
+                        <div className="flex items-center gap-1 bg-background/60 border border-border/30 rounded px-1 py-0.5">
+                            <GripVertical
+                                size={10}
+                                className="text-muted-foreground"
+                            />
+                            <span className="text-[8px] text-muted-foreground uppercase">{id}</span>
+                            <span className="text-[8px] text-muted-foreground ml-1">
+                                {Math.round(displayScale * 100)}%
+                            </span>
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-1">
                         {onReset && (
