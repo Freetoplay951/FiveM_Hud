@@ -208,10 +208,8 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                         {String(Math.round(speed)).padStart(3, "0")}
                     </motion.span>
 
-                    {/* Heading, Body Health & Anchor Status */}
+                    {/* Heading & Anchor Status */}
                     <div className="relative flex items-center gap-2 mt-2 min-w-[120px] justify-center">
-                        {/* Body Health */}
-                        {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                         <Navigation
                             size={12}
                             className="text-primary flex-shrink-0"
@@ -232,6 +230,11 @@ export const BoatHUD = ({ vehicle, visible }: BoatHUDProps) => {
                             style={anchor ? { filter: "drop-shadow(0 0 4px hsl(var(--warning)))" } : {}}
                         />
                     </div>
+                </div>
+
+                {/* Body Health Indicator - Centered between outer and inner circle */}
+                <div className="absolute bottom-[12.5%] left-1/2 -translate-x-1/2 translate-y-1/2">
+                    {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                 </div>
             </div>
 

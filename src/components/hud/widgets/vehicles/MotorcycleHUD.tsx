@@ -204,9 +204,8 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
                         {String(Math.round(vehicle.speed)).padStart(3, "0")}
                     </motion.span>
 
-                    {/* Gear & Body Health Display */}
+                    {/* Gear Display */}
                     <div className="relative flex items-center gap-2 mt-1">
-                        {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                         <span className="text-[8px] text-muted-foreground">{t.vehicle.gear.toUpperCase()}</span>
                         <span
                             className="hud-number text-sm text-warning leading-none"
@@ -214,6 +213,11 @@ export const MotorcycleHUD = ({ vehicle, visible }: MotorcycleHUDProps) => {
                             {vehicle.gear === 0 ? "N" : vehicle.gear}
                         </span>
                     </div>
+                </div>
+
+                {/* Body Health Indicator - Centered between outer and inner circle */}
+                <div className="absolute bottom-[12.5%] left-1/2 -translate-x-1/2 translate-y-1/2">
+                    {vehicle.bodyHealth !== undefined && <BodyHealthIndicator bodyHealth={vehicle.bodyHealth} />}
                 </div>
             </div>
 
