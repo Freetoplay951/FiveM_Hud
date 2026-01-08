@@ -1010,7 +1010,8 @@ export const HUD = () => {
                         onScaleChange={updateWidgetScale}
                         onReset={(id) => resetWidget(id, isWidgetDisabled)}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        className={isDeadOverlay ? "z-50" : ""}>
+                        className={isDeadOverlay ? "z-50" : ""}
+                        {...getMultiSelectProps(widget.id)}>
                         <NotificationContainer
                             notifications={displayedNotifications}
                             onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
