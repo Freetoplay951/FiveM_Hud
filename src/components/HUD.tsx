@@ -34,7 +34,16 @@ import {
     RadioState,
     DisabledWidgets,
 } from "@/types/hud";
-import { WidgetType, VEHICLE_WIDGET_TYPES, SpeedometerType } from "@/types/widget";
+import { WidgetType, VEHICLE_WIDGET_TYPES, HELI_WIDGET_TYPES, SpeedometerType } from "@/types/widget";
+import {
+    HeliBaseWidget,
+    HeliSpeedWidget,
+    HeliAltitudeWidget,
+    HeliHeadingWidget,
+    HeliRotorWidget,
+    HeliFuelWidget,
+    HeliVerticalSpeedWidget,
+} from "./hud/widgets/vehicles/helicopter";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
@@ -1047,8 +1056,8 @@ export const HUD = () => {
                 );
             })()}
 
-            {/* Vehicle Speedometers - one widget per vehicle type */}
-            {VEHICLE_WIDGET_TYPES.map((widgetType) => {
+            {/* Vehicle Speedometers - one widget per vehicle type (except helicopter which uses subwidgets) */}
+            {VEHICLE_WIDGET_TYPES.filter((type) => type !== "speedometer-helicopter").map((widgetType) => {
                 const widget = getWidget(widgetType);
                 if (!widget) return null;
 
@@ -1082,6 +1091,63 @@ export const HUD = () => {
                             vehicle={{ ...vehicleState, vehicleType }}
                             visible={baseVisible && correctVehicle && (editMode ? true : widget.visible)}
                         />
+                    </HUDWidget>
+                );
+            })}
+
+            {/* Helicopter Sub-Widgets */}
+            {HELI_WIDGET_TYPES.map((widgetType) => {
+                const widget = getWidget(widgetType);
+                if (!widget) return null;
+
+                const baseVisible = editMode ? true : !deathState.isDead;
+                const isHelicopter = editMode
+                    ? speedometerType === "helicopter"
+                    : vehicleState.inVehicle && vehicleState.vehicleType === "helicopter";
+
+                const shouldShow = widget.visible && baseVisible && isHelicopter;
+
+                // Render the appropriate heli sub-widget based on type
+                const renderHeliWidget = () => {
+                    const visible = baseVisible && isHelicopter && (editMode ? true : widget.visible);
+                    
+                    switch (widgetType) {
+                        case "heli-base":
+                            return <HeliBaseWidget vehicle={vehicleState} visible={visible} />;
+                        case "heli-speed":
+                            return <HeliSpeedWidget vehicle={vehicleState} visible={visible} />;
+                        case "heli-altitude":
+                            return <HeliAltitudeWidget vehicle={vehicleState} visible={visible} />;
+                        case "heli-heading":
+                            return <HeliHeadingWidget vehicle={vehicleState} visible={visible} />;
+                        case "heli-rotor":
+                            return <HeliRotorWidget vehicle={vehicleState} visible={visible} />;
+                        case "heli-fuel":
+                            return <HeliFuelWidget vehicle={vehicleState} visible={visible} />;
+                        case "heli-verticalspeed":
+                            return <HeliVerticalSpeedWidget vehicle={vehicleState} visible={visible} />;
+                        default:
+                            return null;
+                    }
+                };
+
+                return (
+                    <HUDWidget
+                        key={widgetType}
+                        id={widget.id}
+                        position={widget.position}
+                        hasAccess={isHelicopter}
+                        visible={shouldShow}
+                        scale={widget.scale}
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={updateWidgetPosition}
+                        onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
+                        onScaleChange={updateWidgetScale}
+                        onReset={() => resetWidget(widgetType, isWidgetDisabled)}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}>
+                        {renderHeliWidget()}
                     </HUDWidget>
                 );
             })}
