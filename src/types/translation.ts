@@ -66,7 +66,7 @@ export interface Translations {
         statusDesign: string;
         minimapShape: string;
         speedometerType: string;
-        heliSimpleMode: string;
+        simpleMode: string;
         options: string;
         snapToGrid: string;
         exitEdit: string;

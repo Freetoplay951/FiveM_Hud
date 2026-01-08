@@ -27,12 +27,12 @@ interface EditModeOverlayProps {
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
-    heliSimpleMode: boolean;
+    simpleMode: boolean;
     onSnapToGridChange: (value: boolean) => void;
     onStatusDesignChange: (design: StatusDesign) => void;
     onSpeedometerTypeChange: (type: SpeedometerType) => void;
     onMinimapShapeChange: (shape: MinimapShape) => void;
-    onHeliSimpleModeChange: (enabled: boolean) => void;
+    onSimpleModeChange: (enabled: boolean) => void;
     onReset: () => void;
     onExitEditMode: () => void;
 }
@@ -76,12 +76,12 @@ export const EditModeOverlay = ({
     statusDesign,
     speedometerType,
     minimapShape,
-    heliSimpleMode,
+    simpleMode,
     onSnapToGridChange,
     onStatusDesignChange,
     onSpeedometerTypeChange,
     onMinimapShapeChange,
-    onHeliSimpleModeChange,
+    onSimpleModeChange,
     onReset,
     onExitEditMode,
 }: EditModeOverlayProps) => {
@@ -222,9 +222,9 @@ export const EditModeOverlay = ({
                 {speedometerType === "helicopter" && (
                     <ToggleOption
                         icon={Layers}
-                        label={t.editMode.heliSimpleMode}
-                        checked={heliSimpleMode}
-                        onChange={onHeliSimpleModeChange}
+                        label={t.editMode.simpleMode}
+                        checked={simpleMode}
+                        onChange={onSimpleModeChange}
                     />
                 )}
             </div>

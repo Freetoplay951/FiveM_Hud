@@ -59,7 +59,7 @@
         "statusDesign": "Status Design",
         "minimapShape": "Minimap Form",
         "speedometerType": "Tacho Typ",
-        "heliSimpleMode": "Helikopter Simple Mode",
+        "simpleMode": "Simple Mode",
         "options": "Optionen",
         "snapToGrid": "Am Raster ausrichten",
         "exitEdit": "Bearbeitung beenden",

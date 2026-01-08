@@ -59,7 +59,7 @@
         "statusDesign": "Status Design",
         "minimapShape": "Minimap Shape",
         "speedometerType": "Speedometer Type",
-        "heliSimpleMode": "Helicopter Simple Mode",
+        "simpleMode": "Simple Mode",
         "options": "Options",
         "snapToGrid": "Snap to Grid",
         "exitEdit": "Exit Edit Mode",

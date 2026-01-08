@@ -216,7 +216,7 @@ export const HUD = () => {
         statusDesign,
         speedometerType,
         minimapShape,
-        heliSimpleMode,
+        simpleMode,
         widgetsDistributed,
         autoLayoutHiddenIds,
         toggleEditMode,
@@ -224,7 +224,7 @@ export const HUD = () => {
         setStatusDesign,
         setSpeedometerType,
         setMinimapShape,
-        setHeliSimpleMode,
+        setSimpleMode,
         updateWidgetPosition,
         updateWidgetScale,
         toggleWidgetVisibility,
@@ -931,12 +931,12 @@ export const HUD = () => {
                         statusDesign={statusDesign}
                         speedometerType={speedometerType}
                         minimapShape={minimapShape}
-                        heliSimpleMode={heliSimpleMode}
+                        simpleMode={simpleMode}
                         onSnapToGridChange={setSnapToGrid}
                         onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled)}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled)}
-                        onHeliSimpleModeChange={setHeliSimpleMode}
+                        onSimpleModeChange={setSimpleMode}
                         onReset={() => resetLayout(false, isWidgetDisabled, hasSignaledReady)}
                         onExitEditMode={exitEditMode}
                     />
@@ -1378,13 +1378,13 @@ export const HUD = () => {
 
                     // In Simple Mode: only heli-base is draggable, others follow
                     const isBaseWidget = widgetType === "heli-base";
-                    const canDrag = !heliSimpleMode || isBaseWidget;
+                    const canDrag = !simpleMode || isBaseWidget;
 
                     // Handle base widget position change - in simple mode, reset sub-widgets after drag
                     const handleBasePositionChange = (id: string, newPosition: WidgetPosition) => {
                         updateWidgetPosition(id, newPosition);
 
-                        if (heliSimpleMode) {
+                        if (simpleMode) {
                             // Reset all sub-widgets so they recalculate relative to new base position
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
