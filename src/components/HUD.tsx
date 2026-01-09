@@ -1433,15 +1433,47 @@ export const HUD = () => {
                         }
                     };
                     
-                    // Handle scale change - in simple mode, update all sub-widgets
+                    // Handle scale change - in simple mode, update all sub-widgets and reposition them
                     const handleBaseScaleChange = (id: string, newScale: number) => {
                         updateWidgetScale(id, newScale);
                         
                         if (simpleMode) {
-                            // Update all sub-widgets to the same scale
+                            // Update all sub-widgets to the same scale and reset their positions
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
                                 updateWidgetScale(subType, newScale);
+                            });
+                            
+                            // Wait for DOM to update with new scales, then reset positions
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                        if (subType === "heli-base") return;
+                                        resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                                    });
+                                });
+                            });
+                        }
+                    };
+                    
+                    // Handle visibility toggle - in simple mode, toggle all sub-widgets when base is toggled
+                    const handleBaseVisibilityToggle = () => {
+                        const baseWidget = getWidget("heli-base");
+                        if (!baseWidget) return;
+                        
+                        // Toggle base widget
+                        toggleWidgetVisibility("heli-base");
+                        
+                        if (simpleMode) {
+                            // If base is becoming hidden, hide all sub-widgets too
+                            // If base is becoming visible, show all sub-widgets too
+                            const newVisibility = !baseWidget.visible;
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+                                const subWidget = getWidget(subType);
+                                if (subWidget && subWidget.visible !== newVisibility) {
+                                    toggleWidgetVisibility(subType);
+                                }
                             });
                         }
                     };
@@ -1460,7 +1492,7 @@ export const HUD = () => {
                             onPositionChange={
                                 canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
                             }
-                            onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
+                            onVisibilityToggle={canDrag ? (isBaseWidget && simpleMode ? handleBaseVisibilityToggle : () => toggleWidgetVisibility(widgetType)) : undefined}
                             onScaleChange={canDrag ? (isBaseWidget ? handleBaseScaleChange : updateWidgetScale) : undefined}
                             onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
                             onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
