@@ -13,7 +13,8 @@ import {
 import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
 
 // Tolerance for position comparison (pixels)
-const POSITION_TOLERANCE = 5;
+// Must be at least as large as the grid size to account for snap-to-grid adjustments
+const POSITION_TOLERANCE = 15;
 
 /**
  * Programmatically extract widget dependencies by analyzing position functions.
