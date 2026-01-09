@@ -33,14 +33,6 @@ export interface PositionResolver {
     hasSignaledReady: boolean;
 }
 
-const getWidgetSizeFromDOM = (id: string, scale: number = 1): WidgetSize => {
-    const element = document.getElementById(`hud-widget-${id}`);
-    return {
-        width: (element?.offsetWidth ?? 0) * scale,
-        height: (element?.offsetHeight ?? 0) * scale,
-    };
-};
-
 /**
  * Computes all default widget positions in order, building up a cache
  * so dependent widgets can query the resolved positions of their dependencies.
@@ -67,10 +59,17 @@ export function resolveDefaultPositions(
         height: typeof window !== "undefined" ? window.innerHeight : 1080,
     };
 
+    const widgetScales = new Map<string, number>();
+    for (const config of widgetConfigs) {
+        widgetScales.set(config.id, config.scale ?? 1);
+    }
+
+    console.log(widgetScales.get("heli-fuel"));
+
     const getWidgetSize = (id: string): WidgetSize => {
         const element = document.getElementById(`hud-widget-${id}`);
+        const scale = widgetScales.get(id) ?? 1;
 
-        // When the HUD is fully rendered, use the rendered size (includes transforms like scale)
         if (hasSignaledReady && element) {
             const rect = element.getBoundingClientRect();
             return {
@@ -79,17 +78,15 @@ export function resolveDefaultPositions(
             };
         }
 
-        // During initial layout we only have layout sizes (without transforms)
         return {
-            width: element?.offsetWidth ?? 0,
-            height: element?.offsetHeight ?? 0,
+            width: (element?.offsetWidth ?? 0) * scale,
+            height: (element?.offsetHeight ?? 0) * scale,
         };
     };
 
     // Get current rect from DOM (actual position after user dragging)
     // Returns computed rect if HUD hasn't signaled ready yet (widgets still positioning)
     const getWidgetCurrentRect = (id: string): WidgetRect | null => {
-        // If HUD hasn't signaled ready, widgets are still in initial render - use computed positions
         if (!hasSignaledReady) {
             return resolvedRects.get(id) ?? null;
         }
@@ -97,14 +94,16 @@ export function resolveDefaultPositions(
         const element = document.getElementById(`hud-widget-${id}`);
         if (!element) return resolvedRects.get(id) ?? null;
 
+        const scale = widgetScales.get(id) ?? 1;
         const rect = element.getBoundingClientRect();
+
         return {
             x: rect.left,
             y: rect.top,
-            width: rect.width,
-            height: rect.height,
-            right: rect.right,
-            bottom: rect.bottom,
+            width: rect.width * scale,
+            height: rect.height * scale,
+            right: rect.left + rect.width * scale,
+            bottom: rect.top + rect.height * scale,
         };
     };
 
@@ -122,9 +121,7 @@ export function resolveDefaultPositions(
         const element = document.getElementById(`hud-widget-${config.id}`);
 
         // Use rendered size when possible (so scale is respected), otherwise fallback to offset size * config scale
-        const size = hasSignaledReady
-            ? getWidgetSize(config.id)
-            : getWidgetSizeFromDOM(config.id, config.scale ?? 1);
+        const size = getWidgetSize(config.id);
 
         // Compute position using resolver (which has access to previously computed rects
         // and can fetch current DOM positions via getWidgetCurrentRect)
