@@ -43,11 +43,6 @@ export type WidgetType =
     | "voice"
     | "radio"
     | "location"
-    | "speedometer-car"
-    | "speedometer-plane"
-    | "speedometer-boat"
-    | "speedometer-motorcycle"
-    | "speedometer-bicycle"
     // Helicopter subwidgets
     | "heli-base"
     | "heli-kts"
@@ -177,13 +172,7 @@ export const BICYCLE_SUBWIDGET_TYPES = [
     ...WIDGET_GROUPS.find((g) => g.base === "bicycle-base")!.subwidgets,
 ] as const;
 
-export const VEHICLE_WIDGET_TYPES = [
-    "speedometer-car",
-    "speedometer-plane",
-    "speedometer-boat",
-    "speedometer-motorcycle",
-    "speedometer-bicycle",
-] as const;
+// Old speedometer widgets removed - now using subwidgets (car-base, plane-base, etc.)
 
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 export type SpeedometerType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
@@ -416,15 +405,15 @@ const getCarSubwidgetConfigs = (): WidgetConfig[] => [
         id: "car-warning",
         type: "car-warning",
         position: (id, _el, resolver) => {
-            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
             const baseRect = resolver.getWidgetCurrentRect("car-base");
             const { width, height } = resolver.getWidgetSize(id);
-            const scaledGap = GAP * Math.min(2, widgetScale);
             if (baseRect) {
                 const baseCenterX = baseRect.x + baseRect.width / 2;
+                // Center between outer arc (at ~12% from edge) and inner backdrop (at 25% from edge)
+                // Middle point is at ~18.5% from edge = 81.5% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
+                    y: baseRect.y + baseRect.height * 0.815 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -630,15 +619,15 @@ const getBoatSubwidgetConfigs = (): WidgetConfig[] => [
         id: "boat-warning",
         type: "boat-warning",
         position: (id, _el, resolver) => {
-            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
             const baseRect = resolver.getWidgetCurrentRect("boat-base");
             const { width, height } = resolver.getWidgetSize(id);
-            const scaledGap = GAP * Math.min(2, widgetScale);
             if (baseRect) {
                 const baseCenterX = baseRect.x + baseRect.width / 2;
+                // Center between outer arc (at ~12% from edge) and inner backdrop (at 25% from edge)
+                // Middle point is at ~18.5% from edge = 81.5% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
+                    y: baseRect.y + baseRect.height * 0.815 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -688,15 +677,15 @@ const getMotorcycleSubwidgetConfigs = (): WidgetConfig[] => [
         id: "motorcycle-warning",
         type: "motorcycle-warning",
         position: (id, _el, resolver) => {
-            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
             const baseRect = resolver.getWidgetCurrentRect("motorcycle-base");
             const { width, height } = resolver.getWidgetSize(id);
-            const scaledGap = GAP * Math.min(2, widgetScale);
             if (baseRect) {
                 const baseCenterX = baseRect.x + baseRect.width / 2;
+                // Center between outer arc (at ~20% from edge for motorcycle) and inner backdrop (at 28% from edge)
+                // Middle point is at ~24% from edge = 76% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
+                    y: baseRect.y + baseRect.height * 0.76 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -745,15 +734,15 @@ const getBicycleSubwidgetConfigs = (): WidgetConfig[] => [
         id: "bicycle-warning",
         type: "bicycle-warning",
         position: (id, _el, resolver) => {
-            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
             const baseRect = resolver.getWidgetCurrentRect("bicycle-base");
             const { width, height } = resolver.getWidgetSize(id);
-            const scaledGap = GAP * Math.min(2, widgetScale);
             if (baseRect) {
                 const baseCenterX = baseRect.x + baseRect.width / 2;
+                // Center between outer arc (at ~12% from edge) and inner backdrop (at 25% from edge)
+                // Middle point is at ~18.5% from edge = 81.5% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
+                    y: baseRect.y + baseRect.height * 0.815 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -808,20 +797,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         },
-        ...VEHICLE_WIDGET_TYPES.map((type) => ({
-            id: type,
-            type: type as WidgetType,
-            position: (_id: string, el: HTMLElement | null, resolver: PositionResolver) => {
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
-                return {
-                    x: resolver.screen.width - MARGIN - width,
-                    y: resolver.screen.height - MARGIN - height,
-                };
-            },
-            visible: true,
-            scale: 1,
-        })),
+        // Old speedometer widgets removed - now using subwidgets (car-base, plane-base, etc.)
 
         // === Dependent widgets (depend on previously defined widgets) ===
         {

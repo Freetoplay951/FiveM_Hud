@@ -11,7 +11,6 @@ import { ChatWidget } from "./widgets/ChatWidget";
 import { TeamChatWidget } from "./widgets/TeamChatWidget";
 import { RadioWidget } from "./widgets/RadioWidget";
 import { MinimapWidget } from "./widgets/MinimapWidget";
-import { VehicleHUDFactory } from "./widgets/vehicles/VehicleHUDFactory";
 import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import {
     StatusWidgetState,
@@ -33,7 +32,6 @@ import {
     MinimapShape,
     SpeedometerType,
     ResolvedWidgetConfig,
-    VEHICLE_WIDGET_TYPES,
 } from "@/types/widget";
 import { DEMO_RADIO_ENABLED } from "./data/demoData";
 
@@ -554,65 +552,7 @@ export const MinimapWidgetRenderer = ({
     );
 };
 
-// ==========================================
-// VEHICLE SPEEDOMETERS
-// ==========================================
-export const VehicleSpeedometersRenderer = ({
-    vehicleState,
-    editMode,
-    deathState,
-    snapToGrid,
-    gridSize,
-    speedometerType,
-    hasSignaledReady,
-    getWidget,
-    updateWidgetPosition,
-    updateWidgetScale,
-    toggleWidgetVisibility,
-    resetWidget,
-    isWidgetDisabled,
-    getMultiSelectProps,
-}: WidgetRenderersProps) => {
-    return (
-        <>
-            {VEHICLE_WIDGET_TYPES.map((widgetType) => {
-                const widget = getWidget(widgetType);
-                if (!widget) return null;
-
-                const vehicleType = widgetType.replace("speedometer-", "") as SpeedometerType;
-                const baseVisible = editMode ? true : !deathState.isDead;
-                const correctVehicle = editMode
-                    ? speedometerType === vehicleType
-                    : vehicleState.inVehicle && vehicleState.vehicleType === vehicleType;
-                const shouldShow = widget.visible && baseVisible && correctVehicle;
-
-                return (
-                    <HUDWidget
-                        key={widgetType}
-                        id={widget.id}
-                        position={widget.position}
-                        hasAccess={correctVehicle}
-                        visible={shouldShow}
-                        scale={widget.scale}
-                        editMode={editMode}
-                        snapToGrid={snapToGrid}
-                        gridSize={gridSize}
-                        onPositionChange={updateWidgetPosition}
-                        onVisibilityToggle={() => toggleWidgetVisibility(widgetType)}
-                        onScaleChange={updateWidgetScale}
-                        onReset={() => resetWidget(widgetType, isWidgetDisabled, hasSignaledReady)}
-                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        {...getMultiSelectProps(widget.id)}>
-                        <VehicleHUDFactory
-                            vehicle={{ ...vehicleState, vehicleType }}
-                            visible={baseVisible && correctVehicle && (editMode ? true : widget.visible)}
-                        />
-                    </HUDWidget>
-                );
-            })}
-        </>
-    );
-};
+// Old VehicleSpeedometersRenderer removed - now using SubwidgetRenderer for all vehicle types
 
 // ==========================================
 // CHAT WIDGET
@@ -772,7 +712,6 @@ export const HUDWidgetRenderers = (props: WidgetRenderersProps) => {
             <CompassWidgetRenderer {...props} />
             <VehicleNameWidgetRenderer {...props} />
             <MinimapWidgetRenderer {...props} />
-            <VehicleSpeedometersRenderer {...props} />
             <ChatWidgetRenderer {...props} />
             <TeamChatWidgetRenderer {...props} />
         </>
