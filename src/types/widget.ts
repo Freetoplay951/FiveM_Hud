@@ -402,11 +402,9 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "radio",
             type: "radio",
-            position: (_id, el, resolver) => {
+            position: (_id, _el, resolver) => {
                 const moneyRect = resolver.getWidgetRect("money");
-                const width = el?.offsetWidth ?? 0;
-                const scale = 0.8;
-                const scaledWidth = width * scale;
+                const scaledWidth = resolver.getWidgetSize(_id).width;
 
                 if (moneyRect) {
                     const moneyCenterX = moneyRect.x + moneyRect.width / 2;
