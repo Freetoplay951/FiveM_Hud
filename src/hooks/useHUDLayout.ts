@@ -480,21 +480,36 @@ export const useHUDLayout = () => {
      */
     const reflowWidgetPosition = useCallback(
         (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
-            const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
-            const rect = resolvedRects.get(id);
-            if (!rect) return;
+            setState((prev) => {
+                // Build widget configs with current scales from state
+                const widgetConfigsWithCurrentScales = defaultWidgetConfigs.map((config) => {
+                    const stateWidget = prev.widgets.find((w) => w.id === config.id);
+                    return {
+                        ...config,
+                        scale: stateWidget?.scale ?? config.scale,
+                    };
+                });
 
-            setState((prev) => ({
-                ...prev,
-                widgets: prev.widgets.map((w) =>
-                    w.id === id
-                        ? {
-                              ...w,
-                              position: clampPosition({ x: rect.x, y: rect.y }),
-                          }
-                        : w
-                ),
-            }));
+                const resolvedRects = resolveDefaultPositions(
+                    widgetConfigsWithCurrentScales,
+                    isWidgetDisabled,
+                    hasSignaledReady
+                );
+                const rect = resolvedRects.get(id);
+                if (!rect) return prev;
+
+                return {
+                    ...prev,
+                    widgets: prev.widgets.map((w) =>
+                        w.id === id
+                            ? {
+                                  ...w,
+                                  position: clampPosition({ x: rect.x, y: rect.y }),
+                              }
+                            : w
+                    ),
+                };
+            });
         },
         []
     );

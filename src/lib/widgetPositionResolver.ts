@@ -64,7 +64,7 @@ export function resolveDefaultPositions(
         widgetScales.set(config.id, config.scale ?? 1);
     }
 
-    console.log(widgetScales.get("heli-fuel"));
+    
 
     const getWidgetSize = (id: string): WidgetSize => {
         const element = document.getElementById(`hud-widget-${id}`);
