@@ -241,20 +241,20 @@ export const HUD = () => {
         distributeWidgets,
     } = useHUDLayout();
 
-    const isWidgetDisabled = (widgetId: string): boolean => {
+    const isWidgetDisabled = useCallback((widgetId: string): boolean => {
         return disabledWidgets[widgetId as WidgetType] === true;
-    };
+    }, [disabledWidgets]);
 
     const { t, isLoaded: isLanguageLoaded } = useTranslation();
 
     const { notifications, removeNotification, success, error, warning, info } = useNotifications();
 
-    const enterEditMode = () => {
+    const enterEditMode = useCallback(() => {
         if (!editMode) toggleEditMode();
         setEditMenuOpen(true);
-    };
+    }, [editMode, toggleEditMode]);
 
-    const exitEditMode = () => {
+    const exitEditMode = useCallback(() => {
         // First close the popover, then exit edit mode after a brief delay
         // This ensures the popover closes properly before the component unmounts
         setEditMenuOpen(false);
@@ -268,7 +268,7 @@ export const HUD = () => {
         setTimeout(() => {
             if (editMode) toggleEditMode();
         }, 50);
-    };
+    }, [editMode, toggleEditMode, widgets]);
 
     useEffect(() => {
         if (!editMode) setEditMenuOpen(false);
@@ -294,7 +294,7 @@ export const HUD = () => {
                 });
             });
         }
-    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets, hudState]);
+    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets, hudState, isWidgetDisabled]);
 
     // NUI Event handlers
     useNuiEvents({
@@ -850,6 +850,24 @@ export const HUD = () => {
         }
     }, [editMode]);
 
+    // Handle simple mode toggle - when enabling, snap all heli subwidgets to base
+    const handleSimpleModeChange = useCallback(
+        (enabled: boolean) => {
+            setSimpleMode(enabled);
+
+            if (enabled) {
+                // Reflow all heli subwidgets to their default positions relative to base
+                requestAnimationFrame(() => {
+                    HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                        if (subType === "heli-base") return;
+                        reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
+                    });
+                });
+            }
+        },
+        [setSimpleMode, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady]
+    );
+
     const widgetProps = {
         editMode,
         snapToGrid,
@@ -943,7 +961,7 @@ export const HUD = () => {
                         onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled)}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled)}
-                        onSimpleModeChange={setSimpleMode}
+                        onSimpleModeChange={handleSimpleModeChange}
                         onReset={() => resetLayout(false, isWidgetDisabled, hasSignaledReady)}
                         onExitEditMode={exitEditMode}
                     />
