@@ -381,35 +381,236 @@ const HeliSubwidgetRenderer = ({
 // ==========================================
 // BOAT SUBWIDGET RENDERER
 // ==========================================
-const BoatSubwidgetRenderer = (props: SubwidgetRendererProps) => {
-    const { vehicleState, editMode, speedometerType, simpleMode, snapToGrid, gridSize, hasSignaledReady, deathState, getWidget, updateWidgetPosition, updateWidgetScale, toggleWidgetVisibility, resetWidget, reflowWidgetPosition, isWidgetDisabled, getMultiSelectProps } = props;
+const BoatSubwidgetRenderer = ({
+    vehicleState,
+    editMode,
+    simpleMode,
+    speedometerType,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    deathState,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    reflowWidgetPosition,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: SubwidgetRendererProps) => {
+    const isBoat = editMode
+        ? speedometerType === "boat"
+        : vehicleState.inVehicle && vehicleState.vehicleType === "boat";
 
-    const isBoat = editMode ? speedometerType === "boat" : vehicleState.inVehicle && vehicleState.vehicleType === "boat";
     const heading = vehicleState.heading ?? 0;
     const anchor = vehicleState.anchor ?? false;
     const fuel = vehicleState.fuel ?? 0;
     const bodyHealth = vehicleState.bodyHealth ?? 100;
 
-    const handleBasePositionChange = useCallback((id: string, newPosition: WidgetPosition) => {
-        if (!simpleMode) { updateWidgetPosition(id, newPosition); return; }
+    // Handle base widget position change - in simple mode, move all sub-widgets together
+    const handleBasePositionChange = useCallback(
+        (id: string, newPosition: WidgetPosition) => {
+            if (!simpleMode) {
+                updateWidgetPosition(id, newPosition);
+                return;
+            }
+
+            const baseWidget = getWidget("boat-base");
+            if (!baseWidget) return;
+
+            const deltaX = newPosition.x - baseWidget.position.x;
+            const deltaY = newPosition.y - baseWidget.position.y;
+
+            BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+                const subWidget = getWidget(subType);
+                if (subWidget) {
+                    updateWidgetPosition(subType, {
+                        x: subWidget.position.x + deltaX,
+                        y: subWidget.position.y + deltaY,
+                    });
+                }
+            });
+        },
+        [simpleMode, getWidget, updateWidgetPosition]
+    );
+
+    // Handle live drag - directly manipulate DOM for instant feedback
+    const handleLiveDrag = useCallback(
+        (_id: string, currentPos: WidgetPosition) => {
+            if (!simpleMode) return;
+
+            const baseWidget = getWidget("boat-base");
+            if (!baseWidget) return;
+
+            const deltaX = currentPos.x - baseWidget.position.x;
+            const deltaY = currentPos.y - baseWidget.position.y;
+
+            BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+                if (subType === "boat-base") return;
+                const subWidget = getWidget(subType);
+                if (subWidget) {
+                    const el = document.getElementById(`hud-widget-${subType}`);
+                    if (el) {
+                        el.style.left = `${subWidget.position.x + deltaX}px`;
+                        el.style.top = `${subWidget.position.y + deltaY}px`;
+                    }
+                }
+            });
+        },
+        [simpleMode, getWidget]
+    );
+
+    // Handle base widget scale change - in simple mode, scale all sub-widgets together
+    const handleBaseScaleChange = useCallback(
+        (id: string, newScale: number) => {
+            updateWidgetScale(id, newScale);
+
+            if (simpleMode) {
+                BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+                    if (subType === "boat-base") return;
+                    updateWidgetScale(subType, newScale);
+                });
+
+                requestAnimationFrame(() => {
+                    BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+                        if (subType === "boat-base") return;
+                        reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
+                    });
+                });
+            }
+        },
+        [simpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady]
+    );
+
+    // Handle live scale - directly manipulate DOM for instant feedback using resolver
+    const handleLiveScale = useCallback(
+        (_id: string, currentScale: number) => {
+            if (!simpleMode) return;
+
+            BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+                if (subType === "boat-base") return;
+                const el = document.getElementById(`hud-widget-${subType}`);
+                if (el) {
+                    el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
+                }
+            });
+
+            requestAnimationFrame(() => {
+                const defaultWidgets = getDefaultWidgets();
+                const boatSubConfigs = defaultWidgets.filter(
+                    (w) =>
+                        BOAT_SUBWIDGET_TYPES.includes(w.id as (typeof BOAT_SUBWIDGET_TYPES)[number]) &&
+                        w.id !== "boat-base"
+                );
+
+                const resolvedRects = new Map<
+                    string,
+                    { x: number; y: number; width: number; height: number; right: number; bottom: number }
+                >();
+
+                const resolver = {
+                    getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
+                    getWidgetCurrentRect: (id: string) => {
+                        const el = document.getElementById(`hud-widget-${id}`);
+                        if (!el) return resolvedRects.get(id) ?? null;
+                        const rect = el.getBoundingClientRect();
+                        return {
+                            x: rect.left,
+                            y: rect.top,
+                            width: rect.width,
+                            height: rect.height,
+                            right: rect.right,
+                            bottom: rect.bottom,
+                        };
+                    },
+                    getWidgetSize: (id: string) => {
+                        const el = document.getElementById(`hud-widget-${id}`);
+                        const rect = el?.getBoundingClientRect();
+                        return { width: rect?.width ?? 0, height: rect?.height ?? 0 };
+                    },
+                    screen: { width: window.innerWidth, height: window.innerHeight },
+                    isWidgetDisabled: () => false,
+                    hasSignaledReady: true,
+                };
+
+                boatSubConfigs.forEach((config) => {
+                    const el = document.getElementById(`hud-widget-${config.id}`);
+                    if (!el) return;
+
+                    const scaledRect = el.getBoundingClientRect();
+                    const mockElement = {
+                        offsetWidth: scaledRect.width,
+                        offsetHeight: scaledRect.height,
+                        getBoundingClientRect: () => scaledRect,
+                    } as HTMLElement;
+
+                    const newPos = config.position(config.id, mockElement, resolver);
+                    el.style.left = `${newPos.x}px`;
+                    el.style.top = `${newPos.y}px`;
+
+                    resolvedRects.set(config.id, {
+                        x: newPos.x,
+                        y: newPos.y,
+                        width: scaledRect.width,
+                        height: scaledRect.height,
+                        right: newPos.x + scaledRect.width,
+                        bottom: newPos.y + scaledRect.height,
+                    });
+                });
+            });
+        },
+        [simpleMode]
+    );
+
+    // Handle reset - in simple mode, reset all sub-widgets when base is reset
+    const handleBaseReset = useCallback(
+        (id: string) => {
+            resetWidget(id, isWidgetDisabled, false);
+
+            if (simpleMode && id === "boat-base") {
+                BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+                    if (subType === "boat-base") return;
+                    resetWidget(subType, isWidgetDisabled, false);
+                });
+            }
+        },
+        [simpleMode, resetWidget, isWidgetDisabled]
+    );
+
+    // Handle visibility toggle - in simple mode, toggle all sub-widgets when base is toggled
+    const handleBaseVisibilityToggle = useCallback(() => {
         const baseWidget = getWidget("boat-base");
         if (!baseWidget) return;
-        const deltaX = newPosition.x - baseWidget.position.x;
-        const deltaY = newPosition.y - baseWidget.position.y;
-        BOAT_SUBWIDGET_TYPES.forEach((subType) => {
-            const subWidget = getWidget(subType);
-            if (subWidget) updateWidgetPosition(subType, { x: subWidget.position.x + deltaX, y: subWidget.position.y + deltaY });
-        });
-    }, [simpleMode, getWidget, updateWidgetPosition]);
+
+        toggleWidgetVisibility("boat-base");
+
+        if (simpleMode) {
+            const newVisibility = !baseWidget.visible;
+            BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+                if (subType === "boat-base") return;
+                const subWidget = getWidget(subType);
+                if (subWidget && subWidget.visible !== newVisibility) {
+                    toggleWidgetVisibility(subType);
+                }
+            });
+        }
+    }, [simpleMode, getWidget, toggleWidgetVisibility]);
 
     const renderWidgetContent = (widgetType: string, contentVisible: boolean) => {
         switch (widgetType) {
-            case "boat-base": return <BoatBaseWidget vehicle={vehicleState} visible={contentVisible} />;
-            case "boat-heading": return <BoatHeadingWidget heading={heading} visible={contentVisible} />;
-            case "boat-anchor": return <BoatAnchorWidget anchor={anchor} visible={contentVisible} />;
-            case "boat-fuel": return <BoatFuelWidget fuel={fuel} visible={contentVisible} />;
-            case "boat-warning": return <BoatWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
-            default: return null;
+            case "boat-base":
+                return <BoatBaseWidget vehicle={vehicleState} visible={contentVisible} />;
+            case "boat-heading":
+                return <BoatHeadingWidget heading={heading} visible={contentVisible} />;
+            case "boat-anchor":
+                return <BoatAnchorWidget anchor={anchor} visible={contentVisible} />;
+            case "boat-fuel":
+                return <BoatFuelWidget fuel={fuel} visible={contentVisible} />;
+            case "boat-warning":
+                return <BoatWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
+            default:
+                return null;
         }
     };
 
@@ -418,17 +619,52 @@ const BoatSubwidgetRenderer = (props: SubwidgetRendererProps) => {
             {BOAT_SUBWIDGET_TYPES.map((widgetType) => {
                 const widget = getWidget(widgetType);
                 if (!widget) return null;
+
                 const baseVisible = editMode ? true : !deathState.isDead;
                 const shouldShow = widget.visible && baseVisible && isBoat;
+
                 const isBaseWidget = widgetType === "boat-base";
                 const canDrag = isBaseWidget || !simpleMode;
+
                 const contentVisible = editMode && isBoat ? true : shouldShow;
+
                 return (
-                    <HUDWidget key={widgetType} id={widget.id} position={widget.position} hasAccess={isBoat} visible={shouldShow} scale={widget.scale} editMode={editMode} snapToGrid={snapToGrid} gridSize={gridSize}
-                        onPositionChange={canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined}
-                        onScaleChange={canDrag ? updateWidgetScale : undefined}
-                        onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
-                        onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
+                    <HUDWidget
+                        key={widgetType}
+                        id={widget.id}
+                        position={widget.position}
+                        hasAccess={isBoat}
+                        visible={shouldShow}
+                        scale={widget.scale}
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={
+                            canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
+                        }
+                        onScaleChange={
+                            canDrag
+                                ? isBaseWidget && simpleMode
+                                    ? handleBaseScaleChange
+                                    : updateWidgetScale
+                                : undefined
+                        }
+                        onVisibilityToggle={
+                            canDrag
+                                ? isBaseWidget && simpleMode
+                                    ? handleBaseVisibilityToggle
+                                    : () => toggleWidgetVisibility(widgetType)
+                                : undefined
+                        }
+                        onReset={
+                            canDrag
+                                ? isBaseWidget && simpleMode
+                                    ? handleBaseReset
+                                    : (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)
+                                : undefined
+                        }
+                        onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
+                        onLiveScale={isBaseWidget && simpleMode ? handleLiveScale : undefined}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
                         {renderWidgetContent(widgetType, contentVisible)}
@@ -442,10 +678,28 @@ const BoatSubwidgetRenderer = (props: SubwidgetRendererProps) => {
 // ==========================================
 // PLANE SUBWIDGET RENDERER
 // ==========================================
-const PlaneSubwidgetRenderer = (props: SubwidgetRendererProps) => {
-    const { vehicleState, editMode, speedometerType, simpleMode, snapToGrid, gridSize, hasSignaledReady, deathState, getWidget, updateWidgetPosition, updateWidgetScale, toggleWidgetVisibility, resetWidget, reflowWidgetPosition, isWidgetDisabled, getMultiSelectProps } = props;
+const PlaneSubwidgetRenderer = ({
+    vehicleState,
+    editMode,
+    simpleMode,
+    speedometerType,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    deathState,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    reflowWidgetPosition,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: SubwidgetRendererProps) => {
+    const isPlane = editMode
+        ? speedometerType === "plane"
+        : vehicleState.inVehicle && vehicleState.vehicleType === "plane";
 
-    const isPlane = editMode ? speedometerType === "plane" : vehicleState.inVehicle && vehicleState.vehicleType === "plane";
     const airspeed = vehicleState.airspeed ?? vehicleState.speed;
     const altitude = vehicleState.altitude ?? 0;
     const heading = vehicleState.heading ?? 0;
@@ -454,29 +708,215 @@ const PlaneSubwidgetRenderer = (props: SubwidgetRendererProps) => {
     const flaps = vehicleState.flaps ?? 0;
     const bodyHealth = vehicleState.bodyHealth ?? 100;
 
-    const handleBasePositionChange = useCallback((id: string, newPosition: WidgetPosition) => {
-        if (!simpleMode) { updateWidgetPosition(id, newPosition); return; }
+    // Handle base widget position change - in simple mode, move all sub-widgets together
+    const handleBasePositionChange = useCallback(
+        (id: string, newPosition: WidgetPosition) => {
+            if (!simpleMode) {
+                updateWidgetPosition(id, newPosition);
+                return;
+            }
+
+            const baseWidget = getWidget("plane-base");
+            if (!baseWidget) return;
+
+            const deltaX = newPosition.x - baseWidget.position.x;
+            const deltaY = newPosition.y - baseWidget.position.y;
+
+            PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+                const subWidget = getWidget(subType);
+                if (subWidget) {
+                    updateWidgetPosition(subType, {
+                        x: subWidget.position.x + deltaX,
+                        y: subWidget.position.y + deltaY,
+                    });
+                }
+            });
+        },
+        [simpleMode, getWidget, updateWidgetPosition]
+    );
+
+    // Handle live drag - directly manipulate DOM for instant feedback
+    const handleLiveDrag = useCallback(
+        (_id: string, currentPos: WidgetPosition) => {
+            if (!simpleMode) return;
+
+            const baseWidget = getWidget("plane-base");
+            if (!baseWidget) return;
+
+            const deltaX = currentPos.x - baseWidget.position.x;
+            const deltaY = currentPos.y - baseWidget.position.y;
+
+            PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+                if (subType === "plane-base") return;
+                const subWidget = getWidget(subType);
+                if (subWidget) {
+                    const el = document.getElementById(`hud-widget-${subType}`);
+                    if (el) {
+                        el.style.left = `${subWidget.position.x + deltaX}px`;
+                        el.style.top = `${subWidget.position.y + deltaY}px`;
+                    }
+                }
+            });
+        },
+        [simpleMode, getWidget]
+    );
+
+    // Handle base widget scale change - in simple mode, scale all sub-widgets together
+    const handleBaseScaleChange = useCallback(
+        (id: string, newScale: number) => {
+            updateWidgetScale(id, newScale);
+
+            if (simpleMode) {
+                PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+                    if (subType === "plane-base") return;
+                    updateWidgetScale(subType, newScale);
+                });
+
+                requestAnimationFrame(() => {
+                    PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+                        if (subType === "plane-base") return;
+                        reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
+                    });
+                });
+            }
+        },
+        [simpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady]
+    );
+
+    // Handle live scale - directly manipulate DOM for instant feedback using resolver
+    const handleLiveScale = useCallback(
+        (_id: string, currentScale: number) => {
+            if (!simpleMode) return;
+
+            PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+                if (subType === "plane-base") return;
+                const el = document.getElementById(`hud-widget-${subType}`);
+                if (el) {
+                    el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
+                }
+            });
+
+            requestAnimationFrame(() => {
+                const defaultWidgets = getDefaultWidgets();
+                const planeSubConfigs = defaultWidgets.filter(
+                    (w) =>
+                        PLANE_SUBWIDGET_TYPES.includes(w.id as (typeof PLANE_SUBWIDGET_TYPES)[number]) &&
+                        w.id !== "plane-base"
+                );
+
+                const resolvedRects = new Map<
+                    string,
+                    { x: number; y: number; width: number; height: number; right: number; bottom: number }
+                >();
+
+                const resolver = {
+                    getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
+                    getWidgetCurrentRect: (id: string) => {
+                        const el = document.getElementById(`hud-widget-${id}`);
+                        if (!el) return resolvedRects.get(id) ?? null;
+                        const rect = el.getBoundingClientRect();
+                        return {
+                            x: rect.left,
+                            y: rect.top,
+                            width: rect.width,
+                            height: rect.height,
+                            right: rect.right,
+                            bottom: rect.bottom,
+                        };
+                    },
+                    getWidgetSize: (id: string) => {
+                        const el = document.getElementById(`hud-widget-${id}`);
+                        const rect = el?.getBoundingClientRect();
+                        return { width: rect?.width ?? 0, height: rect?.height ?? 0 };
+                    },
+                    screen: { width: window.innerWidth, height: window.innerHeight },
+                    isWidgetDisabled: () => false,
+                    hasSignaledReady: true,
+                };
+
+                planeSubConfigs.forEach((config) => {
+                    const el = document.getElementById(`hud-widget-${config.id}`);
+                    if (!el) return;
+
+                    const scaledRect = el.getBoundingClientRect();
+                    const mockElement = {
+                        offsetWidth: scaledRect.width,
+                        offsetHeight: scaledRect.height,
+                        getBoundingClientRect: () => scaledRect,
+                    } as HTMLElement;
+
+                    const newPos = config.position(config.id, mockElement, resolver);
+                    el.style.left = `${newPos.x}px`;
+                    el.style.top = `${newPos.y}px`;
+
+                    resolvedRects.set(config.id, {
+                        x: newPos.x,
+                        y: newPos.y,
+                        width: scaledRect.width,
+                        height: scaledRect.height,
+                        right: newPos.x + scaledRect.width,
+                        bottom: newPos.y + scaledRect.height,
+                    });
+                });
+            });
+        },
+        [simpleMode]
+    );
+
+    // Handle reset - in simple mode, reset all sub-widgets when base is reset
+    const handleBaseReset = useCallback(
+        (id: string) => {
+            resetWidget(id, isWidgetDisabled, false);
+
+            if (simpleMode && id === "plane-base") {
+                PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+                    if (subType === "plane-base") return;
+                    resetWidget(subType, isWidgetDisabled, false);
+                });
+            }
+        },
+        [simpleMode, resetWidget, isWidgetDisabled]
+    );
+
+    // Handle visibility toggle - in simple mode, toggle all sub-widgets when base is toggled
+    const handleBaseVisibilityToggle = useCallback(() => {
         const baseWidget = getWidget("plane-base");
         if (!baseWidget) return;
-        const deltaX = newPosition.x - baseWidget.position.x;
-        const deltaY = newPosition.y - baseWidget.position.y;
-        PLANE_SUBWIDGET_TYPES.forEach((subType) => {
-            const subWidget = getWidget(subType);
-            if (subWidget) updateWidgetPosition(subType, { x: subWidget.position.x + deltaX, y: subWidget.position.y + deltaY });
-        });
-    }, [simpleMode, getWidget, updateWidgetPosition]);
+
+        toggleWidgetVisibility("plane-base");
+
+        if (simpleMode) {
+            const newVisibility = !baseWidget.visible;
+            PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+                if (subType === "plane-base") return;
+                const subWidget = getWidget(subType);
+                if (subWidget && subWidget.visible !== newVisibility) {
+                    toggleWidgetVisibility(subType);
+                }
+            });
+        }
+    }, [simpleMode, getWidget, toggleWidgetVisibility]);
 
     const renderWidgetContent = (widgetType: string, contentVisible: boolean) => {
         switch (widgetType) {
-            case "plane-base": return <PlaneBaseWidget vehicle={vehicleState} visible={contentVisible} />;
-            case "plane-kts": return <PlaneKtsWidget airspeed={airspeed} visible={contentVisible} />;
-            case "plane-altitude": return <PlaneAltitudeWidget altitude={altitude} visible={contentVisible} />;
-            case "plane-heading": return <PlaneHeadingWidget heading={heading} visible={contentVisible} />;
-            case "plane-fuel": return <PlaneFuelWidget fuel={fuel} visible={contentVisible} />;
-            case "plane-gear": return <PlaneGearWidget landingGear={landingGear} visible={contentVisible} />;
-            case "plane-flaps": return <PlaneFlapsWidget flaps={flaps} visible={contentVisible} />;
-            case "plane-warning": return <PlaneWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
-            default: return null;
+            case "plane-base":
+                return <PlaneBaseWidget vehicle={vehicleState} visible={contentVisible} />;
+            case "plane-kts":
+                return <PlaneKtsWidget airspeed={airspeed} visible={contentVisible} />;
+            case "plane-altitude":
+                return <PlaneAltitudeWidget altitude={altitude} visible={contentVisible} />;
+            case "plane-heading":
+                return <PlaneHeadingWidget heading={heading} visible={contentVisible} />;
+            case "plane-fuel":
+                return <PlaneFuelWidget fuel={fuel} visible={contentVisible} />;
+            case "plane-gear":
+                return <PlaneGearWidget landingGear={landingGear} visible={contentVisible} />;
+            case "plane-flaps":
+                return <PlaneFlapsWidget flaps={flaps} visible={contentVisible} />;
+            case "plane-warning":
+                return <PlaneWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
+            default:
+                return null;
         }
     };
 
@@ -485,17 +925,52 @@ const PlaneSubwidgetRenderer = (props: SubwidgetRendererProps) => {
             {PLANE_SUBWIDGET_TYPES.map((widgetType) => {
                 const widget = getWidget(widgetType);
                 if (!widget) return null;
+
                 const baseVisible = editMode ? true : !deathState.isDead;
                 const shouldShow = widget.visible && baseVisible && isPlane;
+
                 const isBaseWidget = widgetType === "plane-base";
                 const canDrag = isBaseWidget || !simpleMode;
+
                 const contentVisible = editMode && isPlane ? true : shouldShow;
+
                 return (
-                    <HUDWidget key={widgetType} id={widget.id} position={widget.position} hasAccess={isPlane} visible={shouldShow} scale={widget.scale} editMode={editMode} snapToGrid={snapToGrid} gridSize={gridSize}
-                        onPositionChange={canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined}
-                        onScaleChange={canDrag ? updateWidgetScale : undefined}
-                        onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
-                        onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
+                    <HUDWidget
+                        key={widgetType}
+                        id={widget.id}
+                        position={widget.position}
+                        hasAccess={isPlane}
+                        visible={shouldShow}
+                        scale={widget.scale}
+                        editMode={editMode}
+                        snapToGrid={snapToGrid}
+                        gridSize={gridSize}
+                        onPositionChange={
+                            canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
+                        }
+                        onScaleChange={
+                            canDrag
+                                ? isBaseWidget && simpleMode
+                                    ? handleBaseScaleChange
+                                    : updateWidgetScale
+                                : undefined
+                        }
+                        onVisibilityToggle={
+                            canDrag
+                                ? isBaseWidget && simpleMode
+                                    ? handleBaseVisibilityToggle
+                                    : () => toggleWidgetVisibility(widgetType)
+                                : undefined
+                        }
+                        onReset={
+                            canDrag
+                                ? isBaseWidget && simpleMode
+                                    ? handleBaseReset
+                                    : (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)
+                                : undefined
+                        }
+                        onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
+                        onLiveScale={isBaseWidget && simpleMode ? handleLiveScale : undefined}
                         disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                         {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
                         {renderWidgetContent(widgetType, contentVisible)}
