@@ -44,7 +44,13 @@ import {
     RadioState,
     DisabledWidgets,
 } from "@/types/hud";
-import { WidgetType, VEHICLE_WIDGET_TYPES, HELI_SUBWIDGET_TYPES, SpeedometerType, getDefaultWidgets } from "@/types/widget";
+import {
+    WidgetType,
+    VEHICLE_WIDGET_TYPES,
+    HELI_SUBWIDGET_TYPES,
+    SpeedometerType,
+    getDefaultWidgets,
+} from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { SelectionBox } from "./hud/SelectionBox";
 import { motion } from "framer-motion";
@@ -1393,11 +1399,16 @@ export const HUD = () => {
                         requestAnimationFrame(() => {
                             const defaultWidgets = getDefaultWidgets();
                             const heliSubConfigs = defaultWidgets.filter(
-                                (w) => HELI_SUBWIDGET_TYPES.includes(w.id as typeof HELI_SUBWIDGET_TYPES[number]) && w.id !== "heli-base"
+                                (w) =>
+                                    HELI_SUBWIDGET_TYPES.includes(w.id as (typeof HELI_SUBWIDGET_TYPES)[number]) &&
+                                    w.id !== "heli-base"
                             );
 
                             // Build a resolver that uses current DOM positions with scaled dimensions
-                            const resolvedRects = new Map<string, { x: number; y: number; width: number; height: number; right: number; bottom: number }>();
+                            const resolvedRects = new Map<
+                                string,
+                                { x: number; y: number; width: number; height: number; right: number; bottom: number }
+                            >();
 
                             const resolver = {
                                 getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
@@ -1459,7 +1470,7 @@ export const HUD = () => {
 
                     // Handle reset - in simple mode, reset all sub-widgets when base is reset
                     const handleBaseReset = (id: string) => {
-                        resetWidget(id, isWidgetDisabled, hasSignaledReady);
+                        resetWidget(id, isWidgetDisabled, false);
 
                         if (simpleMode && id === "heli-base") {
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
