@@ -1,38 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HUDWidget } from "./hud/HUDWidget";
-import { VehicleHUDFactory } from "./hud/widgets/vehicles/VehicleHUDFactory";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
-import { StatusWidget } from "./hud/widgets/StatusWidget";
-import { MoneyWidget } from "./hud/widgets/MoneyWidget";
-import { VoiceWidget } from "./hud/widgets/VoiceWidget";
-import { LocationWidget } from "./hud/widgets/LocationWidget";
-import { ClockWidget } from "./hud/widgets/ClockWidget";
-import { CompassWidget } from "./hud/widgets/CompassWidget";
-import { VehicleNameWidget } from "./hud/widgets/VehicleNameWidget";
-import { NotificationContainer } from "./hud/notifications/NotificationContainer";
-import { ChatWidget } from "./hud/widgets/ChatWidget";
-import { TeamChatWidget } from "./hud/widgets/TeamChatWidget";
-import { RadioWidget } from "./hud/widgets/RadioWidget";
 import { SubwidgetRenderer } from "./hud/SubwidgetRenderer";
+import { HUDWidgetRenderers } from "./hud/HUDWidgetRenderers";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useHUDState } from "@/hooks/useHUDState";
 import { useHUDNuiEvents } from "@/hooks/useHUDNuiEvents";
 import { useDemoSimulation } from "@/hooks/useDemoSimulation";
 import { useMultiSelection } from "@/hooks/useMultiSelection";
-import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
+import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { StatusType } from "@/types/hud";
-import { VEHICLE_WIDGET_TYPES, HELI_SUBWIDGET_TYPES, SpeedometerType } from "@/types/widget";
+import { HELI_SUBWIDGET_TYPES } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { SelectionBox } from "./hud/SelectionBox";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import { MinimapWidget } from "./hud/widgets/MinimapWidget";
-import { DEMO_RADIO_ENABLED, EDIT_MODE_DEMO_NOTIFICATIONS } from "./hud/data/demoData";
+import { EDIT_MODE_DEMO_NOTIFICATIONS } from "./hud/data/demoData";
 
 export const HUD = () => {
     // All HUD state management
@@ -218,19 +204,54 @@ export const HUD = () => {
         [setSimpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady, getWidget]
     );
 
-    const widgetProps = {
+    const isUsingEditDemoNotifications = editMode && notifications.length === 0;
+    const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
+
+    // Props for HUDWidgetRenderers
+    const widgetRendererProps = {
+        // State
+        statusState,
+        vehicleState,
+        moneyState,
+        playerState,
+        voiceState,
+        locationState,
+        deathState,
+        chatState,
+        teamChatState,
+        radioState,
+
+        // Settings
         editMode,
         snapToGrid,
         gridSize,
-        onPositionChange: updateWidgetPosition,
-        onVisibilityToggle: toggleWidgetVisibility,
-        onScaleChange: updateWidgetScale,
-        onReset: (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-    };
+        statusDesign,
+        speedometerType,
+        minimapShape,
+        isDemoMode,
+        isVoiceEnabled,
+        hasSignaledReady,
+        autoLayoutHiddenIds,
 
-    const statusTypes: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
-    const isUsingEditDemoNotifications = editMode && notifications.length === 0;
-    const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
+        // Notifications
+        notifications,
+        removeNotification,
+        displayedNotifications,
+        isUsingEditDemoNotifications,
+
+        // Widget functions
+        getWidget,
+        updateWidgetPosition,
+        updateWidgetScale,
+        toggleWidgetVisibility,
+        resetWidget,
+        isWidgetDisabled,
+        getMultiSelectProps,
+
+        // State setters for chat
+        setChatState,
+        setTeamChatState,
+    };
 
     if (!isVisible || !t) return null;
 
@@ -338,175 +359,8 @@ export const HUD = () => {
                 </div>
             )}
 
-            {/* Notifications */}
-            {(() => {
-                const widget = getWidget("notifications");
-                if (!widget) return null;
-                const isDeadOverlay = deathState.isDead && !editMode;
-                return (
-                    <HUDWidget
-                        id={widget.id}
-                        position={isDeadOverlay ? { x: 20, y: 20 } : widget.position}
-                        visible={widget.visible}
-                        scale={widget.scale}
-                        editMode={editMode}
-                        snapToGrid={snapToGrid}
-                        gridSize={gridSize}
-                        onPositionChange={updateWidgetPosition}
-                        onScaleChange={updateWidgetScale}
-                        onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
-                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        className={isDeadOverlay ? "z-50" : ""}
-                        {...getMultiSelectProps(widget.id)}>
-                        <NotificationContainer
-                            notifications={displayedNotifications}
-                            onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
-                        />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Status Widgets */}
-            {statusTypes.map((type) => {
-                const widget = getWidget(type);
-                if (!widget) return null;
-                const value = statusState[type] ?? 100;
-                const isOxygenHidden = type === "oxygen" && !editMode && !statusState.isUnderwater;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead) && !isOxygenHidden;
-                return (
-                    <HUDWidget
-                        key={type}
-                        id={type}
-                        position={widget.position}
-                        visible={baseVisible}
-                        scale={widget.scale}
-                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        suspended={autoLayoutHiddenIds.includes(type)}
-                        {...widgetProps}
-                        {...getMultiSelectProps(type)}>
-                        <StatusWidget type={type} value={value} design={statusDesign} />
-                    </HUDWidget>
-                );
-            })}
-
-            {/* Money Widget */}
-            {(() => {
-                const widget = getWidget("money");
-                if (!widget) return null;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={baseVisible} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <MoneyWidget money={moneyState} player={playerState} />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Clock Widget */}
-            {(() => {
-                const widget = getWidget("clock");
-                if (!widget) return null;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={baseVisible} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <ClockWidget />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Voice Widget */}
-            {(() => {
-                const widget = getWidget("voice");
-                if (!widget) return null;
-                const baseVisible = editMode ? true : !deathState.isDead;
-                const voiceAvailable = isDemoMode || isVoiceEnabled;
-                const isVisibleWidget = widget.visible && baseVisible && voiceAvailable;
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={isVisibleWidget} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} suspended={autoLayoutHiddenIds.includes(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <VoiceWidget voice={voiceState} />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Radio Widget */}
-            {(() => {
-                const widget = getWidget("radio");
-                if (!widget) return null;
-                const baseVisible = editMode ? true : !deathState.isDead;
-                const voiceAvailable = isDemoMode || isVoiceEnabled;
-                const showRadio = radioState.active || editMode;
-                const isVisibleWidget = widget.visible && baseVisible && voiceAvailable && showRadio;
-                const radioData = editMode && !radioState.active ? DEMO_RADIO_ENABLED : radioState;
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={isVisibleWidget} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <RadioWidget radio={radioData} />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Location Widget */}
-            {(() => {
-                const widget = getWidget("location");
-                if (!widget) return null;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={baseVisible} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} suspended={autoLayoutHiddenIds.includes(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <LocationWidget location={locationState} shape={minimapShape} />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Compass Widget */}
-            {(() => {
-                const widget = getWidget("compass");
-                if (!widget) return null;
-                const showCompass = locationState.heading != undefined || editMode;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead) && showCompass;
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={baseVisible} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <CompassWidget heading={locationState.heading} />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Vehicle Name Widget */}
-            {(() => {
-                const widget = getWidget("vehiclename");
-                if (!widget) return null;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={baseVisible} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <VehicleNameWidget vehicleType={editMode ? speedometerType : vehicleState.vehicleType} vehicleName={vehicleState.vehicleName} vehicleSpawnName={vehicleState.vehicleSpawnName} inVehicle={vehicleState.inVehicle} editMode={editMode} />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Minimap Widget */}
-            {(() => {
-                const widget = getWidget("minimap");
-                if (!widget) return null;
-                const isNUI = isNuiEnvironment();
-                const baseVisible = widget.visible && (editMode || !isNUI);
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={baseVisible} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} suspended={autoLayoutHiddenIds.includes(widget.id)} {...widgetProps} onPositionChange={undefined} onScaleChange={undefined}>
-                        <MinimapWidget shape={minimapShape} />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Vehicle Speedometers */}
-            {VEHICLE_WIDGET_TYPES.map((widgetType) => {
-                const widget = getWidget(widgetType);
-                if (!widget) return null;
-                const vehicleType = widgetType.replace("speedometer-", "") as SpeedometerType;
-                const baseVisible = editMode ? true : !deathState.isDead;
-                const correctVehicle = editMode ? speedometerType === vehicleType : vehicleState.inVehicle && vehicleState.vehicleType === vehicleType;
-                const shouldShow = widget.visible && baseVisible && correctVehicle;
-                return (
-                    <HUDWidget key={widgetType} id={widget.id} position={widget.position} hasAccess={correctVehicle} visible={shouldShow} scale={widget.scale} editMode={editMode} snapToGrid={snapToGrid} gridSize={gridSize} onPositionChange={updateWidgetPosition} onVisibilityToggle={() => toggleWidgetVisibility(widgetType)} onScaleChange={updateWidgetScale} onReset={() => resetWidget(widgetType, isWidgetDisabled, hasSignaledReady)} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...getMultiSelectProps(widget.id)}>
-                        <VehicleHUDFactory vehicle={{ ...vehicleState, vehicleType }} visible={baseVisible && correctVehicle && (editMode ? true : widget.visible)} />
-                    </HUDWidget>
-                );
-            })}
+            {/* All Widget Renderers */}
+            <HUDWidgetRenderers {...widgetRendererProps} />
 
             {/* Subwidget Renderer (Helicopter and future vehicle subwidgets) */}
             <SubwidgetRenderer
@@ -527,69 +381,6 @@ export const HUD = () => {
                 isWidgetDisabled={isWidgetDisabled}
                 getMultiSelectProps={getMultiSelectProps}
             />
-
-            {/* Chat Widget */}
-            {(() => {
-                const widget = getWidget("chat");
-                if (!widget) return null;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={baseVisible} scale={widget.scale} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <ChatWidget
-                            chat={chatState}
-                            setChatState={setChatState}
-                            editMode={editMode}
-                            onSendMessage={(msg) => {
-                                if (isDemoMode) {
-                                    const newMsg = { id: Date.now().toString(), type: "normal" as const, sender: "Du", message: msg, timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) };
-                                    setChatState((prev) => ({ ...prev, isInputActive: false, messages: [...prev.messages, newMsg] }));
-                                } else {
-                                    sendNuiCallback("sendChatMessage", { message: msg });
-                                }
-                            }}
-                            onClose={() => {
-                                if (isDemoMode) {
-                                    setChatState((prev) => ({ ...prev, isInputActive: false }));
-                                } else {
-                                    sendNuiCallback("closeChat");
-                                }
-                            }}
-                        />
-                    </HUDWidget>
-                );
-            })()}
-
-            {/* Team Chat Widget */}
-            {(() => {
-                const widget = getWidget("teamchat");
-                if (!widget) return null;
-                const hasTeamAccess = teamChatState.hasAccess;
-                const baseVisible = hasTeamAccess && (editMode || !deathState.isDead);
-                const isVisibleWidget = widget.visible && baseVisible;
-                return (
-                    <HUDWidget id={widget.id} position={widget.position} visible={isVisibleWidget} scale={widget.scale} hasAccess={hasTeamAccess} disabled={!hasSignaledReady || isWidgetDisabled(widget.id)} {...widgetProps} {...getMultiSelectProps(widget.id)}>
-                        <TeamChatWidget
-                            teamChat={teamChatState}
-                            editMode={editMode}
-                            onSendMessage={(msg) => {
-                                if (isDemoMode) {
-                                    const newMsg = { id: Date.now().toString(), sender: "Du", rank: "Admin", message: msg, timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) };
-                                    setTeamChatState((prev) => ({ ...prev, isInputActive: false, messages: [...prev.messages, newMsg] }));
-                                } else {
-                                    sendNuiCallback("sendTeamChatMessage", { message: msg });
-                                }
-                            }}
-                            onClose={() => {
-                                if (isDemoMode) {
-                                    setTeamChatState((prev) => ({ ...prev, isInputActive: false }));
-                                } else {
-                                    sendNuiCallback("closeTeamChat");
-                                }
-                            }}
-                        />
-                    </HUDWidget>
-                );
-            })()}
 
             {/* Fullscreen Death Screen */}
             {!editMode && (
