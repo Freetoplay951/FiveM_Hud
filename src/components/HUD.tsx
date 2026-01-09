@@ -1393,15 +1393,27 @@ export const HUD = () => {
                         }
                     };
                     
-                    // Handle live drag - reset sub-widgets during drag to follow base
+                    // Handle live drag - directly manipulate DOM for instant feedback
                     const handleLiveDrag = (id: string, currentPos: WidgetPosition) => {
                         if (simpleMode && id === "heli-base") {
-                            // Temporarily update base position for sub-widget calculations
-                            updateWidgetPosition(id, currentPos);
-                            // Reset all sub-widgets so they recalculate relative to new base position
+                            const baseWidget = getWidget("heli-base");
+                            if (!baseWidget) return;
+                            
+                            // Calculate delta from original position
+                            const deltaX = currentPos.x - baseWidget.position.x;
+                            const deltaY = currentPos.y - baseWidget.position.y;
+                            
+                            // Directly update sub-widget DOM positions for instant feedback
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
-                                resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                                const subWidget = getWidget(subType);
+                                if (!subWidget) return;
+                                
+                                const el = document.getElementById(`hud-widget-${subType}`);
+                                if (el) {
+                                    el.style.left = `${subWidget.position.x + deltaX}px`;
+                                    el.style.top = `${subWidget.position.y + deltaY}px`;
+                                }
                             });
                         }
                     };
