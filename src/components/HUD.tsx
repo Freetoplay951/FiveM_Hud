@@ -1313,70 +1313,6 @@ export const HUD = () => {
                     const fuel = vehicleState.fuel;
                     const bodyHealth = vehicleState.bodyHealth;
 
-                    // Render the appropriate widget content based on type
-                    const renderWidgetContent = () => {
-                        switch (widgetType) {
-                            case "heli-base":
-                                return (
-                                    <HeliBaseWidget
-                                        vehicle={vehicleState}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            case "heli-kts":
-                                return (
-                                    <HeliKtsWidget
-                                        airspeed={airspeed}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            case "heli-altitude":
-                                return (
-                                    <HeliAltitudeWidget
-                                        altitude={altitude}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            case "heli-vspeed":
-                                return (
-                                    <HeliVSpeedWidget
-                                        verticalSpeed={verticalSpeed}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            case "heli-heading":
-                                return (
-                                    <HeliHeadingWidget
-                                        heading={heading}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            case "heli-rotor":
-                                return (
-                                    <HeliRotorWidget
-                                        rotorRpm={rotorRpm}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            case "heli-fuel":
-                                return (
-                                    <HeliFuelWidget
-                                        fuel={fuel}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            case "heli-warning":
-                                return (
-                                    <HeliWarningWidget
-                                        bodyHealth={bodyHealth}
-                                        visible={shouldShow}
-                                    />
-                                );
-                            default:
-                                return null;
-                        }
-                    };
-
                     // In Simple Mode: only heli-base is draggable, others follow
                     const isBaseWidget = widgetType === "heli-base";
                     const canDrag = !simpleMode || isBaseWidget;
@@ -1415,58 +1351,6 @@ export const HUD = () => {
                                     el.style.left = `${subWidget.position.x + deltaX}px`;
                                     el.style.top = `${subWidget.position.y + deltaY}px`;
                                 }
-                            });
-                        }
-                    };
-
-                    // Handle live scale - directly manipulate DOM for instant feedback
-                    const handleLiveScale = (id: string, currentScale: number) => {
-                        if (simpleMode && id === "heli-base") {
-                            // Directly update sub-widget DOM scales for instant feedback
-                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
-                                if (subType === "heli-base") return;
-
-                                const el = document.getElementById(`hud-widget-${subType}`);
-                                if (el) {
-                                    el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
-                                }
-                            });
-                        }
-                    };
-
-                    // Handle scale change - in simple mode, update all sub-widgets and reflow their positions (without resetting scale)
-                    const handleBaseScaleChange = (id: string, newScale: number) => {
-                        // Get current base widget position BEFORE updating scale
-                        const baseWidget = getWidget("heli-base");
-                        const currentBasePos = baseWidget ? { ...baseWidget.position } : null;
-
-                        updateWidgetScale(id, newScale);
-
-                        if (simpleMode && currentBasePos) {
-                            // Update all sub-widgets to the same scale
-                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
-                                if (subType === "heli-base") return;
-                                updateWidgetScale(subType, newScale);
-                            });
-
-                            // Wait for DOM to update with new scales, then reflow positions
-                            // The position functions use getWidgetCurrentRect which gets the DOM position
-                            // We need to ensure the base widget DOM position matches the stored position
-                            requestAnimationFrame(() => {
-                                requestAnimationFrame(() => {
-                                    // Force the base widget DOM to the stored position
-                                    const baseEl = document.getElementById("hud-widget-heli-base");
-                                    if (baseEl) {
-                                        baseEl.style.left = `${currentBasePos.x}px`;
-                                        baseEl.style.top = `${currentBasePos.y}px`;
-                                    }
-
-                                    // Now reflow sub-widgets - they will use the corrected base position
-                                    HELI_SUBWIDGET_TYPES.forEach((subType) => {
-                                        if (subType === "heli-base") return;
-                                        reflowWidgetPosition(subType, isWidgetDisabled, true);
-                                    });
-                                });
                             });
                         }
                     };
@@ -1529,9 +1413,6 @@ export const HUD = () => {
                                         : () => toggleWidgetVisibility(widgetType)
                                     : undefined
                             }
-                            onScaleChange={
-                                canDrag ? (isBaseWidget ? handleBaseScaleChange : updateWidgetScale) : undefined
-                            }
                             onReset={
                                 canDrag
                                     ? isBaseWidget && simpleMode
@@ -1540,7 +1421,6 @@ export const HUD = () => {
                                     : undefined
                             }
                             onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
-                            onLiveScale={isBaseWidget && simpleMode ? handleLiveScale : undefined}
                             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                             {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
                             {(() => {
