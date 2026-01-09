@@ -190,16 +190,18 @@ export const HUD = () => {
         (enabled: boolean) => {
             setSimpleMode(enabled);
             if (enabled) {
-                // Get all widget groups and sync subwidgets to their base's scale
                 const groupsMap = getWidgetGroupsMap();
-                
+
+                groupsMap.forEach((subwidgets, baseId) => {
+                    const baseScale = getWidget(baseId)?.scale ?? 1;
+                    subwidgets.forEach((subType) => {
+                        updateWidgetScale(subType, baseScale);
+                    });
+                });
+
                 requestAnimationFrame(() => {
-                    groupsMap.forEach((subwidgets, baseId) => {
-                        const baseWidget = getWidget(baseId);
-                        const baseScale = baseWidget?.scale ?? 1;
-                        
+                    groupsMap.forEach((subwidgets, _baseId) => {
                         subwidgets.forEach((subType) => {
-                            updateWidgetScale(subType, baseScale);
                             reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
                         });
                     });
@@ -208,7 +210,7 @@ export const HUD = () => {
         },
         [setSimpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady, getWidget]
     );
-
+    
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
