@@ -48,6 +48,7 @@ export type WidgetType =
     | "speedometer-boat"
     | "speedometer-motorcycle"
     | "speedometer-bicycle"
+    // Helicopter subwidgets
     | "heli-base"
     | "heli-kts"
     | "heli-altitude"
@@ -56,6 +57,30 @@ export type WidgetType =
     | "heli-rotor"
     | "heli-fuel"
     | "heli-warning"
+    // Car subwidgets
+    | "car-base"
+    | "car-warning"
+    | "car-fuel"
+    // Plane subwidgets
+    | "plane-base"
+    | "plane-kts"
+    | "plane-altitude"
+    | "plane-warning"
+    | "plane-heading"
+    | "plane-gear"
+    | "plane-flaps"
+    | "plane-fuel"
+    // Boat subwidgets
+    | "boat-base"
+    | "boat-warning"
+    | "boat-fuel"
+    // Motorcycle subwidgets
+    | "motorcycle-base"
+    | "motorcycle-warning"
+    | "motorcycle-fuel"
+    // Bicycle subwidgets
+    | "bicycle-base"
+    | "bicycle-warning"
     | "notifications"
     | "chat"
     | "teamchat";
@@ -80,6 +105,34 @@ export const WIDGET_GROUPS: WidgetGroup[] = [
             "heli-warning",
         ],
     },
+    {
+        base: "car-base",
+        subwidgets: ["car-warning", "car-fuel"],
+    },
+    {
+        base: "plane-base",
+        subwidgets: [
+            "plane-kts",
+            "plane-altitude",
+            "plane-warning",
+            "plane-heading",
+            "plane-gear",
+            "plane-flaps",
+            "plane-fuel",
+        ],
+    },
+    {
+        base: "boat-base",
+        subwidgets: ["boat-warning", "boat-fuel"],
+    },
+    {
+        base: "motorcycle-base",
+        subwidgets: ["motorcycle-warning", "motorcycle-fuel"],
+    },
+    {
+        base: "bicycle-base",
+        subwidgets: ["bicycle-warning"],
+    },
 ];
 
 // Helper to get all subwidget types for a base widget
@@ -97,6 +150,31 @@ export const getWidgetGroupsMap = (): Map<WidgetType, WidgetType[]> => {
 export const HELI_SUBWIDGET_TYPES = [
     "heli-base",
     ...WIDGET_GROUPS.find((g) => g.base === "heli-base")!.subwidgets,
+] as const;
+
+export const CAR_SUBWIDGET_TYPES = [
+    "car-base",
+    ...WIDGET_GROUPS.find((g) => g.base === "car-base")!.subwidgets,
+] as const;
+
+export const PLANE_SUBWIDGET_TYPES = [
+    "plane-base",
+    ...WIDGET_GROUPS.find((g) => g.base === "plane-base")!.subwidgets,
+] as const;
+
+export const BOAT_SUBWIDGET_TYPES = [
+    "boat-base",
+    ...WIDGET_GROUPS.find((g) => g.base === "boat-base")!.subwidgets,
+] as const;
+
+export const MOTORCYCLE_SUBWIDGET_TYPES = [
+    "motorcycle-base",
+    ...WIDGET_GROUPS.find((g) => g.base === "motorcycle-base")!.subwidgets,
+] as const;
+
+export const BICYCLE_SUBWIDGET_TYPES = [
+    "bicycle-base",
+    ...WIDGET_GROUPS.find((g) => g.base === "bicycle-base")!.subwidgets,
 ] as const;
 
 export const VEHICLE_WIDGET_TYPES = [
@@ -309,6 +387,373 @@ const getHeliSubwidgetConfigs = (): WidgetConfig[] => [
                 return {
                     x: rotorRect.right + scaledGap,
                     y: rotorRect.y,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+];
+
+// === Car Subwidget Configurations ===
+const getCarSubwidgetConfigs = (): WidgetConfig[] => [
+    {
+        id: "car-base",
+        type: "car-base",
+        position: (id, _el, resolver) => {
+            const { width, height } = resolver.getWidgetSize(id);
+            const fuelHeight = resolver.getWidgetSize("car-fuel").height;
+            return {
+                x: resolver.screen.width - MARGIN - width,
+                y: resolver.screen.height - MARGIN - fuelHeight - GAP - height,
+            };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "car-warning",
+        type: "car-warning",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("car-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "car-fuel",
+        type: "car-fuel",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("car-base");
+            const { width } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.bottom + scaledGap,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+];
+
+// === Plane Subwidget Configurations ===
+const getPlaneSubwidgetConfigs = (): WidgetConfig[] => [
+    {
+        id: "plane-base",
+        type: "plane-base",
+        position: (id, _el, resolver) => {
+            const { width, height } = resolver.getWidgetSize(id);
+            const gearHeight = resolver.getWidgetSize("plane-gear").height;
+            return {
+                x: resolver.screen.width - MARGIN - width,
+                y: resolver.screen.height - MARGIN - gearHeight - GAP - height,
+            };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "plane-kts",
+        type: "plane-kts",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("plane-base");
+            const { height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                return {
+                    x: baseRect.x + scaledGap,
+                    y: baseRect.y + baseRect.height / 2 - height / 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "plane-altitude",
+        type: "plane-altitude",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("plane-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                return {
+                    x: baseRect.x + baseRect.width - width - scaledGap,
+                    y: baseRect.y + baseRect.height / 2 - height / 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "plane-heading",
+        type: "plane-heading",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("plane-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.y + baseRect.height - height - scaledGap,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "plane-warning",
+        type: "plane-warning",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("plane-base");
+            const headingRect = resolver.getWidgetRect("plane-heading");
+            const { width, height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect && headingRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: headingRect.y - height - scaledGap / 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "plane-gear",
+        type: "plane-gear",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("plane-base");
+            const { width: gearWidth } = resolver.getWidgetSize(id);
+            const flapsWidth = resolver.getWidgetSize("plane-flaps").width;
+            const fuelWidth = resolver.getWidgetSize("plane-fuel").width;
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                const totalWidth = gearWidth + scaledGap + flapsWidth + scaledGap + fuelWidth;
+                return {
+                    x: baseCenterX - totalWidth / 2,
+                    y: baseRect.bottom + scaledGap,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "plane-flaps",
+        type: "plane-flaps",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const gearRect = resolver.getWidgetRect("plane-gear");
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (gearRect) {
+                return {
+                    x: gearRect.right + scaledGap,
+                    y: gearRect.y,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "plane-fuel",
+        type: "plane-fuel",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const flapsRect = resolver.getWidgetRect("plane-flaps");
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (flapsRect) {
+                return {
+                    x: flapsRect.right + scaledGap,
+                    y: flapsRect.y,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+];
+
+// === Boat Subwidget Configurations ===
+const getBoatSubwidgetConfigs = (): WidgetConfig[] => [
+    {
+        id: "boat-base",
+        type: "boat-base",
+        position: (id, _el, resolver) => {
+            const { width, height } = resolver.getWidgetSize(id);
+            const fuelHeight = resolver.getWidgetSize("boat-fuel").height;
+            return {
+                x: resolver.screen.width - MARGIN - width,
+                y: resolver.screen.height - MARGIN - fuelHeight - GAP - height,
+            };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "boat-warning",
+        type: "boat-warning",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("boat-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "boat-fuel",
+        type: "boat-fuel",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("boat-base");
+            const { width } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.bottom + scaledGap,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+];
+
+// === Motorcycle Subwidget Configurations ===
+const getMotorcycleSubwidgetConfigs = (): WidgetConfig[] => [
+    {
+        id: "motorcycle-base",
+        type: "motorcycle-base",
+        position: (id, _el, resolver) => {
+            const { width, height } = resolver.getWidgetSize(id);
+            const fuelHeight = resolver.getWidgetSize("motorcycle-fuel").height;
+            return {
+                x: resolver.screen.width - MARGIN - width,
+                y: resolver.screen.height - MARGIN - fuelHeight - GAP - height,
+            };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "motorcycle-warning",
+        type: "motorcycle-warning",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("motorcycle-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "motorcycle-fuel",
+        type: "motorcycle-fuel",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("motorcycle-base");
+            const { width } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.bottom + scaledGap,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+];
+
+// === Bicycle Subwidget Configurations ===
+const getBicycleSubwidgetConfigs = (): WidgetConfig[] => [
+    {
+        id: "bicycle-base",
+        type: "bicycle-base",
+        position: (id, _el, resolver) => {
+            const { width, height } = resolver.getWidgetSize(id);
+            return {
+                x: resolver.screen.width - MARGIN - width,
+                y: resolver.screen.height - MARGIN - height,
+            };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "bicycle-warning",
+        type: "bicycle-warning",
+        position: (id, _el, resolver) => {
+            const widgetScale = resolver.getWidgetScale?.(id) ?? 1;
+            const baseRect = resolver.getWidgetCurrentRect("bicycle-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            const scaledGap = GAP * Math.min(2, widgetScale);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.y + baseRect.height - height - scaledGap * 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -547,7 +992,12 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
 
-        // === Helicopter Subwidgets (injected from getHeliSubwidgetConfigs) ===
+        // === Vehicle Subwidgets ===
         ...getHeliSubwidgetConfigs(),
+        ...getCarSubwidgetConfigs(),
+        ...getPlaneSubwidgetConfigs(),
+        ...getBoatSubwidgetConfigs(),
+        ...getMotorcycleSubwidgetConfigs(),
+        ...getBicycleSubwidgetConfigs(),
     ];
 };
