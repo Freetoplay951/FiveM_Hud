@@ -64,8 +64,6 @@ export function resolveDefaultPositions(
         widgetScales.set(config.id, config.scale ?? 1);
     }
 
-    
-
     const getWidgetSize = (id: string): WidgetSize => {
         const element = document.getElementById(`hud-widget-${id}`);
         const scale = widgetScales.get(id) ?? 1;
