@@ -12,9 +12,8 @@ import {
 } from "@/types/widget";
 import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
 
-// Tolerance for position comparison (pixels)
-// Must be at least as large as the grid size to account for snap-to-grid adjustments
-const POSITION_TOLERANCE = 15;
+// Base tolerance for position comparison (added to gridSize)
+const POSITION_TOLERANCE_BASE = 5;
 
 /**
  * Programmatically extract widget dependencies by analyzing position functions.
@@ -283,8 +282,9 @@ export const useHUDLayout = () => {
     const [autoLayoutHiddenIds, setAutoLayoutHiddenIds] = useState<string[]>([]);
     const lastDefaultRectsRef = useRef<Map<string, WidgetRect> | null>(null);
 
-    const isPositionClose = useCallback((a: WidgetPosition, b: WidgetPosition) => {
-        return Math.abs(a.x - b.x) <= POSITION_TOLERANCE && Math.abs(a.y - b.y) <= POSITION_TOLERANCE;
+    const isPositionClose = useCallback((a: WidgetPosition, b: WidgetPosition, gridSize: number) => {
+        const tolerance = gridSize + POSITION_TOLERANCE_BASE;
+        return Math.abs(a.x - b.x) <= tolerance && Math.abs(a.y - b.y) <= tolerance;
     }, []);
 
     const captureDefaultRects = useCallback(
@@ -323,7 +323,7 @@ export const useHUDLayout = () => {
                             if (!oldRect || !newRect) return w;
 
                             // Only move if it was at the old default position
-                            if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y })) {
+                            if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, prev.gridSize)) {
                                 return {
                                     ...w,
                                     position: clampPosition({ x: newRect.x, y: newRect.y }),
@@ -354,7 +354,7 @@ export const useHUDLayout = () => {
                     const oldRect = oldRects.get(w.id);
                     if (!oldRect) return false;
                     // Only include if at old default position
-                    return isPositionClose(w.position, { x: oldRect.x, y: oldRect.y });
+                    return isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, state.gridSize);
                 })
                 .map((w) => w.id);
         },
