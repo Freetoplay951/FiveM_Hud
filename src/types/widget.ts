@@ -411,7 +411,7 @@ const getCarSubwidgetConfigs = (): WidgetConfig[] => [
                 // Middle point is at ~18.5% from edge = 81.5% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height * 0.815 - height / 2,
+                    y: baseRect.y + baseRect.height * 0.875 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -625,7 +625,7 @@ const getBoatSubwidgetConfigs = (): WidgetConfig[] => [
                 // Middle point is at ~18.5% from edge = 81.5% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height * 0.815 - height / 2,
+                    y: baseRect.y + baseRect.height * 0.875 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -683,7 +683,7 @@ const getMotorcycleSubwidgetConfigs = (): WidgetConfig[] => [
                 // Middle point is at ~24% from edge = 76% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height * 0.76 - height / 2,
+                    y: baseRect.y + baseRect.height * 0.86 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -740,7 +740,7 @@ const getBicycleSubwidgetConfigs = (): WidgetConfig[] => [
                 // Middle point is at ~18.5% from edge = 81.5% from top
                 return {
                     x: baseCenterX - width / 2,
-                    y: baseRect.y + baseRect.height * 0.815 - height / 2,
+                    y: baseRect.y + baseRect.height * 0.875 - height / 2,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
