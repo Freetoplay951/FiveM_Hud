@@ -1392,6 +1392,19 @@ export const HUD = () => {
                             });
                         }
                     };
+                    
+                    // Handle live drag - reset sub-widgets during drag to follow base
+                    const handleLiveDrag = (id: string, currentPos: WidgetPosition) => {
+                        if (simpleMode && id === "heli-base") {
+                            // Temporarily update base position for sub-widget calculations
+                            updateWidgetPosition(id, currentPos);
+                            // Reset all sub-widgets so they recalculate relative to new base position
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+                                resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                            });
+                        }
+                    };
 
                     return (
                         <HUDWidget
@@ -1410,6 +1423,7 @@ export const HUD = () => {
                             onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
                             onScaleChange={canDrag ? updateWidgetScale : undefined}
                             onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
+                            onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
                             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                             {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
                             {renderWidgetContent()}

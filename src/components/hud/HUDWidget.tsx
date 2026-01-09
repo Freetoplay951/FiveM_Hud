@@ -32,6 +32,8 @@ interface HUDWidgetProps {
     onDragEnd?: () => void;
     /** Called to clear all selections */
     onClearSelection?: () => void;
+    /** Called during live drag with current position */
+    onLiveDrag?: (id: string, currentPos: WidgetPosition) => void;
 }
 
 const MIN_SCALE = 0.5;
@@ -60,6 +62,7 @@ export const HUDWidget = ({
     onDragMove,
     onDragEnd,
     onClearSelection,
+    onLiveDrag,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const [elementSize, setElementSize] = useState({ w: 0, h: 0 });
@@ -178,6 +181,11 @@ export const HUDWidget = ({
             // Notify parent about drag movement for multi-selection
             if (onDragMove && isSelected) {
                 onDragMove(deltaX, deltaY);
+            }
+            
+            // Notify parent about live drag position
+            if (onLiveDrag) {
+                onLiveDrag(id, clamped);
             }
         };
 
