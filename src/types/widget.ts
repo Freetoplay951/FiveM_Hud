@@ -273,12 +273,14 @@ const getHeliSubwidgetConfigs = (): WidgetConfig[] => [
             const baseRect = resolver.getWidgetCurrentRect("heli-base");
             const { width: rotorWidth } = resolver.getWidgetSize(id);
             const fuelWidth = resolver.getWidgetSize("heli-fuel").width;
+            const rotorScale = resolver.getWidgetScale?.(id) ?? 1;
+            const scaledGap = GAP * rotorScale;
             if (baseRect) {
                 const baseCenterX = baseRect.x + baseRect.width / 2;
-                const totalWidth = rotorWidth + GAP + fuelWidth;
+                const totalWidth = rotorWidth + scaledGap + fuelWidth;
                 return {
                     x: baseCenterX - totalWidth / 2,
-                    y: baseRect.bottom + GAP,
+                    y: baseRect.bottom + scaledGap,
                 };
             }
             return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
@@ -289,11 +291,13 @@ const getHeliSubwidgetConfigs = (): WidgetConfig[] => [
     {
         id: "heli-fuel",
         type: "heli-fuel",
-        position: (_id, _el, resolver) => {
+        position: (id, _el, resolver) => {
             const rotorRect = resolver.getWidgetRect("heli-rotor");
+            const fuelScale = resolver.getWidgetScale?.(id) ?? 1;
+            const scaledGap = GAP * fuelScale;
             if (rotorRect) {
                 return {
-                    x: rotorRect.right + GAP,
+                    x: rotorRect.right + scaledGap,
                     y: rotorRect.y,
                 };
             }

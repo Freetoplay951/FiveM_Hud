@@ -25,6 +25,8 @@ export interface PositionResolver {
     getWidgetCurrentRect: (id: string) => WidgetRect | null;
     /** Get just the size of a widget from DOM */
     getWidgetSize: (id: string) => WidgetSize;
+    /** Get the scale of a widget */
+    getWidgetScale?: (id: string) => number;
     /** Get screen dimensions */
     screen: { width: number; height: number };
     /** Check if a widget is disabled by server */
@@ -110,6 +112,7 @@ export function resolveDefaultPositions(
         getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
         getWidgetCurrentRect,
         getWidgetSize,
+        getWidgetScale: (id: string) => widgetScales.get(id) ?? 1,
         screen,
         isWidgetDisabled,
         hasSignaledReady,
