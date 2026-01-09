@@ -60,15 +60,37 @@ export type WidgetType =
     | "chat"
     | "teamchat";
 
+// Widget group structure: Base widget with its subwidgets
+export interface WidgetGroup {
+    base: WidgetType;
+    subwidgets: WidgetType[];
+}
+
+// Define all widget groups (base → subwidgets mapping)
+export const WIDGET_GROUPS: WidgetGroup[] = [
+    {
+        base: "heli-base",
+        subwidgets: ["heli-kts", "heli-altitude", "heli-vspeed", "heli-heading", "heli-rotor", "heli-fuel", "heli-warning"],
+    },
+    // Add future widget groups here, e.g.:
+    // { base: "plane-base", subwidgets: ["plane-altitude", "plane-speed", ...] },
+];
+
+// Helper to get all subwidget types for a base widget
+export const getSubwidgetsForBase = (baseId: WidgetType): WidgetType[] => {
+    const group = WIDGET_GROUPS.find((g) => g.base === baseId);
+    return group?.subwidgets ?? [];
+};
+
+// Helper to get all widget groups as a flat map
+export const getWidgetGroupsMap = (): Map<WidgetType, WidgetType[]> => {
+    return new Map(WIDGET_GROUPS.map((g) => [g.base, g.subwidgets]));
+};
+
+// Derived constants for backwards compatibility
 export const HELI_SUBWIDGET_TYPES = [
     "heli-base",
-    "heli-kts",
-    "heli-altitude",
-    "heli-vspeed",
-    "heli-heading",
-    "heli-rotor",
-    "heli-fuel",
-    "heli-warning",
+    ...WIDGET_GROUPS.find((g) => g.base === "heli-base")!.subwidgets,
 ] as const;
 
 export const VEHICLE_WIDGET_TYPES = [
@@ -131,6 +153,150 @@ const getStatusWidgetPosition = (
         y: resolver.screen.height - MARGIN - height,
     };
 };
+
+// === Helicopter Subwidget Configurations ===
+const getHeliSubwidgetConfigs = (): WidgetConfig[] => [
+    {
+        id: "heli-base",
+        type: "heli-base",
+        position: (id, _el, resolver) => {
+            const { width, height } = resolver.getWidgetSize(id);
+            const rotorHeight = resolver.getWidgetSize("heli-rotor").height;
+            const fuelHeight = resolver.getWidgetSize("heli-fuel").height;
+            return {
+                x: resolver.screen.width - MARGIN - width,
+                y: resolver.screen.height - MARGIN - Math.max(rotorHeight, fuelHeight) - GAP - height,
+            };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "heli-kts",
+        type: "heli-kts",
+        position: (id, _el, resolver) => {
+            const baseRect = resolver.getWidgetCurrentRect("heli-base");
+            const { height } = resolver.getWidgetSize(id);
+            if (baseRect) {
+                return {
+                    x: baseRect.x + GAP,
+                    y: baseRect.y + baseRect.height / 2 - height / 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "heli-altitude",
+        type: "heli-altitude",
+        position: (id, _el, resolver) => {
+            const baseRect = resolver.getWidgetCurrentRect("heli-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            if (baseRect) {
+                return {
+                    x: baseRect.x + baseRect.width - width - GAP,
+                    y: baseRect.y + baseRect.height / 2 - height / 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "heli-vspeed",
+        type: "heli-vspeed",
+        position: (id, _el, resolver) => {
+            const baseRect = resolver.getWidgetCurrentRect("heli-base");
+            const altitudeRect = resolver.getWidgetRect("heli-altitude");
+            const { width } = resolver.getWidgetSize(id);
+            if (baseRect && altitudeRect) {
+                return {
+                    x: baseRect.x + baseRect.width - width - GAP,
+                    y: altitudeRect.bottom + GAP,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "heli-heading",
+        type: "heli-heading",
+        position: (id, _el, resolver) => {
+            const baseRect = resolver.getWidgetCurrentRect("heli-base");
+            const { width, height } = resolver.getWidgetSize(id);
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: baseRect.y + baseRect.height - height - GAP,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "heli-warning",
+        type: "heli-warning",
+        position: (id, _el, resolver) => {
+            const baseRect = resolver.getWidgetCurrentRect("heli-base");
+            const headingRect = resolver.getWidgetRect("heli-heading");
+            const { width, height } = resolver.getWidgetSize(id);
+            if (baseRect && headingRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                return {
+                    x: baseCenterX - width / 2,
+                    y: headingRect.y - height - GAP / 2,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "heli-rotor",
+        type: "heli-rotor",
+        position: (id, _el, resolver) => {
+            const baseRect = resolver.getWidgetCurrentRect("heli-base");
+            const { width: rotorWidth } = resolver.getWidgetSize(id);
+            const fuelWidth = resolver.getWidgetSize("heli-fuel").width;
+            if (baseRect) {
+                const baseCenterX = baseRect.x + baseRect.width / 2;
+                const totalWidth = rotorWidth + GAP + fuelWidth;
+                return {
+                    x: baseCenterX - totalWidth / 2,
+                    y: baseRect.bottom + GAP,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+    {
+        id: "heli-fuel",
+        type: "heli-fuel",
+        position: (_id, _el, resolver) => {
+            const rotorRect = resolver.getWidgetRect("heli-rotor");
+            if (rotorRect) {
+                return {
+                    x: rotorRect.right + GAP,
+                    y: rotorRect.y,
+                };
+            }
+            return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
+        },
+        visible: true,
+        scale: 1,
+    },
+];
 
 export const getDefaultWidgets = (): WidgetConfig[] => {
     return [
@@ -363,147 +529,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
 
-        // === Helicopter Subwidgets (depend on heli-base) ===
-        {
-            id: "heli-base",
-            type: "heli-base",
-            position: (id, _el, resolver) => {
-                const { width, height } = resolver.getWidgetSize(id);
-
-                const rotorHeight = resolver.getWidgetSize("heli-rotor").height;
-                const fuelHeight = resolver.getWidgetSize("heli-fuel").height;
-                return {
-                    x: resolver.screen.width - MARGIN - width,
-                    y: resolver.screen.height - MARGIN - Math.max(rotorHeight, fuelHeight) - GAP - height,
-                };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-kts",
-            type: "heli-kts",
-            position: (id, _el, resolver) => {
-                const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const { height } = resolver.getWidgetSize(id);
-                if (baseRect) {
-                    return {
-                        x: baseRect.x + GAP,
-                        y: baseRect.y + baseRect.height / 2 - height / 2,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-altitude",
-            type: "heli-altitude",
-            position: (id, _el, resolver) => {
-                const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const { width, height } = resolver.getWidgetSize(id);
-                if (baseRect) {
-                    return {
-                        x: baseRect.x + baseRect.width - width - GAP,
-                        y: baseRect.y + baseRect.height / 2 - height / 2,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-vspeed",
-            type: "heli-vspeed",
-            position: (id, _el, resolver) => {
-                const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const altitudeRect = resolver.getWidgetRect("heli-altitude");
-                const { width } = resolver.getWidgetSize(id);
-                if (baseRect && altitudeRect) {
-                    return {
-                        x: baseRect.x + baseRect.width - width - GAP,
-                        y: altitudeRect.bottom + GAP,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-heading",
-            type: "heli-heading",
-            position: (id, _el, resolver) => {
-                const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const { width, height } = resolver.getWidgetSize(id);
-                if (baseRect) {
-                    const baseCenterX = baseRect.x + baseRect.width / 2;
-                    return {
-                        x: baseCenterX - width / 2,
-                        y: baseRect.y + baseRect.height - height - GAP,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-warning",
-            type: "heli-warning",
-            position: (id, _el, resolver) => {
-                const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const headingRect = resolver.getWidgetRect("heli-heading");
-                const { width, height } = resolver.getWidgetSize(id);
-                if (baseRect && headingRect) {
-                    const baseCenterX = baseRect.x + baseRect.width / 2;
-                    return {
-                        x: baseCenterX - width / 2,
-                        y: headingRect.y - height - GAP / 2,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-rotor",
-            type: "heli-rotor",
-            position: (id, _el, resolver) => {
-                const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const { width: rotorWidth } = resolver.getWidgetSize(id);
-                const fuelWidth = resolver.getWidgetSize("heli-fuel").width;
-                if (baseRect) {
-                    const baseCenterX = baseRect.x + baseRect.width / 2;
-                    const totalWidth = rotorWidth + GAP + fuelWidth;
-                    return {
-                        x: baseCenterX - totalWidth / 2,
-                        y: baseRect.bottom + GAP,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "heli-fuel",
-            type: "heli-fuel",
-            position: (_id, _el, resolver) => {
-                const rotorRect = resolver.getWidgetRect("heli-rotor");
-                if (rotorRect) {
-                    return {
-                        x: rotorRect.right + GAP,
-                        y: rotorRect.y,
-                    };
-                }
-                return { x: resolver.screen.width - MARGIN, y: resolver.screen.height - MARGIN };
-            },
-            visible: true,
-            scale: 1,
-        },
+        // === Helicopter Subwidgets (injected from getHeliSubwidgetConfigs) ===
+        ...getHeliSubwidgetConfigs(),
     ];
 };

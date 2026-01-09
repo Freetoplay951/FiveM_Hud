@@ -12,7 +12,7 @@ import { useMultiSelection } from "@/hooks/useMultiSelection";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { HELI_SUBWIDGET_TYPES } from "@/types/widget";
+import { getWidgetGroupsMap } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { SelectionBox } from "./hud/SelectionBox";
 import { motion } from "framer-motion";
@@ -185,18 +185,23 @@ export const HUD = () => {
         }
     }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets, statusState, isWidgetDisabled]);
 
-    // Handle simple mode toggle
+    // Handle simple mode toggle - syncs subwidgets to their base widget's scale
     const handleSimpleModeChange = useCallback(
         (enabled: boolean) => {
             setSimpleMode(enabled);
             if (enabled) {
-                const baseWidget = getWidget("heli-base");
-                const baseScale = baseWidget?.scale ?? 1;
+                // Get all widget groups and sync subwidgets to their base's scale
+                const groupsMap = getWidgetGroupsMap();
+                
                 requestAnimationFrame(() => {
-                    HELI_SUBWIDGET_TYPES.forEach((subType) => {
-                        if (subType === "heli-base") return;
-                        updateWidgetScale(subType, baseScale);
-                        reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
+                    groupsMap.forEach((subwidgets, baseId) => {
+                        const baseWidget = getWidget(baseId);
+                        const baseScale = baseWidget?.scale ?? 1;
+                        
+                        subwidgets.forEach((subType) => {
+                            updateWidgetScale(subType, baseScale);
+                            reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
+                        });
                     });
                 });
             }
