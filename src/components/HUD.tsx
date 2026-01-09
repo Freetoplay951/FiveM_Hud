@@ -44,7 +44,7 @@ import {
     RadioState,
     DisabledWidgets,
 } from "@/types/hud";
-import { WidgetType, VEHICLE_WIDGET_TYPES, HELI_SUBWIDGET_TYPES, SpeedometerType } from "@/types/widget";
+import { WidgetType, VEHICLE_WIDGET_TYPES, HELI_SUBWIDGET_TYPES, SpeedometerType, getDefaultWidgets } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { SelectionBox } from "./hud/SelectionBox";
 import { motion } from "framer-motion";
@@ -1376,83 +1376,76 @@ export const HUD = () => {
                         }
                     };
 
-                    // Handle live scale - directly manipulate DOM for instant feedback
-                    const handleLiveScale = (id: string, currentScale: number) => {
-                        if (simpleMode && id === "heli-base") {
-                            const baseEl = document.getElementById(`hud-widget-heli-base`);
-                            if (!baseEl) return;
+                    // Handle live scale - directly manipulate DOM for instant feedback using resolver
+                    const handleLiveScale = (_id: string, currentScale: number) => {
+                        if (!simpleMode) return;
 
-                            // Get current base rect (with current live scale applied)
-                            const baseRect = baseEl.getBoundingClientRect();
-                            const GAP = 10;
+                        // Apply scale to all sub-widgets first
+                        HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                            if (subType === "heli-base") return;
+                            const el = document.getElementById(`hud-widget-${subType}`);
+                            if (el) {
+                                el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
+                            }
+                        });
 
-                            // Update scale and position for all sub-widgets
-                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
-                                if (subType === "heli-base") return;
+                        // Use the resolver system to recalculate positions
+                        // getWidgetCurrentRect will get the real DOM rects with current scale
+                        requestAnimationFrame(() => {
+                            const defaultWidgets = getDefaultWidgets();
+                            const heliSubConfigs = defaultWidgets.filter(
+                                (w) => HELI_SUBWIDGET_TYPES.includes(w.id as typeof HELI_SUBWIDGET_TYPES[number]) && w.id !== "heli-base"
+                            );
 
-                                const el = document.getElementById(`hud-widget-${subType}`);
+                            // Build a simple resolver that uses current DOM positions
+                            const resolvedRects = new Map<string, { x: number; y: number; width: number; height: number; right: number; bottom: number }>();
+
+                            const resolver = {
+                                getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
+                                getWidgetCurrentRect: (id: string) => {
+                                    const el = document.getElementById(`hud-widget-${id}`);
+                                    if (!el) return resolvedRects.get(id) ?? null;
+                                    const rect = el.getBoundingClientRect();
+                                    return {
+                                        x: rect.left,
+                                        y: rect.top,
+                                        width: rect.width,
+                                        height: rect.height,
+                                        right: rect.right,
+                                        bottom: rect.bottom,
+                                    };
+                                },
+                                getWidgetSize: (id: string) => {
+                                    const el = document.getElementById(`hud-widget-${id}`);
+                                    const rect = el?.getBoundingClientRect();
+                                    return { width: rect?.width ?? 0, height: rect?.height ?? 0 };
+                                },
+                                screen: { width: window.innerWidth, height: window.innerHeight },
+                                isWidgetDisabled: () => false,
+                                hasSignaledReady: true,
+                            };
+
+                            // Calculate positions for each sub-widget using their position functions
+                            heliSubConfigs.forEach((config) => {
+                                const el = document.getElementById(`hud-widget-${config.id}`);
                                 if (!el) return;
 
-                                // Apply scale
-                                el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
+                                const newPos = config.position(config.id, el, resolver);
+                                el.style.left = `${newPos.x}px`;
+                                el.style.top = `${newPos.y}px`;
 
-                                // Get this widget's scaled size
-                                const subRect = el.getBoundingClientRect();
-                                const scaledWidth = subRect.width;
-                                const scaledHeight = subRect.height;
-
-                                // Calculate new position based on base widget
-                                let newX = 0;
-                                let newY = 0;
-
-                                switch (subType) {
-                                    case "heli-kts":
-                                        newX = baseRect.x + GAP;
-                                        newY = baseRect.y + baseRect.height / 2 - scaledHeight / 2;
-                                        break;
-                                    case "heli-altitude":
-                                        newX = baseRect.x + baseRect.width - scaledWidth - GAP;
-                                        newY = baseRect.y + baseRect.height / 2 - scaledHeight / 2;
-                                        break;
-                                    case "heli-vspeed": {
-                                        const altEl = document.getElementById(`hud-widget-heli-altitude`);
-                                        const altRect = altEl?.getBoundingClientRect();
-                                        newX = baseRect.x + baseRect.width - scaledWidth - GAP;
-                                        newY = altRect ? altRect.bottom + GAP : baseRect.y + baseRect.height / 2;
-                                        break;
-                                    }
-                                    case "heli-heading":
-                                        newX = baseRect.x + baseRect.width / 2 - scaledWidth / 2;
-                                        newY = baseRect.y + baseRect.height - scaledHeight - GAP;
-                                        break;
-                                    case "heli-warning": {
-                                        const headEl = document.getElementById(`hud-widget-heli-heading`);
-                                        const headRect = headEl?.getBoundingClientRect();
-                                        newX = baseRect.x + baseRect.width / 2 - scaledWidth / 2;
-                                        newY = headRect ? headRect.y - scaledHeight - GAP / 2 : baseRect.y + baseRect.height / 2;
-                                        break;
-                                    }
-                                    case "heli-rotor": {
-                                        const fuelEl = document.getElementById(`hud-widget-heli-fuel`);
-                                        const fuelRect = fuelEl?.getBoundingClientRect();
-                                        const totalWidth = scaledWidth + GAP + (fuelRect?.width ?? 0);
-                                        newX = baseRect.x + baseRect.width / 2 - totalWidth / 2;
-                                        newY = baseRect.bottom + GAP;
-                                        break;
-                                    }
-                                    case "heli-fuel": {
-                                        const rotorEl = document.getElementById(`hud-widget-heli-rotor`);
-                                        const rotorRect = rotorEl?.getBoundingClientRect();
-                                        newX = rotorRect ? rotorRect.right + GAP : baseRect.x + baseRect.width / 2;
-                                        newY = baseRect.bottom + GAP;
-                                        break;
-                                    }
-                                }
-
-                                el.style.left = `${newX}px`;
-                                el.style.top = `${newY}px`;
+                                // Store resolved rect for dependent widgets
+                                const rect = el.getBoundingClientRect();
+                                resolvedRects.set(config.id, {
+                                    x: newPos.x,
+                                    y: newPos.y,
+                                    width: rect.width,
+                                    height: rect.height,
+                                    right: newPos.x + rect.width,
+                                    bottom: newPos.y + rect.height,
+                                });
                             });
-                        }
+                        });
                     };
 
                     // Handle reset - in simple mode, reset all sub-widgets when base is reset
