@@ -241,9 +241,12 @@ export const HUD = () => {
         distributeWidgets,
     } = useHUDLayout();
 
-    const isWidgetDisabled = useCallback((widgetId: string): boolean => {
-        return disabledWidgets[widgetId as WidgetType] === true;
-    }, [disabledWidgets]);
+    const isWidgetDisabled = useCallback(
+        (widgetId: string): boolean => {
+            return disabledWidgets[widgetId as WidgetType] === true;
+        },
+        [disabledWidgets]
+    );
 
     const { t, isLoaded: isLanguageLoaded } = useTranslation();
 
@@ -860,12 +863,12 @@ export const HUD = () => {
                 requestAnimationFrame(() => {
                     HELI_SUBWIDGET_TYPES.forEach((subType) => {
                         if (subType === "heli-base") return;
-                        reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
+                        resetWidget(subType, isWidgetDisabled, hasSignaledReady);
                     });
                 });
             }
         },
-        [setSimpleMode, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady]
+        [setSimpleMode, resetWidget, isWidgetDisabled, hasSignaledReady]
     );
 
     const widgetProps = {
