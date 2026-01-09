@@ -94,16 +94,17 @@ export function resolveDefaultPositions(
         const element = document.getElementById(`hud-widget-${id}`);
         if (!element) return resolvedRects.get(id) ?? null;
 
-        const scale = widgetScales.get(id) ?? 1;
+        // getBoundingClientRect already returns the scaled size (after CSS transform)
+        // so we should NOT multiply by scale again
         const rect = element.getBoundingClientRect();
 
         return {
             x: rect.left,
             y: rect.top,
-            width: rect.width * scale,
-            height: rect.height * scale,
-            right: rect.left + rect.width * scale,
-            bottom: rect.top + rect.height * scale,
+            width: rect.width,
+            height: rect.height,
+            right: rect.left + rect.width,
+            bottom: rect.top + rect.height,
         };
     };
 
