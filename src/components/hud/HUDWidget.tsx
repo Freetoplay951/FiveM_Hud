@@ -185,7 +185,7 @@ export const HUDWidget = ({
             if (onDragMove && isSelected) {
                 onDragMove(deltaX, deltaY);
             }
-            
+
             // Notify parent about live drag position
             if (onLiveDrag) {
                 onLiveDrag(id, clamped);
@@ -249,7 +249,7 @@ export const HUDWidget = ({
             const nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, (scaleXNew + scaleYNew) / 2));
             const roundedScale = Number(nextScale.toFixed(3));
             setLocalScale(roundedScale);
-            
+
             // Notify parent about live scale
             if (onLiveScale) {
                 onLiveScale(id, roundedScale);
@@ -291,7 +291,7 @@ export const HUDWidget = ({
             className={cn(
                 "absolute pointer-events-auto select-none",
                 editMode && onPositionChange && "cursor-move",
-                editMode && !isSelected && "ring-2 ring-primary/50 ring-dashed rounded-lg",
+                editMode && !isSelected && !isSubWidget && "ring-2 ring-primary/50 ring-dashed rounded-lg",
                 editMode &&
                     isSelected &&
                     "ring-[3px] ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
