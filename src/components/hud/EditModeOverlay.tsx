@@ -219,14 +219,12 @@ export const EditModeOverlay = ({
                     checked={snapToGrid}
                     onChange={onSnapToGridChange}
                 />
-                {(speedometerType === "helicopter" || speedometerType === "boat" || speedometerType === "plane") && (
-                    <ToggleOption
-                        icon={Layers}
-                        label={t.editMode.simpleMode}
-                        checked={simpleMode}
-                        onChange={onSimpleModeChange}
-                    />
-                )}
+                <ToggleOption
+                    icon={Layers}
+                    label={t.editMode.simpleMode}
+                    checked={simpleMode}
+                    onChange={onSimpleModeChange}
+                />
             </div>
 
             {/* Actions */}

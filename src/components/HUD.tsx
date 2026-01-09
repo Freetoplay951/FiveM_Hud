@@ -210,7 +210,7 @@ export const HUD = () => {
         },
         [setSimpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady, getWidget]
     );
-    
+
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
@@ -282,7 +282,9 @@ export const HUD = () => {
 
             {/* Edit Mode Settings */}
             {editMode && (
-                <Popover open={editMenuOpen} onOpenChange={setEditMenuOpen}>
+                <Popover
+                    open={editMenuOpen}
+                    onOpenChange={setEditMenuOpen}>
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -294,7 +296,11 @@ export const HUD = () => {
                             className="p-2 bg-card/90 rounded-lg border border-primary/40 hover:border-primary/70 transition-colors pointer-events-auto"
                             onPointerDown={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}>
-                            <Settings size={18} className="text-primary" style={{ filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }} />
+                            <Settings
+                                size={18}
+                                className="text-primary"
+                                style={{ filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }}
+                            />
                         </button>
                     </motion.div>
                     <PopoverTrigger asChild>
@@ -303,7 +309,11 @@ export const HUD = () => {
                             style={{ top: "50%", right: 10, transform: "translateY(-50%)" }}
                             onPointerDown={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}>
-                            <Settings size={18} className="text-primary" style={{ filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }} />
+                            <Settings
+                                size={18}
+                                className="text-primary"
+                                style={{ filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }}
+                            />
                         </button>
                     </PopoverTrigger>
                     <EditModeOverlay
@@ -345,10 +355,14 @@ export const HUD = () => {
                             </div>
                             <div className="flex flex-wrap items-center gap-3 border-t border-destructive-foreground/20 pt-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-destructive-foreground/80">{t.demo.teamChatAccess}</span>
+                                    <span className="text-xs text-destructive-foreground/80">
+                                        {t.demo.teamChatAccess}
+                                    </span>
                                     <Switch
                                         checked={teamChatState.hasAccess}
-                                        onCheckedChange={(checked) => setTeamChatState((prev) => ({ ...prev, hasAccess: checked }))}
+                                        onCheckedChange={(checked) =>
+                                            setTeamChatState((prev) => ({ ...prev, hasAccess: checked }))
+                                        }
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
@@ -356,7 +370,9 @@ export const HUD = () => {
                                     <span className="text-xs text-destructive-foreground/80">{t.demo.adminRights}</span>
                                     <Switch
                                         checked={teamChatState.isAdmin}
-                                        onCheckedChange={(checked) => setTeamChatState((prev) => ({ ...prev, isAdmin: checked }))}
+                                        onCheckedChange={(checked) =>
+                                            setTeamChatState((prev) => ({ ...prev, isAdmin: checked }))
+                                        }
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
@@ -392,7 +408,16 @@ export const HUD = () => {
             {/* Fullscreen Death Screen */}
             {!editMode && (
                 <FullscreenDeathScreen
-                    death={isDemoMode && deathState.isDead ? { ...deathState, respawnTimer: demoDeathTimer.respawnTimer, waitTimer: demoDeathTimer.waitTimer, canRespawn: demoDeathTimer.respawnTimer === 0 } : deathState}
+                    death={
+                        isDemoMode && deathState.isDead
+                            ? {
+                                  ...deathState,
+                                  respawnTimer: demoDeathTimer.respawnTimer,
+                                  waitTimer: demoDeathTimer.waitTimer,
+                                  canRespawn: demoDeathTimer.respawnTimer === 0,
+                              }
+                            : deathState
+                    }
                     visible={deathState.isDead}
                 />
             )}
