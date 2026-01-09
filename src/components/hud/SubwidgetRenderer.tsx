@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { HUDWidget } from "./HUDWidget";
 import { VehicleState } from "@/types/hud";
-import { WidgetPosition, HELI_SUBWIDGET_TYPES, getDefaultWidgets, ResolvedWidgetConfig } from "@/types/widget";
+import { WidgetPosition, HELI_SUBWIDGET_TYPES, BOAT_SUBWIDGET_TYPES, PLANE_SUBWIDGET_TYPES, getDefaultWidgets, ResolvedWidgetConfig } from "@/types/widget";
 import {
     HeliBaseWidget,
     HeliKtsWidget,
@@ -12,6 +12,23 @@ import {
     HeliFuelWidget,
     HeliWarningWidget,
 } from "./widgets/vehicles/helicopter";
+import {
+    BoatBaseWidget,
+    BoatHeadingWidget,
+    BoatAnchorWidget,
+    BoatFuelWidget,
+    BoatWarningWidget,
+} from "./widgets/vehicles/boat";
+import {
+    PlaneBaseWidget,
+    PlaneKtsWidget,
+    PlaneAltitudeWidget,
+    PlaneHeadingWidget,
+    PlaneFuelWidget,
+    PlaneGearWidget,
+    PlaneFlapsWidget,
+    PlaneWarningWidget,
+} from "./widgets/vehicles/plane";
 
 // ==========================================
 // SUBWIDGET SYSTEM CONFIGURATION
@@ -362,21 +379,142 @@ const HeliSubwidgetRenderer = ({
 };
 
 // ==========================================
+// BOAT SUBWIDGET RENDERER
+// ==========================================
+const BoatSubwidgetRenderer = (props: SubwidgetRendererProps) => {
+    const { vehicleState, editMode, speedometerType, simpleMode, snapToGrid, gridSize, hasSignaledReady, deathState, getWidget, updateWidgetPosition, updateWidgetScale, toggleWidgetVisibility, resetWidget, reflowWidgetPosition, isWidgetDisabled, getMultiSelectProps } = props;
+
+    const isBoat = editMode ? speedometerType === "boat" : vehicleState.inVehicle && vehicleState.vehicleType === "boat";
+    const heading = vehicleState.heading ?? 0;
+    const anchor = vehicleState.anchor ?? false;
+    const fuel = vehicleState.fuel ?? 0;
+    const bodyHealth = vehicleState.bodyHealth ?? 100;
+
+    const handleBasePositionChange = useCallback((id: string, newPosition: WidgetPosition) => {
+        if (!simpleMode) { updateWidgetPosition(id, newPosition); return; }
+        const baseWidget = getWidget("boat-base");
+        if (!baseWidget) return;
+        const deltaX = newPosition.x - baseWidget.position.x;
+        const deltaY = newPosition.y - baseWidget.position.y;
+        BOAT_SUBWIDGET_TYPES.forEach((subType) => {
+            const subWidget = getWidget(subType);
+            if (subWidget) updateWidgetPosition(subType, { x: subWidget.position.x + deltaX, y: subWidget.position.y + deltaY });
+        });
+    }, [simpleMode, getWidget, updateWidgetPosition]);
+
+    const renderWidgetContent = (widgetType: string, contentVisible: boolean) => {
+        switch (widgetType) {
+            case "boat-base": return <BoatBaseWidget vehicle={vehicleState} visible={contentVisible} />;
+            case "boat-heading": return <BoatHeadingWidget heading={heading} visible={contentVisible} />;
+            case "boat-anchor": return <BoatAnchorWidget anchor={anchor} visible={contentVisible} />;
+            case "boat-fuel": return <BoatFuelWidget fuel={fuel} visible={contentVisible} />;
+            case "boat-warning": return <BoatWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
+            default: return null;
+        }
+    };
+
+    return (
+        <>
+            {BOAT_SUBWIDGET_TYPES.map((widgetType) => {
+                const widget = getWidget(widgetType);
+                if (!widget) return null;
+                const baseVisible = editMode ? true : !deathState.isDead;
+                const shouldShow = widget.visible && baseVisible && isBoat;
+                const isBaseWidget = widgetType === "boat-base";
+                const canDrag = isBaseWidget || !simpleMode;
+                const contentVisible = editMode && isBoat ? true : shouldShow;
+                return (
+                    <HUDWidget key={widgetType} id={widget.id} position={widget.position} hasAccess={isBoat} visible={shouldShow} scale={widget.scale} editMode={editMode} snapToGrid={snapToGrid} gridSize={gridSize}
+                        onPositionChange={canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined}
+                        onScaleChange={canDrag ? updateWidgetScale : undefined}
+                        onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
+                        onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
+                        {renderWidgetContent(widgetType, contentVisible)}
+                    </HUDWidget>
+                );
+            })}
+        </>
+    );
+};
+
+// ==========================================
+// PLANE SUBWIDGET RENDERER
+// ==========================================
+const PlaneSubwidgetRenderer = (props: SubwidgetRendererProps) => {
+    const { vehicleState, editMode, speedometerType, simpleMode, snapToGrid, gridSize, hasSignaledReady, deathState, getWidget, updateWidgetPosition, updateWidgetScale, toggleWidgetVisibility, resetWidget, reflowWidgetPosition, isWidgetDisabled, getMultiSelectProps } = props;
+
+    const isPlane = editMode ? speedometerType === "plane" : vehicleState.inVehicle && vehicleState.vehicleType === "plane";
+    const airspeed = vehicleState.airspeed ?? vehicleState.speed;
+    const altitude = vehicleState.altitude ?? 0;
+    const heading = vehicleState.heading ?? 0;
+    const fuel = vehicleState.fuel ?? 0;
+    const landingGear = vehicleState.landingGear ?? true;
+    const flaps = vehicleState.flaps ?? 0;
+    const bodyHealth = vehicleState.bodyHealth ?? 100;
+
+    const handleBasePositionChange = useCallback((id: string, newPosition: WidgetPosition) => {
+        if (!simpleMode) { updateWidgetPosition(id, newPosition); return; }
+        const baseWidget = getWidget("plane-base");
+        if (!baseWidget) return;
+        const deltaX = newPosition.x - baseWidget.position.x;
+        const deltaY = newPosition.y - baseWidget.position.y;
+        PLANE_SUBWIDGET_TYPES.forEach((subType) => {
+            const subWidget = getWidget(subType);
+            if (subWidget) updateWidgetPosition(subType, { x: subWidget.position.x + deltaX, y: subWidget.position.y + deltaY });
+        });
+    }, [simpleMode, getWidget, updateWidgetPosition]);
+
+    const renderWidgetContent = (widgetType: string, contentVisible: boolean) => {
+        switch (widgetType) {
+            case "plane-base": return <PlaneBaseWidget vehicle={vehicleState} visible={contentVisible} />;
+            case "plane-kts": return <PlaneKtsWidget airspeed={airspeed} visible={contentVisible} />;
+            case "plane-altitude": return <PlaneAltitudeWidget altitude={altitude} visible={contentVisible} />;
+            case "plane-heading": return <PlaneHeadingWidget heading={heading} visible={contentVisible} />;
+            case "plane-fuel": return <PlaneFuelWidget fuel={fuel} visible={contentVisible} />;
+            case "plane-gear": return <PlaneGearWidget landingGear={landingGear} visible={contentVisible} />;
+            case "plane-flaps": return <PlaneFlapsWidget flaps={flaps} visible={contentVisible} />;
+            case "plane-warning": return <PlaneWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
+            default: return null;
+        }
+    };
+
+    return (
+        <>
+            {PLANE_SUBWIDGET_TYPES.map((widgetType) => {
+                const widget = getWidget(widgetType);
+                if (!widget) return null;
+                const baseVisible = editMode ? true : !deathState.isDead;
+                const shouldShow = widget.visible && baseVisible && isPlane;
+                const isBaseWidget = widgetType === "plane-base";
+                const canDrag = isBaseWidget || !simpleMode;
+                const contentVisible = editMode && isPlane ? true : shouldShow;
+                return (
+                    <HUDWidget key={widgetType} id={widget.id} position={widget.position} hasAccess={isPlane} visible={shouldShow} scale={widget.scale} editMode={editMode} snapToGrid={snapToGrid} gridSize={gridSize}
+                        onPositionChange={canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined}
+                        onScaleChange={canDrag ? updateWidgetScale : undefined}
+                        onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
+                        onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
+                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+                        {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
+                        {renderWidgetContent(widgetType, contentVisible)}
+                    </HUDWidget>
+                );
+            })}
+        </>
+    );
+};
+
+// ==========================================
 // MAIN SUBWIDGET RENDERER
 // ==========================================
-// Add new vehicle subwidget renderers here as they are created
 export const SubwidgetRenderer = (props: SubwidgetRendererProps) => {
     return (
         <>
-            {/* Helicopter subwidgets */}
             <HeliSubwidgetRenderer {...props} />
-            
-            {/* 
-            Future: Add other vehicle subwidget renderers here
-            Example:
-            <PlaneSubwidgetRenderer {...props} />
             <BoatSubwidgetRenderer {...props} />
-            */}
+            <PlaneSubwidgetRenderer {...props} />
         </>
     );
 };
