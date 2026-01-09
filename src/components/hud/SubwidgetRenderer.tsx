@@ -22,8 +22,9 @@ import {
     HeliFuelWidget,
     HeliWarningWidget,
 } from "./widgets/vehicles/helicopter";
-import { CarWarningWidget, CarFuelWidget } from "./widgets/vehicles/car";
+import { CarBaseWidget, CarWarningWidget, CarFuelWidget } from "./widgets/vehicles/car";
 import {
+    PlaneBaseWidget,
     PlaneKtsWidget,
     PlaneAltitudeWidget,
     PlaneWarningWidget,
@@ -32,14 +33,9 @@ import {
     PlaneFlapsWidget,
     PlaneFuelWidget,
 } from "./widgets/vehicles/plane";
-import { BoatWarningWidget, BoatFuelWidget } from "./widgets/vehicles/boat";
-import { MotorcycleWarningWidget, MotorcycleFuelWidget } from "./widgets/vehicles/motorcycle";
-import { BicycleWarningWidget } from "./widgets/vehicles/bicycle";
-import { VehicleHUD } from "./widgets/vehicles/VehicleHUD";
-import { PlaneHUD } from "./widgets/vehicles/PlaneHUD";
-import { BoatHUD } from "./widgets/vehicles/BoatHUD";
-import { MotorcycleHUD } from "./widgets/vehicles/MotorcycleHUD";
-import { BicycleHUD } from "./widgets/vehicles/BicycleHUD";
+import { BoatBaseWidget, BoatWarningWidget, BoatFuelWidget } from "./widgets/vehicles/boat";
+import { MotorcycleBaseWidget, MotorcycleWarningWidget, MotorcycleFuelWidget } from "./widgets/vehicles/motorcycle";
+import { BicycleBaseWidget, BicycleWarningWidget } from "./widgets/vehicles/bicycle";
 
 export interface SubwidgetRendererProps {
     vehicleState: VehicleState;
@@ -374,7 +370,7 @@ const CarSubwidgetRenderer = createVehicleSubwidgetRenderer(
     "car",
     CAR_SUBWIDGET_TYPES,
     "car-base",
-    (vehicle, visible) => <VehicleHUD vehicle={vehicle} visible={visible} />,
+    (vehicle, visible) => <CarBaseWidget vehicle={vehicle} visible={visible} />,
     (widgetType, visible, vehicle) => {
         switch (widgetType) {
             case "car-warning":
@@ -392,7 +388,7 @@ const PlaneSubwidgetRenderer = createVehicleSubwidgetRenderer(
     "plane",
     PLANE_SUBWIDGET_TYPES,
     "plane-base",
-    (vehicle, visible) => <PlaneHUD vehicle={vehicle} visible={visible} />,
+    (vehicle, visible) => <PlaneBaseWidget vehicle={vehicle} visible={visible} />,
     (widgetType, visible, vehicle) => {
         switch (widgetType) {
             case "plane-kts":
@@ -420,7 +416,7 @@ const BoatSubwidgetRenderer = createVehicleSubwidgetRenderer(
     "boat",
     BOAT_SUBWIDGET_TYPES,
     "boat-base",
-    (vehicle, visible) => <BoatHUD vehicle={vehicle} visible={visible} />,
+    (vehicle, visible) => <BoatBaseWidget vehicle={vehicle} visible={visible} />,
     (widgetType, visible, vehicle) => {
         switch (widgetType) {
             case "boat-warning":
@@ -438,7 +434,7 @@ const MotorcycleSubwidgetRenderer = createVehicleSubwidgetRenderer(
     "motorcycle",
     MOTORCYCLE_SUBWIDGET_TYPES,
     "motorcycle-base",
-    (vehicle, visible) => <MotorcycleHUD vehicle={vehicle} visible={visible} />,
+    (vehicle, visible) => <MotorcycleBaseWidget vehicle={vehicle} visible={visible} />,
     (widgetType, visible, vehicle) => {
         switch (widgetType) {
             case "motorcycle-warning":
@@ -456,7 +452,7 @@ const BicycleSubwidgetRenderer = createVehicleSubwidgetRenderer(
     "bicycle",
     BICYCLE_SUBWIDGET_TYPES,
     "bicycle-base",
-    (vehicle, visible) => <BicycleHUD vehicle={vehicle} visible={visible} />,
+    (vehicle, visible) => <BicycleBaseWidget vehicle={vehicle} visible={visible} />,
     (widgetType, visible, vehicle) => {
         switch (widgetType) {
             case "bicycle-warning":

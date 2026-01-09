@@ -1,3 +1,4 @@
+export { PlaneBaseWidget } from "./PlaneBaseWidget";
 export { PlaneKtsWidget } from "./PlaneKtsWidget";
 export { PlaneAltitudeWidget } from "./PlaneAltitudeWidget";
 export { PlaneWarningWidget } from "./PlaneWarningWidget";

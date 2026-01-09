@@ -16,34 +16,42 @@ export const BoatFuelWidget = ({ fuel, visible }: BoatFuelWidgetProps) => {
             initial={false}
             animate={{ opacity: visible ? 1 : 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-background/85 border border-white/20 rounded px-2 py-1 flex items-center gap-1.5 min-w-[64px] whitespace-nowrap">
+            className="flex items-center gap-2">
             <Fuel
-                size={10}
+                size={12}
                 className={cn(
-                    fuelCritical ? "text-critical critical-pulse" : fuelWarning ? "text-warning" : "text-stamina",
-                    "flex-shrink-0"
+                    fuelCritical
+                        ? "text-critical critical-pulse"
+                        : fuelWarning
+                        ? "text-warning warning-pulse"
+                        : "text-stamina"
                 )}
-                style={{
-                    filter: `drop-shadow(0 0 3px hsl(var(--${
-                        fuelCritical ? "critical" : fuelWarning ? "warning" : "stamina"
-                    })))`,
-                }}
             />
-            <motion.span
+            <div className="relative w-24 h-2 rounded-full glass-panel overflow-hidden">
+                <motion.div
+                    className={cn(
+                        "absolute top-0 left-0 bottom-0 rounded-full",
+                        fuelCritical ? "bg-critical" : fuelWarning ? "bg-warning" : "bg-stamina"
+                    )}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${fuel}%` }}
+                    transition={{ duration: 0.3 }}
+                    style={{
+                        boxShadow: fuelCritical
+                            ? "0 0 12px hsl(var(--critical)), inset 0 0 8px hsl(var(--critical) / 0.5)"
+                            : fuelWarning
+                            ? "0 0 10px hsl(var(--warning))"
+                            : "0 0 8px hsl(var(--stamina) / 0.6)",
+                    }}
+                />
+            </div>
+            <span
                 className={cn(
-                    "hud-number text-[10px] tabular-nums text-right ml-auto",
-                    fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-stamina"
-                )}
-                style={{
-                    textShadow: `0 0 6px hsl(var(--${
-                        fuelCritical ? "critical" : fuelWarning ? "warning" : "stamina"
-                    }) / 0.5)`,
-                    fontVariantNumeric: "tabular-nums",
-                }}
-                animate={{ opacity: 1 }}
-                transition={{ type: "spring", stiffness: 100, damping: 15 }}>
+                    "text-[10px] hud-number tabular-nums min-w-[28px] text-right",
+                    fuelCritical ? "text-critical" : fuelWarning ? "text-warning" : "text-muted-foreground"
+                )}>
                 {Math.round(fuel)}%
-            </motion.span>
+            </span>
         </motion.div>
     );
 };
