@@ -1406,6 +1406,9 @@ export const HUD = () => {
                             onPositionChange={
                                 canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
                             }
+                            onScaleChange={
+                                canDrag ? (isBaseWidget && simpleMode ? undefined : updateWidgetScale) : undefined
+                            }
                             onVisibilityToggle={
                                 canDrag
                                     ? isBaseWidget && simpleMode
