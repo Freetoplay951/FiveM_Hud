@@ -1355,6 +1355,42 @@ export const HUD = () => {
                         }
                     };
 
+                    // Handle scale change for base widget in simple mode
+                    const handleBaseScaleChange = (id: string, newScale: number) => {
+                        updateWidgetScale(id, newScale);
+
+                        if (simpleMode && id === "heli-base") {
+                            // Update scale for all sub-widgets
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+                                updateWidgetScale(subType, newScale);
+                            });
+
+                            // After scale change, reflow all sub-widgets to recalculate positions
+                            requestAnimationFrame(() => {
+                                HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                    if (subType === "heli-base") return;
+                                    reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
+                                });
+                            });
+                        }
+                    };
+
+                    // Handle live scale - directly manipulate DOM for instant feedback
+                    const handleLiveScale = (id: string, currentScale: number) => {
+                        if (simpleMode && id === "heli-base") {
+                            // Update scale transform on all sub-widgets for instant feedback
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+
+                                const el = document.getElementById(`hud-widget-${subType}`);
+                                if (el) {
+                                    el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
+                                }
+                            });
+                        }
+                    };
+
                     // Handle reset - in simple mode, reset all sub-widgets when base is reset
                     const handleBaseReset = (id: string) => {
                         resetWidget(id, isWidgetDisabled, hasSignaledReady);
@@ -1407,7 +1443,11 @@ export const HUD = () => {
                                 canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
                             }
                             onScaleChange={
-                                canDrag ? (isBaseWidget && simpleMode ? undefined : updateWidgetScale) : undefined
+                                canDrag
+                                    ? isBaseWidget && simpleMode
+                                        ? handleBaseScaleChange
+                                        : updateWidgetScale
+                                    : undefined
                             }
                             onVisibilityToggle={
                                 canDrag
@@ -1424,6 +1464,7 @@ export const HUD = () => {
                                     : undefined
                             }
                             onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
+                            onLiveScale={isBaseWidget && simpleMode ? handleLiveScale : undefined}
                             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                             {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
                             {(() => {
