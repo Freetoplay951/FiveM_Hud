@@ -15,6 +15,7 @@ import { useTranslation } from "@/contexts/LanguageContext";
 import { getWidgetGroupsMap } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
 import { SelectionBox } from "./hud/SelectionBox";
+import { BrandingWidget } from "./hud/BrandingWidget";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
@@ -269,6 +270,9 @@ export const HUD = () => {
             onMouseMove={handleSelectionMove}
             onMouseUp={handleSelectionEnd}
             onMouseLeave={handleSelectionEnd}>
+            {/* Branding */}
+            {!deathState.isDead && <BrandingWidget />}
+
             {/* Selection Box */}
             {selectionBox && (
                 <SelectionBox
