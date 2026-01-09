@@ -69,6 +69,17 @@ export function resolveDefaultPositions(
 
     const getWidgetSize = (id: string): WidgetSize => {
         const element = document.getElementById(`hud-widget-${id}`);
+
+        // When the HUD is fully rendered, use the rendered size (includes transforms like scale)
+        if (hasSignaledReady && element) {
+            const rect = element.getBoundingClientRect();
+            return {
+                width: rect.width,
+                height: rect.height,
+            };
+        }
+
+        // During initial layout we only have layout sizes (without transforms)
         return {
             width: element?.offsetWidth ?? 0,
             height: element?.offsetHeight ?? 0,
@@ -109,8 +120,11 @@ export function resolveDefaultPositions(
     // Process widgets in order - earlier widgets are resolved first
     for (const config of widgetConfigs) {
         const element = document.getElementById(`hud-widget-${config.id}`);
-        const scale = config.scale ?? 1;
-        const size = getWidgetSizeFromDOM(config.id, scale);
+
+        // Use rendered size when possible (so scale is respected), otherwise fallback to offset size * config scale
+        const size = hasSignaledReady
+            ? getWidgetSize(config.id)
+            : getWidgetSizeFromDOM(config.id, config.scale ?? 1);
 
         // Compute position using resolver (which has access to previously computed rects
         // and can fetch current DOM positions via getWidgetCurrentRect)

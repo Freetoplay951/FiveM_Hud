@@ -230,6 +230,7 @@ export const HUD = () => {
         toggleWidgetVisibility,
         resetLayout,
         resetWidget,
+        reflowWidgetPosition,
         getWidget,
         distributeWidgets,
     } = useHUDLayout();
@@ -1380,35 +1381,35 @@ export const HUD = () => {
                     const isBaseWidget = widgetType === "heli-base";
                     const canDrag = !simpleMode || isBaseWidget;
 
-                    // Handle base widget position change - in simple mode, reset sub-widgets after drag
+                    // Handle base widget position change - in simple mode, reflow sub-widgets after drag
                     const handleBasePositionChange = (id: string, newPosition: WidgetPosition) => {
                         updateWidgetPosition(id, newPosition);
 
                         if (simpleMode) {
-                            // Reset all sub-widgets so they recalculate relative to new base position
+                            // Reflow all sub-widgets so they recalculate relative to new base position
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
-                                resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                                reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
                             });
                         }
                     };
-                    
+
                     // Handle live drag - directly manipulate DOM for instant feedback
                     const handleLiveDrag = (id: string, currentPos: WidgetPosition) => {
                         if (simpleMode && id === "heli-base") {
                             const baseWidget = getWidget("heli-base");
                             if (!baseWidget) return;
-                            
+
                             // Calculate delta from original position
                             const deltaX = currentPos.x - baseWidget.position.x;
                             const deltaY = currentPos.y - baseWidget.position.y;
-                            
+
                             // Directly update sub-widget DOM positions for instant feedback
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
                                 const subWidget = getWidget(subType);
                                 if (!subWidget) return;
-                                
+
                                 const el = document.getElementById(`hud-widget-${subType}`);
                                 if (el) {
                                     el.style.left = `${subWidget.position.x + deltaX}px`;
@@ -1417,14 +1418,14 @@ export const HUD = () => {
                             });
                         }
                     };
-                    
+
                     // Handle live scale - directly manipulate DOM for instant feedback
                     const handleLiveScale = (id: string, currentScale: number) => {
                         if (simpleMode && id === "heli-base") {
                             // Directly update sub-widget DOM scales for instant feedback
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
-                                
+
                                 const el = document.getElementById(`hud-widget-${subType}`);
                                 if (el) {
                                     el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
@@ -1432,38 +1433,50 @@ export const HUD = () => {
                             });
                         }
                     };
-                    
-                    // Handle scale change - in simple mode, update all sub-widgets and reposition them
+
+                    // Handle scale change - in simple mode, update all sub-widgets and reflow their positions (without resetting scale)
                     const handleBaseScaleChange = (id: string, newScale: number) => {
                         updateWidgetScale(id, newScale);
-                        
+
                         if (simpleMode) {
-                            // Update all sub-widgets to the same scale and reset their positions
+                            // Update all sub-widgets to the same scale
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
                                 updateWidgetScale(subType, newScale);
                             });
-                            
-                            // Wait for DOM to update with new scales, then reset positions
+
+                            // Wait for DOM to update with new scales, then reflow positions
                             requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
                                     HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                         if (subType === "heli-base") return;
-                                        resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                                        reflowWidgetPosition(subType, isWidgetDisabled, true);
                                     });
                                 });
                             });
                         }
                     };
-                    
+
+                    // Handle reset - in simple mode, reset all sub-widgets when base is reset
+                    const handleBaseReset = (id: string) => {
+                        resetWidget(id, isWidgetDisabled, hasSignaledReady);
+
+                        if (simpleMode && id === "heli-base") {
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+                                resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                            });
+                        }
+                    };
+
                     // Handle visibility toggle - in simple mode, toggle all sub-widgets when base is toggled
                     const handleBaseVisibilityToggle = () => {
                         const baseWidget = getWidget("heli-base");
                         if (!baseWidget) return;
-                        
+
                         // Toggle base widget
                         toggleWidgetVisibility("heli-base");
-                        
+
                         if (simpleMode) {
                             // If base is becoming hidden, hide all sub-widgets too
                             // If base is becoming visible, show all sub-widgets too
@@ -1477,6 +1490,9 @@ export const HUD = () => {
                             });
                         }
                     };
+
+                    // Ensure heli widgets still render content in edit mode (even if hidden), so you can see/move them.
+                    const contentVisible = editMode && isHelicopter ? true : shouldShow;
 
                     return (
                         <HUDWidget
@@ -1492,14 +1508,47 @@ export const HUD = () => {
                             onPositionChange={
                                 canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
                             }
-                            onVisibilityToggle={canDrag ? (isBaseWidget && simpleMode ? handleBaseVisibilityToggle : () => toggleWidgetVisibility(widgetType)) : undefined}
+                            onVisibilityToggle={
+                                canDrag
+                                    ? isBaseWidget && simpleMode
+                                        ? handleBaseVisibilityToggle
+                                        : () => toggleWidgetVisibility(widgetType)
+                                    : undefined
+                            }
                             onScaleChange={canDrag ? (isBaseWidget ? handleBaseScaleChange : updateWidgetScale) : undefined}
-                            onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
+                            onReset={
+                                canDrag
+                                    ? isBaseWidget && simpleMode
+                                        ? handleBaseReset
+                                        : (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)
+                                    : undefined
+                            }
                             onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
                             onLiveScale={isBaseWidget && simpleMode ? handleLiveScale : undefined}
                             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                             {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
-                            {renderWidgetContent()}
+                            {(() => {
+                                switch (widgetType) {
+                                    case "heli-base":
+                                        return <HeliBaseWidget vehicle={vehicleState} visible={contentVisible} />;
+                                    case "heli-kts":
+                                        return <HeliKtsWidget airspeed={airspeed} visible={contentVisible} />;
+                                    case "heli-altitude":
+                                        return <HeliAltitudeWidget altitude={altitude} visible={contentVisible} />;
+                                    case "heli-vspeed":
+                                        return <HeliVSpeedWidget verticalSpeed={verticalSpeed} visible={contentVisible} />;
+                                    case "heli-heading":
+                                        return <HeliHeadingWidget heading={heading} visible={contentVisible} />;
+                                    case "heli-rotor":
+                                        return <HeliRotorWidget rotorRpm={rotorRpm} visible={contentVisible} />;
+                                    case "heli-fuel":
+                                        return <HeliFuelWidget fuel={fuel} visible={contentVisible} />;
+                                    case "heli-warning":
+                                        return <HeliWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
+                                    default:
+                                        return null;
+                                }
+                            })()}
                         </HUDWidget>
                     );
                 });
