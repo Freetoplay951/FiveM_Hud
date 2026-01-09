@@ -452,8 +452,6 @@ export const useHUDLayout = () => {
             const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
             if (!defaultWidget) return;
 
-            // getWidgetCurrentRect in the position functions will automatically
-            // get the current DOM position of anchor widgets like heli-base
             const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
             const rect = resolvedRects.get(id);
 
@@ -476,7 +474,6 @@ export const useHUDLayout = () => {
 
     /**
      * Recalculate a widget's position using the resolver, but keep its current scale/visibility.
-     * This is important for heli subwidgets in simpleMode when the base widget is moved/scaled.
      */
     const reflowWidgetPosition = useCallback(
         (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
@@ -495,6 +492,7 @@ export const useHUDLayout = () => {
                     isWidgetDisabled,
                     hasSignaledReady
                 );
+
                 const rect = resolvedRects.get(id);
                 if (!rect) return prev;
 
