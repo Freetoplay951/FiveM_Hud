@@ -9,7 +9,7 @@ export const BrandingWidget = () => {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="relative flex items-center justify-center"
             >
-                {/* Outer glow layer */}
+                {/* Outer glow layer - dual color */}
                 <motion.div
                     className="absolute inset-0 blur-2xl opacity-40"
                     animate={{
@@ -22,30 +22,31 @@ export const BrandingWidget = () => {
                         ease: "easeInOut",
                     }}
                 >
-                    <div className="text-4xl font-bold text-primary tracking-widest">
-                        COMMUNITY RP
+                    <div className="text-4xl font-bold tracking-widest">
+                        <span className="text-primary">COMMUNITY</span>
+                        <span style={{ color: "hsl(0 100% 50%)" }}> RP</span>
                     </div>
                 </motion.div>
 
                 {/* Main text container */}
                 <div className="relative flex items-baseline gap-2">
-                    {/* COMMUNITY text */}
+                    {/* COMMUNITY text - Cyan */}
                     <motion.span
                         className="text-3xl md:text-4xl font-bold tracking-[0.2em] hud-text"
                         style={{
                             color: "hsl(var(--foreground))",
                             textShadow: `
-                                0 0 10px hsl(var(--primary) / 0.8),
-                                0 0 20px hsl(var(--primary) / 0.6),
-                                0 0 40px hsl(var(--primary) / 0.4),
-                                0 0 60px hsl(var(--primary) / 0.2)
+                                0 0 10px hsl(188 100% 50% / 0.8),
+                                0 0 20px hsl(188 100% 50% / 0.6),
+                                0 0 40px hsl(188 100% 50% / 0.4),
+                                0 0 60px hsl(188 100% 50% / 0.2)
                             `,
                         }}
                         animate={{
                             textShadow: [
-                                `0 0 10px hsl(var(--primary) / 0.8), 0 0 20px hsl(var(--primary) / 0.6), 0 0 40px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.2)`,
-                                `0 0 15px hsl(var(--primary) / 1), 0 0 30px hsl(var(--primary) / 0.8), 0 0 50px hsl(var(--primary) / 0.5), 0 0 80px hsl(var(--primary) / 0.3)`,
-                                `0 0 10px hsl(var(--primary) / 0.8), 0 0 20px hsl(var(--primary) / 0.6), 0 0 40px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.2)`,
+                                `0 0 10px hsl(188 100% 50% / 0.8), 0 0 20px hsl(188 100% 50% / 0.6), 0 0 40px hsl(188 100% 50% / 0.4), 0 0 60px hsl(188 100% 50% / 0.2)`,
+                                `0 0 15px hsl(188 100% 50% / 1), 0 0 30px hsl(188 100% 50% / 0.8), 0 0 50px hsl(188 100% 50% / 0.5), 0 0 80px hsl(188 100% 50% / 0.3)`,
+                                `0 0 10px hsl(188 100% 50% / 0.8), 0 0 20px hsl(188 100% 50% / 0.6), 0 0 40px hsl(188 100% 50% / 0.4), 0 0 60px hsl(188 100% 50% / 0.2)`,
                             ],
                         }}
                         transition={{
@@ -57,23 +58,23 @@ export const BrandingWidget = () => {
                         COMMUNITY
                     </motion.span>
 
-                    {/* RP text - accent color */}
+                    {/* RP text - Red/Magenta */}
                     <motion.span
                         className="text-3xl md:text-4xl font-bold tracking-[0.2em] hud-text"
                         style={{
-                            color: "hsl(var(--primary))",
+                            color: "hsl(0 100% 50%)",
                             textShadow: `
-                                0 0 10px hsl(var(--primary) / 1),
-                                0 0 25px hsl(var(--primary) / 0.8),
-                                0 0 50px hsl(var(--primary) / 0.6),
-                                0 0 80px hsl(var(--primary) / 0.4)
+                                0 0 10px hsl(0 100% 50% / 1),
+                                0 0 25px hsl(0 100% 50% / 0.8),
+                                0 0 50px hsl(0 100% 50% / 0.6),
+                                0 0 80px hsl(0 100% 50% / 0.4)
                             `,
                         }}
                         animate={{
                             textShadow: [
-                                `0 0 10px hsl(var(--primary) / 1), 0 0 25px hsl(var(--primary) / 0.8), 0 0 50px hsl(var(--primary) / 0.6), 0 0 80px hsl(var(--primary) / 0.4)`,
-                                `0 0 20px hsl(var(--primary) / 1), 0 0 40px hsl(var(--primary) / 1), 0 0 70px hsl(var(--primary) / 0.8), 0 0 100px hsl(var(--primary) / 0.5)`,
-                                `0 0 10px hsl(var(--primary) / 1), 0 0 25px hsl(var(--primary) / 0.8), 0 0 50px hsl(var(--primary) / 0.6), 0 0 80px hsl(var(--primary) / 0.4)`,
+                                `0 0 10px hsl(0 100% 50% / 1), 0 0 25px hsl(0 100% 50% / 0.8), 0 0 50px hsl(0 100% 50% / 0.6), 0 0 80px hsl(0 100% 50% / 0.4)`,
+                                `0 0 20px hsl(0 100% 50% / 1), 0 0 40px hsl(0 100% 50% / 1), 0 0 70px hsl(0 100% 50% / 0.8), 0 0 100px hsl(0 100% 50% / 0.5)`,
+                                `0 0 10px hsl(0 100% 50% / 1), 0 0 25px hsl(0 100% 50% / 0.8), 0 0 50px hsl(0 100% 50% / 0.6), 0 0 80px hsl(0 100% 50% / 0.4)`,
                             ],
                             scale: [1, 1.02, 1],
                         }}
@@ -88,18 +89,19 @@ export const BrandingWidget = () => {
                     </motion.span>
                 </div>
 
-                {/* Underline glow effect */}
+                {/* Underline glow effect - gradient from cyan to red */}
                 <motion.div
-                    className="absolute -bottom-2 left-1/2 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent"
+                    className="absolute -bottom-2 left-1/2 h-[2px]"
+                    style={{
+                        background: "linear-gradient(90deg, transparent, hsl(188 100% 50%), hsl(0 100% 50%), transparent)",
+                        boxShadow: `
+                            0 0 10px hsl(188 100% 50% / 0.8),
+                            0 0 20px hsl(0 100% 50% / 0.5)
+                        `,
+                    }}
                     initial={{ width: 0, x: "-50%" }}
                     animate={{ width: "120%", x: "-50%" }}
                     transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-                    style={{
-                        boxShadow: `
-                            0 0 10px hsl(var(--primary) / 0.8),
-                            0 0 20px hsl(var(--primary) / 0.5)
-                        `,
-                    }}
                 />
 
                 {/* Animated shimmer effect */}
