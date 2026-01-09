@@ -1390,14 +1390,13 @@ export const HUD = () => {
                         });
 
                         // Use the resolver system to recalculate positions
-                        // getWidgetCurrentRect will get the real DOM rects with current scale
                         requestAnimationFrame(() => {
                             const defaultWidgets = getDefaultWidgets();
                             const heliSubConfigs = defaultWidgets.filter(
                                 (w) => HELI_SUBWIDGET_TYPES.includes(w.id as typeof HELI_SUBWIDGET_TYPES[number]) && w.id !== "heli-base"
                             );
 
-                            // Build a simple resolver that uses current DOM positions
+                            // Build a resolver that uses current DOM positions with scaled dimensions
                             const resolvedRects = new Map<string, { x: number; y: number; width: number; height: number; right: number; bottom: number }>();
 
                             const resolver = {
@@ -1426,23 +1425,33 @@ export const HUD = () => {
                             };
 
                             // Calculate positions for each sub-widget using their position functions
+                            // We need to pass a mock element with scaled dimensions since position functions use el.offsetWidth/Height
                             heliSubConfigs.forEach((config) => {
                                 const el = document.getElementById(`hud-widget-${config.id}`);
                                 if (!el) return;
 
-                                const newPos = config.position(config.id, el, resolver);
+                                // Get the scaled dimensions from getBoundingClientRect
+                                const scaledRect = el.getBoundingClientRect();
+
+                                // Create a mock element with scaled dimensions for the position function
+                                const mockElement = {
+                                    offsetWidth: scaledRect.width,
+                                    offsetHeight: scaledRect.height,
+                                    getBoundingClientRect: () => scaledRect,
+                                } as HTMLElement;
+
+                                const newPos = config.position(config.id, mockElement, resolver);
                                 el.style.left = `${newPos.x}px`;
                                 el.style.top = `${newPos.y}px`;
 
                                 // Store resolved rect for dependent widgets
-                                const rect = el.getBoundingClientRect();
                                 resolvedRects.set(config.id, {
                                     x: newPos.x,
                                     y: newPos.y,
-                                    width: rect.width,
-                                    height: rect.height,
-                                    right: newPos.x + rect.width,
-                                    bottom: newPos.y + rect.height,
+                                    width: scaledRect.width,
+                                    height: scaledRect.height,
+                                    right: newPos.x + scaledRect.width,
+                                    bottom: newPos.y + scaledRect.height,
                                 });
                             });
                         });
