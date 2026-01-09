@@ -20,14 +20,14 @@ export const VehicleHUDFactory = ({ vehicle, visible }: VehicleHUDFactoryProps) 
                 />
             );
         case "boat":
-            // Boat is now rendered via separate subwidgets (boat-base, boat-heading, etc.)
-            return null;
+            return (
+                <BoatHUD
+                    vehicle={vehicle}
+                    visible={visible}
+                />
+            );
         case "helicopter":
-            // Helicopter is now rendered via separate subwidgets (heli-base, heli-kts, etc.)
-            return null;
-        case "plane":
-            // Plane is now rendered via separate subwidgets (plane-base, plane-kts, etc.)
-            return null;
+            return null; //rendered via subwidgets
         case "motorcycle":
             return (
                 <MotorcycleHUD
