@@ -767,7 +767,10 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             type: "clock",
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
-                return { x: resolver.screen.width / 2 - width / 2, y: MARGIN };
+                return {
+                    x: resolver.screen.width / 2 - width / 2,
+                    y: MARGIN + (document.getElementById("branding")?.offsetHeight ?? 0),
+                };
             },
             visible: true,
             scale: 1,

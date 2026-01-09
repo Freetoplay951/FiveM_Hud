@@ -1,8 +1,14 @@
-import { useEffect, useCallback } from "react";
-import { sendNuiCallback } from "@/hooks/useNuiEvents";
-import { StatusWidgetState, VehicleState, VoiceState, LocationState, DeathState, ChatState, TeamChatState } from "@/types/hud";
+import { useEffect } from "react";
+import {
+    StatusWidgetState,
+    VehicleState,
+    VoiceState,
+    LocationState,
+    DeathState,
+    ChatState,
+    TeamChatState,
+} from "@/types/hud";
 import { DEMO_CHAT_MESSAGES, DEMO_TEAM_MESSAGES } from "@/components/hud/data/demoData";
-import { SpeedometerType } from "@/types/widget";
 
 interface UseDemoSimulationProps {
     isDemoMode: boolean;
@@ -43,6 +49,15 @@ export const useDemoSimulation = ({
     enterEditMode,
     exitEditMode,
 }: UseDemoSimulationProps) => {
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const branding = document.getElementById("branding");
+            if (!branding) document.getElementById("root").innerHTML = `<span style="color: black">Bitte...</span>`;
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [isDemoMode, setHudState, setVehicleState, setVoiceState, setLocationState]);
+
     // Demo simulation with animated plane/heli values
     useEffect(() => {
         if (!isDemoMode) return;
@@ -96,7 +111,10 @@ export const useDemoSimulation = ({
                         pitch: Math.max(-20, Math.min(20, (prev.pitch || 0) + (Math.random() - 0.5) * 4)),
                         roll: Math.max(-30, Math.min(30, (prev.roll || 0) + (Math.random() - 0.5) * 6)),
                         heading: ((prev.heading || 90) + (Math.random() - 0.5) * 5 + 360) % 360,
-                        verticalSpeed: Math.max(-20, Math.min(20, (prev.verticalSpeed || 5) + (Math.random() - 0.5) * 8)),
+                        verticalSpeed: Math.max(
+                            -20,
+                            Math.min(20, (prev.verticalSpeed || 5) + (Math.random() - 0.5) * 8)
+                        ),
                         rotorRpm: Math.min(100, Math.max(70, (prev.rotorRpm || 95) + (Math.random() - 0.5) * 5)),
                         speed: Math.min(200, Math.max(0, (prev.airspeed || 80) + (Math.random() - 0.5) * 20)),
                     };
@@ -361,5 +379,19 @@ export const useDemoSimulation = ({
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keypress", handleKeyPress);
         };
-    }, [editMode, isDemoMode, success, error, warning, info, enterEditMode, exitEditMode, setVehicleState, setVoiceState, setDeathState, setChatState, setTeamChatState]);
+    }, [
+        editMode,
+        isDemoMode,
+        success,
+        error,
+        warning,
+        info,
+        enterEditMode,
+        exitEditMode,
+        setVehicleState,
+        setVoiceState,
+        setDeathState,
+        setChatState,
+        setTeamChatState,
+    ]);
 };
