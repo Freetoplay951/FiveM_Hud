@@ -289,8 +289,7 @@ export const HUD = () => {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="fixed z-50"
-                        style={{ top: "50%", right: 10, transform: "translateY(-50%)" }}>
+                        className="fixed top-4 right-4 z-50">
                         <button
                             onClick={() => setEditMenuOpen((o) => !o)}
                             className="p-2 bg-card/90 rounded-lg border border-primary/40 hover:border-primary/70 transition-colors pointer-events-auto"
