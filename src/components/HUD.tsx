@@ -1417,6 +1417,34 @@ export const HUD = () => {
                             });
                         }
                     };
+                    
+                    // Handle live scale - directly manipulate DOM for instant feedback
+                    const handleLiveScale = (id: string, currentScale: number) => {
+                        if (simpleMode && id === "heli-base") {
+                            // Directly update sub-widget DOM scales for instant feedback
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+                                
+                                const el = document.getElementById(`hud-widget-${subType}`);
+                                if (el) {
+                                    el.style.transform = `scale(${Math.round(currentScale * 100) / 100})`;
+                                }
+                            });
+                        }
+                    };
+                    
+                    // Handle scale change - in simple mode, update all sub-widgets
+                    const handleBaseScaleChange = (id: string, newScale: number) => {
+                        updateWidgetScale(id, newScale);
+                        
+                        if (simpleMode) {
+                            // Update all sub-widgets to the same scale
+                            HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                                if (subType === "heli-base") return;
+                                updateWidgetScale(subType, newScale);
+                            });
+                        }
+                    };
 
                     return (
                         <HUDWidget
@@ -1433,9 +1461,10 @@ export const HUD = () => {
                                 canDrag ? (isBaseWidget ? handleBasePositionChange : updateWidgetPosition) : undefined
                             }
                             onVisibilityToggle={canDrag ? () => toggleWidgetVisibility(widgetType) : undefined}
-                            onScaleChange={canDrag ? updateWidgetScale : undefined}
+                            onScaleChange={canDrag ? (isBaseWidget ? handleBaseScaleChange : updateWidgetScale) : undefined}
                             onReset={canDrag ? (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady) : undefined}
                             onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
+                            onLiveScale={isBaseWidget && simpleMode ? handleLiveScale : undefined}
                             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
                             {...(canDrag ? getMultiSelectProps(widget.id) : {})}>
                             {renderWidgetContent()}

@@ -34,6 +34,8 @@ interface HUDWidgetProps {
     onClearSelection?: () => void;
     /** Called during live drag with current position */
     onLiveDrag?: (id: string, currentPos: WidgetPosition) => void;
+    /** Called during live scale with current scale */
+    onLiveScale?: (id: string, currentScale: number) => void;
 }
 
 const MIN_SCALE = 0.5;
@@ -63,6 +65,7 @@ export const HUDWidget = ({
     onDragEnd,
     onClearSelection,
     onLiveDrag,
+    onLiveScale,
 }: HUDWidgetProps) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const [elementSize, setElementSize] = useState({ w: 0, h: 0 });
@@ -244,7 +247,13 @@ export const HUDWidget = ({
             const scaleYNew = baseHeight > 0 ? newHeight / baseHeight : resizeStartScale.current;
 
             const nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, (scaleXNew + scaleYNew) / 2));
-            setLocalScale(Number(nextScale.toFixed(3)));
+            const roundedScale = Number(nextScale.toFixed(3));
+            setLocalScale(roundedScale);
+            
+            // Notify parent about live scale
+            if (onLiveScale) {
+                onLiveScale(id, roundedScale);
+            }
         };
 
         const handleMouseUp = () => {
