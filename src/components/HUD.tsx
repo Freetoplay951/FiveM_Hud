@@ -853,21 +853,20 @@ export const HUD = () => {
         }
     }, [editMode]);
 
-    // Handle simple mode toggle - when enabling, apply base scale to all subwidgets and reflow
     const handleSimpleModeChange = useCallback(
         (enabled: boolean) => {
             setSimpleMode(enabled);
-
             if (enabled) {
-                // Get the current base widget scale
-                const baseWidget = getWidget("heli-base");
-                const baseScale = baseWidget?.scale ?? 1;
-                
-                // Apply base scale to all heli subwidgets and reflow their positions
+                const baseScale = getWidget("heli-base")?.scale ?? 1;
+
+                HELI_SUBWIDGET_TYPES.forEach((subType) => {
+                    if (subType === "heli-base") return;
+                    updateWidgetScale(subType, baseScale);
+                });
+
                 requestAnimationFrame(() => {
                     HELI_SUBWIDGET_TYPES.forEach((subType) => {
                         if (subType === "heli-base") return;
-                        updateWidgetScale(subType, baseScale);
                         reflowWidgetPosition(subType, isWidgetDisabled, hasSignaledReady);
                     });
                 });
