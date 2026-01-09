@@ -1436,9 +1436,13 @@ export const HUD = () => {
 
                     // Handle scale change - in simple mode, update all sub-widgets and reflow their positions (without resetting scale)
                     const handleBaseScaleChange = (id: string, newScale: number) => {
+                        // Get current base widget position BEFORE updating scale
+                        const baseWidget = getWidget("heli-base");
+                        const currentBasePos = baseWidget ? { ...baseWidget.position } : null;
+
                         updateWidgetScale(id, newScale);
 
-                        if (simpleMode) {
+                        if (simpleMode && currentBasePos) {
                             // Update all sub-widgets to the same scale
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
@@ -1446,8 +1450,18 @@ export const HUD = () => {
                             });
 
                             // Wait for DOM to update with new scales, then reflow positions
+                            // The position functions use getWidgetCurrentRect which gets the DOM position
+                            // We need to ensure the base widget DOM position matches the stored position
                             requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
+                                    // Force the base widget DOM to the stored position
+                                    const baseEl = document.getElementById("hud-widget-heli-base");
+                                    if (baseEl) {
+                                        baseEl.style.left = `${currentBasePos.x}px`;
+                                        baseEl.style.top = `${currentBasePos.y}px`;
+                                    }
+
+                                    // Now reflow sub-widgets - they will use the corrected base position
                                     HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                         if (subType === "heli-base") return;
                                         reflowWidgetPosition(subType, isWidgetDisabled, true);
