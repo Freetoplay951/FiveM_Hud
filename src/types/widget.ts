@@ -172,8 +172,6 @@ export const BICYCLE_SUBWIDGET_TYPES = [
     ...WIDGET_GROUPS.find((g) => g.base === "bicycle-base")!.subwidgets,
 ] as const;
 
-// Old speedometer widgets removed - now using subwidgets (car-base, plane-base, etc.)
-
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 export type SpeedometerType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
 export type MinimapShape = "square" | "round";
@@ -797,7 +795,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         },
-        // Old speedometer widgets removed - now using subwidgets (car-base, plane-base, etc.)
 
         // === Dependent widgets (depend on previously defined widgets) ===
         {

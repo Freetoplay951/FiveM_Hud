@@ -26,13 +26,7 @@ import {
     StatusType,
     NotificationData,
 } from "@/types/hud";
-import {
-    WidgetPosition,
-    StatusDesign,
-    MinimapShape,
-    SpeedometerType,
-    ResolvedWidgetConfig,
-} from "@/types/widget";
+import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
 import { DEMO_RADIO_ENABLED } from "./data/demoData";
 
 // ==========================================
@@ -179,7 +173,11 @@ export const StatusWidgetsRenderer = ({
                         onScaleChange={updateWidgetScale}
                         onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
                         {...getMultiSelectProps(type)}>
-                        <StatusWidget type={type} value={value} design={statusDesign} />
+                        <StatusWidget
+                            type={type}
+                            value={value}
+                            design={statusDesign}
+                        />
                     </HUDWidget>
                 );
             })}
@@ -226,7 +224,10 @@ export const MoneyWidgetRenderer = ({
             onScaleChange={updateWidgetScale}
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
-            <MoneyWidget money={moneyState} player={playerState} />
+            <MoneyWidget
+                money={moneyState}
+                player={playerState}
+            />
         </HUDWidget>
     );
 };
@@ -412,7 +413,10 @@ export const LocationWidgetRenderer = ({
             onScaleChange={updateWidgetScale}
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
-            <LocationWidget location={locationState} shape={minimapShape} />
+            <LocationWidget
+                location={locationState}
+                shape={minimapShape}
+            />
         </HUDWidget>
     );
 };
@@ -552,8 +556,6 @@ export const MinimapWidgetRenderer = ({
     );
 };
 
-// Old VehicleSpeedometersRenderer removed - now using SubwidgetRenderer for all vehicle types
-
 // ==========================================
 // CHAT WIDGET
 // ==========================================
@@ -607,7 +609,11 @@ export const ChatWidgetRenderer = ({
                             message: msg,
                             timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
                         };
-                        setChatState((prev) => ({ ...prev, isInputActive: false, messages: [...prev.messages, newMsg] }));
+                        setChatState((prev) => ({
+                            ...prev,
+                            isInputActive: false,
+                            messages: [...prev.messages, newMsg],
+                        }));
                     } else {
                         sendNuiCallback("sendChatMessage", { message: msg });
                     }
@@ -679,7 +685,11 @@ export const TeamChatWidgetRenderer = ({
                             message: msg,
                             timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
                         };
-                        setTeamChatState((prev) => ({ ...prev, isInputActive: false, messages: [...prev.messages, newMsg] }));
+                        setTeamChatState((prev) => ({
+                            ...prev,
+                            isInputActive: false,
+                            messages: [...prev.messages, newMsg],
+                        }));
                     } else {
                         sendNuiCallback("sendTeamChatMessage", { message: msg });
                     }
