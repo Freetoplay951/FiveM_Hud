@@ -474,6 +474,31 @@ export const useHUDLayout = () => {
         []
     );
 
+    /**
+     * Recalculate a widget's position using the resolver, but keep its current scale/visibility.
+     * This is important for heli subwidgets in simpleMode when the base widget is moved/scaled.
+     */
+    const reflowWidgetPosition = useCallback(
+        (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+            const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
+            const rect = resolvedRects.get(id);
+            if (!rect) return;
+
+            setState((prev) => ({
+                ...prev,
+                widgets: prev.widgets.map((w) =>
+                    w.id === id
+                        ? {
+                              ...w,
+                              position: clampPosition({ x: rect.x, y: rect.y }),
+                          }
+                        : w
+                ),
+            }));
+        },
+        []
+    );
+
     const getWidget = useCallback(
         (id: string): ResolvedWidgetConfig | undefined => {
             return state.widgets.find((w) => w.id === id);
@@ -499,6 +524,7 @@ export const useHUDLayout = () => {
         setSimpleMode,
         resetLayout,
         resetWidget,
+        reflowWidgetPosition,
         getWidget,
         distributeWidgets,
     };
