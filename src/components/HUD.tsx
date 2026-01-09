@@ -1464,7 +1464,7 @@ export const HUD = () => {
                         if (simpleMode && id === "heli-base") {
                             HELI_SUBWIDGET_TYPES.forEach((subType) => {
                                 if (subType === "heli-base") return;
-                                resetWidget(subType, isWidgetDisabled, hasSignaledReady);
+                                resetWidget(subType, isWidgetDisabled, false);
                             });
                         }
                     };
@@ -1515,7 +1515,9 @@ export const HUD = () => {
                                         : () => toggleWidgetVisibility(widgetType)
                                     : undefined
                             }
-                            onScaleChange={canDrag ? (isBaseWidget ? handleBaseScaleChange : updateWidgetScale) : undefined}
+                            onScaleChange={
+                                canDrag ? (isBaseWidget ? handleBaseScaleChange : updateWidgetScale) : undefined
+                            }
                             onReset={
                                 canDrag
                                     ? isBaseWidget && simpleMode
@@ -1530,21 +1532,61 @@ export const HUD = () => {
                             {(() => {
                                 switch (widgetType) {
                                     case "heli-base":
-                                        return <HeliBaseWidget vehicle={vehicleState} visible={contentVisible} />;
+                                        return (
+                                            <HeliBaseWidget
+                                                vehicle={vehicleState}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     case "heli-kts":
-                                        return <HeliKtsWidget airspeed={airspeed} visible={contentVisible} />;
+                                        return (
+                                            <HeliKtsWidget
+                                                airspeed={airspeed}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     case "heli-altitude":
-                                        return <HeliAltitudeWidget altitude={altitude} visible={contentVisible} />;
+                                        return (
+                                            <HeliAltitudeWidget
+                                                altitude={altitude}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     case "heli-vspeed":
-                                        return <HeliVSpeedWidget verticalSpeed={verticalSpeed} visible={contentVisible} />;
+                                        return (
+                                            <HeliVSpeedWidget
+                                                verticalSpeed={verticalSpeed}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     case "heli-heading":
-                                        return <HeliHeadingWidget heading={heading} visible={contentVisible} />;
+                                        return (
+                                            <HeliHeadingWidget
+                                                heading={heading}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     case "heli-rotor":
-                                        return <HeliRotorWidget rotorRpm={rotorRpm} visible={contentVisible} />;
+                                        return (
+                                            <HeliRotorWidget
+                                                rotorRpm={rotorRpm}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     case "heli-fuel":
-                                        return <HeliFuelWidget fuel={fuel} visible={contentVisible} />;
+                                        return (
+                                            <HeliFuelWidget
+                                                fuel={fuel}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     case "heli-warning":
-                                        return <HeliWarningWidget bodyHealth={bodyHealth} visible={contentVisible} />;
+                                        return (
+                                            <HeliWarningWidget
+                                                bodyHealth={bodyHealth}
+                                                visible={contentVisible}
+                                            />
+                                        );
                                     default:
                                         return null;
                                 }
