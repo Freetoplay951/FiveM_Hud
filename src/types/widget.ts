@@ -367,9 +367,8 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-base",
             type: "heli-base",
-            position: (_id, el, resolver) => {
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
+            position: (id, _el, resolver) => {
+                const { width, height } = resolver.getWidgetSize(id);
 
                 const rotorHeight = resolver.getWidgetSize("heli-rotor").height;
                 const fuelHeight = resolver.getWidgetSize("heli-fuel").height;
@@ -384,9 +383,9 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-kts",
             type: "heli-kts",
-            position: (_id, el, resolver) => {
+            position: (id, _el, resolver) => {
                 const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const height = el?.offsetHeight ?? 0;
+                const { height } = resolver.getWidgetSize(id);
                 if (baseRect) {
                     return {
                         x: baseRect.x + GAP,
@@ -401,10 +400,9 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-altitude",
             type: "heli-altitude",
-            position: (_id, el, resolver) => {
+            position: (id, _el, resolver) => {
                 const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
+                const { width, height } = resolver.getWidgetSize(id);
                 if (baseRect) {
                     return {
                         x: baseRect.x + baseRect.width - width - GAP,
@@ -419,10 +417,10 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-vspeed",
             type: "heli-vspeed",
-            position: (_id, el, resolver) => {
+            position: (id, _el, resolver) => {
                 const baseRect = resolver.getWidgetCurrentRect("heli-base");
                 const altitudeRect = resolver.getWidgetRect("heli-altitude");
-                const width = el?.offsetWidth ?? 0;
+                const { width } = resolver.getWidgetSize(id);
                 if (baseRect && altitudeRect) {
                     return {
                         x: baseRect.x + baseRect.width - width - GAP,
@@ -437,10 +435,9 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-heading",
             type: "heli-heading",
-            position: (_id, el, resolver) => {
+            position: (id, _el, resolver) => {
                 const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
+                const { width, height } = resolver.getWidgetSize(id);
                 if (baseRect) {
                     const baseCenterX = baseRect.x + baseRect.width / 2;
                     return {
@@ -456,11 +453,10 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-warning",
             type: "heli-warning",
-            position: (_id, el, resolver) => {
+            position: (id, _el, resolver) => {
                 const baseRect = resolver.getWidgetCurrentRect("heli-base");
                 const headingRect = resolver.getWidgetRect("heli-heading");
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
+                const { width, height } = resolver.getWidgetSize(id);
                 if (baseRect && headingRect) {
                     const baseCenterX = baseRect.x + baseRect.width / 2;
                     return {
@@ -476,9 +472,9 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "heli-rotor",
             type: "heli-rotor",
-            position: (_id, el, resolver) => {
+            position: (id, _el, resolver) => {
                 const baseRect = resolver.getWidgetCurrentRect("heli-base");
-                const rotorWidth = el?.offsetWidth ?? 0;
+                const { width: rotorWidth } = resolver.getWidgetSize(id);
                 const fuelWidth = resolver.getWidgetSize("heli-fuel").width;
                 if (baseRect) {
                     const baseCenterX = baseRect.x + baseRect.width / 2;
