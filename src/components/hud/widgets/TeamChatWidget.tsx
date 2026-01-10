@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Send, X, Shield, Lock, Crown } from "lucide-react";
+import { Send, X, Shield, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatHistory } from "@/hooks/useChatHistory";
 import { useChatStore, useTeamChatData } from "@/stores/chatStore";
 import { useIsDemoMode } from "@/stores/hudStore";
-import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
+import { sendNuiCallback } from "@/hooks/useNuiEvents";
 
 interface TeamChatWidgetProps {
     editMode: boolean;
@@ -21,10 +21,7 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
     default: { bg: "bg-primary/20", text: "text-primary", border: "border-primary/30", icon: Shield },
 };
 
-export const TeamChatWidget = ({
-    editMode,
-    autoHideDelay = 10000,
-}: TeamChatWidgetProps) => {
+export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidgetProps) => {
     // Zustand store access
     const teamChat = useTeamChatData();
     const isDemoMode = useIsDemoMode();
@@ -93,17 +90,20 @@ export const TeamChatWidget = ({
     }, []);
 
     // Smart auto-scroll: only scroll if user is at bottom
-    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
-        if (!isUserScrolled) {
-            messagesEndRef.current?.scrollIntoView({ behavior });
-        }
-    }, [isUserScrolled]);
+    const scrollToBottom = useCallback(
+        (behavior: ScrollBehavior = "smooth") => {
+            if (!isUserScrolled) {
+                messagesEndRef.current?.scrollIntoView({ behavior });
+            }
+        },
+        [isUserScrolled]
+    );
 
     // Handle scroll to detect if user manually scrolled up
     const handleScroll = useCallback(() => {
         const container = messagesContainerRef.current;
         if (!container) return;
-        
+
         const { scrollTop, scrollHeight, clientHeight } = container;
         const isAtBottom = scrollHeight - scrollTop - clientHeight < 30; // 30px threshold
         setIsUserScrolled(!isAtBottom);
@@ -113,7 +113,7 @@ export const TeamChatWidget = ({
     useEffect(() => {
         scrollToBottom("smooth");
     }, [teamChat.messages, scrollToBottom]);
-    
+
     // Scroll to bottom when input becomes active
     useEffect(() => {
         if (teamChat.isInputActive) {
@@ -137,7 +137,7 @@ export const TeamChatWidget = ({
 
         const msg = inputValue.trim();
         addToHistory(msg);
-        
+
         if (isDemoMode) {
             addTeamChatMessage({
                 id: Date.now().toString(),
@@ -150,7 +150,7 @@ export const TeamChatWidget = ({
         } else {
             sendNuiCallback("sendTeamChatMessage", { message: msg });
         }
-        
+
         setInputValue("");
         closeChat();
     }, [inputValue, addToHistory, isDemoMode, addTeamChatMessage, setTeamChatInputActive, closeChat]);
@@ -189,142 +189,135 @@ export const TeamChatWidget = ({
     return (
         <motion.div
             initial={false}
-            animate={{ 
+            animate={{
                 opacity: shouldShow ? 1 : 0,
-                pointerEvents: shouldShow ? "auto" : "none"
+                pointerEvents: shouldShow ? "auto" : "none",
             }}
             transition={{ duration: 0.3 }}>
             <motion.div
                 ref={containerRef}
                 className="glass-panel rounded-lg overflow-hidden flex flex-col border"
-                style={{ 
-                    width: "320px", 
+                style={{
+                    width: "320px",
                     height: "280px",
-                    visibility: shouldRender ? "visible" : "hidden"
+                    visibility: shouldRender ? "visible" : "hidden",
                 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: shouldRender ? 1 : 0, y: shouldRender ? 0 : 20 }}
                 transition={{ duration: 0.3 }}>
-                    {/* Header */}
-                    <div
-                        className={cn(
-                            "flex items-center justify-between px-3 py-2 border-b",
-                            teamColor.border,
-                            teamColor.bg
-                        )}>
-                        <div className="flex items-center gap-2">
-                            <TeamIcon
-                                size={14}
-                                className={teamColor.text}
+                {/* Header */}
+                <div
+                    className={cn(
+                        "flex items-center justify-between px-3 py-2 border-b",
+                        teamColor.border,
+                        teamColor.bg
+                    )}>
+                    <div className="flex items-center gap-2">
+                        <TeamIcon
+                            size={14}
+                            className={teamColor.text}
+                        />
+                        <span className={cn("text-xs font-medium uppercase tracking-wider", teamColor.text)}>
+                            {teamChat.teamName}
+                        </span>
+                        {teamChat.isAdmin && (
+                            <Shield
+                                size={10}
+                                className="text-warning"
                             />
-                            <span className={cn("text-xs font-medium uppercase tracking-wider", teamColor.text)}>
-                                {teamChat.teamName}
+                        )}
+                        {teamChat.unreadCount > 0 && (
+                            <span
+                                className={cn("px-1.5 py-0.5 text-[10px] rounded-full", teamColor.bg, teamColor.text)}>
+                                {teamChat.unreadCount}
                             </span>
-                            {teamChat.isAdmin && (
-                                <Shield
-                                    size={10}
-                                    className="text-warning"
-                                />
-                            )}
-                            {teamChat.unreadCount > 0 && (
-                                <span
-                                    className={cn(
-                                        "px-1.5 py-0.5 text-[10px] rounded-full",
-                                        teamColor.bg,
-                                        teamColor.text
-                                    )}>
-                                    {teamChat.unreadCount}
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-muted-foreground">{teamChat.onlineMembers} online</span>
-                            {isInputActive && (
-                                <button
-                                    onClick={closeChat}
-                                    className="p-1 rounded hover:bg-background/50 transition-colors ml-1">
-                                    <X
-                                        size={12}
-                                        className="text-muted-foreground"
-                                    />
-                                </button>
-                            )}
-                        </div>
+                        )}
                     </div>
+                    <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-muted-foreground">{teamChat.onlineMembers} online</span>
+                        {isInputActive && (
+                            <button
+                                onClick={closeChat}
+                                className="p-1 rounded hover:bg-background/50 transition-colors ml-1">
+                                <X
+                                    size={12}
+                                    className="text-muted-foreground"
+                                />
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                    {/* Messages */}
-                    <div 
-                        ref={messagesContainerRef}
-                        onScroll={handleScroll}
-                        className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin">
-                        <AnimatePresence initial={false}>
-                            {teamChat.messages.map((msg) => (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 10 }}
-                                    className="text-xs leading-relaxed">
-                                    <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
-                                    {msg.rank && (
-                                        <span
-                                            className={cn(
-                                                "text-[9px] px-1 py-0.5 rounded mr-1",
-                                                teamColor.bg,
-                                                teamColor.text
-                                            )}>
-                                            {msg.rank}
-                                        </span>
-                                    )}
-                                    <span className={cn("font-medium mr-1", teamColor.text)}>{msg.sender}:</span>
+                {/* Messages */}
+                <div
+                    ref={messagesContainerRef}
+                    onScroll={handleScroll}
+                    className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin">
+                    <AnimatePresence initial={false}>
+                        {teamChat.messages.map((msg) => (
+                            <motion.div
+                                key={msg.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="text-xs leading-relaxed">
+                                <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
+                                {msg.rank && (
                                     <span
                                         className={cn(
-                                            "text-foreground",
-                                            msg.isImportant && "font-semibold text-warning"
+                                            "text-[9px] px-1 py-0.5 rounded mr-1",
+                                            teamColor.bg,
+                                            teamColor.text
                                         )}>
-                                        {msg.message}
+                                        {msg.rank}
                                     </span>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                        <div ref={messagesEndRef} />
-                    </div>
+                                )}
+                                <span className={cn("font-medium mr-1", teamColor.text)}>{msg.sender}:</span>
+                                <span
+                                    className={cn("text-foreground", msg.isImportant && "font-semibold text-warning")}>
+                                    {msg.message}
+                                </span>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                    <div ref={messagesEndRef} />
+                </div>
 
-                    {/* Input */}
-                    {isInputActive && (
-                        <div className={cn("px-3 py-2 border-t", teamColor.border, "bg-background/40")}>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    autoFocus={!editMode && isInputActive}
-                                    onBlur={(e) => {
-                                        if (editMode) return;
-                                        e.target.focus();
-                                    }}
-                                    type="text"
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="Team-Nachricht..."
-                                    className={cn(
-                                        "flex-1 bg-background/30 border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors",
-                                        teamColor.border
-                                    )}
-                                />
-                                <button
-                                    onClick={handleSend}
-                                    disabled={!inputValue.trim()}
-                                    className={cn(
-                                        "p-1.5 rounded transition-colors",
-                                        inputValue.trim()
-                                            ? cn(teamColor.bg, teamColor.text, "hover:opacity-80")
-                                            : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
-                                    )}>
-                                    <Send size={12} />
-                                </button>
-                            </div>
+                {/* Input */}
+                {isInputActive && (
+                    <div className={cn("px-3 py-2 border-t", teamColor.border, "bg-background/40")}>
+                        <div className="flex items-center gap-2">
+                            <input
+                                autoFocus={!editMode && isInputActive}
+                                onBlur={(e) => {
+                                    if (editMode) return;
+                                    e.target.focus();
+                                }}
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Team-Nachricht..."
+                                className={cn(
+                                    "flex-1 bg-background/30 border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors",
+                                    teamColor.border
+                                )}
+                            />
+                            <button
+                                onClick={handleSend}
+                                disabled={!inputValue.trim()}
+                                className={cn(
+                                    "p-1.5 rounded transition-colors",
+                                    inputValue.trim()
+                                        ? cn(teamColor.bg, teamColor.text, "hover:opacity-80")
+                                        : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
+                                )}>
+                                <Send size={12} />
+                            </button>
                         </div>
-                    )}
-                </motion.div>
+                    </div>
+                )}
+            </motion.div>
         </motion.div>
     );
 };
