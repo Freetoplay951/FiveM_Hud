@@ -2,9 +2,11 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ChatMessage, ChatState } from "@/types/hud";
+import { ChatMessage } from "@/types/hud";
 import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useChatHistory } from "@/hooks/useChatHistory";
+import { useChatStore, useChatData } from "@/stores/chatStore";
+import { useIsDemoMode } from "@/stores/hudStore";
 
 interface ChatCommand {
     command: string;
@@ -27,22 +29,20 @@ const DEMO_COMMANDS: ChatCommand[] = [
 ];
 
 interface ChatWidgetProps {
-    chat: ChatState;
-    setChatInputActive?: (active: boolean) => void;
-    onSendMessage?: (message: string) => void;
-    onClose?: () => void;
     editMode: boolean;
     autoHideDelay?: number; // Zeit in ms bis der Chat versteckt wird (default: 10000)
 }
 
 export const ChatWidget = ({
-    chat,
-    setChatInputActive,
-    onSendMessage,
-    onClose,
     editMode,
     autoHideDelay = 10000,
 }: ChatWidgetProps) => {
+    // Zustand store access
+    const chat = useChatData();
+    const isDemoMode = useIsDemoMode();
+    const setChatInputActive = useChatStore((s) => s.setChatInputActive);
+    const addChatMessage = useChatStore((s) => s.addChatMessage);
+
     const [inputValue, setInputValue] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -204,15 +204,32 @@ export const ChatWidget = ({
         setShowCommandSuggestions(false);
         setInputValue("");
         resetNavigation();
-        onClose?.();
-    }, [onClose, resetNavigation]);
+        if (isDemoMode) {
+            setChatInputActive(false);
+        } else {
+            sendNuiCallback("closeChat");
+        }
+    }, [isDemoMode, setChatInputActive, resetNavigation]);
 
     const handleSend = useCallback(() => {
-        if (!inputValue.trim() || !onSendMessage) return;
+        if (!inputValue.trim()) return;
 
         const msg = inputValue.trim();
         addToHistory(msg);
-        onSendMessage(msg);
+        
+        if (isDemoMode) {
+            addChatMessage({
+                id: Date.now().toString(),
+                type: "normal",
+                sender: "Du",
+                message: msg,
+                timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+            });
+            setChatInputActive(false);
+        } else {
+            sendNuiCallback("sendChatMessage", { message: msg });
+        }
+        
         setInputValue("");
         setShowCommandSuggestions(false);
 
@@ -221,9 +238,9 @@ export const ChatWidget = ({
             availableCommands.some((cmd) => cmd.command.toLowerCase() === msg.split(" ")[0].toLowerCase());
 
         if (isValidCommand) {
-            setChatInputActive?.(false);
+            setChatInputActive(false);
         }
-    }, [inputValue, onSendMessage, addToHistory, setChatInputActive, availableCommands]);
+    }, [inputValue, addToHistory, isDemoMode, addChatMessage, setChatInputActive, availableCommands]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
@@ -372,7 +389,7 @@ export const ChatWidget = ({
                                 </span>
                             )}
                         </div>
-                        {onClose && isInputActive && (
+                        {isInputActive && (
                             <button
                                 onClick={closeChat}
                                 className="p-1 rounded hover:bg-background/50 transition-colors">
