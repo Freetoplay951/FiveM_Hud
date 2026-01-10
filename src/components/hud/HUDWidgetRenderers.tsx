@@ -6,7 +6,7 @@ import { VoiceWidget } from "./widgets/VoiceWidget";
 import { LocationWidget } from "./widgets/LocationWidget";
 import { ClockWidget } from "./widgets/ClockWidget";
 import { DateWidget } from "./widgets/DateWidget";
-import { FpsWidget } from "./widgets/FpsWidget";
+
 import { WantedWidget } from "./widgets/WantedWidget";
 import { PingWidget } from "./widgets/PingWidget";
 import { ServerInfoWidget } from "./widgets/ServerInfoWidget";
@@ -33,7 +33,7 @@ import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
-import { useFps, useWantedLevel, usePing, useServerName, usePlayerCount, useMaxPlayers, useSpeedLimit, useSpeedZoneActive } from "@/stores/utilityStore";
+import { useWantedLevel, usePing, useServerName, usePlayerCount, useMaxPlayers, useSpeedLimit, useSpeedZoneActive, useSpeedLimitEnabled } from "@/stores/utilityStore";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 // ==========================================
@@ -766,57 +766,6 @@ const TeamChatWidgetRendererComponent = ({
 
 export const TeamChatWidgetRenderer = memo(TeamChatWidgetRendererComponent);
 
-// ==========================================
-// FPS WIDGET - Subscribes to utility store
-// ==========================================
-const FpsWidgetRendererComponent = ({
-    editMode,
-    snapToGrid,
-    gridSize,
-    hasSignaledReady,
-    getWidget,
-    updateWidgetPosition,
-    updateWidgetScale,
-    toggleWidgetVisibility,
-    resetWidget,
-    isWidgetDisabled,
-    getMultiSelectProps,
-}: LayoutOnlyProps) => {
-    const widget = getWidget("fps");
-    const isDead = useIsDead();
-
-    const fps = useFps();
-
-    const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
-    );
-
-    if (!widget) return null;
-
-    const baseVisible = widget.visible && (editMode ? true : !isDead);
-
-    return (
-        <HUDWidget
-            id={widget.id}
-            position={widget.position}
-            visible={baseVisible}
-            scale={widget.scale}
-            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-            editMode={editMode}
-            snapToGrid={snapToGrid}
-            gridSize={gridSize}
-            onPositionChange={updateWidgetPosition}
-            onVisibilityToggle={toggleWidgetVisibility}
-            onScaleChange={updateWidgetScale}
-            onReset={handleReset}
-            {...getMultiSelectProps(widget.id)}>
-            <FpsWidget fps={fps} />
-        </HUDWidget>
-    );
-};
-
-export const FpsWidgetRenderer = memo(FpsWidgetRendererComponent);
 
 // ==========================================
 // PING WIDGET - Subscribes to utility store
@@ -1081,6 +1030,7 @@ export const ServerNameWidgetRenderer = memo(ServerNameWidgetRendererComponent);
 
 // ==========================================
 // SPEED LIMIT WIDGET - Subscribes to utility & vehicle store
+// Only shown when explicitly enabled via API (opt-in system)
 // ==========================================
 const SpeedLimitWidgetRendererComponent = ({
     editMode,
@@ -1100,6 +1050,7 @@ const SpeedLimitWidgetRendererComponent = ({
 
     const speedLimit = useSpeedLimit();
     const speedZoneActive = useSpeedZoneActive();
+    const speedLimitEnabled = useSpeedLimitEnabled();
     const currentSpeed = useVehicleStore((s) => s.speed);
     const inVehicle = useVehicleStore((s) => s.inVehicle);
 
@@ -1110,8 +1061,9 @@ const SpeedLimitWidgetRendererComponent = ({
 
     if (!widget) return null;
 
-    // Show when in vehicle and speed zone is active, or in edit mode
-    const showSpeedLimit = (speedZoneActive && inVehicle) || editMode;
+    // SpeedLimit widget requires explicit opt-in via enableSpeedLimit(true)
+    // Only show when enabled AND (in vehicle with speed zone active OR in edit mode)
+    const showSpeedLimit = speedLimitEnabled && ((speedZoneActive && inVehicle) || editMode);
     const baseVisible = widget.visible && (editMode ? true : !isDead) && showSpeedLimit;
 
     return (
@@ -1151,7 +1103,6 @@ const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
             <MoneyWidgetRenderer {...props} />
             <ClockWidgetRenderer {...props} />
             <DateWidgetRenderer {...props} />
-            <FpsWidgetRenderer {...props} />
             <PingWidgetRenderer {...props} />
             <WantedWidgetRenderer {...props} />
             <ServerInfoWidgetRenderer {...props} />
