@@ -49,7 +49,7 @@ AddEventHandler("hud:loading", function()
     -- Send initial wanted level and evading status
     local playerId = PlayerId()
     local wantedLevel = GetPlayerWantedLevel(playerId)
-    local isEvading = Citizen.InvokeNative(0x7E07C78925D5FD96, playerId) -- ArePlayerStarsGreyedOut
+    local isEvading = Citizen.InvokeNative(0x7E07C78925D5FD96, playerId) ~= 0
     SendNUI('updateUtility', { 
         wantedLevel = wantedLevel,
         isEvading = isEvading
@@ -122,7 +122,7 @@ CreateThread(function()
         
         -- Check if player is evading (cops lost sight)
         -- ArePlayerStarsGreyedOut returns true when cops can't see you
-        local isEvading = Citizen.InvokeNative(0x7E07C78925D5FD96, playerId)
+        local isEvading = Citizen.InvokeNative(0x7E07C78925D5FD96, playerId) ~= 0
         
         -- Only send if something changed
         local wantedChanged = wantedLevel ~= lastUtilityData.wantedLevel
