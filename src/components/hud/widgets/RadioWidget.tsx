@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Radio, User } from "lucide-react";
 import { RadioState, RadioMember } from "@/types/hud";
@@ -45,44 +45,47 @@ const TalkingIndicator = memo(() => (
 ));
 TalkingIndicator.displayName = "TalkingIndicator";
 
-// Memoized member row component
-const RadioMemberRow = memo(({ member }: { member: RadioMember }) => (
-    <motion.div
-        {...memberMotion}
-        className={cn(
-            "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors",
-            member.talking ? "bg-info/20 border border-info/30" : "bg-background/30"
-        )}>
-        {/* Avatar */}
-        <div
+// Memoized member row component with forwardRef for AnimatePresence popLayout
+const RadioMemberRow = memo(
+    forwardRef<HTMLDivElement, { member: RadioMember }>(({ member }, ref) => (
+        <motion.div
+            ref={ref}
+            {...memberMotion}
             className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center overflow-hidden",
-                member.talking ? "ring-2 ring-info" : "bg-muted/30"
+                "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors",
+                member.talking ? "bg-info/20 border border-info/30" : "bg-background/30"
             )}>
-            {member.avatar ? (
-                <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-full h-full object-cover"
-                />
-            ) : (
-                <User size={12} className="text-muted-foreground" />
-            )}
-        </div>
+            {/* Avatar */}
+            <div
+                className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center overflow-hidden",
+                    member.talking ? "ring-2 ring-info" : "bg-muted/30"
+                )}>
+                {member.avatar ? (
+                    <img
+                        src={member.avatar}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <User size={12} className="text-muted-foreground" />
+                )}
+            </div>
 
-        {/* Name */}
-        <span
-            className={cn(
-                "text-xs flex-1 truncate",
-                member.talking ? "text-info font-medium" : "text-foreground"
-            )}>
-            {member.name}
-        </span>
+            {/* Name */}
+            <span
+                className={cn(
+                    "text-xs flex-1 truncate",
+                    member.talking ? "text-info font-medium" : "text-foreground"
+                )}>
+                {member.name}
+            </span>
 
-        {/* Talking indicator */}
-        {member.talking && <TalkingIndicator />}
-    </motion.div>
-));
+            {/* Talking indicator */}
+            {member.talking && <TalkingIndicator />}
+        </motion.div>
+    ))
+);
 RadioMemberRow.displayName = "RadioMemberRow";
 
 const RadioWidgetComponent = ({ radio }: RadioWidgetProps) => {
