@@ -87,7 +87,6 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
     }
 };
 
-
 /**
  * Bridge hook that connects NUI events directly to Zustand stores.
  * Each store updates independently - no parent re-renders.
@@ -95,42 +94,8 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
 export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) => {
     const hasRegistered = useRef(false);
 
-    // Create handlers object that maps to stores
-    const h: NuiEventHandlers = {
-        onUpdateHud: (data) => useStatusStore.getState().setStatus(data),
-        onUpdateVehicle: (data) => useVehicleStore.getState().setVehicleState(data),
-        onUpdateMoney: (data) => useMoneyStore.getState().setMoney(data),
-        onUpdateVoice: (data) => useVoiceStore.getState().setVoiceState(data),
-        onUpdateRadio: (data) => useVoiceStore.getState().setRadioState(data),
-        onUpdateLocation: (data) => useLocationStore.getState().setLocation(data),
-        onUpdatePlayer: (data) => useMoneyStore.getState().setPlayer(data),
-        onNotify: (data) => {
-            const store = useNotificationStore.getState();
-            if (data.type === "success") store.success(data.title, data.message);
-            else if (data.type === "error") store.error(data.title, data.message);
-            else if (data.type === "warning") store.warning(data.title, data.message);
-            else if (data.type === "info") store.info(data.title, data.message);
-        },
-        onToggleEditMode: () => {
-            if (!editMode) toggleEditMode();
-        },
-        onSetVisible: (visible) => useHUDGlobalStore.getState().setIsVisible(visible),
-        onUpdateDeath: (data) => useDeathStore.getState().setDeathState(data),
-        onSetVoiceEnabled: (enabled) => useVoiceStore.getState().setIsVoiceEnabled(enabled),
-        onUpdateDisabledWidgets: (data) => useHUDGlobalStore.getState().setDisabledWidgets(data),
-        onChatUpdate: (data) => useChatStore.getState().setChatState(data),
-        onTeamChatUpdate: (data) => useChatStore.getState().setTeamChatState(data),
-    };
-
     useEffect(() => {
         if (!isNuiEnvironment()) return;
-
-        // Send loadedNUI callback ONCE on first mount
-        if (!hasRegistered.current) {
-            hasRegistered.current = true;
-            console.log("[HUD DEBUG] NUI event listener registered");
-            sendNuiCallback("loadedNUI");
-        }
 
         const handleMessage = (event: MessageEvent) => {
             const { action, data } = event.data;
@@ -141,49 +106,54 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     sendNuiCallback("pong");
                     break;
                 case "updateHud":
-                    h.onUpdateHud?.(data);
+                    useStatusStore.getState().setStatus(data);
                     break;
                 case "updateVehicle":
-                    h.onUpdateVehicle?.(data);
+                    useVehicleStore.getState().setVehicleState(data);
                     break;
                 case "updateMoney":
-                    h.onUpdateMoney?.(data);
+                    useMoneyStore.getState().setMoney(data);
                     break;
                 case "updateVoice":
-                    h.onUpdateVoice?.(data);
+                    useVoiceStore.getState().setVoiceState(data);
                     break;
                 case "updateRadio":
-                    h.onUpdateRadio?.(data);
+                    useVoiceStore.getState().setRadioState(data);
                     break;
                 case "updateLocation":
-                    h.onUpdateLocation?.(data);
+                    useLocationStore.getState().setLocation(data);
                     break;
                 case "updatePlayer":
-                    h.onUpdatePlayer?.(data);
+                    useMoneyStore.getState().setPlayer(data);
                     break;
-                case "notify":
-                    h.onNotify?.(data);
+                case "notify": {
+                    const store = useNotificationStore.getState();
+                    if (data.type === "success") store.success(data.title, data.message);
+                    else if (data.type === "error") store.error(data.title, data.message);
+                    else if (data.type === "warning") store.warning(data.title, data.message);
+                    else if (data.type === "info") store.info(data.title, data.message);
                     break;
+                }
                 case "toggleEditMode":
-                    h.onToggleEditMode?.(data);
+                    if (!editMode) toggleEditMode();
                     break;
                 case "setVisible":
-                    h.onSetVisible?.(data);
+                    useHUDGlobalStore.getState().setIsVisible(data);
                     break;
                 case "updateDeath":
-                    h.onUpdateDeath?.(data);
+                    useDeathStore.getState().setDeathState(data);
                     break;
                 case "setVoiceEnabled":
-                    h.onSetVoiceEnabled?.(data);
+                    useVoiceStore.getState().setIsVoiceEnabled(data);
                     break;
                 case "updateDisabledWidgets":
-                    h.onUpdateDisabledWidgets?.(data);
+                    useHUDGlobalStore.getState().setDisabledWidgets(data);
                     break;
                 case "chatUpdate":
-                    h.onChatUpdate?.(data);
+                    useChatStore.getState().setChatState(data);
                     break;
                 case "teamChatUpdate":
-                    h.onTeamChatUpdate?.(data);
+                    useChatStore.getState().setTeamChatState(data);
                     break;
                 default:
                     if (action) {
@@ -194,6 +164,13 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
         };
 
         window.addEventListener("message", handleMessage);
+
+        if (!hasRegistered.current) {
+            hasRegistered.current = true;
+            console.log("[HUD DEBUG] NUI event listener registered");
+            sendNuiCallback("loadedNUI");
+        }
+
         return () => window.removeEventListener("message", handleMessage);
     }, [editMode, toggleEditMode]);
 };
