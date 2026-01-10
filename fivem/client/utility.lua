@@ -9,6 +9,20 @@ local lastUtilityData = {
 }
 
 -- ============================================================================
+-- DISABLE DEFAULT GTA HUD COMPONENTS
+-- ============================================================================
+
+local function DisableDefaultWantedHud()
+    -- WANTED_STARS = 1
+    SetHudComponentSize(1, 0, 0)
+    SetHudComponentPosition(1, 0, 0)
+    
+    if Config.Debug then
+        print('[HUD Utility] Disabled default GTA wanted stars HUD')
+    end
+end
+
+-- ============================================================================
 -- PING RECEIVER (from server)
 -- ============================================================================
 
@@ -25,6 +39,9 @@ end)
 -- ============================================================================
 
 AddEventHandler("hud:loading", function()
+    -- Disable default GTA wanted stars
+    DisableDefaultWantedHud()
+    
     -- Send initial server info
     SendNUI('updateUtility', {
         serverName = Config.ServerName or GetConvar('sv_hostname', 'RP Server'),
@@ -62,14 +79,12 @@ end)
 CreateThread(function()
     while true do
         Wait(10000)
-        if isHudVisible then
-            local playerCount = #GetActivePlayers()
-            if playerCount ~= lastUtilityData.playerCount then
-                lastUtilityData.playerCount = playerCount
-                SendNUI('updateUtility', {
-                    playerCount = playerCount
-                })
-            end
+        local playerCount = #GetActivePlayers()
+        if playerCount ~= lastUtilityData.playerCount then
+            lastUtilityData.playerCount = playerCount
+            SendNUI('updateUtility', {
+                playerCount = playerCount
+            })
         end
     end
 end)
@@ -82,22 +97,20 @@ CreateThread(function()
     while true do
         Wait(Config.UtilityUpdateInterval or 500)
         
-        if isHudVisible then
-            local playerId = PlayerId()
-            
-            -- Get wanted level (0-5) - this is client-side
-            local wantedLevel = GetPlayerWantedLevel(playerId)
-            
-            -- Only send if wanted level changed
-            if wantedLevel ~= lastUtilityData.wantedLevel then
-                lastUtilityData.wantedLevel = wantedLevel
-                SendNUI('updateUtility', { wantedLevel = wantedLevel })
-            end
-            
-            -- Request ping from server (server-side only!)
-            if Config.enablePing then
-                TriggerServerEvent('hud:requestPing')
-            end
+        local playerId = PlayerId()
+        
+        -- Get wanted level (0-5) - this is client-side
+        local wantedLevel = GetPlayerWantedLevel(playerId)
+        
+        -- Only send if wanted level changed
+        if wantedLevel ~= lastUtilityData.wantedLevel then
+            lastUtilityData.wantedLevel = wantedLevel
+            SendNUI('updateUtility', { wantedLevel = wantedLevel })
+        end
+        
+        -- Request ping from server (server-side only!)
+        if Config.enablePing then
+            TriggerServerEvent('hud:requestPing')
         end
     end
 end)
