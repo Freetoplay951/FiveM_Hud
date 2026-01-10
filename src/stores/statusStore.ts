@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { StatusWidgetState, StatusType } from "@/types/hud";
 import { DEMO_HUD } from "@/components/hud/data/demoData";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface StatusStore {
     // Individual status values

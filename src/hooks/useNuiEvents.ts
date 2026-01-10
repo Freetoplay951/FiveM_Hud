@@ -8,15 +8,15 @@ import { useChatStore } from "@/stores/chatStore";
 import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { isNuiEnvironment, GetParentResourceName } from "@/lib/nuiUtils";
+
+// Re-export for backwards compatibility
+export { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface UseNuiEventsProps {
     editMode: boolean;
     toggleEditMode: () => void;
 }
-
-export const isNuiEnvironment = (): boolean => {
-    return typeof window !== "undefined" && window.invokeNative !== undefined;
-};
 
 export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
     eventName: string,
@@ -50,9 +50,6 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
     }
 };
 
-const GetParentResourceName = (): string => {
-    return window.GetParentResourceName?.() ?? "rp-hud";
-};
 
 /**
  * Bridge hook that connects NUI events directly to Zustand stores.
