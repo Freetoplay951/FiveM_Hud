@@ -13,9 +13,9 @@ import { TeamChatWidget } from "./widgets/TeamChatWidget";
 import { RadioWidget } from "./widgets/RadioWidget";
 import { MinimapWidget } from "./widgets/MinimapWidget";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
-import { StatusType, NotificationData } from "@/types/hud";
+import { StatusType } from "@/types/hud";
 import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
-import { DEMO_RADIO_ENABLED } from "./data/demoData";
+import { DEMO_RADIO_ENABLED, EDIT_MODE_DEMO_NOTIFICATIONS } from "./data/demoData";
 
 // Import stores - widgets subscribe to their own data
 import { useIsDemoMode } from "@/stores/hudStore";
@@ -26,10 +26,11 @@ import { useVoiceData, useIsVoiceEnabled, useRadioData } from "@/stores/voiceSto
 import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
+import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
 
 // ==========================================
 // LAYOUT-ONLY PROPS INTERFACE
-// No widget data - only layout/edit concerns
+// No widget data, no notifications - only layout/edit concerns
 // ==========================================
 export interface LayoutOnlyProps {
     // Layout settings
@@ -42,12 +43,6 @@ export interface LayoutOnlyProps {
     hasSignaledReady: boolean;
     autoLayoutHiddenIds: string[];
 
-    // Notifications (cross-cutting concern)
-    notifications: NotificationData[];
-    removeNotification: (id: string) => void;
-    displayedNotifications: NotificationData[];
-    isUsingEditDemoNotifications: boolean;
-
     // Layout functions only
     getWidget: (id: string) => ResolvedWidgetConfig | undefined;
     updateWidgetPosition: (id: string, position: WidgetPosition) => void;
@@ -59,16 +54,13 @@ export interface LayoutOnlyProps {
 }
 
 // ==========================================
-// NOTIFICATIONS WIDGET
+// NOTIFICATIONS WIDGET - Self-subscribed to notification store
 // ==========================================
 const NotificationsRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
     hasSignaledReady,
-    displayedNotifications,
-    isUsingEditDemoNotifications,
-    removeNotification,
     getWidget,
     updateWidgetPosition,
     updateWidgetScale,
@@ -78,6 +70,14 @@ const NotificationsRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("notifications");
     const isDead = useIsDead();
+    
+    // Self-subscribe to notification store - only this component re-renders on notification changes
+    const notifications = useNotifications();
+    const removeNotification = useRemoveNotification();
+    
+    // Demo notifications for edit mode
+    const isUsingEditDemoNotifications = editMode && notifications.length === 0;
+    const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),

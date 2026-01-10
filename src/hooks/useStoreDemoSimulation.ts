@@ -6,14 +6,11 @@ import { useLocationStore } from "@/stores/locationStore";
 import { useChatStore } from "@/stores/chatStore";
 import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { DEMO_CHAT_MESSAGES, DEMO_TEAM_MESSAGES } from "@/components/hud/data/demoData";
 
 interface UseStoreDemoSimulationProps {
     editMode: boolean;
-    success: (title: string, message: string) => void;
-    error: (title: string, message: string) => void;
-    warning: (title: string, message: string) => void;
-    info: (title: string, message: string) => void;
     enterEditMode: () => void;
     exitEditMode: () => void;
 }
@@ -24,10 +21,6 @@ interface UseStoreDemoSimulationProps {
  */
 export const useStoreDemoSimulation = ({
     editMode,
-    success,
-    error,
-    warning,
-    info,
     enterEditMode,
     exitEditMode,
 }: UseStoreDemoSimulationProps) => {
@@ -46,6 +39,12 @@ export const useStoreDemoSimulation = ({
     const setTeamChatAccess = useChatStore((state) => state.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((state) => state.setTeamChatIsAdmin);
     const setDeathState = useDeathStore((state) => state.setDeathState);
+    
+    // Notification store actions (stable references)
+    const notifySuccess = useNotificationStore((state) => state.success);
+    const notifyError = useNotificationStore((state) => state.error);
+    const notifyWarning = useNotificationStore((state) => state.warning);
+    const notifyInfo = useNotificationStore((state) => state.info);
 
     // Demo simulation with animated values - updates stores directly
     useEffect(() => {
@@ -267,12 +266,12 @@ export const useStoreDemoSimulation = ({
             if (e.key === "5") setVehicleState({ vehicleType: "motorcycle", speed: 95, gear: 3, fuel: 70 });
             if (e.key === "6") setVehicleState({ vehicleType: "bicycle", speed: 22, gear: 1, fuel: 0 });
 
-            // Notifications
+            // Notifications - uses notification store directly
             if (!editMode) {
-                if (e.key === "h") success("Erfolg!", "Aktion erfolgreich ausgeführt.");
-                if (e.key === "j") error("Fehler!", "Etwas ist schief gelaufen.");
-                if (e.key === "k") warning("Warnung!", "Bitte beachten.");
-                if (e.key === "l") info("Info", "Hier ist eine Information.");
+                if (e.key === "h") notifySuccess("Erfolg!", "Aktion erfolgreich ausgeführt.");
+                if (e.key === "j") notifyError("Fehler!", "Etwas ist schief gelaufen.");
+                if (e.key === "k") notifyWarning("Warnung!", "Bitte beachten.");
+                if (e.key === "l") notifyInfo("Info", "Hier ist eine Information.");
             }
 
             // Death toggle
@@ -329,10 +328,10 @@ export const useStoreDemoSimulation = ({
     }, [
         editMode,
         isDemoMode,
-        success,
-        error,
-        warning,
-        info,
+        notifySuccess,
+        notifyError,
+        notifyWarning,
+        notifyInfo,
         enterEditMode,
         exitEditMode,
         setVehicleState,

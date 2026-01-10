@@ -9,7 +9,6 @@ import { useStoreNuiEvents } from "@/hooks/useStoreNuiEvents";
 import { useStoreDemoSimulation } from "@/hooks/useStoreDemoSimulation";
 import { useMultiSelection } from "@/hooks/useMultiSelection";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
-import { useNotifications } from "@/hooks/useNotifications";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { getWidgetGroupsMap } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
@@ -18,7 +17,6 @@ import { BrandingWidget } from "./hud/BrandingWidget";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
-import { EDIT_MODE_DEMO_NOTIFICATIONS } from "./hud/data/demoData";
 
 // Import stores - HUD only uses global state, widgets fetch their own data
 import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
@@ -73,7 +71,6 @@ export const HUD = () => {
     } = useHUDLayout();
 
     const { t, isLoaded: isLanguageLoaded } = useTranslation();
-    const { notifications, removeNotification, success, error, warning, info } = useNotifications();
 
     // Multi-selection
     const {
@@ -113,10 +110,6 @@ export const HUD = () => {
     useStoreNuiEvents({
         editMode,
         toggleEditMode,
-        success,
-        error,
-        warning,
-        info,
     });
 
     // Demo simulation - updates stores directly
@@ -124,10 +117,6 @@ export const HUD = () => {
         editMode,
         enterEditMode,
         exitEditMode,
-        success,
-        error,
-        warning,
-        info,
     });
 
     // Ready signal
@@ -174,9 +163,6 @@ export const HUD = () => {
         [setSimpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady, getWidget]
     );
 
-    const isUsingEditDemoNotifications = editMode && notifications.length === 0;
-    const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
-
     // Stabilized callbacks for demo mode switches
     const handleTeamChatAccessChange = useCallback(
         (checked: boolean) => setTeamChatAccess(checked),
@@ -187,8 +173,8 @@ export const HUD = () => {
         [setTeamChatIsAdmin]
     );
 
-    // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data props
-    // Memoized to prevent unnecessary re-renders
+    // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data, NO notifications
+    // Notifications are now self-subscribed via notificationStore
     const layoutProps = useMemo(
         () => ({
             // Layout settings only
@@ -200,12 +186,6 @@ export const HUD = () => {
             minimapShape,
             hasSignaledReady,
             autoLayoutHiddenIds,
-
-            // Notifications (managed at HUD level for cross-cutting concern)
-            notifications,
-            removeNotification,
-            displayedNotifications,
-            isUsingEditDemoNotifications,
 
             // Layout functions only
             getWidget,
@@ -225,10 +205,6 @@ export const HUD = () => {
             minimapShape,
             hasSignaledReady,
             autoLayoutHiddenIds,
-            notifications,
-            removeNotification,
-            displayedNotifications,
-            isUsingEditDemoNotifications,
             getWidget,
             updateWidgetPosition,
             updateWidgetScale,
