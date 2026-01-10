@@ -16,6 +16,7 @@ import { BrandingWidget } from "./hud/BrandingWidget";
 import { motion } from "framer-motion";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { useRenderLogger } from "@/hooks/useRenderLogger";
 
 // Import stores - HUD only uses global state, widgets fetch their own data
 import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
@@ -40,6 +41,17 @@ export const HUD = () => {
     const teamChatIsAdmin = useChatStore((s) => s.teamChatIsAdmin);
     const setTeamChatAccess = useChatStore((s) => s.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((s) => s.setTeamChatIsAdmin);
+
+    // Render logging for performance debugging
+    useRenderLogger("HUD", {
+        editMenuOpen,
+        hasSignaledReady,
+        isVisible,
+        isDemoMode,
+        isDead,
+        teamChatHasAccess,
+        teamChatIsAdmin,
+    });
 
     // Layout management - pure layout, no widget data
     const {
