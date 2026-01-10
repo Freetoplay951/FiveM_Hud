@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
@@ -22,7 +22,7 @@ import { EDIT_MODE_DEMO_NOTIFICATIONS } from "./hud/data/demoData";
 
 // Import stores - HUD only uses global state, widgets fetch their own data
 import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
-import { useDeathStore, useIsDead, useDeathData } from "@/stores/deathStore";
+import { useIsDead, useDeathData } from "@/stores/deathStore";
 import { useChatStore } from "@/stores/chatStore";
 
 export const HUD = () => {
@@ -177,33 +177,103 @@ export const HUD = () => {
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
+    // Stabilized callbacks for demo mode switches
+    const handleTeamChatAccessChange = useCallback(
+        (checked: boolean) => setTeamChatAccess(checked),
+        [setTeamChatAccess]
+    );
+    const handleTeamChatAdminChange = useCallback(
+        (checked: boolean) => setTeamChatIsAdmin(checked),
+        [setTeamChatIsAdmin]
+    );
+
     // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data props
-    const layoutProps = {
-        // Layout settings only
-        editMode,
-        snapToGrid,
-        gridSize,
-        statusDesign,
-        speedometerType,
-        minimapShape,
-        hasSignaledReady,
-        autoLayoutHiddenIds,
+    // Memoized to prevent unnecessary re-renders
+    const layoutProps = useMemo(
+        () => ({
+            // Layout settings only
+            editMode,
+            snapToGrid,
+            gridSize,
+            statusDesign,
+            speedometerType,
+            minimapShape,
+            hasSignaledReady,
+            autoLayoutHiddenIds,
 
-        // Notifications (managed at HUD level for cross-cutting concern)
-        notifications,
-        removeNotification,
-        displayedNotifications,
-        isUsingEditDemoNotifications,
+            // Notifications (managed at HUD level for cross-cutting concern)
+            notifications,
+            removeNotification,
+            displayedNotifications,
+            isUsingEditDemoNotifications,
 
-        // Layout functions only
-        getWidget,
-        updateWidgetPosition,
-        updateWidgetScale,
-        toggleWidgetVisibility,
-        resetWidget,
-        isWidgetDisabled,
-        getMultiSelectProps,
-    };
+            // Layout functions only
+            getWidget,
+            updateWidgetPosition,
+            updateWidgetScale,
+            toggleWidgetVisibility,
+            resetWidget,
+            isWidgetDisabled,
+            getMultiSelectProps,
+        }),
+        [
+            editMode,
+            snapToGrid,
+            gridSize,
+            statusDesign,
+            speedometerType,
+            minimapShape,
+            hasSignaledReady,
+            autoLayoutHiddenIds,
+            notifications,
+            removeNotification,
+            displayedNotifications,
+            isUsingEditDemoNotifications,
+            getWidget,
+            updateWidgetPosition,
+            updateWidgetScale,
+            toggleWidgetVisibility,
+            resetWidget,
+            isWidgetDisabled,
+            getMultiSelectProps,
+        ]
+    );
+
+    // Subwidget props - memoized separately
+    const subwidgetProps = useMemo(
+        () => ({
+            editMode,
+            simpleMode,
+            speedometerType,
+            snapToGrid,
+            gridSize,
+            hasSignaledReady,
+            getWidget,
+            updateWidgetPosition,
+            updateWidgetScale,
+            toggleWidgetVisibility,
+            resetWidget,
+            reflowWidgetPosition,
+            isWidgetDisabled,
+            getMultiSelectProps,
+        }),
+        [
+            editMode,
+            simpleMode,
+            speedometerType,
+            snapToGrid,
+            gridSize,
+            hasSignaledReady,
+            getWidget,
+            updateWidgetPosition,
+            updateWidgetScale,
+            toggleWidgetVisibility,
+            resetWidget,
+            reflowWidgetPosition,
+            isWidgetDisabled,
+            getMultiSelectProps,
+        ]
+    );
 
     if (!isVisible || !t) return null;
 
@@ -307,7 +377,7 @@ export const HUD = () => {
                                     </span>
                                     <Switch
                                         checked={teamChatHasAccess}
-                                        onCheckedChange={setTeamChatAccess}
+                                        onCheckedChange={handleTeamChatAccessChange}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
@@ -315,7 +385,7 @@ export const HUD = () => {
                                     <span className="text-xs text-destructive-foreground/80">{t.demo.adminRights}</span>
                                     <Switch
                                         checked={teamChatIsAdmin}
-                                        onCheckedChange={setTeamChatIsAdmin}
+                                        onCheckedChange={handleTeamChatAdminChange}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
@@ -329,22 +399,7 @@ export const HUD = () => {
             <HUDWidgetRenderers {...layoutProps} />
 
             {/* Subwidget Renderer (Helicopter and future vehicle subwidgets) */}
-            <SubwidgetRenderer
-                editMode={editMode}
-                simpleMode={simpleMode}
-                speedometerType={speedometerType}
-                snapToGrid={snapToGrid}
-                gridSize={gridSize}
-                hasSignaledReady={hasSignaledReady}
-                getWidget={getWidget}
-                updateWidgetPosition={updateWidgetPosition}
-                updateWidgetScale={updateWidgetScale}
-                toggleWidgetVisibility={toggleWidgetVisibility}
-                resetWidget={resetWidget}
-                reflowWidgetPosition={reflowWidgetPosition}
-                isWidgetDisabled={isWidgetDisabled}
-                getMultiSelectProps={getMultiSelectProps}
-            />
+            <SubwidgetRenderer {...subwidgetProps} />
 
             {/* Fullscreen Death Screen */}
             {!editMode && (

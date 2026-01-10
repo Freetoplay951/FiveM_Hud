@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
 import { HUDWidget } from "./HUDWidget";
 import {
     WidgetPosition,
@@ -534,7 +534,7 @@ const BicycleSubwidgetConnected = ({ widgetType, visible }: { widgetType: string
 };
 
 // Main Subwidget Renderer Component
-export const SubwidgetRenderer = (props: SubwidgetRendererProps) => {
+const SubwidgetRendererComponent = (props: SubwidgetRendererProps) => {
     return (
         <>
             <HeliSubwidgetRenderer {...props} />
@@ -546,3 +546,5 @@ export const SubwidgetRenderer = (props: SubwidgetRendererProps) => {
         </>
     );
 };
+
+export const SubwidgetRenderer = memo(SubwidgetRendererComponent);
