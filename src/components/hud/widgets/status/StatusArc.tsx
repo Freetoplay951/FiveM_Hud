@@ -1,37 +1,44 @@
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STATUS_CONFIG, StatusProps } from "./config";
 
-export const StatusArc = ({ type, value }: StatusProps) => {
+// Pre-calculated constants
+const STROKE = 3.5;
+const RADIUS = 18;
+const CIRCUMFERENCE = Math.PI * RADIUS;
+
+// Arc path (calculated once)
+const ARC_PATH = `M ${25 - RADIUS} 25 A ${RADIUS} ${RADIUS} 0 0 1 ${25 + RADIUS} 25`;
+
+// Static tick positions (calculated once)
+const TICKS = [0, 25, 50, 75, 100];
+const TICK_POSITIONS = TICKS.map((tick) => {
+    const angle = Math.PI * (1 - tick / 100);
+    const outerRadius = RADIUS + 3;
+    return {
+        tick,
+        x: 25 + RADIUS * Math.cos(angle),
+        y: 25 - RADIUS * Math.sin(angle),
+        outerX: 25 + outerRadius * Math.cos(angle),
+        outerY: 25 - outerRadius * Math.sin(angle),
+    };
+});
+
+const StatusArcComponent = ({ type, value }: StatusProps) => {
     const config = STATUS_CONFIG[type];
     const Icon = config.icon;
 
-    const isWarning = value <= 30;
-    const isCritical = value <= 15;
-
-    const getColor = () => {
-        if (isCritical) return "critical";
-        if (isWarning) return "warning";
-        return config.color;
-    };
-
-    const stroke = 3.5;
-    const radius = 18;
-    const colorVar = getColor();
-
-    // Arc calculations (180 degree arc)
-    const circumference = Math.PI * radius;
-    const progress = (value / 100) * circumference;
-
-    // Tick marks for the arc
-    const ticks = [0, 25, 50, 75, 100];
-    const getTickPosition = (percent: number) => {
-        const angle = Math.PI * (1 - percent / 100);
+    const { colorVar, isCritical, progress } = useMemo(() => {
+        const isWarning = value <= 30;
+        const critical = value <= 15;
+        const color = critical ? "critical" : isWarning ? "warning" : config.color;
         return {
-            x: 25 + radius * Math.cos(angle),
-            y: 25 - radius * Math.sin(angle),
+            colorVar: color,
+            isCritical: critical,
+            progress: (value / 100) * CIRCUMFERENCE,
         };
-    };
+    }, [value, config.color]);
 
     return (
         <div className="relative rounded-lg w-16 h-12 bg-black/60 border border-white/10">
@@ -56,48 +63,39 @@ export const StatusArc = ({ type, value }: StatusProps) => {
                     </filter>
                 </defs>
 
-                {/* Tick marks */}
-                {ticks.map((tick) => {
-                    const pos = getTickPosition(tick);
-                    const innerPos = getTickPosition(tick);
-                    const outerRadius = radius + 3;
-                    const outerX = 25 + outerRadius * Math.cos(Math.PI * (1 - tick / 100));
-                    const outerY = 25 - outerRadius * Math.sin(Math.PI * (1 - tick / 100));
-                    const isActive = value >= tick;
-
-                    return (
-                        <line
-                            key={tick}
-                            x1={pos.x}
-                            y1={pos.y}
-                            x2={outerX}
-                            y2={outerY}
-                            stroke={isActive ? `hsl(var(--${colorVar}))` : "hsl(var(--muted) / 0.3)"}
-                            strokeWidth={0.8}
-                            strokeLinecap="round"
-                        />
-                    );
-                })}
+                {/* Tick marks - using pre-calculated positions */}
+                {TICK_POSITIONS.map(({ tick, x, y, outerX, outerY }) => (
+                    <line
+                        key={tick}
+                        x1={x}
+                        y1={y}
+                        x2={outerX}
+                        y2={outerY}
+                        stroke={value >= tick ? `hsl(var(--${colorVar}))` : "hsl(var(--muted) / 0.3)"}
+                        strokeWidth={0.8}
+                        strokeLinecap="round"
+                    />
+                ))}
 
                 {/* Background arc */}
                 <path
-                    d={`M ${25 - radius} 25 A ${radius} ${radius} 0 0 1 ${25 + radius} 25`}
+                    d={ARC_PATH}
                     fill="none"
                     stroke="hsl(var(--muted) / 0.15)"
-                    strokeWidth={stroke}
+                    strokeWidth={STROKE}
                     strokeLinecap="round"
                 />
 
                 {/* Progress arc */}
                 <motion.path
-                    d={`M ${25 - radius} 25 A ${radius} ${radius} 0 0 1 ${25 + radius} 25`}
+                    d={ARC_PATH}
                     fill="none"
                     stroke={`hsl(var(--${colorVar}))`}
-                    strokeWidth={stroke}
+                    strokeWidth={STROKE}
                     strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: circumference - progress }}
+                    strokeDasharray={CIRCUMFERENCE}
+                    initial={{ strokeDashoffset: CIRCUMFERENCE }}
+                    animate={{ strokeDashoffset: CIRCUMFERENCE - progress }}
                     transition={{ duration: 0.3 }}
                     filter={`url(#arcGlow-${type})`}
                     style={{
@@ -130,3 +128,5 @@ export const StatusArc = ({ type, value }: StatusProps) => {
         </div>
     );
 };
+
+export const StatusArc = memo(StatusArcComponent);

@@ -1,21 +1,18 @@
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STATUS_CONFIG, StatusProps } from "./config";
 
-export const StatusVertical = ({ type, value }: StatusProps) => {
+const StatusVerticalComponent = ({ type, value }: StatusProps) => {
     const config = STATUS_CONFIG[type];
     const Icon = config.icon;
 
-    const isWarning = value <= 30;
-    const isCritical = value <= 15;
-
-    const getColor = () => {
-        if (isCritical) return "critical";
-        if (isWarning) return "warning";
-        return config.color;
-    };
-
-    const colorVar = getColor();
+    const { colorVar, isCritical } = useMemo(() => {
+        const isWarning = value <= 30;
+        const critical = value <= 15;
+        const color = critical ? "critical" : isWarning ? "warning" : config.color;
+        return { colorVar: color, isCritical: critical };
+    }, [value, config.color]);
 
     return (
         <div className="rounded-lg flex flex-col items-center py-1.5 gap-1 w-7 h-20 bg-black/60 border border-white/10">
@@ -52,3 +49,5 @@ export const StatusVertical = ({ type, value }: StatusProps) => {
         </div>
     );
 };
+
+export const StatusVertical = memo(StatusVerticalComponent);

@@ -1,21 +1,18 @@
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STATUS_CONFIG, StatusProps } from "./config";
 
-export const StatusBar = ({ type, value }: StatusProps) => {
+const StatusBarComponent = ({ type, value }: StatusProps) => {
     const config = STATUS_CONFIG[type];
     const Icon = config.icon;
 
-    const isWarning = value <= 30;
-    const isCritical = value <= 15;
-
-    const getColor = () => {
-        if (isCritical) return "critical";
-        if (isWarning) return "warning";
-        return config.color;
-    };
-
-    const colorVar = getColor();
+    const { colorVar, isCritical } = useMemo(() => {
+        const isWarning = value <= 30;
+        const critical = value <= 15;
+        const color = critical ? "critical" : isWarning ? "warning" : config.color;
+        return { colorVar: color, isCritical: critical };
+    }, [value, config.color]);
 
     return (
         <div className="rounded-full flex items-center gap-2 px-2 w-28 h-6 bg-black/60 border border-white/10">
@@ -52,3 +49,5 @@ export const StatusBar = ({ type, value }: StatusProps) => {
         </div>
     );
 };
+
+export const StatusBar = memo(StatusBarComponent);
