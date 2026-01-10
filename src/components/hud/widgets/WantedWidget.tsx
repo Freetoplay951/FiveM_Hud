@@ -59,7 +59,7 @@ const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetP
             <AnimatePresence mode="popLayout">
                 {stars.map(({ index, active }) => (
                     <motion.div
-                        key={index}
+                        key={`${index}-${active}-${shouldBlink}`}
                         {...starMotion}
                         animate={active && shouldBlink ? blinkAnimation : staticStarAnimation}
                         transition={{
