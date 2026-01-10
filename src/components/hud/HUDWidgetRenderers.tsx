@@ -11,7 +11,7 @@ import { ChatWidget } from "./widgets/ChatWidget";
 import { TeamChatWidget } from "./widgets/TeamChatWidget";
 import { RadioWidget } from "./widgets/RadioWidget";
 import { MinimapWidget } from "./widgets/MinimapWidget";
-import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/hooks/useNuiEvents";
 import { StatusType, NotificationData } from "@/types/hud";
 import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
 import { DEMO_RADIO_ENABLED } from "./data/demoData";
@@ -24,12 +24,7 @@ import { useMoneyData, usePlayerData } from "@/stores/moneyStore";
 import { useVoiceData, useIsVoiceEnabled, useRadioData } from "@/stores/voiceStore";
 import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
-import {
-    useChatStore,
-    useChatData,
-    useTeamChatData,
-    useTeamChatHasAccess,
-} from "@/stores/chatStore";
+import { useTeamChatHasAccess } from "@/stores/chatStore";
 
 // ==========================================
 // LAYOUT-ONLY PROPS INTERFACE
@@ -594,11 +589,6 @@ export const ChatWidgetRenderer = ({
     const isDead = useIsDead();
     const isDemoMode = useIsDemoMode();
     
-    // Widget subscribes to its own data
-    const chatData = useChatData();
-    const addChatMessage = useChatStore((s) => s.addChatMessage);
-    const setChatInputActive = useChatStore((s) => s.setChatInputActive);
-
     if (!widget) return null;
 
     const baseVisible = widget.visible && (editMode ? true : !isDead);
@@ -618,32 +608,7 @@ export const ChatWidgetRenderer = ({
             onScaleChange={updateWidgetScale}
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
-            <ChatWidget
-                chat={chatData}
-                setChatInputActive={setChatInputActive}
-                editMode={editMode}
-                onSendMessage={(msg) => {
-                    if (isDemoMode) {
-                        addChatMessage({
-                            id: Date.now().toString(),
-                            type: "normal",
-                            sender: "Du",
-                            message: msg,
-                            timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-                        });
-                        setChatInputActive(false);
-                    } else {
-                        sendNuiCallback("sendChatMessage", { message: msg });
-                    }
-                }}
-                onClose={() => {
-                    if (isDemoMode) {
-                        setChatInputActive(false);
-                    } else {
-                        sendNuiCallback("closeChat");
-                    }
-                }}
-            />
+            <ChatWidget editMode={editMode} />
         </HUDWidget>
     );
 };
@@ -666,14 +631,9 @@ export const TeamChatWidgetRenderer = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("teamchat");
     const isDead = useIsDead();
-    const isDemoMode = useIsDemoMode();
     
     // Widget subscribes to its own data
-    const teamChatData = useTeamChatData();
     const hasTeamAccess = useTeamChatHasAccess();
-    const setTeamChatState = useChatStore((s) => s.setTeamChatState);
-    const addTeamChatMessage = useChatStore((s) => s.addTeamChatMessage);
-    const setTeamChatInputActive = useChatStore((s) => s.setTeamChatInputActive);
 
     if (!widget) return null;
 
@@ -696,31 +656,7 @@ export const TeamChatWidgetRenderer = ({
             onScaleChange={updateWidgetScale}
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
-            <TeamChatWidget
-                teamChat={teamChatData}
-                editMode={editMode}
-                onSendMessage={(msg) => {
-                    if (isDemoMode) {
-                        addTeamChatMessage({
-                            id: Date.now().toString(),
-                            sender: "Du",
-                            rank: "Admin",
-                            message: msg,
-                            timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-                        });
-                        setTeamChatInputActive(false);
-                    } else {
-                        sendNuiCallback("sendTeamChatMessage", { message: msg });
-                    }
-                }}
-                onClose={() => {
-                    if (isDemoMode) {
-                        setTeamChatInputActive(false);
-                    } else {
-                        sendNuiCallback("closeTeamChat");
-                    }
-                }}
-            />
+            <TeamChatWidget editMode={editMode} />
         </HUDWidget>
     );
 };

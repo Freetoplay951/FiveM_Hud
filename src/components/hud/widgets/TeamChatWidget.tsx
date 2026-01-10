@@ -2,13 +2,12 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Send, X, Shield, Lock, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TeamChatState } from "@/types/hud";
 import { useChatHistory } from "@/hooks/useChatHistory";
+import { useChatStore, useTeamChatData } from "@/stores/chatStore";
+import { useIsDemoMode } from "@/stores/hudStore";
+import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 
 interface TeamChatWidgetProps {
-    teamChat: TeamChatState;
-    onSendMessage?: (message: string) => void;
-    onClose?: () => void;
     editMode: boolean;
     autoHideDelay?: number; // Zeit in ms bis der Chat versteckt wird (default: 10000)
 }
@@ -23,12 +22,15 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; ic
 };
 
 export const TeamChatWidget = ({
-    teamChat,
-    onSendMessage,
-    onClose,
     editMode,
     autoHideDelay = 10000,
 }: TeamChatWidgetProps) => {
+    // Zustand store access
+    const teamChat = useTeamChatData();
+    const isDemoMode = useIsDemoMode();
+    const setTeamChatInputActive = useChatStore((s) => s.setTeamChatInputActive);
+    const addTeamChatMessage = useChatStore((s) => s.addTeamChatMessage);
+
     const [inputValue, setInputValue] = useState("");
     const [isAutoHidden, setIsAutoHidden] = useState(false);
     const [isUserScrolled, setIsUserScrolled] = useState(false);
@@ -123,18 +125,35 @@ export const TeamChatWidget = ({
     const closeChat = useCallback(() => {
         setInputValue("");
         resetNavigation();
-        onClose?.();
-    }, [onClose, resetNavigation]);
+        if (isDemoMode) {
+            setTeamChatInputActive(false);
+        } else {
+            sendNuiCallback("closeTeamChat");
+        }
+    }, [isDemoMode, setTeamChatInputActive, resetNavigation]);
 
     const handleSend = useCallback(() => {
-        if (!inputValue.trim() || !onSendMessage) return;
+        if (!inputValue.trim()) return;
 
         const msg = inputValue.trim();
         addToHistory(msg);
-        onSendMessage(msg);
+        
+        if (isDemoMode) {
+            addTeamChatMessage({
+                id: Date.now().toString(),
+                sender: "Du",
+                rank: "Admin",
+                message: msg,
+                timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+            });
+            setTeamChatInputActive(false);
+        } else {
+            sendNuiCallback("sendTeamChatMessage", { message: msg });
+        }
+        
         setInputValue("");
         closeChat();
-    }, [inputValue, onSendMessage, addToHistory, closeChat]);
+    }, [inputValue, addToHistory, isDemoMode, addTeamChatMessage, setTeamChatInputActive, closeChat]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
@@ -220,7 +239,7 @@ export const TeamChatWidget = ({
                         </div>
                         <div className="flex items-center gap-1">
                             <span className="text-[10px] text-muted-foreground">{teamChat.onlineMembers} online</span>
-                            {onClose && isInputActive && (
+                            {isInputActive && (
                                 <button
                                     onClick={closeChat}
                                     className="p-1 rounded hover:bg-background/50 transition-colors ml-1">
