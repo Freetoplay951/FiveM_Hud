@@ -5,6 +5,7 @@ import { useRenderLogger } from "@/hooks/useRenderLogger";
 
 interface WantedWidgetProps {
     wantedLevel: number; // 0-5
+    isEvading?: boolean; // When true and level > 0, stars blink (cops lost sight)
 }
 
 // Static animation config
@@ -20,10 +21,20 @@ const starMotion = {
     exit: { scale: 0, rotate: 180 },
 } as const;
 
+// Blinking animation for evading state
+const blinkAnimation = {
+    opacity: [1, 0.3, 1] as number[],
+    transition: {
+        duration: 0.8,
+        repeat: Infinity,
+        ease: "easeInOut" as const,
+    },
+};
+
 const MAX_STARS = 5;
 
-const WantedWidgetComponent = ({ wantedLevel }: WantedWidgetProps) => {
-    useRenderLogger("WantedWidget", { wantedLevel });
+const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetProps) => {
+    useRenderLogger("WantedWidget", { wantedLevel, isEvading });
 
     const stars = useMemo(() => {
         const level = Math.min(MAX_STARS, Math.max(0, wantedLevel));
@@ -33,8 +44,8 @@ const WantedWidgetComponent = ({ wantedLevel }: WantedWidgetProps) => {
         }));
     }, [wantedLevel]);
 
-    // Visibility is now controlled by the parent HUDWidget wrapper
-    // This ensures proper rendering in both edit mode and FiveM
+    // Should blink when evading and has wanted level
+    const shouldBlink = isEvading && wantedLevel > 0;
 
     return (
         <motion.div
@@ -45,6 +56,11 @@ const WantedWidgetComponent = ({ wantedLevel }: WantedWidgetProps) => {
                     <motion.div
                         key={index}
                         {...starMotion}
+                        animate={
+                            active && shouldBlink
+                                ? blinkAnimation
+                                : { scale: 1, rotate: 0, opacity: 1 }
+                        }
                         transition={{
                             type: "spring",
                             stiffness: 400,
