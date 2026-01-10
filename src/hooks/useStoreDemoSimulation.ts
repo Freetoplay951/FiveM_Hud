@@ -39,7 +39,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
     
     const setPing = useUtilityStore((state) => state.setPing);
     const setWantedLevel = useUtilityStore((state) => state.setWantedLevel);
-    // Notification store actions (stable references)
+    const setIsEvading = useUtilityStore((state) => state.setIsEvading);
     const notifySuccess = useNotificationStore((state) => state.success);
     const notifyError = useNotificationStore((state) => state.error);
     const notifyWarning = useNotificationStore((state) => state.warning);
@@ -294,8 +294,15 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
 
             // Wanted level toggle (w key)
             if (e.key === "w" && !editMode) {
-                const current = useUtilityStore.getState().wantedLevel;
-                setWantedLevel((current + 1) % 6);
+                const current = useUtilityStore.getState();
+                const newLevel = (current.wantedLevel + 1) % 6;
+                setWantedLevel(newLevel);
+                // Toggle evading when level > 0
+                if (newLevel > 0) {
+                    setIsEvading(!current.isEvading);
+                } else {
+                    setIsEvading(false);
+                }
             }
 
             // Body health toggle
@@ -347,6 +354,8 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
         setDeathState,
         setChatInputActive,
         setTeamChatInputActive,
+        setWantedLevel,
+        setIsEvading,
     ]);
 
     // Expose store setters for demo badge toggles

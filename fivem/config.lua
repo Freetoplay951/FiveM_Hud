@@ -176,8 +176,8 @@ Config.MaxPlayers = 128                -- Maximale Spieleranzahl
 -- ============================================================================
 -- PING WIDGET
 -- ============================================================================
--- GetPlayerPing muss serverseitig aufgerufen werden
--- Setze auf false um das Ping-Widget komplett zu deaktivieren
+-- Uses NetworkGetAverageLatencyForPlayer (client-side native)
+-- Updates every 5 seconds for stability
 
 Config.enablePing = true               -- Ping-Widget aktivieren/deaktivieren
 
