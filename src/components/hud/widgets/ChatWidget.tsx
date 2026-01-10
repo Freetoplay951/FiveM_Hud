@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useCallback, SetStateAction, Dispatch } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ const DEMO_COMMANDS: ChatCommand[] = [
 
 interface ChatWidgetProps {
     chat: ChatState;
-    setChatState: Dispatch<SetStateAction<ChatState>>;
+    setChatInputActive?: (active: boolean) => void;
     onSendMessage?: (message: string) => void;
     onClose?: () => void;
     editMode: boolean;
@@ -37,7 +37,7 @@ interface ChatWidgetProps {
 
 export const ChatWidget = ({
     chat,
-    setChatState,
+    setChatInputActive,
     onSendMessage,
     onClose,
     editMode,
@@ -221,12 +221,9 @@ export const ChatWidget = ({
             availableCommands.some((cmd) => cmd.command.toLowerCase() === msg.split(" ")[0].toLowerCase());
 
         if (isValidCommand) {
-            setChatState((prev) => ({
-                ...prev,
-                isInputActive: false,
-            }));
+            setChatInputActive?.(false);
         }
-    }, [inputValue, onSendMessage, addToHistory, closeChat]);
+    }, [inputValue, onSendMessage, addToHistory, setChatInputActive, availableCommands]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {

@@ -596,7 +596,6 @@ export const ChatWidgetRenderer = ({
     
     // Widget subscribes to its own data
     const chatData = useChatData();
-    const setChatState = useChatStore((s) => s.setChatState);
     const addChatMessage = useChatStore((s) => s.addChatMessage);
     const setChatInputActive = useChatStore((s) => s.setChatInputActive);
 
@@ -621,7 +620,7 @@ export const ChatWidgetRenderer = ({
             {...getMultiSelectProps(widget.id)}>
             <ChatWidget
                 chat={chatData}
-                setChatState={setChatState}
+                setChatInputActive={setChatInputActive}
                 editMode={editMode}
                 onSendMessage={(msg) => {
                     if (isDemoMode) {
