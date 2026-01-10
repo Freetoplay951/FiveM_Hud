@@ -167,6 +167,11 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     else if (notifyData.type === "info") store.info(notifyData.title, notifyData.message);
                     break;
                 }
+                default:
+                    if (action) {
+                        console.warn("[HUD] Unknown NUI event:", action, data);
+                    }
+                    break;
             }
         };
 
