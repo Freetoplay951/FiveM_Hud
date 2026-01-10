@@ -29,6 +29,11 @@ interface UtilityData {
     fps?: number;
     wantedLevel?: number;
     ping?: number;
+    serverName?: string;
+    playerCount?: number;
+    maxPlayers?: number;
+    speedLimit?: number;
+    speedZoneActive?: boolean;
 }
 
 interface NuiEventHandlers {
@@ -130,6 +135,20 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                 if (data.fps !== undefined) store.setFps(data.fps);
                 if (data.wantedLevel !== undefined) store.setWantedLevel(data.wantedLevel);
                 if (data.ping !== undefined) store.setPing(data.ping);
+                if (data.serverName !== undefined || data.playerCount !== undefined || data.maxPlayers !== undefined) {
+                    store.setServerInfo({
+                        serverName: data.serverName,
+                        playerCount: data.playerCount,
+                        maxPlayers: data.maxPlayers,
+                    });
+                }
+                if (data.speedLimit !== undefined || data.speedZoneActive !== undefined) {
+                    const currentState = useUtilityStore.getState();
+                    store.setSpeedLimit(
+                        data.speedLimit ?? currentState.speedLimit,
+                        data.speedZoneActive ?? currentState.speedZoneActive
+                    );
+                }
             },
             onNotify: (data) => {
                 const store = useNotificationStore.getState();
