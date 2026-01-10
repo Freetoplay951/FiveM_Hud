@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 
 export const BrandingWidget = () => {
     return (
-        //Achtung: Darf nicht umbenannt werden (siehe useDemoSimulation)
         <div
             id="branding"
             className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-none z-40">

@@ -69,11 +69,12 @@ end
 
 function SendTeamChatMessage(source, rank, message, isImportant)
     local playerName = GetPlayerDisplayName(source)
+    local senderId = tonumber(source)
     
     local players = GetPlayers()
     for _, playerId in ipairs(players) do
         local targetId = tonumber(playerId)
-        if pid ~= senderId then
+        if targetId ~= senderId then
             if HasTeamChatAccess(targetId) then
                 TriggerClientEvent('hud:receiveTeamChatMessage', targetId, playerName, rank, message, isImportant or false)
             end
