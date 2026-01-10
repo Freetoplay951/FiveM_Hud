@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { DeathState } from "@/types/hud";
 import { DEMO_DEATH } from "@/components/hud/data/demoData";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface DeathStore extends DeathState {
     setDeathState: (state: Partial<DeathState>) => void;

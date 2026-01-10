@@ -12,7 +12,6 @@ import { ChatWidget } from "./widgets/ChatWidget";
 import { TeamChatWidget } from "./widgets/TeamChatWidget";
 import { RadioWidget } from "./widgets/RadioWidget";
 import { MinimapWidget } from "./widgets/MinimapWidget";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
 import { StatusType } from "@/types/hud";
 import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
 import { DEMO_RADIO_ENABLED, EDIT_MODE_DEMO_NOTIFICATIONS } from "./data/demoData";
@@ -27,6 +26,7 @@ import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 // ==========================================
 // LAYOUT-ONLY PROPS INTERFACE
@@ -70,11 +70,11 @@ const NotificationsRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("notifications");
     const isDead = useIsDead();
-    
+
     // Self-subscribe to notification store - only this component re-renders on notification changes
     const notifications = useNotifications();
     const removeNotification = useRemoveNotification();
-    
+
     // Demo notifications for edit mode
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
@@ -145,7 +145,7 @@ const StatusWidgetItemComponent = ({
 }: LayoutOnlyProps & { type: StatusType }) => {
     const widget = getWidget(type);
     const isDead = useIsDead();
-    
+
     // Subscribe only to this specific status value
     const value = useStatusStore((state) => state[type] ?? 100);
     const isUnderwater = useIsUnderwater();
@@ -221,7 +221,7 @@ const MoneyWidgetRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("money");
     const isDead = useIsDead();
-    
+
     // Widget subscribes to its own data
     const money = useMoneyData();
     const player = usePlayerData();
@@ -330,7 +330,7 @@ const VoiceWidgetRendererComponent = ({
     const widget = getWidget("voice");
     const isDead = useIsDead();
     const isDemoMode = useIsDemoMode();
-    
+
     // Widget subscribes to its own data
     const voice = useVoiceData();
     const isVoiceEnabled = useIsVoiceEnabled();
@@ -388,7 +388,7 @@ const RadioWidgetRendererComponent = ({
     const widget = getWidget("radio");
     const isDead = useIsDead();
     const isDemoMode = useIsDemoMode();
-    
+
     // Widget subscribes to its own data
     const radioData = useRadioData();
     const isVoiceEnabled = useIsVoiceEnabled();
@@ -448,7 +448,7 @@ const LocationWidgetRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("location");
     const isDead = useIsDead();
-    
+
     // Widget subscribes to its own data
     const location = useLocationData();
 
@@ -505,7 +505,7 @@ const CompassWidgetRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("compass");
     const isDead = useIsDead();
-    
+
     // Widget subscribes to its own data
     const heading = useHeading();
 
@@ -560,7 +560,7 @@ const VehicleNameWidgetRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("vehiclename");
     const isDead = useIsDead();
-    
+
     // Widget subscribes to its own data
     const inVehicle = useVehicleStore((s) => s.inVehicle);
     const vehicleType = useVehicleStore((s) => s.vehicleType);
@@ -671,7 +671,7 @@ const ChatWidgetRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("chat");
     const isDead = useIsDead();
-    
+
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
         [resetWidget, isWidgetDisabled, hasSignaledReady]
@@ -721,7 +721,7 @@ const TeamChatWidgetRendererComponent = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("teamchat");
     const isDead = useIsDead();
-    
+
     // Widget subscribes to its own data
     const hasTeamAccess = useTeamChatHasAccess();
 

@@ -1,5 +1,5 @@
 import { HUD } from "@/components/HUD";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 const Index = () => {
     const showDemoBackground = !isNuiEnvironment();

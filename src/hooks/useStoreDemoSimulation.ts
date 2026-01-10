@@ -19,11 +19,7 @@ interface UseStoreDemoSimulationProps {
  * Demo simulation that updates stores directly.
  * Each store update triggers only the subscribed widgets.
  */
-export const useStoreDemoSimulation = ({
-    editMode,
-    enterEditMode,
-    exitEditMode,
-}: UseStoreDemoSimulationProps) => {
+export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }: UseStoreDemoSimulationProps) => {
     const isDemoMode = useHUDGlobalStore((state) => state.isDemoMode);
 
     // Get store actions (stable references)
@@ -39,7 +35,7 @@ export const useStoreDemoSimulation = ({
     const setTeamChatAccess = useChatStore((state) => state.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((state) => state.setTeamChatIsAdmin);
     const setDeathState = useDeathStore((state) => state.setDeathState);
-    
+
     // Notification store actions (stable references)
     const notifySuccess = useNotificationStore((state) => state.success);
     const notifyError = useNotificationStore((state) => state.error);
@@ -153,7 +149,7 @@ export const useStoreDemoSimulation = ({
                     type: "normal",
                     sender: randomMsg.sender,
                     message: randomMsg.message,
-                    timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
                 });
             }
         }, 8000);
@@ -166,7 +162,7 @@ export const useStoreDemoSimulation = ({
                     sender: randomMsg.sender,
                     rank: randomMsg.rank,
                     message: randomMsg.message,
-                    timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
                 });
             }
         }, 12000);

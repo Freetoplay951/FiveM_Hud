@@ -163,7 +163,7 @@ export const useDemoSimulation = ({
                     type: "normal" as const,
                     sender: randomMsg.sender,
                     message: randomMsg.message,
-                    timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
                 };
                 setChatState((prev) => ({
                     ...prev,
@@ -182,7 +182,7 @@ export const useDemoSimulation = ({
                     sender: randomMsg.sender,
                     rank: randomMsg.rank,
                     message: randomMsg.message,
-                    timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
                 };
                 setTeamChatState((prev) => ({
                     ...prev,

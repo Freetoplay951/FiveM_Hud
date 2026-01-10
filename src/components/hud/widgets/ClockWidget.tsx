@@ -20,14 +20,14 @@ const motionConfig = {
 } as const;
 
 const getCurrentTime = () =>
-    new Date().toLocaleTimeString("de-DE", {
+    new Date().toLocaleTimeString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
     });
 
 const ClockWidgetComponent = () => {
     const [currentTime, setCurrentTime] = useState(getCurrentTime);
-    
+
     // Performance logging
     useRenderLogger("ClockWidget", { currentTime });
 
@@ -39,16 +39,21 @@ const ClockWidgetComponent = () => {
     }, []);
 
     // Memoize the time style to prevent object recreation
-    const timeStyle = useMemo(() => ({
-        textShadow: "0 0 8px hsl(var(--primary) / 0.4)"
-    }), []);
+    const timeStyle = useMemo(
+        () => ({
+            textShadow: "0 0 8px hsl(var(--primary) / 0.4)",
+        }),
+        []
+    );
 
     return (
         <motion.div
             className="glass-panel rounded-lg px-3 py-1.5 flex items-center gap-2"
             {...motionConfig}>
             <ClockIcon />
-            <span className="hud-number text-sm text-foreground" style={timeStyle}>
+            <span
+                className="hud-number text-sm text-foreground"
+                style={timeStyle}>
                 {currentTime}
             </span>
         </motion.div>

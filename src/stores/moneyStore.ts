@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { MoneyState, PlayerState } from "@/types/hud";
 import { DEMO_MONEY, DEMO_PLAYER } from "@/components/hud/data/demoData";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface MoneyStore {
     // Money state
@@ -25,7 +25,7 @@ const isDemoMode = !isNuiEnvironment();
 export const useMoneyStore = create<MoneyStore>((set) => ({
     cash: isDemoMode ? DEMO_MONEY.cash : 0,
     bank: isDemoMode ? DEMO_MONEY.bank : 0,
-    blackMoney: isDemoMode ? (DEMO_MONEY.blackMoney ?? 0) : 0,
+    blackMoney: isDemoMode ? DEMO_MONEY.blackMoney ?? 0 : 0,
 
     playerId: isDemoMode ? DEMO_PLAYER.id : 0,
     job: isDemoMode ? DEMO_PLAYER.job : "",

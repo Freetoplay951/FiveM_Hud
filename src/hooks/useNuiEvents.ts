@@ -24,9 +24,6 @@ import {
     DisabledWidgets,
 } from "@/types/hud";
 
-// Re-export for backwards compatibility
-export { isNuiEnvironment } from "@/lib/nuiUtils";
-
 interface NuiEventHandlers {
     onUpdateHud?: (data: Partial<StatusWidgetState>) => void;
     onUpdateVehicle?: (data: VehicleState) => void;
@@ -102,64 +99,53 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             onUpdateHud: (data) => {
                 useStatusStore.getState().setStatus(data);
             },
-
             onUpdateVehicle: (data) => {
                 useVehicleStore.getState().setVehicleState(data);
             },
-
             onUpdateMoney: (data) => {
                 useMoneyStore.getState().setMoney(data);
             },
-
             onUpdateVoice: (data) => {
                 useVoiceStore.getState().setVoiceState(data);
             },
-
             onUpdateRadio: (data) => {
                 useVoiceStore.getState().setRadioState(data);
             },
-
             onUpdateLocation: (data) => {
                 useLocationStore.getState().setLocation(data);
             },
-
             onUpdatePlayer: (data) => {
                 useMoneyStore.getState().setPlayer(data);
             },
-
             onNotify: (data) => {
                 const store = useNotificationStore.getState();
-                const notifyFn = { success: store.success, error: store.error, warning: store.warning, info: store.info }[data.type] || store.info;
+                const notifyFn =
+                    { success: store.success, error: store.error, warning: store.warning, info: store.info }[
+                        data.type
+                    ] || store.info;
                 notifyFn(data.title, data.message, data.duration);
             },
-
             onToggleEditMode: (enabled) => {
                 if (enabled && !editMode) toggleEditMode();
                 else if (!enabled && editMode) toggleEditMode();
             },
-
             onSetVisible: (visible) => {
                 useHUDGlobalStore.getState().setIsVisible(visible);
             },
-
             onUpdateDeath: (data) => {
                 useDeathStore.getState().setDeathState(data);
             },
-
             onSetVoiceEnabled: (enabled) => {
                 useVoiceStore.getState().setIsVoiceEnabled(enabled);
             },
-
             onUpdateDisabledWidgets: (data) => {
                 useHUDGlobalStore.getState().setDisabledWidgets(data);
             },
-
             onChatUpdate: (data) => {
                 const chatStore = useChatStore.getState();
-                const currentState = chatStore;
 
-                if (typeof data.isInputActive === "boolean") {
-                    chatStore.setChatInputActive(data.isInputActive);
+                if (data.clearChat) {
+                    chatStore.clearChatMessages();
                 }
 
                 if (data.message) {
@@ -168,68 +154,44 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                         type: data.message.type || "normal",
                         sender: data.message.sender || "",
                         message: data.message.message,
-                        timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                        timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
                     };
                     chatStore.addChatMessage(messageWithJsTimestamp);
                 }
 
-                if (data.clearChat) {
-                    chatStore.clearChatMessages();
+                if (typeof data.isInputActive === "boolean") {
+                    chatStore.setChatInputActive(data.isInputActive);
                 }
             },
-
             onTeamChatUpdate: (data) => {
                 const chatStore = useChatStore.getState();
 
-                // Build partial state update
                 const stateUpdate: Partial<TeamChatState> = {};
 
-                if (typeof data.isInputActive === "boolean") {
-                    stateUpdate.isInputActive = data.isInputActive;
-                }
+                if (typeof data.isInputActive === "boolean") stateUpdate.isInputActive = data.isInputActive;
+                if (typeof data.hasAccess === "boolean") stateUpdate.hasAccess = data.hasAccess;
+                if (data.teamType) stateUpdate.teamType = data.teamType;
+                if (data.teamName) stateUpdate.teamName = data.teamName;
+                if (typeof data.onlineMembers === "number") stateUpdate.onlineMembers = data.onlineMembers;
+                if (typeof data.isAdmin === "boolean") stateUpdate.isAdmin = data.isAdmin;
 
-                if (typeof data.hasAccess === "boolean") {
-                    stateUpdate.hasAccess = data.hasAccess;
-                }
-
-                if (data.teamType) {
-                    stateUpdate.teamType = data.teamType;
-                }
-
-                if (data.teamName) {
-                    stateUpdate.teamName = data.teamName;
-                }
-
-                if (typeof data.onlineMembers === "number") {
-                    stateUpdate.onlineMembers = data.onlineMembers;
-                }
-
-                if (typeof data.isAdmin === "boolean") {
-                    stateUpdate.isAdmin = data.isAdmin;
-                }
-
-                // Apply state update if there are changes
-                if (Object.keys(stateUpdate).length > 0) {
-                    chatStore.setTeamChatState(stateUpdate);
-                }
-
-                // Handle message separately
-                if (data.message) {
-                    const messageWithJsTimestamp: TeamChatMessage = {
-                        ...data.message,
-                        timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-                    };
-                    chatStore.addTeamChatMessage(messageWithJsTimestamp);
-                }
-
-                // Handle clear chat
                 if (data.clearChat) {
                     chatStore.clearTeamChatMessages();
+                }
+
+                if (data.message) {
+                    chatStore.addTeamChatMessage({
+                        ...data.message,
+                        timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
+                    });
+                }
+
+                if (Object.keys(stateUpdate).length > 0) {
+                    chatStore.setTeamChatState(stateUpdate);
                 }
             },
         };
 
-        // Map action names to handler functions
         const actionHandlerMap: Record<string, (data: unknown) => void> = {
             updateHud: handlers.onUpdateHud as (data: unknown) => void,
             updateVehicle: handlers.onUpdateVehicle as (data: unknown) => void,

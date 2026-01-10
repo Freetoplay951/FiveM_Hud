@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { ChatState, ChatMessage, TeamChatState, TeamChatMessage, TeamType } from "@/types/hud";
 import { DEMO_CHAT, DEMO_TEAM_CHAT } from "@/components/hud/data/demoData";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface ChatStore {
     // Regular chat
@@ -42,16 +42,16 @@ export const useChatStore = create<ChatStore>((set) => ({
     // Regular chat initial state
     chatMessages: isDemoMode ? DEMO_CHAT.messages : [],
     chatInputActive: false,
-    chatVisible: isDemoMode ? (DEMO_CHAT.isVisible ?? false) : false,
+    chatVisible: isDemoMode ? DEMO_CHAT.isVisible ?? false : false,
     chatUnreadCount: 0,
 
     // Team chat initial state
     teamChatMessages: isDemoMode ? DEMO_TEAM_CHAT.messages : [],
     teamChatInputActive: false,
-    teamChatVisible: isDemoMode ? (DEMO_TEAM_CHAT.isVisible ?? false) : false,
+    teamChatVisible: isDemoMode ? DEMO_TEAM_CHAT.isVisible ?? false : false,
     teamChatUnreadCount: 0,
     teamChatHasAccess: isDemoMode ? DEMO_TEAM_CHAT.hasAccess : false,
-    teamChatIsAdmin: isDemoMode ? (DEMO_TEAM_CHAT.isAdmin ?? false) : false,
+    teamChatIsAdmin: isDemoMode ? DEMO_TEAM_CHAT.isAdmin ?? false : false,
     teamType: isDemoMode ? DEMO_TEAM_CHAT.teamType : "supporter",
     teamName: isDemoMode ? DEMO_TEAM_CHAT.teamName : "",
     onlineMembers: isDemoMode ? DEMO_TEAM_CHAT.onlineMembers : 0,

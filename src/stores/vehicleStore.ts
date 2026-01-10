@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { VehicleState, VehicleType } from "@/types/hud";
 import { DEMO_VEHICLE } from "@/components/hud/data/demoData";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface VehicleStore extends VehicleState {
     setVehicleState: (state: Partial<VehicleState>) => void;

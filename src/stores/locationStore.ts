@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { LocationState } from "@/types/hud";
 import { DEMO_LOCATION } from "@/components/hud/data/demoData";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface LocationStore extends LocationState {
     setLocation: (state: Partial<LocationState>) => void;

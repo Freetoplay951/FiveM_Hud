@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 import {
     StatusWidgetState,
     VehicleState,

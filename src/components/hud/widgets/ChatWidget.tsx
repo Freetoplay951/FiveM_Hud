@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/types/hud";
-import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
+import { sendNuiCallback } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 import { useChatHistory } from "@/hooks/useChatHistory";
 import { useChatStore, useChatData } from "@/stores/chatStore";
 import { useIsDemoMode } from "@/stores/hudStore";
@@ -33,10 +34,7 @@ interface ChatWidgetProps {
     autoHideDelay?: number; // Zeit in ms bis der Chat versteckt wird (default: 10000)
 }
 
-export const ChatWidget = ({
-    editMode,
-    autoHideDelay = 10000,
-}: ChatWidgetProps) => {
+export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps) => {
     // Zustand store access
     const chat = useChatData();
     const isDemoMode = useIsDemoMode();
@@ -150,17 +148,20 @@ export const ChatWidget = ({
     }, [inputValue, filteredCommands.length]);
 
     // Smart auto-scroll: only scroll if user is at bottom
-    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
-        if (!isUserScrolled) {
-            messagesEndRef.current?.scrollIntoView({ behavior });
-        }
-    }, [isUserScrolled]);
+    const scrollToBottom = useCallback(
+        (behavior: ScrollBehavior = "smooth") => {
+            if (!isUserScrolled) {
+                messagesEndRef.current?.scrollIntoView({ behavior });
+            }
+        },
+        [isUserScrolled]
+    );
 
     // Handle scroll to detect if user manually scrolled up
     const handleScroll = useCallback(() => {
         const container = messagesContainerRef.current;
         if (!container) return;
-        
+
         const { scrollTop, scrollHeight, clientHeight } = container;
         const isAtBottom = scrollHeight - scrollTop - clientHeight < 30; // 30px threshold
         setIsUserScrolled(!isAtBottom);
@@ -170,7 +171,7 @@ export const ChatWidget = ({
     useEffect(() => {
         scrollToBottom("smooth");
     }, [chat.messages, scrollToBottom]);
-    
+
     // Scroll to bottom when input becomes active
     useEffect(() => {
         if (chat.isInputActive) {
@@ -216,20 +217,20 @@ export const ChatWidget = ({
 
         const msg = inputValue.trim();
         addToHistory(msg);
-        
+
         if (isDemoMode) {
             addChatMessage({
                 id: Date.now().toString(),
                 type: "normal",
                 sender: "Du",
                 message: msg,
-                timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
             });
             setChatInputActive(false);
         } else {
             sendNuiCallback("sendChatMessage", { message: msg });
         }
-        
+
         setInputValue("");
         setShowCommandSuggestions(false);
 
@@ -359,179 +360,179 @@ export const ChatWidget = ({
     return (
         <motion.div
             initial={false}
-            animate={{ 
+            animate={{
                 opacity: shouldShow ? 1 : 0,
-                pointerEvents: shouldShow ? "auto" : "none"
+                pointerEvents: shouldShow ? "auto" : "none",
             }}
             transition={{ duration: 0.3 }}>
             <motion.div
                 ref={containerRef}
                 className="glass-panel border border-border/30 rounded-lg overflow-hidden flex flex-col"
-                style={{ 
-                    width: "320px", 
+                style={{
+                    width: "320px",
                     height: "280px",
-                    visibility: shouldRender ? "visible" : "hidden"
+                    visibility: shouldRender ? "visible" : "hidden",
                 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: shouldRender ? 1 : 0, y: shouldRender ? 0 : 20 }}
                 transition={{ duration: 0.3 }}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 bg-background/40">
-                        <div className="flex items-center gap-2">
-                            <MessageSquare
-                                size={14}
-                                className="text-primary"
-                            />
-                            <span className="text-xs font-medium text-foreground uppercase tracking-wider">Chat</span>
-                            {chat.unreadCount > 0 && (
-                                <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/20 text-primary">
-                                    {chat.unreadCount}
-                                </span>
-                            )}
-                        </div>
-                        {isInputActive && (
-                            <button
-                                onClick={closeChat}
-                                className="p-1 rounded hover:bg-background/50 transition-colors">
-                                <X
-                                    size={12}
-                                    className="text-muted-foreground"
-                                />
-                            </button>
+                {/* Header */}
+                <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 bg-background/40">
+                    <div className="flex items-center gap-2">
+                        <MessageSquare
+                            size={14}
+                            className="text-primary"
+                        />
+                        <span className="text-xs font-medium text-foreground uppercase tracking-wider">Chat</span>
+                        {chat.unreadCount > 0 && (
+                            <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/20 text-primary">
+                                {chat.unreadCount}
+                            </span>
                         )}
                     </div>
-
-                    {/* Messages */}
-                    <div 
-                        ref={messagesContainerRef}
-                        onScroll={handleScroll}
-                        className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-                        <AnimatePresence initial={false}>
-                            {chat.messages.map((msg) => (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 10 }}
-                                    className="text-xs leading-relaxed">
-                                    <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
-                                    {msg.sender && (
-                                        <span
-                                            className={cn(
-                                                "font-medium mr-1",
-                                                msg.type === "system" ? "text-warning" : "text-primary"
-                                            )}>
-                                            {msg.sender}:
-                                        </span>
-                                    )}
-                                    <span className={getMessageColor(msg.type)}>{msg.message}</span>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Input */}
                     {isInputActive && (
-                        <div className="relative px-3 py-2 border-t border-border/30 bg-background/40">
-                            {/* Command Suggestions Popup */}
-                            <AnimatePresence>
-                                {showCommandSuggestions && filteredCommands.length > 0 && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 10 }}
-                                        className="absolute bottom-full left-3 right-3 mb-1 z-50">
-                                        <div className="rounded-lg border border-border/50 bg-card shadow-lg overflow-hidden">
-                                            <div className="px-2 py-1.5 border-b border-border/30">
-                                                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                                    Commands
-                                                </span>
-                                            </div>
-                                            <div
-                                                ref={commandListRef}
-                                                className="max-h-[150px] overflow-y-auto py-1">
-                                                {filteredCommands.map((cmd, index) => (
-                                                    <div
-                                                        key={cmd.command}
-                                                        data-index={index}
-                                                        onClick={() => selectCommand(cmd.command)}
+                        <button
+                            onClick={closeChat}
+                            className="p-1 rounded hover:bg-background/50 transition-colors">
+                            <X
+                                size={12}
+                                className="text-muted-foreground"
+                            />
+                        </button>
+                    )}
+                </div>
+
+                {/* Messages */}
+                <div
+                    ref={messagesContainerRef}
+                    onScroll={handleScroll}
+                    className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                    <AnimatePresence initial={false}>
+                        {chat.messages.map((msg) => (
+                            <motion.div
+                                key={msg.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="text-xs leading-relaxed">
+                                <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
+                                {msg.sender && (
+                                    <span
+                                        className={cn(
+                                            "font-medium mr-1",
+                                            msg.type === "system" ? "text-warning" : "text-primary"
+                                        )}>
+                                        {msg.sender}:
+                                    </span>
+                                )}
+                                <span className={getMessageColor(msg.type)}>{msg.message}</span>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input */}
+                {isInputActive && (
+                    <div className="relative px-3 py-2 border-t border-border/30 bg-background/40">
+                        {/* Command Suggestions Popup */}
+                        <AnimatePresence>
+                            {showCommandSuggestions && filteredCommands.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute bottom-full left-3 right-3 mb-1 z-50">
+                                    <div className="rounded-lg border border-border/50 bg-card shadow-lg overflow-hidden">
+                                        <div className="px-2 py-1.5 border-b border-border/30">
+                                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                                Commands
+                                            </span>
+                                        </div>
+                                        <div
+                                            ref={commandListRef}
+                                            className="max-h-[150px] overflow-y-auto py-1">
+                                            {filteredCommands.map((cmd, index) => (
+                                                <div
+                                                    key={cmd.command}
+                                                    data-index={index}
+                                                    onClick={() => selectCommand(cmd.command)}
+                                                    className={cn(
+                                                        "flex items-center gap-2 px-2 py-1.5 cursor-pointer transition-colors",
+                                                        index === selectedCommandIndex
+                                                            ? "bg-primary/20 text-foreground"
+                                                            : "hover:bg-accent/50"
+                                                    )}>
+                                                    <Terminal
+                                                        size={12}
                                                         className={cn(
-                                                            "flex items-center gap-2 px-2 py-1.5 cursor-pointer transition-colors",
+                                                            "shrink-0",
                                                             index === selectedCommandIndex
-                                                                ? "bg-primary/20 text-foreground"
-                                                                : "hover:bg-accent/50"
-                                                        )}>
-                                                        <Terminal
-                                                            size={12}
+                                                                ? "text-primary"
+                                                                : "text-muted-foreground"
+                                                        )}
+                                                    />
+                                                    <div className="flex flex-col flex-1 min-w-0">
+                                                        <span
                                                             className={cn(
-                                                                "shrink-0",
+                                                                "text-xs font-medium",
                                                                 index === selectedCommandIndex
                                                                     ? "text-primary"
-                                                                    : "text-muted-foreground"
-                                                            )}
-                                                        />
-                                                        <div className="flex flex-col flex-1 min-w-0">
-                                                            <span
-                                                                className={cn(
-                                                                    "text-xs font-medium",
-                                                                    index === selectedCommandIndex
-                                                                        ? "text-primary"
-                                                                        : "text-foreground"
-                                                                )}>
-                                                                {cmd.command}
-                                                            </span>
-                                                            <span className="text-[10px] text-muted-foreground truncate">
-                                                                {cmd.description}
-                                                            </span>
-                                                        </div>
-                                                        {cmd.usage && (
-                                                            <span className="text-[9px] text-muted-foreground/60 shrink-0 font-mono">
-                                                                {cmd.usage}
-                                                            </span>
-                                                        )}
+                                                                    : "text-foreground"
+                                                            )}>
+                                                            {cmd.command}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground truncate">
+                                                            {cmd.description}
+                                                        </span>
                                                     </div>
-                                                ))}
-                                            </div>
-                                            <div className="px-2 py-1 border-t border-border/30 bg-background/30">
-                                                <span className="text-[9px] text-muted-foreground">
-                                                    ↑↓ navigieren • Tab/Enter auswählen • Esc schließen
-                                                </span>
-                                            </div>
+                                                    {cmd.usage && (
+                                                        <span className="text-[9px] text-muted-foreground/60 shrink-0 font-mono">
+                                                            {cmd.usage}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                        <div className="px-2 py-1 border-t border-border/30 bg-background/30">
+                                            <span className="text-[9px] text-muted-foreground">
+                                                ↑↓ navigieren • Tab/Enter auswählen • Esc schließen
+                                            </span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                            <div className="flex items-center gap-2">
-                                <input
-                                    autoFocus={!editMode && isInputActive}
-                                    onBlur={(e) => {
-                                        if (editMode) return;
-                                        e.target.focus();
-                                    }}
-                                    type="text"
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="Nachricht eingeben... (/ für Commands)"
-                                    className="flex-1 bg-background/30 border border-border/30 rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
-                                />
-                                <button
-                                    onClick={handleSend}
-                                    disabled={!inputValue.trim()}
-                                    className={cn(
-                                        "p-1.5 rounded transition-colors",
-                                        inputValue.trim()
-                                            ? "bg-primary/20 text-primary hover:bg-primary/30"
-                                            : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
-                                    )}>
-                                    <Send size={12} />
-                                </button>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                autoFocus={!editMode && isInputActive}
+                                onBlur={(e) => {
+                                    if (editMode) return;
+                                    e.target.focus();
+                                }}
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Nachricht eingeben... (/ für Commands)"
+                                className="flex-1 bg-background/30 border border-border/30 rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
+                            />
+                            <button
+                                onClick={handleSend}
+                                disabled={!inputValue.trim()}
+                                className={cn(
+                                    "p-1.5 rounded transition-colors",
+                                    inputValue.trim()
+                                        ? "bg-primary/20 text-primary hover:bg-primary/30"
+                                        : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
+                                )}>
+                                <Send size={12} />
+                            </button>
                         </div>
-                    )}
-                </motion.div>
+                    </div>
+                )}
+            </motion.div>
         </motion.div>
     );
 };

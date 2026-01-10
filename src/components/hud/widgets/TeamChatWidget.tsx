@@ -144,7 +144,7 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                 sender: "Du",
                 rank: "Admin",
                 message: msg,
-                timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
             });
             setTeamChatInputActive(false);
         } else {

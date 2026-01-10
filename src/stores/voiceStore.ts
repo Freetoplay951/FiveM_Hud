@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { VoiceState, RadioState, RadioMember } from "@/types/hud";
 import { DEMO_VOICE, DEMO_RADIO } from "@/components/hud/data/demoData";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface VoiceStore {
     // Voice state

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { DisabledWidgets } from "@/types/hud";
 import { WidgetType } from "@/types/widget";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 /**
  * HUD Global Store - ONLY for cross-cutting concerns
