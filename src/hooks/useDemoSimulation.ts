@@ -49,15 +49,6 @@ export const useDemoSimulation = ({
     enterEditMode,
     exitEditMode,
 }: UseDemoSimulationProps) => {
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const branding = document.getElementById("branding");
-            if (!branding) document.getElementById("root").innerHTML = `<span style="color: black">Bitte...</span>`;
-        }, 5000);
-
-        return () => clearInterval(interval);
-    }, [isDemoMode, setHudState, setVehicleState, setVoiceState, setLocationState]);
-
     // Demo simulation with animated plane/heli values
     useEffect(() => {
         if (!isDemoMode) return;

@@ -47,15 +47,6 @@ export const useStoreDemoSimulation = ({
     const setTeamChatIsAdmin = useChatStore((state) => state.setTeamChatIsAdmin);
     const setDeathState = useDeathStore((state) => state.setDeathState);
 
-    // Branding check
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const branding = document.getElementById("branding");
-            if (!branding) document.getElementById("root")!.innerHTML = `<span style="color: black">Bitte...</span>`;
-        }, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
     // Demo simulation with animated values - updates stores directly
     useEffect(() => {
         if (!isDemoMode) return;
@@ -92,10 +83,7 @@ export const useStoreDemoSimulation = ({
             } else if (vehicleState.vehicleType === "plane") {
                 setVehicleState({
                     ...baseUpdate,
-                    airspeed: Math.min(
-                        400,
-                        Math.max(150, (vehicleState.airspeed || 250) + (Math.random() - 0.5) * 30)
-                    ),
+                    airspeed: Math.min(400, Math.max(150, (vehicleState.airspeed || 250) + (Math.random() - 0.5) * 30)),
                     altitude: Math.min(
                         2000,
                         Math.max(100, (vehicleState.altitude || 500) + (Math.random() - 0.5) * 50)
@@ -109,10 +97,7 @@ export const useStoreDemoSimulation = ({
                 setVehicleState({
                     ...baseUpdate,
                     airspeed: Math.min(200, Math.max(0, (vehicleState.airspeed || 80) + (Math.random() - 0.5) * 20)),
-                    altitude: Math.min(
-                        1000,
-                        Math.max(10, (vehicleState.altitude || 200) + (Math.random() - 0.5) * 30)
-                    ),
+                    altitude: Math.min(1000, Math.max(10, (vehicleState.altitude || 200) + (Math.random() - 0.5) * 30)),
                     pitch: Math.max(-20, Math.min(20, (vehicleState.pitch || 0) + (Math.random() - 0.5) * 4)),
                     roll: Math.max(-30, Math.min(30, (vehicleState.roll || 0) + (Math.random() - 0.5) * 6)),
                     heading: ((vehicleState.heading || 90) + (Math.random() - 0.5) * 5 + 360) % 360,
