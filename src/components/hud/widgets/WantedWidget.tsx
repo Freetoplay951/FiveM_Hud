@@ -23,6 +23,8 @@ const starMotion = {
 
 // Blinking animation for evading state
 const blinkAnimation = {
+    scale: 1,
+    rotate: 0,
     opacity: [1, 0.3, 1] as number[],
     transition: {
         duration: 0.8,
