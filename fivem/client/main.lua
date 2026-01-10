@@ -319,7 +319,13 @@ local function GetPlayerMoney()
     return nil
 end
 
--- Geld Update Loop
+-- Geld Update Loop (with change detection)
+local lastMoneyData = {
+    cash = nil,
+    bank = nil,
+    blackMoney = nil
+}
+
 CreateThread(function()
     while true do
         Wait(Config.StatusUpdateInterval or 500)
@@ -327,15 +333,30 @@ CreateThread(function()
         if isHudVisible and isPlayerLoaded and Framework then
             local money = GetPlayerMoney()
             if money then
-                SendNUI('updateMoney', money)
+                -- Only send if something changed
+                if money.cash ~= lastMoneyData.cash or 
+                   money.bank ~= lastMoneyData.bank or 
+                   money.blackMoney ~= lastMoneyData.blackMoney then
+                    lastMoneyData.cash = money.cash
+                    lastMoneyData.bank = money.bank
+                    lastMoneyData.blackMoney = money.blackMoney
+                    SendNUI('updateMoney', money)
+                end
             end
         end
     end
 end)
 
 -- ============================================================================
--- LOCATION UPDATES
+-- LOCATION UPDATES (with change detection)
 -- ============================================================================
+
+local lastLocationData = {
+    street = nil,
+    crossing = nil,
+    area = nil,
+    heading = nil
+}
 
 CreateThread(function()
     while true do
@@ -344,28 +365,48 @@ CreateThread(function()
         if isHudVisible then
             local ped = PlayerPedId()
             local coords = GetEntityCoords(ped)
-            local heading = GetEntityHeading(ped)
+            local heading = math.floor(GetEntityHeading(ped))
             
             local streetHash, crossingHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
             local streetName = GetStreetNameFromHashKey(streetHash)
             local crossingName = GetStreetNameFromHashKey(crossingHash)
+            if crossingName == '' then crossingName = nil end
             
             local zone = GetNameOfZone(coords.x, coords.y, coords.z)
             local zoneName = GetLabelText(zone)
+            local area = zoneName ~= "NULL" and zoneName or zone
             
-            SendNUI('updateLocation', {
-                street = streetName,
-                crossing = crossingName ~= '' and crossingName or nil,
-                area = zoneName ~= "NULL" and zoneName or zone,
-                heading = heading
-            })
+            -- Check if anything changed (heading tolerance of 2 degrees)
+            local headingChanged = lastLocationData.heading == nil or math.abs(heading - lastLocationData.heading) >= 2
+            local streetChanged = streetName ~= lastLocationData.street
+            local crossingChanged = crossingName ~= lastLocationData.crossing
+            local areaChanged = area ~= lastLocationData.area
+            
+            if streetChanged or crossingChanged or areaChanged or headingChanged then
+                lastLocationData.street = streetName
+                lastLocationData.crossing = crossingName
+                lastLocationData.area = area
+                lastLocationData.heading = heading
+                
+                SendNUI('updateLocation', {
+                    street = streetName,
+                    crossing = crossingName,
+                    area = area,
+                    heading = heading
+                })
+            end
         end
     end
 end)
 
 -- ============================================================================
--- VOICE UPDATES
+-- VOICE UPDATES (with change detection)
 -- ============================================================================
+
+local lastVoiceData = {
+    active = nil,
+    range = nil
+}
 
 CreateThread(function()
     -- Warten bis Voice Resource erkannt
@@ -443,10 +484,16 @@ CreateThread(function()
                 end
             end
             
-            SendNUI('updateVoice', {
-                active = isTalking,
-                range = voiceRange
-            })
+            -- Only send if something changed
+            if isTalking ~= lastVoiceData.active or voiceRange ~= lastVoiceData.range then
+                lastVoiceData.active = isTalking
+                lastVoiceData.range = voiceRange
+                
+                SendNUI('updateVoice', {
+                    active = isTalking,
+                    range = voiceRange
+                })
+            end
         end
     end
 end)

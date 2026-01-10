@@ -166,8 +166,36 @@ local function InvalidateSupportedStatusCache()
 end
 
 -- ============================================================================
--- MAIN STATUS UPDATE FUNCTION
+-- MAIN STATUS UPDATE FUNCTION (with change detection)
 -- ============================================================================
+
+-- Cache for last sent status data
+local lastStatusData = {}
+
+-- Compare two values with tolerance for numbers
+local function hasChanged(key, newValue, oldValue)
+    if oldValue == nil then return true end
+    if type(newValue) == "number" and type(oldValue) == "number" then
+        -- Use tolerance of 1 for percentage values
+        return math.abs(newValue - oldValue) >= 1
+    end
+    return newValue ~= oldValue
+end
+
+-- Check if any status value has changed
+local function getChangedStatus(newData)
+    local changed = {}
+    local hasAnyChange = false
+    
+    for key, value in pairs(newData) do
+        if hasChanged(key, value, lastStatusData[key]) then
+            changed[key] = value
+            hasAnyChange = true
+        end
+    end
+    
+    return changed, hasAnyChange
+end
 
 local function refreshStatusIcons()
     local ped = PlayerPedId()
@@ -232,7 +260,15 @@ local function refreshStatusIcons()
     -- Also send underwater state for conditional display
     statusData.isUnderwater = IsUnderwater(ped)
     
-    SendNUI('updateHud', statusData)
+    -- Only send if something changed
+    local changedData, hasAnyChange = getChangedStatus(statusData)
+    if hasAnyChange then
+        -- Update cache with full data
+        for key, value in pairs(statusData) do
+            lastStatusData[key] = value
+        end
+        SendNUI('updateHud', statusData)
+    end
 end
 
 -- ============================================================================
