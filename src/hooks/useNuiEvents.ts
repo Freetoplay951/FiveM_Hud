@@ -27,6 +27,7 @@ import {
 
 interface UtilityData {
     wantedLevel?: number;
+    isEvading?: boolean;
     ping?: number;
     serverName?: string;
     playerCount?: number;
@@ -130,6 +131,7 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             onUpdateUtility: (data) => {
                 const store = useUtilityStore.getState();
                 if (data.wantedLevel !== undefined) store.setWantedLevel(data.wantedLevel);
+                if (data.isEvading !== undefined) store.setIsEvading(data.isEvading);
                 if (data.ping !== undefined) store.setPing(data.ping);
                 if (data.serverName !== undefined || data.playerCount !== undefined || data.maxPlayers !== undefined) {
                     store.setServerInfo({
