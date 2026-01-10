@@ -11,7 +11,6 @@ import { WantedWidget } from "./widgets/WantedWidget";
 import { PingWidget } from "./widgets/PingWidget";
 import { ServerInfoWidget } from "./widgets/ServerInfoWidget";
 import { ServerNameWidget } from "./widgets/ServerNameWidget";
-import { SpeedLimitWidget } from "./widgets/SpeedLimitWidget";
 import { CompassWidget } from "./widgets/CompassWidget";
 import { VehicleNameWidget } from "./widgets/VehicleNameWidget";
 import { NotificationContainer } from "./notifications/NotificationContainer";
@@ -33,7 +32,7 @@ import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
-import { useWantedLevel, usePing, useServerName, usePlayerCount, useMaxPlayers, useSpeedLimit, useSpeedZoneActive, useSpeedLimitEnabled } from "@/stores/utilityStore";
+import { useWantedLevel, usePing, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 // ==========================================
@@ -1028,69 +1027,6 @@ const ServerNameWidgetRendererComponent = ({
 
 export const ServerNameWidgetRenderer = memo(ServerNameWidgetRendererComponent);
 
-// ==========================================
-// SPEED LIMIT WIDGET - Subscribes to utility & vehicle store
-// Only shown when explicitly enabled via API (opt-in system)
-// ==========================================
-const SpeedLimitWidgetRendererComponent = ({
-    editMode,
-    snapToGrid,
-    gridSize,
-    hasSignaledReady,
-    getWidget,
-    updateWidgetPosition,
-    updateWidgetScale,
-    toggleWidgetVisibility,
-    resetWidget,
-    isWidgetDisabled,
-    getMultiSelectProps,
-}: LayoutOnlyProps) => {
-    const widget = getWidget("speedlimit");
-    const isDead = useIsDead();
-
-    const speedLimit = useSpeedLimit();
-    const speedZoneActive = useSpeedZoneActive();
-    const speedLimitEnabled = useSpeedLimitEnabled();
-    const currentSpeed = useVehicleStore((s) => s.speed);
-    const inVehicle = useVehicleStore((s) => s.inVehicle);
-
-    const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
-    );
-
-    if (!widget) return null;
-
-    // SpeedLimit widget requires explicit opt-in via enableSpeedLimit(true)
-    // Only show when enabled AND (in vehicle with speed zone active OR in edit mode)
-    const showSpeedLimit = speedLimitEnabled && ((speedZoneActive && inVehicle) || editMode);
-    const baseVisible = widget.visible && (editMode ? true : !isDead) && showSpeedLimit;
-
-    return (
-        <HUDWidget
-            id={widget.id}
-            position={widget.position}
-            visible={baseVisible}
-            scale={widget.scale}
-            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-            editMode={editMode}
-            snapToGrid={snapToGrid}
-            gridSize={gridSize}
-            onPositionChange={updateWidgetPosition}
-            onVisibilityToggle={toggleWidgetVisibility}
-            onScaleChange={updateWidgetScale}
-            onReset={handleReset}
-            {...getMultiSelectProps(widget.id)}>
-            <SpeedLimitWidget 
-                currentSpeed={editMode ? 75 : currentSpeed} 
-                speedLimit={speedLimit} 
-                isActive={editMode || speedZoneActive} 
-            />
-        </HUDWidget>
-    );
-};
-
-export const SpeedLimitWidgetRenderer = memo(SpeedLimitWidgetRendererComponent);
 
 // ==========================================
 // COMBINED WIDGET RENDERERS COMPONENT
@@ -1107,7 +1043,6 @@ const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
             <WantedWidgetRenderer {...props} />
             <ServerInfoWidgetRenderer {...props} />
             <ServerNameWidgetRenderer {...props} />
-            <SpeedLimitWidgetRenderer {...props} />
             <VoiceWidgetRenderer {...props} />
             <RadioWidgetRenderer {...props} />
             <LocationWidgetRenderer {...props} />

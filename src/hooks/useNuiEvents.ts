@@ -31,9 +31,6 @@ interface UtilityData {
     serverName?: string;
     playerCount?: number;
     maxPlayers?: number;
-    speedLimit?: number;
-    speedZoneActive?: boolean;
-    speedLimitEnabled?: boolean;
 }
 
 interface NuiEventHandlers {
@@ -140,16 +137,6 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                         playerCount: data.playerCount,
                         maxPlayers: data.maxPlayers,
                     });
-                }
-                if (data.speedLimit !== undefined || data.speedZoneActive !== undefined) {
-                    const currentState = useUtilityStore.getState();
-                    store.setSpeedLimit(
-                        data.speedLimit ?? currentState.speedLimit,
-                        data.speedZoneActive ?? currentState.speedZoneActive
-                    );
-                }
-                if (data.speedLimitEnabled !== undefined) {
-                    store.enableSpeedLimit(data.speedLimitEnabled);
                 }
             },
             onNotify: (data) => {
