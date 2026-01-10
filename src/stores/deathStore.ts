@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { DeathState } from "@/types/hud";
 import { DEMO_DEATH } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
@@ -53,11 +54,13 @@ export const useCanRespawn = () => useDeathStore((state) => state.canRespawn);
 export const useCanCallHelp = () => useDeathStore((state) => state.canCallHelp);
 export const useDeathMessage = () => useDeathStore((state) => state.message);
 export const useDeathData = () =>
-    useDeathStore((state) => ({
-        isDead: state.isDead,
-        respawnTimer: state.respawnTimer,
-        waitTimer: state.waitTimer,
-        canCallHelp: state.canCallHelp,
-        canRespawn: state.canRespawn,
-        message: state.message,
-    }));
+    useDeathStore(
+        useShallow((state) => ({
+            isDead: state.isDead,
+            respawnTimer: state.respawnTimer,
+            waitTimer: state.waitTimer,
+            canCallHelp: state.canCallHelp,
+            canRespawn: state.canRespawn,
+            message: state.message,
+        }))
+    );

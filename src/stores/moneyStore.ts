@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { MoneyState, PlayerState } from "@/types/hud";
 import { DEMO_MONEY, DEMO_PLAYER } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
@@ -55,14 +56,18 @@ export const usePlayerJob = () => useMoneyStore((state) => state.job);
 export const usePlayerRank = () => useMoneyStore((state) => state.rank);
 export const usePlayerId = () => useMoneyStore((state) => state.playerId);
 export const useMoneyData = () =>
-    useMoneyStore((state) => ({
-        cash: state.cash,
-        bank: state.bank,
-        blackMoney: state.blackMoney,
-    }));
+    useMoneyStore(
+        useShallow((state) => ({
+            cash: state.cash,
+            bank: state.bank,
+            blackMoney: state.blackMoney,
+        }))
+    );
 export const usePlayerData = () =>
-    useMoneyStore((state) => ({
-        id: state.playerId,
-        job: state.job,
-        rank: state.rank,
-    }));
+    useMoneyStore(
+        useShallow((state) => ({
+            id: state.playerId,
+            job: state.job,
+            rank: state.rank,
+        }))
+    );
