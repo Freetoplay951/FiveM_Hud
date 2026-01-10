@@ -157,7 +157,7 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     break;
                 default:
                     if (action) {
-                        console.warn("[HUD] Unknown NUI event:", action, data);
+                        console.warn("[HUD] Unknown NUI event:", action, JSON.stringify(data));
                     }
                     break;
             }
