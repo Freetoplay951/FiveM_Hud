@@ -8,7 +8,7 @@ interface WantedWidgetProps {
     isEvading?: boolean; // When true and level > 0, stars blink (cops lost sight)
 }
 
-// Static animation config
+// Static animation config - defined outside component for stable references
 const containerMotion = {
     initial: { opacity: 0, scale: 0.9 },
     animate: { opacity: 1, scale: 1 },
@@ -21,17 +21,20 @@ const starMotion = {
     exit: { scale: 0, rotate: 180 },
 } as const;
 
-// Blinking animation for evading state
+// Static animation for non-blinking state
+const staticStarAnimation = { scale: 1, rotate: 0, opacity: 1 } as const;
+
+// Blinking animation for evading state - stable reference
 const blinkAnimation = {
     scale: 1,
     rotate: 0,
     opacity: [1, 0.3, 1] as number[],
     transition: {
-        duration: 1.5,
+        duration: 0.6,
         repeat: Infinity,
         ease: "easeInOut" as const,
     },
-};
+} as const;
 
 const MAX_STARS = 5;
 
@@ -58,7 +61,7 @@ const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetP
                     <motion.div
                         key={index}
                         {...starMotion}
-                        animate={active && shouldBlink ? blinkAnimation : { scale: 1, rotate: 0, opacity: 1 }}
+                        animate={active && shouldBlink ? blinkAnimation : staticStarAnimation}
                         transition={{
                             type: "spring",
                             stiffness: 400,

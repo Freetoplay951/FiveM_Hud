@@ -19,7 +19,8 @@ import { useRef, useEffect, useMemo } from "react";
  */
 
 // Global flag to enable/disable render logging
-const RENDER_LOGGING_ENABLED = true; //process.env.NODE_ENV === "development";
+// Set to false in production for better performance
+const RENDER_LOGGING_ENABLED = false;
 
 // Render count per component for session tracking
 const renderCounts = new Map<string, number>();

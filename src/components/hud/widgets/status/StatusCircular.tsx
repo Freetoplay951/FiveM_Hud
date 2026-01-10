@@ -1,26 +1,27 @@
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STATUS_CONFIG, StatusProps } from "./config";
 
-export const StatusCircular = ({ type, value }: StatusProps) => {
+// Pre-calculated constants
+const RADIUS = 23;
+const STROKE = 3.5;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+const StatusCircularComponent = ({ type, value }: StatusProps) => {
     const config = STATUS_CONFIG[type];
     const Icon = config.icon;
 
-    const radius = 23;
-    const stroke = 3.5;
-    const circumference = 2 * Math.PI * radius;
-    const progress = (value / 100) * circumference;
-
-    const isWarning = value <= 30;
-    const isCritical = value <= 15;
-
-    const getColor = () => {
-        if (isCritical) return "critical";
-        if (isWarning) return "warning";
-        return config.color;
-    };
-
-    const colorVar = getColor();
+    const { colorVar, isCritical, progress } = useMemo(() => {
+        const isWarning = value <= 30;
+        const critical = value <= 15;
+        const color = critical ? "critical" : isWarning ? "warning" : config.color;
+        return {
+            colorVar: color,
+            isCritical: critical,
+            progress: (value / 100) * CIRCUMFERENCE,
+        };
+    }, [value, config.color]);
 
     return (
         <div className="relative w-14 h-14">
@@ -70,23 +71,23 @@ export const StatusCircular = ({ type, value }: StatusProps) => {
                 <circle
                     cx="30"
                     cy="30"
-                    r={radius}
+                    r={RADIUS}
                     fill="none"
                     stroke="hsl(var(--muted) / 0.15)"
-                    strokeWidth={stroke}
+                    strokeWidth={STROKE}
                 />
 
                 <motion.circle
                     cx="30"
                     cy="30"
-                    r={radius}
+                    r={RADIUS}
                     fill="none"
                     stroke={`hsl(var(--${colorVar}))`}
-                    strokeWidth={stroke}
+                    strokeWidth={STROKE}
                     strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: circumference - progress }}
+                    strokeDasharray={CIRCUMFERENCE}
+                    initial={{ strokeDashoffset: CIRCUMFERENCE }}
+                    animate={{ strokeDashoffset: CIRCUMFERENCE - progress }}
                     transition={{ duration: 0.3 }}
                     filter={`url(#glow-${type})`}
                     style={{
@@ -117,3 +118,5 @@ export const StatusCircular = ({ type, value }: StatusProps) => {
         </div>
     );
 };
+
+export const StatusCircular = memo(StatusCircularComponent);

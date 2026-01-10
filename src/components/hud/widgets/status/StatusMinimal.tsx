@@ -1,21 +1,18 @@
+import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STATUS_CONFIG, StatusProps } from "./config";
 
-export const StatusMinimal = ({ type, value }: StatusProps) => {
+const StatusMinimalComponent = ({ type, value }: StatusProps) => {
     const config = STATUS_CONFIG[type];
     const Icon = config.icon;
 
-    const isWarning = value <= 30;
-    const isCritical = value <= 15;
-
-    const getColor = () => {
-        if (isCritical) return "critical";
-        if (isWarning) return "warning";
-        return config.color;
-    };
-
-    const colorVar = getColor();
+    const { colorVar, isCritical, isWarning } = useMemo(() => {
+        const warning = value <= 30;
+        const critical = value <= 15;
+        const color = critical ? "critical" : warning ? "warning" : config.color;
+        return { colorVar: color, isCritical: critical, isWarning: warning };
+    }, [value, config.color]);
 
     return (
         <motion.div
@@ -24,10 +21,9 @@ export const StatusMinimal = ({ type, value }: StatusProps) => {
                 isCritical && "critical-pulse"
             )}
             animate={{
-                boxShadow:
-                    value <= 30
-                        ? `0 0 ${isCritical ? 12 : 8}px hsl(var(--${colorVar}) / 0.4)`
-                        : `0 0 4px hsl(var(--${colorVar}) / 0.2)`,
+                boxShadow: isWarning
+                    ? `0 0 ${isCritical ? 12 : 8}px hsl(var(--${colorVar}) / 0.4)`
+                    : `0 0 4px hsl(var(--${colorVar}) / 0.2)`,
             }}>
             <Icon
                 size={12}
@@ -48,3 +44,5 @@ export const StatusMinimal = ({ type, value }: StatusProps) => {
         </motion.div>
     );
 };
+
+export const StatusMinimal = memo(StatusMinimalComponent);
