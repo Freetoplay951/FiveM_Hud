@@ -107,7 +107,7 @@ const NotificationsRendererComponent = ({
     return (
         <HUDWidget
             id={widget.id}
-            position={isDeadOverlay ? { x: 20, y: 20 } : widget.position}
+            position={isDeadOverlay ? { x: 100, y: 40 } : widget.position}
             visible={widget.visible}
             scale={widget.scale}
             editMode={editMode}
