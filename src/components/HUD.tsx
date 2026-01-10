@@ -5,9 +5,8 @@ import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { SubwidgetRenderer } from "./hud/SubwidgetRenderer";
 import { HUDWidgetRenderers } from "./hud/HUDWidgetRenderers";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
-import { useHUDState } from "@/hooks/useHUDState";
-import { useHUDNuiEvents } from "@/hooks/useHUDNuiEvents";
-import { useDemoSimulation } from "@/hooks/useDemoSimulation";
+import { useStoreNuiEvents } from "@/hooks/useStoreNuiEvents";
+import { useStoreDemoSimulation } from "@/hooks/useStoreDemoSimulation";
 import { useMultiSelection } from "@/hooks/useMultiSelection";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -21,44 +20,31 @@ import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { EDIT_MODE_DEMO_NOTIFICATIONS } from "./hud/data/demoData";
 
+// Import stores - HUD only uses global state, widgets fetch their own data
+import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
+import { useDeathStore, useIsDead, useDeathData } from "@/stores/deathStore";
+import { useChatStore } from "@/stores/chatStore";
+
 export const HUD = () => {
-    // All HUD state management
-    const hudState = useHUDState();
-    const {
-        hudState: statusState,
-        vehicleState,
-        moneyState,
-        playerState,
-        voiceState,
-        locationState,
-        deathState,
-        chatState,
-        teamChatState,
-        radioState,
-        demoDeathTimer,
-        isVisible,
-        isVoiceEnabled,
-        isDemoMode,
-        setHudState,
-        setVehicleState,
-        setMoneyState,
-        setPlayerState,
-        setVoiceState,
-        setLocationState,
-        setDeathState,
-        setChatState,
-        setTeamChatState,
-        setRadioState,
-        setDisabledWidgets,
-        setDemoDeathTimer,
-        setIsVisible,
-        setIsVoiceEnabled,
-        isWidgetDisabled,
-    } = hudState;
-
     const [editMenuOpen, setEditMenuOpen] = useState(false);
+    const [hasSignaledReady, setHasSignaledReady] = useState(false);
 
-    // Layout management
+    // Global HUD state from stores (NOT widget data)
+    const isVisible = useIsVisible();
+    const isDemoMode = useIsDemoMode();
+    const isWidgetDisabled = useHUDGlobalStore((s) => s.isWidgetDisabled);
+
+    // Death state - needed for death screen overlay
+    const isDead = useIsDead();
+    const deathData = useDeathData();
+
+    // Team chat access for demo mode badge
+    const teamChatHasAccess = useChatStore((s) => s.teamChatHasAccess);
+    const teamChatIsAdmin = useChatStore((s) => s.teamChatIsAdmin);
+    const setTeamChatAccess = useChatStore((s) => s.setTeamChatAccess);
+    const setTeamChatIsAdmin = useChatStore((s) => s.setTeamChatIsAdmin);
+
+    // Layout management - pure layout, no widget data
     const {
         widgets,
         editMode,
@@ -123,21 +109,8 @@ export const HUD = () => {
         if (!editMode) setEditMenuOpen(false);
     }, [editMode]);
 
-    // NUI Events
-    useHUDNuiEvents({
-        setHudState,
-        setVehicleState,
-        setMoneyState,
-        setVoiceState,
-        setRadioState: setRadioState,
-        setLocationState,
-        setPlayerState,
-        setIsVisible,
-        setDeathState,
-        setDisabledWidgets,
-        setIsVoiceEnabled,
-        setChatState,
-        setTeamChatState,
+    // NUI Events - updates stores directly, no props needed
+    useStoreNuiEvents({
         editMode,
         toggleEditMode,
         success,
@@ -146,30 +119,19 @@ export const HUD = () => {
         info,
     });
 
-    // Demo simulation
-    useDemoSimulation({
-        isDemoMode,
+    // Demo simulation - updates stores directly
+    useStoreDemoSimulation({
         editMode,
-        deathState,
-        setHudState,
-        setVehicleState,
-        setVoiceState,
-        setLocationState,
-        setDeathState,
-        setChatState,
-        setTeamChatState,
-        setDemoDeathTimer,
+        enterEditMode,
+        exitEditMode,
         success,
         error,
         warning,
         info,
-        enterEditMode,
-        exitEditMode,
     });
 
     // Ready signal
     const allDataLoaded = isVisible && isLanguageLoaded && t !== null;
-    const [hasSignaledReady, setHasSignaledReady] = useState(false);
 
     useEffect(() => {
         if (allDataLoaded && !hasSignaledReady) {
@@ -184,7 +146,7 @@ export const HUD = () => {
                 });
             });
         }
-    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets, statusState, isWidgetDisabled]);
+    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets, isWidgetDisabled]);
 
     // Handle simple mode toggle - syncs subwidgets to their base widget's scale
     const handleSimpleModeChange = useCallback(
@@ -215,39 +177,25 @@ export const HUD = () => {
     const isUsingEditDemoNotifications = editMode && notifications.length === 0;
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
-    // Props for HUDWidgetRenderers
-    const widgetRendererProps = {
-        // State
-        statusState,
-        vehicleState,
-        moneyState,
-        playerState,
-        voiceState,
-        locationState,
-        deathState,
-        chatState,
-        teamChatState,
-        radioState,
-
-        // Settings
+    // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data props
+    const layoutProps = {
+        // Layout settings only
         editMode,
         snapToGrid,
         gridSize,
         statusDesign,
         speedometerType,
         minimapShape,
-        isDemoMode,
-        isVoiceEnabled,
         hasSignaledReady,
         autoLayoutHiddenIds,
 
-        // Notifications
+        // Notifications (managed at HUD level for cross-cutting concern)
         notifications,
         removeNotification,
         displayedNotifications,
         isUsingEditDemoNotifications,
 
-        // Widget functions
+        // Layout functions only
         getWidget,
         updateWidgetPosition,
         updateWidgetScale,
@@ -255,10 +203,6 @@ export const HUD = () => {
         resetWidget,
         isWidgetDisabled,
         getMultiSelectProps,
-
-        // State setters for chat
-        setChatState,
-        setTeamChatState,
     };
 
     if (!isVisible || !t) return null;
@@ -271,7 +215,7 @@ export const HUD = () => {
             onMouseUp={handleSelectionEnd}
             onMouseLeave={handleSelectionEnd}>
             {/* Branding */}
-            {!deathState.isDead && <BrandingWidget />}
+            {!isDead && <BrandingWidget />}
 
             {/* Selection Box */}
             {selectionBox && (
@@ -337,7 +281,7 @@ export const HUD = () => {
             )}
 
             {/* Demo Mode Badge */}
-            {isDemoMode && !editMode && !deathState.isDead && (
+            {isDemoMode && !editMode && !isDead && (
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
                     <div className="bg-destructive/80 border border-destructive/50 rounded-lg px-4 py-3 animate-fade-in-up pointer-events-auto">
                         <div className="flex flex-col gap-3">
@@ -362,20 +306,16 @@ export const HUD = () => {
                                         {t.demo.teamChatAccess}
                                     </span>
                                     <Switch
-                                        checked={teamChatState.hasAccess}
-                                        onCheckedChange={(checked) =>
-                                            setTeamChatState((prev) => ({ ...prev, hasAccess: checked }))
-                                        }
+                                        checked={teamChatHasAccess}
+                                        onCheckedChange={setTeamChatAccess}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-destructive-foreground/80">{t.demo.adminRights}</span>
                                     <Switch
-                                        checked={teamChatState.isAdmin}
-                                        onCheckedChange={(checked) =>
-                                            setTeamChatState((prev) => ({ ...prev, isAdmin: checked }))
-                                        }
+                                        checked={teamChatIsAdmin}
+                                        onCheckedChange={setTeamChatIsAdmin}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
@@ -385,19 +325,17 @@ export const HUD = () => {
                 </div>
             )}
 
-            {/* All Widget Renderers */}
-            <HUDWidgetRenderers {...widgetRendererProps} />
+            {/* All Widget Renderers - LAYOUT ONLY, widgets fetch their own data */}
+            <HUDWidgetRenderers {...layoutProps} />
 
             {/* Subwidget Renderer (Helicopter and future vehicle subwidgets) */}
             <SubwidgetRenderer
-                vehicleState={vehicleState}
                 editMode={editMode}
                 simpleMode={simpleMode}
                 speedometerType={speedometerType}
                 snapToGrid={snapToGrid}
                 gridSize={gridSize}
                 hasSignaledReady={hasSignaledReady}
-                deathState={deathState}
                 getWidget={getWidget}
                 updateWidgetPosition={updateWidgetPosition}
                 updateWidgetScale={updateWidgetScale}
@@ -411,17 +349,8 @@ export const HUD = () => {
             {/* Fullscreen Death Screen */}
             {!editMode && (
                 <FullscreenDeathScreen
-                    death={
-                        isDemoMode && deathState.isDead
-                            ? {
-                                  ...deathState,
-                                  respawnTimer: demoDeathTimer.respawnTimer,
-                                  waitTimer: demoDeathTimer.waitTimer,
-                                  canRespawn: demoDeathTimer.respawnTimer === 0,
-                              }
-                            : deathState
-                    }
-                    visible={deathState.isDead}
+                    death={deathData}
+                    visible={isDead}
                 />
             )}
         </div>
