@@ -1,11 +1,23 @@
 -- Utility Updates (Wanted Level, Ping, Server Info)
 -- Performance optimized with change detection
+-- NOTE: Ping is fetched from server (GetPlayerPing is server-only!)
 
 local lastUtilityData = {
     wantedLevel = nil,
     ping = nil,
     playerCount = nil
 }
+
+-- ============================================================================
+-- PING RECEIVER (from server)
+-- ============================================================================
+
+RegisterNetEvent('hud:receivePing', function(ping)
+    if ping ~= lastUtilityData.ping then
+        lastUtilityData.ping = ping
+        SendNUI('updateUtility', { ping = ping })
+    end
+end)
 
 -- ============================================================================
 -- HUD STARTING EVENT HANDLER
@@ -20,17 +32,26 @@ AddEventHandler("hud:loading", function()
         playerCount = #GetActivePlayers()
     })
     
-    -- Send initial ping
-    local playerId = PlayerId()
-    local ping = GetPlayerPing(GetPlayerServerId(playerId))
-    SendNUI('updateUtility', { ping = ping })
+    -- Request initial ping from server (only if enabled)
+    if Config.enablePing then
+        TriggerServerEvent('hud:requestPing')
+    end
     
     -- Send initial wanted level
+    local playerId = PlayerId()
     local wantedLevel = GetPlayerWantedLevel(playerId)
     SendNUI('updateUtility', { wantedLevel = wantedLevel })
     
+    -- Disable ping widget if not enabled
+    if not Config.enablePing then
+        SendNUI('updateDisabledWidgets', { ping = true })
+    end
+    
     if Config.Debug then
         print('[HUD Utility] Initial data sent via hud:loading event')
+        if not Config.enablePing then
+            print('[HUD Utility] Ping widget disabled via config')
+        end
     end
 end)
 
@@ -54,7 +75,7 @@ CreateThread(function()
 end)
 
 -- ============================================================================
--- MAIN UTILITY UPDATE LOOP (Wanted Level & Ping)
+-- MAIN UTILITY UPDATE LOOP (Wanted Level & Ping request)
 -- ============================================================================
 
 CreateThread(function()
@@ -64,30 +85,18 @@ CreateThread(function()
         if isHudVisible then
             local playerId = PlayerId()
             
-            -- Get wanted level (0-5)
+            -- Get wanted level (0-5) - this is client-side
             local wantedLevel = GetPlayerWantedLevel(playerId)
             
-            -- Get ping/latency
-            local ping = GetPlayerPing(GetPlayerServerId(playerId))
+            -- Only send if wanted level changed
+            if wantedLevel ~= lastUtilityData.wantedLevel then
+                lastUtilityData.wantedLevel = wantedLevel
+                SendNUI('updateUtility', { wantedLevel = wantedLevel })
+            end
             
-            -- Only send if something changed
-            local wantedChanged = wantedLevel ~= lastUtilityData.wantedLevel
-            local pingChanged = math.abs((ping or 0) - (lastUtilityData.ping or 0)) >= 5
-            
-            if wantedChanged or pingChanged then
-                local updateData = {}
-                
-                if wantedChanged then
-                    updateData.wantedLevel = wantedLevel
-                    lastUtilityData.wantedLevel = wantedLevel
-                end
-                
-                if pingChanged then
-                    updateData.ping = ping
-                    lastUtilityData.ping = ping
-                end
-                
-                SendNUI('updateUtility', updateData)
+            -- Request ping from server (server-side only!)
+            if Config.enablePing then
+                TriggerServerEvent('hud:requestPing')
             end
         end
     end

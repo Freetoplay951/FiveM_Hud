@@ -851,7 +851,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "servername",
             type: "servername",
-            position: (_id, el, resolver) => {
+            position: (_id, _el, resolver) => {
                 const compassRect = resolver.getWidgetRect("compass");
                 const x = compassRect ? compassRect.right + GAP : MARGIN + 100;
                 return { x, y: MARGIN };
@@ -872,35 +872,19 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         },
-        // Ping centered above minimap
-        {
-            id: "ping",
-            type: "ping",
-            position: (_id, el, resolver) => {
-                const minimapRect = resolver.getWidgetRect("minimap");
-                const width = el?.offsetWidth ?? 0;
-                
-                if (minimapRect) {
-                    const minimapCenterX = minimapRect.x + minimapRect.width / 2;
-                    return {
-                        x: minimapCenterX - width / 2,
-                        y: minimapRect.y - GAP - (el?.offsetHeight ?? 0),
-                    };
-                }
-                return { x: MARGIN, y: resolver.screen.height - MARGIN - 150 };
-            },
-            visible: true,
-            scale: 1,
-        },
-
         // === Dependent widgets (depend on previously defined widgets) ===
+        // VehicleName under ServerName (right of compass)
         {
             id: "vehiclename",
             type: "vehiclename",
             position: (_id, _el, resolver) => {
+                const servernameRect = resolver.getWidgetRect("servername");
+                if (servernameRect) {
+                    return { x: servernameRect.x, y: servernameRect.bottom + GAP / 2 };
+                }
                 const compassRect = resolver.getWidgetRect("compass");
                 const x = compassRect ? compassRect.right + GAP : MARGIN;
-                return { x, y: MARGIN };
+                return { x, y: MARGIN + 30 };
             },
             visible: true,
             scale: 1,
@@ -982,6 +966,37 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                     x: resolver.screen.width - MARGIN - width,
                     y: MARGIN + 50 + GAP,
                 };
+            },
+            visible: true,
+            scale: 1,
+        },
+        // Ping centered above location (which is above minimap)
+        {
+            id: "ping",
+            type: "ping",
+            position: (_id, el, resolver) => {
+                const locationRect = resolver.getWidgetRect("location");
+                const width = el?.offsetWidth ?? 0;
+                const height = el?.offsetHeight ?? 0;
+                
+                if (locationRect) {
+                    const locationCenterX = locationRect.x + locationRect.width / 2;
+                    return {
+                        x: locationCenterX - width / 2,
+                        y: locationRect.y - GAP - height,
+                    };
+                }
+                
+                // Fallback: above minimap
+                const minimapRect = resolver.getWidgetRect("minimap");
+                if (minimapRect) {
+                    const minimapCenterX = minimapRect.x + minimapRect.width / 2;
+                    return {
+                        x: minimapCenterX - width / 2,
+                        y: minimapRect.y - GAP * 2 - 40 - height,
+                    };
+                }
+                return { x: MARGIN, y: resolver.screen.height - MARGIN - 150 };
             },
             visible: true,
             scale: 1,

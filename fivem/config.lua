@@ -173,6 +173,13 @@ Config.BodyHealth = {
 Config.ServerName = "RP Server"        -- Server Name im HUD
 Config.MaxPlayers = 128                -- Maximale Spieleranzahl
 
+-- ============================================================================
+-- PING WIDGET
+-- ============================================================================
+-- GetPlayerPing muss serverseitig aufgerufen werden
+-- Setze auf false um das Ping-Widget komplett zu deaktivieren
+
+Config.enablePing = true               -- Ping-Widget aktivieren/deaktivieren
 
 -- Debug
 Config.Debug = true
