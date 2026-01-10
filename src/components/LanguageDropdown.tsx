@@ -1,12 +1,12 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { Languages, Check } from "lucide-react";
-import { Language } from "@/types/translation";
+import { Language, LanguageConfig } from "@/types/translation";
 
 export const LanguageDropdown = () => {
     const { t, language, languages, setLanguage } = useTranslation();
 
-    const languageEntries = Object.entries(languages.languages) as [Language, string][];
+    const languageEntries = Object.entries(languages.languages) as [Language, LanguageConfig][];
 
     return (
         <DropdownMenu.Root>
@@ -21,7 +21,7 @@ export const LanguageDropdown = () => {
             </DropdownMenu.Trigger>
 
             <DropdownMenu.Content className="mt-1 w-24 bg-background border border-border rounded-lg shadow-md p-1 z-50">
-                {languageEntries.map(([key, label]) => (
+                {languageEntries.map(([key, config]) => (
                     <DropdownMenu.Item
                         key={key}
                         className="flex items-center gap-1 px-2 py-1 text-[10px] rounded hover:bg-muted/40 cursor-pointer"
@@ -32,7 +32,7 @@ export const LanguageDropdown = () => {
                                 className="text-foreground"
                             />
                         )}
-                        <span className="flex-1">{label}</span>
+                        <span className="flex-1">{config.name}</span>
                     </DropdownMenu.Item>
                 ))}
             </DropdownMenu.Content>

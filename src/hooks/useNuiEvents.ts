@@ -8,6 +8,7 @@ import { useChatStore } from "@/stores/chatStore";
 import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { useUtilityStore } from "@/stores/utilityStore";
 import { isNuiEnvironment, GetParentResourceName } from "@/lib/nuiUtils";
 import {
     StatusWidgetState,
@@ -24,6 +25,12 @@ import {
     DisabledWidgets,
 } from "@/types/hud";
 
+interface UtilityData {
+    fps?: number;
+    wantedLevel?: number;
+    ping?: number;
+}
+
 interface NuiEventHandlers {
     onUpdateHud?: (data: Partial<StatusWidgetState>) => void;
     onUpdateVehicle?: (data: VehicleState) => void;
@@ -32,6 +39,7 @@ interface NuiEventHandlers {
     onUpdateRadio?: (data: RadioState) => void;
     onUpdateLocation?: (data: LocationState) => void;
     onUpdatePlayer?: (data: { id: number; job: string; rank: string }) => void;
+    onUpdateUtility?: (data: UtilityData) => void;
     onNotify?: (data: { type: NotificationData["type"]; title: string; message: string; duration?: number }) => void;
     onToggleEditMode?: (enabled: boolean) => void;
     onSetVisible?: (visible: boolean) => void;
@@ -117,6 +125,12 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             onUpdatePlayer: (data) => {
                 useMoneyStore.getState().setPlayer(data);
             },
+            onUpdateUtility: (data) => {
+                const store = useUtilityStore.getState();
+                if (data.fps !== undefined) store.setFps(data.fps);
+                if (data.wantedLevel !== undefined) store.setWantedLevel(data.wantedLevel);
+                if (data.ping !== undefined) store.setPing(data.ping);
+            },
             onNotify: (data) => {
                 const store = useNotificationStore.getState();
                 const notifyFn =
@@ -200,6 +214,7 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             updateRadio: handlers.onUpdateRadio as (data: unknown) => void,
             updateLocation: handlers.onUpdateLocation as (data: unknown) => void,
             updatePlayer: handlers.onUpdatePlayer as (data: unknown) => void,
+            updateUtility: handlers.onUpdateUtility as (data: unknown) => void,
             notify: handlers.onNotify as (data: unknown) => void,
             toggleEditMode: handlers.onToggleEditMode as (data: unknown) => void,
             setVisible: handlers.onSetVisible as (data: unknown) => void,

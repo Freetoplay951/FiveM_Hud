@@ -1,8 +1,14 @@
 export type Language = "de" | "en";
 
+export interface LanguageConfig {
+    name: string;
+    locale: string;
+}
+
 export interface Locales {
     defaultLanguage: Language;
-    languages: Record<Language, string>;
+    locale: string;
+    languages: Record<Language, LanguageConfig>;
 }
 
 export interface Translations {

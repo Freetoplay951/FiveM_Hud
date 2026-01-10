@@ -7,6 +7,7 @@ import { useChatStore } from "@/stores/chatStore";
 import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { useUtilityStore } from "@/stores/utilityStore";
 import { DEMO_CHAT_MESSAGES, DEMO_TEAM_MESSAGES } from "@/components/hud/data/demoData";
 
 interface UseStoreDemoSimulationProps {
@@ -35,7 +36,9 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
     const setTeamChatAccess = useChatStore((state) => state.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((state) => state.setTeamChatIsAdmin);
     const setDeathState = useDeathStore((state) => state.setDeathState);
-
+    const setFps = useUtilityStore((state) => state.setFps);
+    const setPing = useUtilityStore((state) => state.setPing);
+    const setWantedLevel = useUtilityStore((state) => state.setWantedLevel);
     // Notification store actions (stable references)
     const notifySuccess = useNotificationStore((state) => state.success);
     const notifyError = useNotificationStore((state) => state.error);
@@ -132,10 +135,14 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                 const change = Math.random() > 0.5 ? 45 : -45;
                 setLocation({ heading: (currentHeading + change + 360) % 360 });
             }
+
+            // FPS/Ping simulation
+            setFps(Math.floor(55 + Math.random() * 10));
+            setPing(Math.floor(30 + Math.random() * 40));
         }, 500);
 
         return () => clearInterval(interval);
-    }, [isDemoMode, setStatus, setVehicleState, setVoiceActive, setLocation]);
+    }, [isDemoMode, setStatus, setVehicleState, setVoiceActive, setLocation, setFps, setPing]);
 
     // Demo: Random Chat messages
     useEffect(() => {
@@ -284,6 +291,12 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                         canRespawn: false,
                     });
                 }
+            }
+
+            // Wanted level toggle (w key)
+            if (e.key === "w" && !editMode) {
+                const current = useUtilityStore.getState().wantedLevel;
+                setWantedLevel((current + 1) % 6);
             }
 
             // Body health toggle
