@@ -12,7 +12,7 @@ local lastUtilityData = {
 -- Register callbacks here that should run BEFORE HUD is visible
 -- ============================================================================
 
-AddEventHandler("hud:starting", function()
+AddEventHandler("hud:loading", function()
     -- Send initial server info
     SendNUI('updateUtility', {
         serverName = Config.ServerName or GetConvar('sv_hostname', 'RP Server'),
@@ -30,7 +30,7 @@ AddEventHandler("hud:starting", function()
     SendNUI('updateUtility', { wantedLevel = wantedLevel })
     
     if Config.Debug then
-        print('[HUD Utility] Initial data sent via hud:starting event')
+        print('[HUD Utility] Initial data sent via hud:loading event')
     end
 end)
 
