@@ -107,7 +107,7 @@ const NotificationsRendererComponent = ({
     return (
         <HUDWidget
             id={widget.id}
-            position={isDeadOverlay ? { x: 100, y: 40 } : widget.position}
+            position={isDeadOverlay ? { x: 40, y: 40 } : widget.position}
             visible={widget.visible}
             scale={widget.scale}
             editMode={editMode}
@@ -765,7 +765,6 @@ const TeamChatWidgetRendererComponent = ({
 
 export const TeamChatWidgetRenderer = memo(TeamChatWidgetRendererComponent);
 
-
 // ==========================================
 // PING WIDGET - Subscribes to utility store
 // ==========================================
@@ -968,7 +967,10 @@ const ServerInfoWidgetRendererComponent = ({
             onScaleChange={updateWidgetScale}
             onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
-            <ServerInfoWidget playerCount={playerCount} maxPlayers={maxPlayers} />
+            <ServerInfoWidget
+                playerCount={playerCount}
+                maxPlayers={maxPlayers}
+            />
         </HUDWidget>
     );
 };
@@ -1026,7 +1028,6 @@ const ServerNameWidgetRendererComponent = ({
 };
 
 export const ServerNameWidgetRenderer = memo(ServerNameWidgetRendererComponent);
-
 
 // ==========================================
 // COMBINED WIDGET RENDERERS COMPONENT
