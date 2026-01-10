@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { HUDWidget } from "./HUDWidget";
 import { StatusWidget } from "./widgets/StatusWidget";
 import { MoneyWidget } from "./widgets/MoneyWidget";
@@ -60,7 +61,7 @@ export interface LayoutOnlyProps {
 // ==========================================
 // NOTIFICATIONS WIDGET
 // ==========================================
-export const NotificationsRenderer = ({
+const NotificationsRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -77,6 +78,21 @@ export const NotificationsRenderer = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("notifications");
     const isDead = useIsDead();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    const handleClose = useCallback(
+        (id: string) => {
+            if (!isUsingEditDemoNotifications) {
+                removeNotification(id);
+            }
+        },
+        [isUsingEditDemoNotifications, removeNotification]
+    );
+
     if (!widget) return null;
 
     const isDeadOverlay = isDead && !editMode;
@@ -92,24 +108,26 @@ export const NotificationsRenderer = ({
             gridSize={gridSize}
             onPositionChange={updateWidgetPosition}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
             className={isDeadOverlay ? "z-50" : ""}
             {...getMultiSelectProps(widget.id)}>
             <NotificationContainer
                 notifications={displayedNotifications}
-                onClose={isUsingEditDemoNotifications ? () => {} : removeNotification}
+                onClose={handleClose}
             />
         </HUDWidget>
     );
 };
+
+export const NotificationsRenderer = memo(NotificationsRendererComponent);
 
 // ==========================================
 // STATUS WIDGETS - Each subscribes to its own value
 // ==========================================
 const STATUS_TYPES: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
 
-const StatusWidgetItem = ({
+const StatusWidgetItemComponent = ({
     type,
     editMode,
     snapToGrid,
@@ -132,6 +150,11 @@ const StatusWidgetItem = ({
     const value = useStatusStore((state) => state[type] ?? 100);
     const isUnderwater = useIsUnderwater();
 
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const isOxygenHidden = type === "oxygen" && !editMode && !isUnderwater;
@@ -151,7 +174,7 @@ const StatusWidgetItem = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(type)}>
             <StatusWidget
                 type={type}
@@ -162,7 +185,9 @@ const StatusWidgetItem = ({
     );
 };
 
-export const StatusWidgetsRenderer = (props: LayoutOnlyProps) => {
+const StatusWidgetItem = memo(StatusWidgetItemComponent);
+
+const StatusWidgetsRendererComponent = (props: LayoutOnlyProps) => {
     return (
         <>
             {STATUS_TYPES.map((type) => (
@@ -176,10 +201,12 @@ export const StatusWidgetsRenderer = (props: LayoutOnlyProps) => {
     );
 };
 
+export const StatusWidgetsRenderer = memo(StatusWidgetsRendererComponent);
+
 // ==========================================
 // MONEY WIDGET - Subscribes to money store
 // ==========================================
-export const MoneyWidgetRenderer = ({
+const MoneyWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -199,6 +226,11 @@ export const MoneyWidgetRenderer = ({
     const money = useMoneyData();
     const player = usePlayerData();
 
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const baseVisible = widget.visible && (editMode ? true : !isDead);
@@ -216,7 +248,7 @@ export const MoneyWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <MoneyWidget
                 money={money}
@@ -226,10 +258,12 @@ export const MoneyWidgetRenderer = ({
     );
 };
 
+export const MoneyWidgetRenderer = memo(MoneyWidgetRendererComponent);
+
 // ==========================================
 // CLOCK WIDGET - Self-contained, no external data
 // ==========================================
-export const ClockWidgetRenderer = ({
+const ClockWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -245,6 +279,11 @@ export const ClockWidgetRenderer = ({
     const widget = getWidget("clock");
     const isDead = useIsDead();
 
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const baseVisible = widget.visible && (editMode ? true : !isDead);
@@ -262,17 +301,19 @@ export const ClockWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <ClockWidget />
         </HUDWidget>
     );
 };
 
+export const ClockWidgetRenderer = memo(ClockWidgetRendererComponent);
+
 // ==========================================
 // VOICE WIDGET - Subscribes to voice store
 // ==========================================
-export const VoiceWidgetRenderer = ({
+const VoiceWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -294,6 +335,11 @@ export const VoiceWidgetRenderer = ({
     const voice = useVoiceData();
     const isVoiceEnabled = useIsVoiceEnabled();
 
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const baseVisible = editMode ? true : !isDead;
@@ -314,17 +360,19 @@ export const VoiceWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <VoiceWidget voice={voice} />
         </HUDWidget>
     );
 };
 
+export const VoiceWidgetRenderer = memo(VoiceWidgetRendererComponent);
+
 // ==========================================
 // RADIO WIDGET - Subscribes to voice store
 // ==========================================
-export const RadioWidgetRenderer = ({
+const RadioWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -344,6 +392,11 @@ export const RadioWidgetRenderer = ({
     // Widget subscribes to its own data
     const radioData = useRadioData();
     const isVoiceEnabled = useIsVoiceEnabled();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
 
     if (!widget) return null;
 
@@ -366,17 +419,19 @@ export const RadioWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <RadioWidget radio={radioDisplay} />
         </HUDWidget>
     );
 };
 
+export const RadioWidgetRenderer = memo(RadioWidgetRendererComponent);
+
 // ==========================================
 // LOCATION WIDGET - Subscribes to location store
 // ==========================================
-export const LocationWidgetRenderer = ({
+const LocationWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -397,6 +452,11 @@ export const LocationWidgetRenderer = ({
     // Widget subscribes to its own data
     const location = useLocationData();
 
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const baseVisible = widget.visible && (editMode ? true : !isDead);
@@ -415,7 +475,7 @@ export const LocationWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <LocationWidget
                 location={location}
@@ -425,10 +485,12 @@ export const LocationWidgetRenderer = ({
     );
 };
 
+export const LocationWidgetRenderer = memo(LocationWidgetRendererComponent);
+
 // ==========================================
 // COMPASS WIDGET - Subscribes to location store
 // ==========================================
-export const CompassWidgetRenderer = ({
+const CompassWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -446,6 +508,11 @@ export const CompassWidgetRenderer = ({
     
     // Widget subscribes to its own data
     const heading = useHeading();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
 
     if (!widget) return null;
 
@@ -465,17 +532,19 @@ export const CompassWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <CompassWidget heading={heading} />
         </HUDWidget>
     );
 };
 
+export const CompassWidgetRenderer = memo(CompassWidgetRendererComponent);
+
 // ==========================================
 // VEHICLE NAME WIDGET - Subscribes to vehicle store
 // ==========================================
-export const VehicleNameWidgetRenderer = ({
+const VehicleNameWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -498,6 +567,11 @@ export const VehicleNameWidgetRenderer = ({
     const vehicleName = useVehicleStore((s) => s.vehicleName);
     const vehicleSpawnName = useVehicleStore((s) => s.vehicleSpawnName);
 
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const baseVisible = widget.visible && (editMode ? true : !isDead);
@@ -515,7 +589,7 @@ export const VehicleNameWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <VehicleNameWidget
                 vehicleType={editMode ? speedometerType : vehicleType}
@@ -528,10 +602,12 @@ export const VehicleNameWidgetRenderer = ({
     );
 };
 
+export const VehicleNameWidgetRenderer = memo(VehicleNameWidgetRendererComponent);
+
 // ==========================================
 // MINIMAP WIDGET
 // ==========================================
-export const MinimapWidgetRenderer = ({
+const MinimapWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -544,6 +620,12 @@ export const MinimapWidgetRenderer = ({
     isWidgetDisabled,
 }: LayoutOnlyProps) => {
     const widget = getWidget("minimap");
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const isNUI = isNuiEnvironment();
@@ -563,16 +645,18 @@ export const MinimapWidgetRenderer = ({
             onPositionChange={undefined}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={undefined}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}>
+            onReset={handleReset}>
             <MinimapWidget shape={minimapShape} />
         </HUDWidget>
     );
 };
 
+export const MinimapWidgetRenderer = memo(MinimapWidgetRendererComponent);
+
 // ==========================================
 // CHAT WIDGET - Subscribes to chat store
 // ==========================================
-export const ChatWidgetRenderer = ({
+const ChatWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -587,8 +671,12 @@ export const ChatWidgetRenderer = ({
 }: LayoutOnlyProps) => {
     const widget = getWidget("chat");
     const isDead = useIsDead();
-    const isDemoMode = useIsDemoMode();
     
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
     if (!widget) return null;
 
     const baseVisible = widget.visible && (editMode ? true : !isDead);
@@ -606,17 +694,19 @@ export const ChatWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <ChatWidget editMode={editMode} />
         </HUDWidget>
     );
 };
 
+export const ChatWidgetRenderer = memo(ChatWidgetRendererComponent);
+
 // ==========================================
 // TEAM CHAT WIDGET - Subscribes to chat store
 // ==========================================
-export const TeamChatWidgetRenderer = ({
+const TeamChatWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
@@ -634,6 +724,11 @@ export const TeamChatWidgetRenderer = ({
     
     // Widget subscribes to its own data
     const hasTeamAccess = useTeamChatHasAccess();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
 
     if (!widget) return null;
 
@@ -654,17 +749,19 @@ export const TeamChatWidgetRenderer = ({
             onPositionChange={updateWidgetPosition}
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
-            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
             <TeamChatWidget editMode={editMode} />
         </HUDWidget>
     );
 };
 
+export const TeamChatWidgetRenderer = memo(TeamChatWidgetRendererComponent);
+
 // ==========================================
 // COMBINED WIDGET RENDERERS COMPONENT
 // ==========================================
-export const HUDWidgetRenderers = (props: LayoutOnlyProps) => {
+const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
     return (
         <>
             <NotificationsRenderer {...props} />
@@ -682,3 +779,5 @@ export const HUDWidgetRenderers = (props: LayoutOnlyProps) => {
         </>
     );
 };
+
+export const HUDWidgetRenderers = memo(HUDWidgetRenderersComponent);
