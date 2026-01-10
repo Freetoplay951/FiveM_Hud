@@ -172,19 +172,6 @@ RegisterNetEvent('hud:requestTeamPermissions', function()
 end)
 
 -- ============================================================================
--- PING SYSTEM (Server-side only - GetPlayerPing is server-only!)
--- ============================================================================
-
--- Client requests ping update
-RegisterNetEvent('hud:requestPing', function()
-    local source = source
-    if Config.enablePing then
-        local ping = GetPlayerPing(source)
-        TriggerClientEvent('hud:receivePing', source, ping)
-    end
-end)
-
--- ============================================================================
 -- EVENTS
 -- ============================================================================
 
