@@ -43,6 +43,10 @@ export type WidgetType =
     | "voice"
     | "radio"
     | "location"
+    | "fps"
+    | "wanted"
+    | "ping"
+    | "date"
     // Helicopter subwidgets
     | "heli-base"
     | "heli-kts"
@@ -776,11 +780,90 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
         {
+            id: "date",
+            type: "date",
+            position: (_id, el, resolver) => {
+                const clockRect = resolver.getWidgetRect("clock");
+                const width = el?.offsetWidth ?? 0;
+                if (clockRect) {
+                    return {
+                        x: resolver.screen.width / 2 - width / 2,
+                        y: clockRect.bottom + GAP / 2,
+                    };
+                }
+                return {
+                    x: resolver.screen.width / 2 - width / 2,
+                    y: MARGIN + 40,
+                };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
             id: "money",
             type: "money",
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
                 return { x: resolver.screen.width - MARGIN - width, y: MARGIN };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "fps",
+            type: "fps",
+            position: (_id, el, resolver) => {
+                const moneyRect = resolver.getWidgetRect("money");
+                const width = el?.offsetWidth ?? 0;
+                if (moneyRect) {
+                    return {
+                        x: moneyRect.x - GAP - width,
+                        y: MARGIN,
+                    };
+                }
+                return { x: resolver.screen.width - MARGIN - width - 100, y: MARGIN };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "ping",
+            type: "ping",
+            position: (_id, el, resolver) => {
+                const fpsRect = resolver.getWidgetRect("fps");
+                const width = el?.offsetWidth ?? 0;
+                if (fpsRect) {
+                    return {
+                        x: fpsRect.x - GAP - width,
+                        y: MARGIN,
+                    };
+                }
+                return { x: resolver.screen.width - MARGIN - width - 200, y: MARGIN };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "wanted",
+            type: "wanted",
+            position: (_id, el, resolver) => {
+                const compassRect = resolver.getWidgetRect("compass");
+                const vehicleRect = resolver.getWidgetRect("vehiclename");
+                const x = vehicleRect ? vehicleRect.right + GAP : compassRect ? compassRect.right + GAP + 100 : MARGIN + 200;
+                return { x, y: MARGIN };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "minimap",
+            type: "minimap",
+            position: (_id, el, resolver) => {
+                const height = el?.offsetHeight ?? 0;
+                return {
+                    x: MARGIN,
+                    y: resolver.screen.height - MARGIN - height,
+                };
             },
             visible: true,
             scale: 1,

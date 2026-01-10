@@ -1,7 +1,8 @@
-import { memo, useEffect, useState, useMemo } from "react";
+import { memo, useEffect, useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import { useRenderLogger } from "@/hooks/useRenderLogger";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 // Memoized static icon to prevent re-renders
 const ClockIcon = memo(() => (
@@ -19,24 +20,29 @@ const motionConfig = {
     animate: { opacity: 1, y: 0 },
 } as const;
 
-const getCurrentTime = () =>
-    new Date().toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-
 const ClockWidgetComponent = () => {
+    const { languages, language } = useTranslation();
+    
+    const getLocale = useCallback(() => languages?.locale ?? "de-DE", [languages?.locale]);
+    
+    const getCurrentTime = useCallback(() =>
+        new Date().toLocaleTimeString(getLocale(), {
+            hour: "2-digit",
+            minute: "2-digit",
+        }), [getLocale]);
+
     const [currentTime, setCurrentTime] = useState(getCurrentTime);
 
     // Performance logging
     useRenderLogger("ClockWidget", { currentTime });
 
     useEffect(() => {
+        setCurrentTime(getCurrentTime());
         const interval = setInterval(() => {
             setCurrentTime(getCurrentTime());
         }, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [getCurrentTime, language]);
 
     // Memoize the time style to prevent object recreation
     const timeStyle = useMemo(

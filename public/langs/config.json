@@ -1,7 +1,14 @@
 {
     "defaultLanguage": "de",
+    "locale": "de-DE",
     "languages": {
-        "de": "Deutsch",
-        "en": "English"
+        "de": {
+            "name": "Deutsch",
+            "locale": "de-DE"
+        },
+        "en": {
+            "name": "English",
+            "locale": "en-US"
+        }
     }
 }

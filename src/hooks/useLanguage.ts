@@ -23,7 +23,13 @@ export const useLanguage = () => {
                         ? (stored as Language)
                         : data.defaultLanguage;
 
-                console.info("Setting language to:", languageKey);
+                // Update the global locale based on selected language
+                const selectedLang = data.languages[languageKey];
+                if (selectedLang?.locale) {
+                    data.locale = selectedLang.locale;
+                }
+
+                console.info("Setting language to:", languageKey, "locale:", data.locale);
                 setLanguages(data);
                 setLanguageState(languageKey);
             } catch (error) {
@@ -46,7 +52,16 @@ export const useLanguage = () => {
                 const translations: Translations = await res.json();
                 setT(translations);
 
-                console.log(`Loaded language ${languages?.languages[language] ?? language}`);
+                // Update locale when language changes
+                if (languages) {
+                    const langConfig = languages.languages[language];
+                    if (langConfig?.locale) {
+                        setLanguages({ ...languages, locale: langConfig.locale });
+                    }
+                }
+
+                const langName = languages?.languages[language]?.name ?? language;
+                console.log(`Loaded language ${langName}`);
                 localStorage.setItem(STORAGE_KEY, language);
             } catch (error) {
                 console.error(error);

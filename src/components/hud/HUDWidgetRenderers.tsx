@@ -5,6 +5,10 @@ import { MoneyWidget } from "./widgets/MoneyWidget";
 import { VoiceWidget } from "./widgets/VoiceWidget";
 import { LocationWidget } from "./widgets/LocationWidget";
 import { ClockWidget } from "./widgets/ClockWidget";
+import { DateWidget } from "./widgets/DateWidget";
+import { FpsWidget } from "./widgets/FpsWidget";
+import { WantedWidget } from "./widgets/WantedWidget";
+import { PingWidget } from "./widgets/PingWidget";
 import { CompassWidget } from "./widgets/CompassWidget";
 import { VehicleNameWidget } from "./widgets/VehicleNameWidget";
 import { NotificationContainer } from "./notifications/NotificationContainer";
@@ -26,6 +30,7 @@ import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
+import { useFps, useWantedLevel, usePing } from "@/stores/utilityStore";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 // ==========================================
@@ -759,6 +764,214 @@ const TeamChatWidgetRendererComponent = ({
 export const TeamChatWidgetRenderer = memo(TeamChatWidgetRendererComponent);
 
 // ==========================================
+// FPS WIDGET - Subscribes to utility store
+// ==========================================
+const FpsWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("fps");
+    const isDead = useIsDead();
+
+    const fps = useFps();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    if (!widget) return null;
+
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <FpsWidget fps={fps} />
+        </HUDWidget>
+    );
+};
+
+export const FpsWidgetRenderer = memo(FpsWidgetRendererComponent);
+
+// ==========================================
+// PING WIDGET - Subscribes to utility store
+// ==========================================
+const PingWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("ping");
+    const isDead = useIsDead();
+
+    const ping = usePing();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    if (!widget) return null;
+
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <PingWidget ping={ping} />
+        </HUDWidget>
+    );
+};
+
+export const PingWidgetRenderer = memo(PingWidgetRendererComponent);
+
+// ==========================================
+// WANTED WIDGET - Subscribes to utility store
+// ==========================================
+const WantedWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("wanted");
+    const isDead = useIsDead();
+
+    const wantedLevel = useWantedLevel();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    if (!widget) return null;
+
+    // Show in edit mode, or when player has wanted level
+    const showWanted = wantedLevel > 0 || editMode;
+    const baseVisible = widget.visible && (editMode ? true : !isDead) && showWanted;
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <WantedWidget wantedLevel={editMode && wantedLevel === 0 ? 3 : wantedLevel} />
+        </HUDWidget>
+    );
+};
+
+export const WantedWidgetRenderer = memo(WantedWidgetRendererComponent);
+
+// ==========================================
+// DATE WIDGET - Self-contained with locale sync
+// ==========================================
+const DateWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("date");
+    const isDead = useIsDead();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    if (!widget) return null;
+
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <DateWidget />
+        </HUDWidget>
+    );
+};
+
+export const DateWidgetRenderer = memo(DateWidgetRendererComponent);
+
+// ==========================================
 // COMBINED WIDGET RENDERERS COMPONENT
 // ==========================================
 const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
@@ -768,6 +981,10 @@ const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
             <StatusWidgetsRenderer {...props} />
             <MoneyWidgetRenderer {...props} />
             <ClockWidgetRenderer {...props} />
+            <DateWidgetRenderer {...props} />
+            <FpsWidgetRenderer {...props} />
+            <PingWidgetRenderer {...props} />
+            <WantedWidgetRenderer {...props} />
             <VoiceWidgetRenderer {...props} />
             <RadioWidgetRenderer {...props} />
             <LocationWidgetRenderer {...props} />
