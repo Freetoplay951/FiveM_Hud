@@ -30,7 +30,7 @@ const blinkAnimation = {
     rotate: 0,
     opacity: [1, 0.3, 1] as number[],
     transition: {
-        duration: 0.6,
+        duration: 1.5,
         repeat: Infinity,
         ease: "easeInOut" as const,
     },
