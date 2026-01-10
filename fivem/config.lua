@@ -166,5 +166,25 @@ Config.BodyHealth = {
     redThreshold = 40,     -- Unter 40% = Rot
 }
 
+-- ============================================================================
+-- SERVER INFO
+-- ============================================================================
+
+Config.ServerName = "RP Server"        -- Server Name im HUD
+Config.MaxPlayers = 128                -- Maximale Spieleranzahl
+
+-- ============================================================================
+-- SPEED ZONES (Blitzer/Geschwindigkeitszonen)
+-- ============================================================================
+-- Definiere Zonen mit Geschwindigkeitslimits
+-- coords = Position des Zentrums, radius = Größe der Zone, limit = Limit in km/h
+-- ============================================================================
+
+Config.SpeedZones = {
+    -- Beispiel-Zonen (füge deine eigenen hinzu):
+    -- { coords = vector3(215.0, -810.0, 30.0), radius = 100.0, limit = 50 },
+    -- { coords = vector3(-1037.0, -2733.0, 20.0), radius = 150.0, limit = 30 },
+}
+
 -- Debug
 Config.Debug = true

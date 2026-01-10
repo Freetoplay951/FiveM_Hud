@@ -9,6 +9,9 @@ import { DateWidget } from "./widgets/DateWidget";
 import { FpsWidget } from "./widgets/FpsWidget";
 import { WantedWidget } from "./widgets/WantedWidget";
 import { PingWidget } from "./widgets/PingWidget";
+import { ServerInfoWidget } from "./widgets/ServerInfoWidget";
+import { ServerNameWidget } from "./widgets/ServerNameWidget";
+import { SpeedLimitWidget } from "./widgets/SpeedLimitWidget";
 import { CompassWidget } from "./widgets/CompassWidget";
 import { VehicleNameWidget } from "./widgets/VehicleNameWidget";
 import { NotificationContainer } from "./notifications/NotificationContainer";
@@ -30,7 +33,7 @@ import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
-import { useFps, useWantedLevel, usePing } from "@/stores/utilityStore";
+import { useFps, useWantedLevel, usePing, useServerName, usePlayerCount, useMaxPlayers, useSpeedLimit, useSpeedZoneActive } from "@/stores/utilityStore";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 // ==========================================
@@ -972,6 +975,172 @@ const DateWidgetRendererComponent = ({
 export const DateWidgetRenderer = memo(DateWidgetRendererComponent);
 
 // ==========================================
+// SERVER INFO WIDGET - Subscribes to utility store
+// ==========================================
+const ServerInfoWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("serverinfo");
+    const isDead = useIsDead();
+
+    const playerCount = usePlayerCount();
+    const maxPlayers = useMaxPlayers();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    if (!widget) return null;
+
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <ServerInfoWidget playerCount={playerCount} maxPlayers={maxPlayers} />
+        </HUDWidget>
+    );
+};
+
+export const ServerInfoWidgetRenderer = memo(ServerInfoWidgetRendererComponent);
+
+// ==========================================
+// SERVER NAME WIDGET - Subscribes to utility store
+// ==========================================
+const ServerNameWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("servername");
+    const isDead = useIsDead();
+
+    const serverName = useServerName();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    if (!widget) return null;
+
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <ServerNameWidget serverName={serverName} />
+        </HUDWidget>
+    );
+};
+
+export const ServerNameWidgetRenderer = memo(ServerNameWidgetRendererComponent);
+
+// ==========================================
+// SPEED LIMIT WIDGET - Subscribes to utility & vehicle store
+// ==========================================
+const SpeedLimitWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("speedlimit");
+    const isDead = useIsDead();
+
+    const speedLimit = useSpeedLimit();
+    const speedZoneActive = useSpeedZoneActive();
+    const currentSpeed = useVehicleStore((s) => s.speed);
+    const inVehicle = useVehicleStore((s) => s.inVehicle);
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady]
+    );
+
+    if (!widget) return null;
+
+    // Show when in vehicle and speed zone is active, or in edit mode
+    const showSpeedLimit = (speedZoneActive && inVehicle) || editMode;
+    const baseVisible = widget.visible && (editMode ? true : !isDead) && showSpeedLimit;
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <SpeedLimitWidget 
+                currentSpeed={editMode ? 75 : currentSpeed} 
+                speedLimit={speedLimit} 
+                isActive={editMode || speedZoneActive} 
+            />
+        </HUDWidget>
+    );
+};
+
+export const SpeedLimitWidgetRenderer = memo(SpeedLimitWidgetRendererComponent);
+
+// ==========================================
 // COMBINED WIDGET RENDERERS COMPONENT
 // ==========================================
 const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
@@ -985,6 +1154,9 @@ const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
             <FpsWidgetRenderer {...props} />
             <PingWidgetRenderer {...props} />
             <WantedWidgetRenderer {...props} />
+            <ServerInfoWidgetRenderer {...props} />
+            <ServerNameWidgetRenderer {...props} />
+            <SpeedLimitWidgetRenderer {...props} />
             <VoiceWidgetRenderer {...props} />
             <RadioWidgetRenderer {...props} />
             <LocationWidgetRenderer {...props} />
