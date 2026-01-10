@@ -49,7 +49,6 @@ export type WidgetType =
     | "date"
     | "serverinfo"
     | "servername"
-    | "speedlimit"
     // Helicopter subwidgets
     | "heli-base"
     | "heli-kts"
@@ -889,20 +888,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                     };
                 }
                 return { x: MARGIN, y: resolver.screen.height - MARGIN - 150 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "speedlimit",
-            type: "speedlimit",
-            position: (_id, el, resolver) => {
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
-                return {
-                    x: resolver.screen.width / 2 - width / 2,
-                    y: resolver.screen.height - MARGIN - height - 100,
-                };
             },
             visible: true,
             scale: 1,
