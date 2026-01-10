@@ -9,9 +9,46 @@ import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { isNuiEnvironment, GetParentResourceName } from "@/lib/nuiUtils";
+import {
+    StatusWidgetState,
+    VehicleState,
+    MoneyState,
+    VoiceState,
+    LocationState,
+    NotificationData,
+    DeathState,
+    ChatMessage,
+    RadioState,
+    TeamChatState,
+    TeamChatMessage,
+    DisabledWidgets,
+} from "@/types/hud";
 
 // Re-export for backwards compatibility
 export { isNuiEnvironment } from "@/lib/nuiUtils";
+
+interface NuiEventHandlers {
+    onUpdateHud?: (data: Partial<StatusWidgetState>) => void;
+    onUpdateVehicle?: (data: VehicleState) => void;
+    onUpdateMoney?: (data: MoneyState) => void;
+    onUpdateVoice?: (data: VoiceState) => void;
+    onUpdateRadio?: (data: RadioState) => void;
+    onUpdateLocation?: (data: LocationState) => void;
+    onUpdatePlayer?: (data: { id: number; job: string; rank: string }) => void;
+    onNotify?: (data: { type: NotificationData["type"]; title: string; message: string; duration?: number }) => void;
+    onToggleEditMode?: (enabled: boolean) => void;
+    onSetVisible?: (visible: boolean) => void;
+    onUpdateDeath?: (data: DeathState) => void;
+    onSetVoiceEnabled?: (enabled: boolean) => void;
+    onUpdateDisabledWidgets?: (data: DisabledWidgets) => void;
+    onChatUpdate?: (data: { isInputActive?: boolean; message?: ChatMessage; clearChat?: boolean }) => void;
+    onTeamChatUpdate?: (
+        data: Omit<Partial<TeamChatState>, "isVisible"> & {
+            message?: TeamChatMessage;
+            clearChat?: boolean;
+        }
+    ) => void;
+}
 
 interface UseNuiEventsProps {
     editMode: boolean;
@@ -77,34 +114,34 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     sendNuiCallback("pong");
                     break;
                 case "updateHUDState":
-                    useStatusStore.getState().setStatus(data);
+                    useStatusStore.getState().setStatus(data as Partial<StatusWidgetState>);
                     break;
                 case "updateVehicleState":
-                    useVehicleStore.getState().setVehicleState(data);
+                    useVehicleStore.getState().setVehicleState(data as VehicleState);
                     break;
                 case "updateMoneyState":
-                    useMoneyStore.getState().setMoney(data);
+                    useMoneyStore.getState().setMoney(data as MoneyState);
                     break;
                 case "updateVoiceState":
-                    useVoiceStore.getState().setVoiceState(data);
+                    useVoiceStore.getState().setVoiceState(data as VoiceState);
                     break;
                 case "updateRadioState":
-                    useVoiceStore.getState().setRadioState(data);
+                    useVoiceStore.getState().setRadioState(data as RadioState);
                     break;
                 case "updateLocationState":
-                    useLocationStore.getState().setLocation(data);
+                    useLocationStore.getState().setLocation(data as LocationState);
                     break;
                 case "updatePlayerState":
-                    useMoneyStore.getState().setPlayer(data);
+                    useMoneyStore.getState().setPlayer(data as { id: number; job: string; rank: string });
                     break;
                 case "updateDeathState":
-                    useDeathStore.getState().setDeathState(data);
+                    useDeathStore.getState().setDeathState(data as DeathState);
                     break;
                 case "updateChatState":
-                    useChatStore.getState().setChatState(data);
+                    useChatStore.getState().setChatState(data as { isInputActive?: boolean; message?: ChatMessage; clearChat?: boolean });
                     break;
                 case "updateTeamChatState":
-                    useChatStore.getState().setTeamChatState(data);
+                    useChatStore.getState().setTeamChatState(data as Omit<Partial<TeamChatState>, "isVisible"> & { message?: TeamChatMessage; clearChat?: boolean });
                     break;
                 case "showHUD":
                     useHUDGlobalStore.getState().setIsVisible(true);
@@ -113,20 +150,21 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     useHUDGlobalStore.getState().setIsVisible(false);
                     break;
                 case "setDisabledWidgets":
-                    useHUDGlobalStore.getState().setDisabledWidgets(data);
+                    useHUDGlobalStore.getState().setDisabledWidgets(data as DisabledWidgets);
                     break;
                 case "setVoiceEnabled":
-                    useVoiceStore.getState().setIsVoiceEnabled(data.enabled);
+                    useVoiceStore.getState().setIsVoiceEnabled((data as { enabled: boolean }).enabled);
                     break;
                 case "toggleEditMode":
                     if (!editMode) toggleEditMode();
                     break;
                 case "notify": {
                     const store = useNotificationStore.getState();
-                    if (data.type === "success") store.success(data.title, data.message);
-                    else if (data.type === "error") store.error(data.title, data.message);
-                    else if (data.type === "warning") store.warning(data.title, data.message);
-                    else if (data.type === "info") store.info(data.title, data.message);
+                    const notifyData = data as { type: NotificationData["type"]; title: string; message: string };
+                    if (notifyData.type === "success") store.success(notifyData.title, notifyData.message);
+                    else if (notifyData.type === "error") store.error(notifyData.title, notifyData.message);
+                    else if (notifyData.type === "warning") store.warning(notifyData.title, notifyData.message);
+                    else if (notifyData.type === "info") store.info(notifyData.title, notifyData.message);
                     break;
                 }
             }
