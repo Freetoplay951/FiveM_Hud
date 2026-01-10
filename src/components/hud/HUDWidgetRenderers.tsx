@@ -12,58 +12,47 @@ import { TeamChatWidget } from "./widgets/TeamChatWidget";
 import { RadioWidget } from "./widgets/RadioWidget";
 import { MinimapWidget } from "./widgets/MinimapWidget";
 import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
-import {
-    StatusWidgetState,
-    VehicleState,
-    MoneyState,
-    PlayerState,
-    VoiceState,
-    LocationState,
-    DeathState,
-    ChatState,
-    TeamChatState,
-    RadioState,
-    StatusType,
-    NotificationData,
-} from "@/types/hud";
+import { StatusType, NotificationData } from "@/types/hud";
 import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
 import { DEMO_RADIO_ENABLED } from "./data/demoData";
 
-// ==========================================
-// SHARED WIDGET PROPS INTERFACE
-// ==========================================
-export interface WidgetRenderersProps {
-    // State
-    statusState: StatusWidgetState;
-    vehicleState: VehicleState;
-    moneyState: MoneyState;
-    playerState: PlayerState;
-    voiceState: VoiceState;
-    locationState: LocationState;
-    deathState: DeathState;
-    chatState: ChatState;
-    teamChatState: TeamChatState;
-    radioState: RadioState;
+// Import stores - widgets subscribe to their own data
+import { useIsDemoMode } from "@/stores/hudStore";
+import { useIsDead } from "@/stores/deathStore";
+import { useStatusStore, useIsUnderwater } from "@/stores/statusStore";
+import { useMoneyData, usePlayerData } from "@/stores/moneyStore";
+import { useVoiceData, useIsVoiceEnabled, useRadioData } from "@/stores/voiceStore";
+import { useLocationData, useHeading } from "@/stores/locationStore";
+import { useVehicleStore } from "@/stores/vehicleStore";
+import {
+    useChatStore,
+    useChatData,
+    useTeamChatData,
+    useTeamChatHasAccess,
+} from "@/stores/chatStore";
 
-    // Settings
+// ==========================================
+// LAYOUT-ONLY PROPS INTERFACE
+// No widget data - only layout/edit concerns
+// ==========================================
+export interface LayoutOnlyProps {
+    // Layout settings
     editMode: boolean;
     snapToGrid: boolean;
     gridSize: number;
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
-    isDemoMode: boolean;
-    isVoiceEnabled: boolean;
     hasSignaledReady: boolean;
     autoLayoutHiddenIds: string[];
 
-    // Notifications
+    // Notifications (cross-cutting concern)
     notifications: NotificationData[];
     removeNotification: (id: string) => void;
     displayedNotifications: NotificationData[];
     isUsingEditDemoNotifications: boolean;
 
-    // Widget functions
+    // Layout functions only
     getWidget: (id: string) => ResolvedWidgetConfig | undefined;
     updateWidgetPosition: (id: string, position: WidgetPosition) => void;
     updateWidgetScale: (id: string, scale: number) => void;
@@ -71,10 +60,6 @@ export interface WidgetRenderersProps {
     resetWidget: (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => void;
     isWidgetDisabled: (id: string) => boolean;
     getMultiSelectProps: (id: string) => Record<string, unknown>;
-
-    // State setters for chat
-    setChatState: React.Dispatch<React.SetStateAction<ChatState>>;
-    setTeamChatState: React.Dispatch<React.SetStateAction<TeamChatState>>;
 }
 
 // ==========================================
@@ -82,7 +67,6 @@ export interface WidgetRenderersProps {
 // ==========================================
 export const NotificationsRenderer = ({
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
@@ -95,11 +79,12 @@ export const NotificationsRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("notifications");
+    const isDead = useIsDead();
     if (!widget) return null;
 
-    const isDeadOverlay = deathState.isDead && !editMode;
+    const isDeadOverlay = isDead && !editMode;
 
     return (
         <HUDWidget
@@ -125,14 +110,13 @@ export const NotificationsRenderer = ({
 };
 
 // ==========================================
-// STATUS WIDGETS
+// STATUS WIDGETS - Each subscribes to its own value
 // ==========================================
 const STATUS_TYPES: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
 
-export const StatusWidgetsRenderer = ({
-    statusState,
+const StatusWidgetItem = ({
+    type,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     statusDesign,
@@ -145,54 +129,63 @@ export const StatusWidgetsRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps & { type: StatusType }) => {
+    const widget = getWidget(type);
+    const isDead = useIsDead();
+    
+    // Subscribe only to this specific status value
+    const value = useStatusStore((state) => state[type] ?? 100);
+    const isUnderwater = useIsUnderwater();
+
+    if (!widget) return null;
+
+    const isOxygenHidden = type === "oxygen" && !editMode && !isUnderwater;
+    const baseVisible = widget.visible && (editMode ? true : !isDead) && !isOxygenHidden;
+
+    return (
+        <HUDWidget
+            id={type}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            suspended={autoLayoutHiddenIds.includes(type)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
+            {...getMultiSelectProps(type)}>
+            <StatusWidget
+                type={type}
+                value={value}
+                design={statusDesign}
+            />
+        </HUDWidget>
+    );
+};
+
+export const StatusWidgetsRenderer = (props: LayoutOnlyProps) => {
     return (
         <>
-            {STATUS_TYPES.map((type) => {
-                const widget = getWidget(type);
-                if (!widget) return null;
-
-                const value = statusState[type] ?? 100;
-                const isOxygenHidden = type === "oxygen" && !editMode && !statusState.isUnderwater;
-                const baseVisible = widget.visible && (editMode ? true : !deathState.isDead) && !isOxygenHidden;
-
-                return (
-                    <HUDWidget
-                        key={type}
-                        id={type}
-                        position={widget.position}
-                        visible={baseVisible}
-                        scale={widget.scale}
-                        disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-                        suspended={autoLayoutHiddenIds.includes(type)}
-                        editMode={editMode}
-                        snapToGrid={snapToGrid}
-                        gridSize={gridSize}
-                        onPositionChange={updateWidgetPosition}
-                        onVisibilityToggle={toggleWidgetVisibility}
-                        onScaleChange={updateWidgetScale}
-                        onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
-                        {...getMultiSelectProps(type)}>
-                        <StatusWidget
-                            type={type}
-                            value={value}
-                            design={statusDesign}
-                        />
-                    </HUDWidget>
-                );
-            })}
+            {STATUS_TYPES.map((type) => (
+                <StatusWidgetItem
+                    key={type}
+                    type={type}
+                    {...props}
+                />
+            ))}
         </>
     );
 };
 
 // ==========================================
-// MONEY WIDGET
+// MONEY WIDGET - Subscribes to money store
 // ==========================================
 export const MoneyWidgetRenderer = ({
-    moneyState,
-    playerState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
@@ -203,11 +196,17 @@ export const MoneyWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("money");
+    const isDead = useIsDead();
+    
+    // Widget subscribes to its own data
+    const money = useMoneyData();
+    const player = usePlayerData();
+
     if (!widget) return null;
 
-    const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
 
     return (
         <HUDWidget
@@ -225,19 +224,18 @@ export const MoneyWidgetRenderer = ({
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
             <MoneyWidget
-                money={moneyState}
-                player={playerState}
+                money={money}
+                player={player}
             />
         </HUDWidget>
     );
 };
 
 // ==========================================
-// CLOCK WIDGET
+// CLOCK WIDGET - Self-contained, no external data
 // ==========================================
 export const ClockWidgetRenderer = ({
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
@@ -248,11 +246,13 @@ export const ClockWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("clock");
+    const isDead = useIsDead();
+
     if (!widget) return null;
 
-    const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
 
     return (
         <HUDWidget
@@ -275,17 +275,13 @@ export const ClockWidgetRenderer = ({
 };
 
 // ==========================================
-// VOICE WIDGET
+// VOICE WIDGET - Subscribes to voice store
 // ==========================================
 export const VoiceWidgetRenderer = ({
-    voiceState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
-    isDemoMode,
-    isVoiceEnabled,
     autoLayoutHiddenIds,
     getWidget,
     updateWidgetPosition,
@@ -294,11 +290,18 @@ export const VoiceWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("voice");
+    const isDead = useIsDead();
+    const isDemoMode = useIsDemoMode();
+    
+    // Widget subscribes to its own data
+    const voice = useVoiceData();
+    const isVoiceEnabled = useIsVoiceEnabled();
+
     if (!widget) return null;
 
-    const baseVisible = editMode ? true : !deathState.isDead;
+    const baseVisible = editMode ? true : !isDead;
     const voiceAvailable = isDemoMode || isVoiceEnabled;
     const isVisibleWidget = widget.visible && baseVisible && voiceAvailable;
 
@@ -318,23 +321,19 @@ export const VoiceWidgetRenderer = ({
             onScaleChange={updateWidgetScale}
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
-            <VoiceWidget voice={voiceState} />
+            <VoiceWidget voice={voice} />
         </HUDWidget>
     );
 };
 
 // ==========================================
-// RADIO WIDGET
+// RADIO WIDGET - Subscribes to voice store
 // ==========================================
 export const RadioWidgetRenderer = ({
-    radioState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
-    isDemoMode,
-    isVoiceEnabled,
     getWidget,
     updateWidgetPosition,
     updateWidgetScale,
@@ -342,15 +341,22 @@ export const RadioWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("radio");
+    const isDead = useIsDead();
+    const isDemoMode = useIsDemoMode();
+    
+    // Widget subscribes to its own data
+    const radioData = useRadioData();
+    const isVoiceEnabled = useIsVoiceEnabled();
+
     if (!widget) return null;
 
-    const baseVisible = editMode ? true : !deathState.isDead;
+    const baseVisible = editMode ? true : !isDead;
     const voiceAvailable = isDemoMode || isVoiceEnabled;
-    const showRadio = radioState.active || editMode;
+    const showRadio = radioData.active || editMode;
     const isVisibleWidget = widget.visible && baseVisible && voiceAvailable && showRadio;
-    const radioData = editMode && !radioState.active ? DEMO_RADIO_ENABLED : radioState;
+    const radioDisplay = editMode && !radioData.active ? DEMO_RADIO_ENABLED : radioData;
 
     return (
         <HUDWidget
@@ -367,18 +373,16 @@ export const RadioWidgetRenderer = ({
             onScaleChange={updateWidgetScale}
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
-            <RadioWidget radio={radioData} />
+            <RadioWidget radio={radioDisplay} />
         </HUDWidget>
     );
 };
 
 // ==========================================
-// LOCATION WIDGET
+// LOCATION WIDGET - Subscribes to location store
 // ==========================================
 export const LocationWidgetRenderer = ({
-    locationState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     minimapShape,
@@ -391,11 +395,16 @@ export const LocationWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("location");
+    const isDead = useIsDead();
+    
+    // Widget subscribes to its own data
+    const location = useLocationData();
+
     if (!widget) return null;
 
-    const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
 
     return (
         <HUDWidget
@@ -414,7 +423,7 @@ export const LocationWidgetRenderer = ({
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
             <LocationWidget
-                location={locationState}
+                location={location}
                 shape={minimapShape}
             />
         </HUDWidget>
@@ -422,12 +431,10 @@ export const LocationWidgetRenderer = ({
 };
 
 // ==========================================
-// COMPASS WIDGET
+// COMPASS WIDGET - Subscribes to location store
 // ==========================================
 export const CompassWidgetRenderer = ({
-    locationState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
@@ -438,12 +445,17 @@ export const CompassWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("compass");
+    const isDead = useIsDead();
+    
+    // Widget subscribes to its own data
+    const heading = useHeading();
+
     if (!widget) return null;
 
-    const showCompass = locationState.heading != undefined || editMode;
-    const baseVisible = widget.visible && (editMode ? true : !deathState.isDead) && showCompass;
+    const showCompass = heading != undefined || editMode;
+    const baseVisible = widget.visible && (editMode ? true : !isDead) && showCompass;
 
     return (
         <HUDWidget
@@ -460,18 +472,16 @@ export const CompassWidgetRenderer = ({
             onScaleChange={updateWidgetScale}
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
-            <CompassWidget heading={locationState.heading} />
+            <CompassWidget heading={heading} />
         </HUDWidget>
     );
 };
 
 // ==========================================
-// VEHICLE NAME WIDGET
+// VEHICLE NAME WIDGET - Subscribes to vehicle store
 // ==========================================
 export const VehicleNameWidgetRenderer = ({
-    vehicleState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     speedometerType,
@@ -483,11 +493,19 @@ export const VehicleNameWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("vehiclename");
+    const isDead = useIsDead();
+    
+    // Widget subscribes to its own data
+    const inVehicle = useVehicleStore((s) => s.inVehicle);
+    const vehicleType = useVehicleStore((s) => s.vehicleType);
+    const vehicleName = useVehicleStore((s) => s.vehicleName);
+    const vehicleSpawnName = useVehicleStore((s) => s.vehicleSpawnName);
+
     if (!widget) return null;
 
-    const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
 
     return (
         <HUDWidget
@@ -505,10 +523,10 @@ export const VehicleNameWidgetRenderer = ({
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
             <VehicleNameWidget
-                vehicleType={editMode ? speedometerType : vehicleState.vehicleType}
-                vehicleName={vehicleState.vehicleName}
-                vehicleSpawnName={vehicleState.vehicleSpawnName}
-                inVehicle={vehicleState.inVehicle}
+                vehicleType={editMode ? speedometerType : vehicleType}
+                vehicleName={vehicleName}
+                vehicleSpawnName={vehicleSpawnName}
+                inVehicle={inVehicle}
                 editMode={editMode}
             />
         </HUDWidget>
@@ -529,7 +547,7 @@ export const MinimapWidgetRenderer = ({
     toggleWidgetVisibility,
     resetWidget,
     isWidgetDisabled,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("minimap");
     if (!widget) return null;
 
@@ -557,17 +575,13 @@ export const MinimapWidgetRenderer = ({
 };
 
 // ==========================================
-// CHAT WIDGET
+// CHAT WIDGET - Subscribes to chat store
 // ==========================================
 export const ChatWidgetRenderer = ({
-    chatState,
-    setChatState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
-    isDemoMode,
     getWidget,
     updateWidgetPosition,
     updateWidgetScale,
@@ -575,11 +589,20 @@ export const ChatWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("chat");
+    const isDead = useIsDead();
+    const isDemoMode = useIsDemoMode();
+    
+    // Widget subscribes to its own data
+    const chatData = useChatData();
+    const setChatState = useChatStore((s) => s.setChatState);
+    const addChatMessage = useChatStore((s) => s.addChatMessage);
+    const setChatInputActive = useChatStore((s) => s.setChatInputActive);
+
     if (!widget) return null;
 
-    const baseVisible = widget.visible && (editMode ? true : !deathState.isDead);
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
 
     return (
         <HUDWidget
@@ -597,30 +620,26 @@ export const ChatWidgetRenderer = ({
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
             <ChatWidget
-                chat={chatState}
+                chat={chatData}
                 setChatState={setChatState}
                 editMode={editMode}
                 onSendMessage={(msg) => {
                     if (isDemoMode) {
-                        const newMsg = {
+                        addChatMessage({
                             id: Date.now().toString(),
-                            type: "normal" as const,
+                            type: "normal",
                             sender: "Du",
                             message: msg,
                             timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-                        };
-                        setChatState((prev) => ({
-                            ...prev,
-                            isInputActive: false,
-                            messages: [...prev.messages, newMsg],
-                        }));
+                        });
+                        setChatInputActive(false);
                     } else {
                         sendNuiCallback("sendChatMessage", { message: msg });
                     }
                 }}
                 onClose={() => {
                     if (isDemoMode) {
-                        setChatState((prev) => ({ ...prev, isInputActive: false }));
+                        setChatInputActive(false);
                     } else {
                         sendNuiCallback("closeChat");
                     }
@@ -631,17 +650,13 @@ export const ChatWidgetRenderer = ({
 };
 
 // ==========================================
-// TEAM CHAT WIDGET
+// TEAM CHAT WIDGET - Subscribes to chat store
 // ==========================================
 export const TeamChatWidgetRenderer = ({
-    teamChatState,
-    setTeamChatState,
     editMode,
-    deathState,
     snapToGrid,
     gridSize,
     hasSignaledReady,
-    isDemoMode,
     getWidget,
     updateWidgetPosition,
     updateWidgetScale,
@@ -649,12 +664,21 @@ export const TeamChatWidgetRenderer = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
-}: WidgetRenderersProps) => {
+}: LayoutOnlyProps) => {
     const widget = getWidget("teamchat");
+    const isDead = useIsDead();
+    const isDemoMode = useIsDemoMode();
+    
+    // Widget subscribes to its own data
+    const teamChatData = useTeamChatData();
+    const hasTeamAccess = useTeamChatHasAccess();
+    const setTeamChatState = useChatStore((s) => s.setTeamChatState);
+    const addTeamChatMessage = useChatStore((s) => s.addTeamChatMessage);
+    const setTeamChatInputActive = useChatStore((s) => s.setTeamChatInputActive);
+
     if (!widget) return null;
 
-    const hasTeamAccess = teamChatState.hasAccess;
-    const baseVisible = hasTeamAccess && (editMode || !deathState.isDead);
+    const baseVisible = hasTeamAccess && (editMode || !isDead);
     const isVisibleWidget = widget.visible && baseVisible;
 
     return (
@@ -674,29 +698,25 @@ export const TeamChatWidgetRenderer = ({
             onReset={(id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)}
             {...getMultiSelectProps(widget.id)}>
             <TeamChatWidget
-                teamChat={teamChatState}
+                teamChat={teamChatData}
                 editMode={editMode}
                 onSendMessage={(msg) => {
                     if (isDemoMode) {
-                        const newMsg = {
+                        addTeamChatMessage({
                             id: Date.now().toString(),
                             sender: "Du",
                             rank: "Admin",
                             message: msg,
                             timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-                        };
-                        setTeamChatState((prev) => ({
-                            ...prev,
-                            isInputActive: false,
-                            messages: [...prev.messages, newMsg],
-                        }));
+                        });
+                        setTeamChatInputActive(false);
                     } else {
                         sendNuiCallback("sendTeamChatMessage", { message: msg });
                     }
                 }}
                 onClose={() => {
                     if (isDemoMode) {
-                        setTeamChatState((prev) => ({ ...prev, isInputActive: false }));
+                        setTeamChatInputActive(false);
                     } else {
                         sendNuiCallback("closeTeamChat");
                     }
@@ -709,7 +729,7 @@ export const TeamChatWidgetRenderer = ({
 // ==========================================
 // COMBINED WIDGET RENDERERS COMPONENT
 // ==========================================
-export const HUDWidgetRenderers = (props: WidgetRenderersProps) => {
+export const HUDWidgetRenderers = (props: LayoutOnlyProps) => {
     return (
         <>
             <NotificationsRenderer {...props} />
