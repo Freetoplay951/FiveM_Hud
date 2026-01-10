@@ -1,122 +1,18 @@
 import { useEffect, useRef } from "react";
-import {
-    StatusWidgetState,
-    VehicleState,
-    MoneyState,
-    VoiceState,
-    LocationState,
-    NotificationData,
-    DeathState,
-    ChatMessage,
-    RadioState,
-    TeamChatState,
-    TeamChatMessage,
-    DisabledWidgets,
-} from "@/types/hud";
+import { useStatusStore } from "@/stores/statusStore";
+import { useVehicleStore } from "@/stores/vehicleStore";
+import { useVoiceStore } from "@/stores/voiceStore";
+import { useLocationStore } from "@/stores/locationStore";
+import { useMoneyStore } from "@/stores/moneyStore";
+import { useChatStore } from "@/stores/chatStore";
+import { useDeathStore } from "@/stores/deathStore";
+import { useHUDGlobalStore } from "@/stores/hudStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 
-interface NuiEventHandlers {
-    onUpdateHud?: (data: Partial<StatusWidgetState>) => void;
-    onUpdateVehicle?: (data: VehicleState) => void;
-    onUpdateMoney?: (data: MoneyState) => void;
-    onUpdateVoice?: (data: VoiceState) => void;
-    onUpdateRadio?: (data: RadioState) => void;
-    onUpdateLocation?: (data: LocationState) => void;
-    onUpdatePlayer?: (data: { id: number; job: string; rank: string }) => void;
-    onNotify?: (data: { type: NotificationData["type"]; title: string; message: string; duration?: number }) => void;
-    onToggleEditMode?: (enabled: boolean) => void;
-    onSetVisible?: (visible: boolean) => void;
-    onUpdateDeath?: (data: DeathState) => void;
-    onSetVoiceEnabled?: (enabled: boolean) => void;
-    onUpdateDisabledWidgets?: (data: DisabledWidgets) => void;
-    onChatUpdate?: (data: { isInputActive?: boolean; message?: ChatMessage; clearChat?: boolean }) => void;
-    onTeamChatUpdate?: (
-        data: Omit<Partial<TeamChatState>, "isVisible"> & {
-            message?: TeamChatMessage;
-            clearChat?: boolean;
-        }
-    ) => void;
+interface UseNuiEventsProps {
+    editMode: boolean;
+    toggleEditMode: () => void;
 }
-
-export const useNuiEvents = (handlers: NuiEventHandlers) => {
-    // Use ref to always have access to latest handlers without re-registering listener
-    const handlersRef = useRef(handlers);
-
-    // Update ref on every render (this is cheap and doesn't cause re-registration)
-    useEffect(() => {
-        handlersRef.current = handlers;
-    });
-
-    // Register event listener ONCE on mount
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            const { action, data } = event.data;
-            const eventType = action || event.data.type;
-            const h = handlersRef.current;
-
-            switch (eventType) {
-                case "ping":
-                    console.log("[HUD DEBUG] Lua -> Web ping received");
-                    sendNuiCallback("pong");
-                    break;
-                case "updateHud":
-                    h.onUpdateHud?.(data);
-                    break;
-                case "updateVehicle":
-                    h.onUpdateVehicle?.(data);
-                    break;
-                case "updateMoney":
-                    h.onUpdateMoney?.(data);
-                    break;
-                case "updateVoice":
-                    h.onUpdateVoice?.(data);
-                    break;
-                case "updateRadio":
-                    h.onUpdateRadio?.(data);
-                    break;
-                case "updateLocation":
-                    h.onUpdateLocation?.(data);
-                    break;
-                case "updatePlayer":
-                    h.onUpdatePlayer?.(data);
-                    break;
-                case "notify":
-                    h.onNotify?.(data);
-                    break;
-                case "toggleEditMode":
-                    h.onToggleEditMode?.(data);
-                    break;
-                case "setVisible":
-                    h.onSetVisible?.(data);
-                    break;
-                case "updateDeath":
-                    h.onUpdateDeath?.(data);
-                    break;
-                case "setVoiceEnabled":
-                    h.onSetVoiceEnabled?.(data);
-                    break;
-                case "updateDisabledWidgets":
-                    h.onUpdateDisabledWidgets?.(data);
-                    break;
-                case "chatUpdate":
-                    h.onChatUpdate?.(data);
-                    break;
-                case "teamChatUpdate":
-                    h.onTeamChatUpdate?.(data);
-                    break;
-            }
-        };
-
-        window.addEventListener("message", handleMessage);
-
-        console.log("[HUD DEBUG] NUI event listener registered");
-        sendNuiCallback("loadedNUI");
-
-        return () => {
-            window.removeEventListener("message", handleMessage);
-            console.log("[HUD DEBUG] NUI event listener removed");
-        };
-    }, []); // Empty deps = register once on mount
-};
 
 export const isNuiEnvironment = (): boolean => {
     return typeof window !== "undefined" && window.invokeNative !== undefined;
@@ -138,7 +34,6 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
             body: JSON.stringify(data ?? {}),
         });
 
-        // Handle empty responses gracefully
         const text = await response.text();
         if (!text || text.trim() === "") {
             return null;
@@ -147,7 +42,6 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
         try {
             return JSON.parse(text) as TResponse;
         } catch {
-            // Response is not JSON, return null
             return null;
         }
     } catch (error) {
@@ -158,4 +52,90 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
 
 const GetParentResourceName = (): string => {
     return window.GetParentResourceName?.() ?? "rp-hud";
+};
+
+/**
+ * Bridge hook that connects NUI events directly to Zustand stores.
+ * Each store updates independently - no parent re-renders.
+ */
+export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) => {
+    const hasRegistered = useRef(false);
+
+    useEffect(() => {
+        if (!isNuiEnvironment()) return;
+
+        // Send loadedNUI callback ONCE on first mount
+        if (!hasRegistered.current) {
+            hasRegistered.current = true;
+            console.log("[HUD DEBUG] NUI event listener registered");
+            sendNuiCallback("loadedNUI");
+        }
+
+        const handleMessage = (event: MessageEvent) => {
+            const { action, data } = event.data;
+
+            switch (action) {
+                case "ping":
+                    console.log("[HUD DEBUG] Lua -> Web ping received");
+                    sendNuiCallback("pong");
+                    break;
+                case "updateHUDState":
+                    useStatusStore.getState().setStatus(data);
+                    break;
+                case "updateVehicleState":
+                    useVehicleStore.getState().setVehicleState(data);
+                    break;
+                case "updateMoneyState":
+                    useMoneyStore.getState().setMoney(data);
+                    break;
+                case "updateVoiceState":
+                    useVoiceStore.getState().setVoiceState(data);
+                    break;
+                case "updateRadioState":
+                    useVoiceStore.getState().setRadioState(data);
+                    break;
+                case "updateLocationState":
+                    useLocationStore.getState().setLocation(data);
+                    break;
+                case "updatePlayerState":
+                    useMoneyStore.getState().setPlayer(data);
+                    break;
+                case "updateDeathState":
+                    useDeathStore.getState().setDeathState(data);
+                    break;
+                case "updateChatState":
+                    useChatStore.getState().setChatState(data);
+                    break;
+                case "updateTeamChatState":
+                    useChatStore.getState().setTeamChatState(data);
+                    break;
+                case "showHUD":
+                    useHUDGlobalStore.getState().setIsVisible(true);
+                    break;
+                case "hideHUD":
+                    useHUDGlobalStore.getState().setIsVisible(false);
+                    break;
+                case "setDisabledWidgets":
+                    useHUDGlobalStore.getState().setDisabledWidgets(data);
+                    break;
+                case "setVoiceEnabled":
+                    useVoiceStore.getState().setIsVoiceEnabled(data.enabled);
+                    break;
+                case "toggleEditMode":
+                    if (!editMode) toggleEditMode();
+                    break;
+                case "notify": {
+                    const store = useNotificationStore.getState();
+                    if (data.type === "success") store.success(data.title, data.message);
+                    else if (data.type === "error") store.error(data.title, data.message);
+                    else if (data.type === "warning") store.warning(data.title, data.message);
+                    else if (data.type === "info") store.info(data.title, data.message);
+                    break;
+                }
+            }
+        };
+
+        window.addEventListener("message", handleMessage);
+        return () => window.removeEventListener("message", handleMessage);
+    }, [editMode, toggleEditMode]);
 };

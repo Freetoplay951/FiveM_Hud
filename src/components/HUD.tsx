@@ -5,10 +5,9 @@ import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { SubwidgetRenderer } from "./hud/SubwidgetRenderer";
 import { HUDWidgetRenderers } from "./hud/HUDWidgetRenderers";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
-import { useStoreNuiEvents } from "@/hooks/useStoreNuiEvents";
+import { useNuiEvents, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useStoreDemoSimulation } from "@/hooks/useStoreDemoSimulation";
 import { useMultiSelection } from "@/hooks/useMultiSelection";
-import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { getWidgetGroupsMap } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
@@ -107,7 +106,7 @@ export const HUD = () => {
     }, [editMode]);
 
     // NUI Events - updates stores directly, no props needed
-    useStoreNuiEvents({
+    useNuiEvents({
         editMode,
         toggleEditMode,
     });
