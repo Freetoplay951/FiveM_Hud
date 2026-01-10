@@ -8,14 +8,11 @@ import { useMoneyStore } from "@/stores/moneyStore";
 import { useChatStore } from "@/stores/chatStore";
 import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 
 interface UseStoreNuiEventsProps {
     editMode: boolean;
     toggleEditMode: () => void;
-    success: (title: string, message: string) => void;
-    error: (title: string, message: string) => void;
-    warning: (title: string, message: string) => void;
-    info: (title: string, message: string) => void;
 }
 
 /**
@@ -25,10 +22,6 @@ interface UseStoreNuiEventsProps {
 export const useStoreNuiEvents = ({
     editMode,
     toggleEditMode,
-    success,
-    error,
-    warning,
-    info,
 }: UseStoreNuiEventsProps) => {
     useEffect(() => {
         if (!isNuiEnvironment()) return;
@@ -83,15 +76,17 @@ export const useStoreNuiEvents = ({
                     if (!editMode) toggleEditMode();
                     break;
                 case "notify":
-                    if (data.type === "success") success(data.title, data.message);
-                    else if (data.type === "error") error(data.title, data.message);
-                    else if (data.type === "warning") warning(data.title, data.message);
-                    else if (data.type === "info") info(data.title, data.message);
+                    // Use notification store directly
+                    const notificationStore = useNotificationStore.getState();
+                    if (data.type === "success") notificationStore.success(data.title, data.message);
+                    else if (data.type === "error") notificationStore.error(data.title, data.message);
+                    else if (data.type === "warning") notificationStore.warning(data.title, data.message);
+                    else if (data.type === "info") notificationStore.info(data.title, data.message);
                     break;
             }
         };
 
         window.addEventListener("message", handleMessage);
         return () => window.removeEventListener("message", handleMessage);
-    }, [editMode, toggleEditMode, success, error, warning, info]);
+    }, [editMode, toggleEditMode]);
 };
