@@ -27,7 +27,7 @@ const blinkAnimation = {
     rotate: 0,
     opacity: [1, 0.3, 1] as number[],
     transition: {
-        duration: 0.8,
+        duration: 1.5,
         repeat: Infinity,
         ease: "easeInOut" as const,
     },
@@ -58,11 +58,7 @@ const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetP
                     <motion.div
                         key={index}
                         {...starMotion}
-                        animate={
-                            active && shouldBlink
-                                ? blinkAnimation
-                                : { scale: 1, rotate: 0, opacity: 1 }
-                        }
+                        animate={active && shouldBlink ? blinkAnimation : { scale: 1, rotate: 0, opacity: 1 }}
                         transition={{
                             type: "spring",
                             stiffness: 400,
@@ -71,11 +67,7 @@ const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetP
                         }}>
                         <Star
                             size={14}
-                            className={
-                                active
-                                    ? "text-yellow-400 fill-yellow-400"
-                                    : "text-muted-foreground/30"
-                            }
+                            className={active ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}
                             style={
                                 active
                                     ? {
