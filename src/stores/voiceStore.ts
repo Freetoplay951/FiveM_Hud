@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { VoiceState, RadioState, RadioMember } from "@/types/hud";
 import { DEMO_VOICE, DEMO_RADIO } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
@@ -66,13 +67,17 @@ export const useRadioActive = () => useVoiceStore((state) => state.radioActive);
 export const useRadioChannel = () => useVoiceStore((state) => state.radioChannel);
 export const useRadioMembers = () => useVoiceStore((state) => state.radioMembers);
 export const useRadioData = () =>
-    useVoiceStore((state) => ({
-        active: state.radioActive,
-        channel: state.radioChannel,
-        members: state.radioMembers,
-    }));
+    useVoiceStore(
+        useShallow((state) => ({
+            active: state.radioActive,
+            channel: state.radioChannel,
+            members: state.radioMembers,
+        }))
+    );
 export const useVoiceData = () =>
-    useVoiceStore((state) => ({
-        active: state.voiceActive,
-        range: state.voiceRange,
-    }));
+    useVoiceStore(
+        useShallow((state) => ({
+            active: state.voiceActive,
+            range: state.voiceRange,
+        }))
+    );

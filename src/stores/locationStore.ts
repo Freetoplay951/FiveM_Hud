@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { LocationState } from "@/types/hud";
 import { DEMO_LOCATION } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
@@ -39,7 +40,9 @@ export const useStreet = () => useLocationStore((state) => state.street);
 export const useArea = () => useLocationStore((state) => state.area);
 export const useHeading = () => useLocationStore((state) => state.heading);
 export const useLocationData = () =>
-    useLocationStore((state) => ({
-        street: state.street,
-        area: state.area,
-    }));
+    useLocationStore(
+        useShallow((state) => ({
+            street: state.street,
+            area: state.area,
+        }))
+    );

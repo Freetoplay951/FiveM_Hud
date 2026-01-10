@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { ChatState, ChatMessage, TeamChatState, TeamChatMessage, TeamType } from "@/types/hud";
 import { DEMO_CHAT, DEMO_TEAM_CHAT } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/hooks/useNuiEvents";
@@ -121,12 +122,14 @@ export const useChatInputActive = () => useChatStore((state) => state.chatInputA
 export const useChatVisible = () => useChatStore((state) => state.chatVisible);
 export const useChatUnreadCount = () => useChatStore((state) => state.chatUnreadCount);
 export const useChatData = () =>
-    useChatStore((state) => ({
-        messages: state.chatMessages,
-        isInputActive: state.chatInputActive,
-        isVisible: state.chatVisible,
-        unreadCount: state.chatUnreadCount,
-    }));
+    useChatStore(
+        useShallow((state) => ({
+            messages: state.chatMessages,
+            isInputActive: state.chatInputActive,
+            isVisible: state.chatVisible,
+            unreadCount: state.chatUnreadCount,
+        }))
+    );
 
 // Team chat selectors
 export const useTeamChatMessages = () => useChatStore((state) => state.teamChatMessages);
@@ -139,14 +142,16 @@ export const useTeamType = () => useChatStore((state) => state.teamType);
 export const useTeamName = () => useChatStore((state) => state.teamName);
 export const useOnlineMembers = () => useChatStore((state) => state.onlineMembers);
 export const useTeamChatData = () =>
-    useChatStore((state) => ({
-        messages: state.teamChatMessages,
-        isInputActive: state.teamChatInputActive,
-        isVisible: state.teamChatVisible,
-        unreadCount: state.teamChatUnreadCount,
-        hasAccess: state.teamChatHasAccess,
-        isAdmin: state.teamChatIsAdmin,
-        teamType: state.teamType,
-        teamName: state.teamName,
-        onlineMembers: state.onlineMembers,
-    }));
+    useChatStore(
+        useShallow((state) => ({
+            messages: state.teamChatMessages,
+            isInputActive: state.teamChatInputActive,
+            isVisible: state.teamChatVisible,
+            unreadCount: state.teamChatUnreadCount,
+            hasAccess: state.teamChatHasAccess,
+            isAdmin: state.teamChatIsAdmin,
+            teamType: state.teamType,
+            teamName: state.teamName,
+            onlineMembers: state.onlineMembers,
+        }))
+    );
