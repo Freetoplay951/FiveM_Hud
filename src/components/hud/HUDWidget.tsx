@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback, useEffect, ReactNode } from "react";
+import { useState, useRef, useCallback, useEffect, ReactNode, memo } from "react";
 import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WidgetPosition } from "@/types/widget";
+import { useRenderLogger } from "@/hooks/useRenderLogger";
 
 interface HUDWidgetProps {
     id: string;
@@ -12,7 +13,7 @@ interface HUDWidgetProps {
     snapToGrid: boolean;
     gridSize: number;
     scale?: number;
-    onPositionChange: (id: string, position: WidgetPosition) => void;
+    onPositionChange?: (id: string, position: WidgetPosition) => void;
     onVisibilityToggle?: (id: string) => void;
     onScaleChange?: (id: string, scale: number) => void;
     onReset?: (id: string) => void;
@@ -41,7 +42,7 @@ interface HUDWidgetProps {
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
 
-export const HUDWidget = ({
+const HUDWidgetComponent = ({
     id,
     children,
     position,
@@ -67,6 +68,8 @@ export const HUDWidget = ({
     onLiveDrag,
     onLiveScale,
 }: HUDWidgetProps) => {
+    // Performance logging
+    useRenderLogger(`HUDWidget:${id}`, { position, visible, scale, editMode, disabled, isSelected });
     const rootRef = useRef<HTMLDivElement | null>(null);
     const [elementSize, setElementSize] = useState({ w: 0, h: 0 });
 
@@ -405,3 +408,26 @@ export const HUDWidget = ({
         </div>
     );
 };
+
+// Memoize the component to prevent unnecessary re-renders
+// Only re-render when props actually change
+export const HUDWidget = memo(HUDWidgetComponent, (prevProps, nextProps) => {
+    // Custom comparison for better performance
+    // Skip comparison of callback functions - they should be stable via useCallback
+    return (
+        prevProps.id === nextProps.id &&
+        prevProps.position.x === nextProps.position.x &&
+        prevProps.position.y === nextProps.position.y &&
+        prevProps.visible === nextProps.visible &&
+        prevProps.editMode === nextProps.editMode &&
+        prevProps.snapToGrid === nextProps.snapToGrid &&
+        prevProps.gridSize === nextProps.gridSize &&
+        prevProps.scale === nextProps.scale &&
+        prevProps.hasAccess === nextProps.hasAccess &&
+        prevProps.disabled === nextProps.disabled &&
+        prevProps.suspended === nextProps.suspended &&
+        prevProps.className === nextProps.className &&
+        prevProps.isSelected === nextProps.isSelected &&
+        prevProps.children === nextProps.children
+    );
+});
