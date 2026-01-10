@@ -1,9 +1,10 @@
 -- Utility Updates (Wanted Level, Ping, Server Info)
 -- Performance optimized with change detection
--- NOTE: Ping is fetched from server (GetPlayerPing is server-only!)
+-- Uses NetworkGetAverageLatencyForPlayer for ping (client-side)
 
 local lastUtilityData = {
     wantedLevel = nil,
+    isEvading = nil,
     ping = nil,
     playerCount = nil
 }
@@ -23,17 +24,6 @@ local function DisableDefaultWantedHud()
 end
 
 -- ============================================================================
--- PING RECEIVER (from server)
--- ============================================================================
-
-RegisterNetEvent('hud:receivePing', function(ping)
-    if ping ~= lastUtilityData.ping then
-        lastUtilityData.ping = ping
-        SendNUI('updateUtility', { ping = ping })
-    end
-end)
-
--- ============================================================================
 -- HUD STARTING EVENT HANDLER
 -- Register callbacks here that should run BEFORE HUD is visible
 -- ============================================================================
@@ -49,15 +39,21 @@ AddEventHandler("hud:loading", function()
         playerCount = #GetActivePlayers()
     })
     
-    -- Request initial ping from server (only if enabled)
+    -- Send initial ping using NetworkGetAverageLatencyForPlayer
     if Config.enablePing then
-        TriggerServerEvent('hud:requestPing')
+        local playerId = PlayerId()
+        local latency = NetworkGetAverageLatencyForPlayer(playerId) * 1000 -- Convert to ms
+        SendNUI('updateUtility', { ping = math.floor(latency) })
     end
     
-    -- Send initial wanted level
+    -- Send initial wanted level and evading status
     local playerId = PlayerId()
     local wantedLevel = GetPlayerWantedLevel(playerId)
-    SendNUI('updateUtility', { wantedLevel = wantedLevel })
+    local isEvading = Citizen.InvokeNative(0x7E07C78925D5FD96, playerId) -- ArePlayerStarsGreyedOut
+    SendNUI('updateUtility', { 
+        wantedLevel = wantedLevel,
+        isEvading = isEvading
+    })
     
     -- Disable ping widget if not enabled
     if not Config.enablePing then
@@ -90,7 +86,29 @@ CreateThread(function()
 end)
 
 -- ============================================================================
--- MAIN UTILITY UPDATE LOOP (Wanted Level & Ping request)
+-- PING UPDATE LOOP (every 5 seconds - less frequent since it's stable)
+-- Uses NetworkGetAverageLatencyForPlayer (client-side native)
+-- ============================================================================
+
+CreateThread(function()
+    while true do
+        Wait(5000)
+        
+        if Config.enablePing then
+            local playerId = PlayerId()
+            local latency = NetworkGetAverageLatencyForPlayer(playerId) * 1000 -- Convert to ms
+            local ping = math.floor(latency)
+            
+            if ping ~= lastUtilityData.ping then
+                lastUtilityData.ping = ping
+                SendNUI('updateUtility', { ping = ping })
+            end
+        end
+    end
+end)
+
+-- ============================================================================
+-- WANTED LEVEL UPDATE LOOP (faster for responsive evading status)
 -- ============================================================================
 
 CreateThread(function()
@@ -102,15 +120,21 @@ CreateThread(function()
         -- Get wanted level (0-5) - this is client-side
         local wantedLevel = GetPlayerWantedLevel(playerId)
         
-        -- Only send if wanted level changed
-        if wantedLevel ~= lastUtilityData.wantedLevel then
-            lastUtilityData.wantedLevel = wantedLevel
-            SendNUI('updateUtility', { wantedLevel = wantedLevel })
-        end
+        -- Check if player is evading (cops lost sight)
+        -- ArePlayerStarsGreyedOut returns true when cops can't see you
+        local isEvading = Citizen.InvokeNative(0x7E07C78925D5FD96, playerId)
         
-        -- Request ping from server (server-side only!)
-        if Config.enablePing then
-            TriggerServerEvent('hud:requestPing')
+        -- Only send if something changed
+        local wantedChanged = wantedLevel ~= lastUtilityData.wantedLevel
+        local evadingChanged = isEvading ~= lastUtilityData.isEvading
+        
+        if wantedChanged or evadingChanged then
+            lastUtilityData.wantedLevel = wantedLevel
+            lastUtilityData.isEvading = isEvading
+            SendNUI('updateUtility', { 
+                wantedLevel = wantedLevel,
+                isEvading = isEvading
+            })
         end
     end
 end)

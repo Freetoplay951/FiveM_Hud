@@ -32,7 +32,7 @@ import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
-import { useWantedLevel, usePing, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
+import { useWantedLevel, useIsEvading, usePing, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 // ==========================================
@@ -837,6 +837,7 @@ const WantedWidgetRendererComponent = ({
     const isDead = useIsDead();
 
     const wantedLevel = useWantedLevel();
+    const isEvading = useIsEvading();
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
@@ -864,7 +865,10 @@ const WantedWidgetRendererComponent = ({
             onScaleChange={updateWidgetScale}
             onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
-            <WantedWidget wantedLevel={editMode && wantedLevel === 0 ? 3 : wantedLevel} />
+            <WantedWidget 
+                wantedLevel={editMode && wantedLevel === 0 ? 3 : wantedLevel} 
+                isEvading={editMode ? true : isEvading}
+            />
         </HUDWidget>
     );
 };
