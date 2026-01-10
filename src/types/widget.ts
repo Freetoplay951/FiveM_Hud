@@ -43,7 +43,7 @@ export type WidgetType =
     | "voice"
     | "radio"
     | "location"
-    | "fps"
+    
     | "wanted"
     | "ping"
     | "date"
@@ -873,40 +873,22 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         },
-        // FPS & Ping centered above minimap
+        // Ping centered above minimap
         {
-            id: "fps",
-            type: "fps",
+            id: "ping",
+            type: "ping",
             position: (_id, el, resolver) => {
                 const minimapRect = resolver.getWidgetRect("minimap");
                 const width = el?.offsetWidth ?? 0;
-                const pingWidth = resolver.getWidgetSize("ping").width;
-                const totalWidth = width + GAP + pingWidth;
                 
                 if (minimapRect) {
                     const minimapCenterX = minimapRect.x + minimapRect.width / 2;
                     return {
-                        x: minimapCenterX - totalWidth / 2,
+                        x: minimapCenterX - width / 2,
                         y: minimapRect.y - GAP - (el?.offsetHeight ?? 0),
                     };
                 }
                 return { x: MARGIN, y: resolver.screen.height - MARGIN - 150 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        {
-            id: "ping",
-            type: "ping",
-            position: (_id, _el, resolver) => {
-                const fpsRect = resolver.getWidgetRect("fps");
-                if (fpsRect) {
-                    return {
-                        x: fpsRect.right + GAP,
-                        y: fpsRect.y,
-                    };
-                }
-                return { x: MARGIN + 80, y: resolver.screen.height - MARGIN - 150 };
             },
             visible: true,
             scale: 1,

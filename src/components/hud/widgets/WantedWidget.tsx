@@ -33,8 +33,8 @@ const WantedWidgetComponent = ({ wantedLevel }: WantedWidgetProps) => {
         }));
     }, [wantedLevel]);
 
-    // Don't render if no wanted level
-    if (wantedLevel <= 0) return null;
+    // Visibility is now controlled by the parent HUDWidget wrapper
+    // This ensures proper rendering in both edit mode and FiveM
 
     return (
         <motion.div
