@@ -149,9 +149,28 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                 case "updateDisabledWidgets":
                     useHUDGlobalStore.getState().setDisabledWidgets(data);
                     break;
-                case "chatUpdate":
-                    useChatStore.getState().setChatState(data);
+                case "chatUpdate": {
+                    const chatStore = useChatStore.getState();
+                    // Handle input state
+                    if (data.isInputActive !== undefined) {
+                        chatStore.setChatInputActive(data.isInputActive);
+                    }
+                    // Handle single message from Lua (add to history)
+                    if (data.message && data.message.message) {
+                        chatStore.addChatMessage({
+                            id: data.message.id || Date.now().toString(),
+                            type: data.message.type || "normal",
+                            sender: data.message.sender || "",
+                            message: data.message.message,
+                            timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                        });
+                    }
+                    // Handle clear chat
+                    if (data.clearChat) {
+                        chatStore.clearChatMessages();
+                    }
                     break;
+                }
                 case "teamChatUpdate":
                     useChatStore.getState().setTeamChatState(data);
                     break;
