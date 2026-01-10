@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { isNuiEnvironment } from "@/hooks/useNuiEvents";
+import { useEffect, useRef } from "react";
+import { isNuiEnvironment, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useStatusStore } from "@/stores/statusStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useVoiceStore } from "@/stores/voiceStore";
@@ -23,8 +23,17 @@ export const useStoreNuiEvents = ({
     editMode,
     toggleEditMode,
 }: UseStoreNuiEventsProps) => {
+    const hasRegistered = useRef(false);
+
     useEffect(() => {
         if (!isNuiEnvironment()) return;
+
+        // Send loadedNUI callback ONCE on first mount
+        if (!hasRegistered.current) {
+            hasRegistered.current = true;
+            console.log("[HUD DEBUG] NUI event listener registered");
+            sendNuiCallback("loadedNUI");
+        }
 
         const handleMessage = (event: MessageEvent) => {
             const { action, data } = event.data;
