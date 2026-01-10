@@ -95,6 +95,33 @@ export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
 export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) => {
     const hasRegistered = useRef(false);
 
+    // Create handlers object that maps to stores
+    const h: NuiEventHandlers = {
+        onUpdateHud: (data) => useStatusStore.getState().setStatus(data),
+        onUpdateVehicle: (data) => useVehicleStore.getState().setVehicleState(data),
+        onUpdateMoney: (data) => useMoneyStore.getState().setMoney(data),
+        onUpdateVoice: (data) => useVoiceStore.getState().setVoiceState(data),
+        onUpdateRadio: (data) => useVoiceStore.getState().setRadioState(data),
+        onUpdateLocation: (data) => useLocationStore.getState().setLocation(data),
+        onUpdatePlayer: (data) => useMoneyStore.getState().setPlayer(data),
+        onNotify: (data) => {
+            const store = useNotificationStore.getState();
+            if (data.type === "success") store.success(data.title, data.message);
+            else if (data.type === "error") store.error(data.title, data.message);
+            else if (data.type === "warning") store.warning(data.title, data.message);
+            else if (data.type === "info") store.info(data.title, data.message);
+        },
+        onToggleEditMode: () => {
+            if (!editMode) toggleEditMode();
+        },
+        onSetVisible: (visible) => useHUDGlobalStore.getState().setIsVisible(visible),
+        onUpdateDeath: (data) => useDeathStore.getState().setDeathState(data),
+        onSetVoiceEnabled: (enabled) => useVoiceStore.getState().setIsVoiceEnabled(enabled),
+        onUpdateDisabledWidgets: (data) => useHUDGlobalStore.getState().setDisabledWidgets(data),
+        onChatUpdate: (data) => useChatStore.getState().setChatState(data),
+        onTeamChatUpdate: (data) => useChatStore.getState().setTeamChatState(data),
+    };
+
     useEffect(() => {
         if (!isNuiEnvironment()) return;
 
@@ -113,60 +140,51 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     console.log("[HUD DEBUG] Lua -> Web ping received");
                     sendNuiCallback("pong");
                     break;
-                case "updateHUDState":
-                    useStatusStore.getState().setStatus(data as Partial<StatusWidgetState>);
+                case "updateHud":
+                    h.onUpdateHud?.(data);
                     break;
-                case "updateVehicleState":
-                    useVehicleStore.getState().setVehicleState(data as VehicleState);
+                case "updateVehicle":
+                    h.onUpdateVehicle?.(data);
                     break;
-                case "updateMoneyState":
-                    useMoneyStore.getState().setMoney(data as MoneyState);
+                case "updateMoney":
+                    h.onUpdateMoney?.(data);
                     break;
-                case "updateVoiceState":
-                    useVoiceStore.getState().setVoiceState(data as VoiceState);
+                case "updateVoice":
+                    h.onUpdateVoice?.(data);
                     break;
-                case "updateRadioState":
-                    useVoiceStore.getState().setRadioState(data as RadioState);
+                case "updateRadio":
+                    h.onUpdateRadio?.(data);
                     break;
-                case "updateLocationState":
-                    useLocationStore.getState().setLocation(data as LocationState);
+                case "updateLocation":
+                    h.onUpdateLocation?.(data);
                     break;
-                case "updatePlayerState":
-                    useMoneyStore.getState().setPlayer(data as { id: number; job: string; rank: string });
+                case "updatePlayer":
+                    h.onUpdatePlayer?.(data);
                     break;
-                case "updateDeathState":
-                    useDeathStore.getState().setDeathState(data as DeathState);
-                    break;
-                case "updateChatState":
-                    useChatStore.getState().setChatState(data as { isInputActive?: boolean; message?: ChatMessage; clearChat?: boolean });
-                    break;
-                case "updateTeamChatState":
-                    useChatStore.getState().setTeamChatState(data as Omit<Partial<TeamChatState>, "isVisible"> & { message?: TeamChatMessage; clearChat?: boolean });
-                    break;
-                case "showHUD":
-                    useHUDGlobalStore.getState().setIsVisible(true);
-                    break;
-                case "hideHUD":
-                    useHUDGlobalStore.getState().setIsVisible(false);
-                    break;
-                case "setDisabledWidgets":
-                    useHUDGlobalStore.getState().setDisabledWidgets(data as DisabledWidgets);
-                    break;
-                case "setVoiceEnabled":
-                    useVoiceStore.getState().setIsVoiceEnabled((data as { enabled: boolean }).enabled);
+                case "notify":
+                    h.onNotify?.(data);
                     break;
                 case "toggleEditMode":
-                    if (!editMode) toggleEditMode();
+                    h.onToggleEditMode?.(data);
                     break;
-                case "notify": {
-                    const store = useNotificationStore.getState();
-                    const notifyData = data as { type: NotificationData["type"]; title: string; message: string };
-                    if (notifyData.type === "success") store.success(notifyData.title, notifyData.message);
-                    else if (notifyData.type === "error") store.error(notifyData.title, notifyData.message);
-                    else if (notifyData.type === "warning") store.warning(notifyData.title, notifyData.message);
-                    else if (notifyData.type === "info") store.info(notifyData.title, notifyData.message);
+                case "setVisible":
+                    h.onSetVisible?.(data);
                     break;
-                }
+                case "updateDeath":
+                    h.onUpdateDeath?.(data);
+                    break;
+                case "setVoiceEnabled":
+                    h.onSetVoiceEnabled?.(data);
+                    break;
+                case "updateDisabledWidgets":
+                    h.onUpdateDisabledWidgets?.(data);
+                    break;
+                case "chatUpdate":
+                    h.onChatUpdate?.(data);
+                    break;
+                case "teamChatUpdate":
+                    h.onTeamChatUpdate?.(data);
+                    break;
                 default:
                     if (action) {
                         console.warn("[HUD] Unknown NUI event:", action, data);
