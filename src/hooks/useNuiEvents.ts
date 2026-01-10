@@ -97,88 +97,171 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
     useEffect(() => {
         if (!isNuiEnvironment()) return;
 
+        // Typed event handlers using Zustand stores
+        const handlers: NuiEventHandlers = {
+            onUpdateHud: (data) => {
+                useStatusStore.getState().setStatus(data);
+            },
+
+            onUpdateVehicle: (data) => {
+                useVehicleStore.getState().setVehicleState(data);
+            },
+
+            onUpdateMoney: (data) => {
+                useMoneyStore.getState().setMoney(data);
+            },
+
+            onUpdateVoice: (data) => {
+                useVoiceStore.getState().setVoiceState(data);
+            },
+
+            onUpdateRadio: (data) => {
+                useVoiceStore.getState().setRadioState(data);
+            },
+
+            onUpdateLocation: (data) => {
+                useLocationStore.getState().setLocation(data);
+            },
+
+            onUpdatePlayer: (data) => {
+                useMoneyStore.getState().setPlayer(data);
+            },
+
+            onNotify: (data) => {
+                const store = useNotificationStore.getState();
+                const notifyFn = { success: store.success, error: store.error, warning: store.warning, info: store.info }[data.type] || store.info;
+                notifyFn(data.title, data.message, data.duration);
+            },
+
+            onToggleEditMode: (enabled) => {
+                if (enabled && !editMode) toggleEditMode();
+                else if (!enabled && editMode) toggleEditMode();
+            },
+
+            onSetVisible: (visible) => {
+                useHUDGlobalStore.getState().setIsVisible(visible);
+            },
+
+            onUpdateDeath: (data) => {
+                useDeathStore.getState().setDeathState(data);
+            },
+
+            onSetVoiceEnabled: (enabled) => {
+                useVoiceStore.getState().setIsVoiceEnabled(enabled);
+            },
+
+            onUpdateDisabledWidgets: (data) => {
+                useHUDGlobalStore.getState().setDisabledWidgets(data);
+            },
+
+            onChatUpdate: (data) => {
+                const chatStore = useChatStore.getState();
+                const currentState = chatStore;
+
+                if (typeof data.isInputActive === "boolean") {
+                    chatStore.setChatInputActive(data.isInputActive);
+                }
+
+                if (data.message) {
+                    const messageWithJsTimestamp = {
+                        id: data.message.id || Date.now().toString(),
+                        type: data.message.type || "normal",
+                        sender: data.message.sender || "",
+                        message: data.message.message,
+                        timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    };
+                    chatStore.addChatMessage(messageWithJsTimestamp);
+                }
+
+                if (data.clearChat) {
+                    chatStore.clearChatMessages();
+                }
+            },
+
+            onTeamChatUpdate: (data) => {
+                const chatStore = useChatStore.getState();
+
+                // Build partial state update
+                const stateUpdate: Partial<TeamChatState> = {};
+
+                if (typeof data.isInputActive === "boolean") {
+                    stateUpdate.isInputActive = data.isInputActive;
+                }
+
+                if (typeof data.hasAccess === "boolean") {
+                    stateUpdate.hasAccess = data.hasAccess;
+                }
+
+                if (data.teamType) {
+                    stateUpdate.teamType = data.teamType;
+                }
+
+                if (data.teamName) {
+                    stateUpdate.teamName = data.teamName;
+                }
+
+                if (typeof data.onlineMembers === "number") {
+                    stateUpdate.onlineMembers = data.onlineMembers;
+                }
+
+                if (typeof data.isAdmin === "boolean") {
+                    stateUpdate.isAdmin = data.isAdmin;
+                }
+
+                // Apply state update if there are changes
+                if (Object.keys(stateUpdate).length > 0) {
+                    chatStore.setTeamChatState(stateUpdate);
+                }
+
+                // Handle message separately
+                if (data.message) {
+                    const messageWithJsTimestamp: TeamChatMessage = {
+                        ...data.message,
+                        timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+                    };
+                    chatStore.addTeamChatMessage(messageWithJsTimestamp);
+                }
+
+                // Handle clear chat
+                if (data.clearChat) {
+                    chatStore.clearTeamChatMessages();
+                }
+            },
+        };
+
+        // Map action names to handler functions
+        const actionHandlerMap: Record<string, (data: unknown) => void> = {
+            updateHud: handlers.onUpdateHud as (data: unknown) => void,
+            updateVehicle: handlers.onUpdateVehicle as (data: unknown) => void,
+            updateMoney: handlers.onUpdateMoney as (data: unknown) => void,
+            updateVoice: handlers.onUpdateVoice as (data: unknown) => void,
+            updateRadio: handlers.onUpdateRadio as (data: unknown) => void,
+            updateLocation: handlers.onUpdateLocation as (data: unknown) => void,
+            updatePlayer: handlers.onUpdatePlayer as (data: unknown) => void,
+            notify: handlers.onNotify as (data: unknown) => void,
+            toggleEditMode: handlers.onToggleEditMode as (data: unknown) => void,
+            setVisible: handlers.onSetVisible as (data: unknown) => void,
+            updateDeath: handlers.onUpdateDeath as (data: unknown) => void,
+            setVoiceEnabled: handlers.onSetVoiceEnabled as (data: unknown) => void,
+            updateDisabledWidgets: handlers.onUpdateDisabledWidgets as (data: unknown) => void,
+            chatUpdate: handlers.onChatUpdate as (data: unknown) => void,
+            teamChatUpdate: handlers.onTeamChatUpdate as (data: unknown) => void,
+        };
+
         const handleMessage = (event: MessageEvent) => {
             const { action, data } = event.data;
 
-            switch (action) {
-                case "ping":
-                    console.log("[HUD DEBUG] Lua -> Web ping received");
-                    sendNuiCallback("pong");
-                    break;
-                case "updateHud":
-                    useStatusStore.getState().setStatus(data);
-                    break;
-                case "updateVehicle":
-                    useVehicleStore.getState().setVehicleState(data);
-                    break;
-                case "updateMoney":
-                    useMoneyStore.getState().setMoney(data);
-                    break;
-                case "updateVoice":
-                    useVoiceStore.getState().setVoiceState(data);
-                    break;
-                case "updateRadio":
-                    useVoiceStore.getState().setRadioState(data);
-                    break;
-                case "updateLocation":
-                    useLocationStore.getState().setLocation(data);
-                    break;
-                case "updatePlayer":
-                    useMoneyStore.getState().setPlayer(data);
-                    break;
-                case "notify": {
-                    const store = useNotificationStore.getState();
-                    if (data.type === "success") store.success(data.title, data.message);
-                    else if (data.type === "error") store.error(data.title, data.message);
-                    else if (data.type === "warning") store.warning(data.title, data.message);
-                    else if (data.type === "info") store.info(data.title, data.message);
-                    break;
-                }
-                case "toggleEditMode":
-                    if (!editMode) toggleEditMode();
-                    break;
-                case "setVisible":
-                    useHUDGlobalStore.getState().setIsVisible(data);
-                    break;
-                case "updateDeath":
-                    useDeathStore.getState().setDeathState(data);
-                    break;
-                case "setVoiceEnabled":
-                    useVoiceStore.getState().setIsVoiceEnabled(data);
-                    break;
-                case "updateDisabledWidgets":
-                    useHUDGlobalStore.getState().setDisabledWidgets(data);
-                    break;
-                case "chatUpdate": {
-                    const chatStore = useChatStore.getState();
-                    // Handle input state
-                    if (data.isInputActive !== undefined) {
-                        chatStore.setChatInputActive(data.isInputActive);
-                    }
-                    // Handle single message from Lua (add to history)
-                    if (data.message && data.message.message) {
-                        chatStore.addChatMessage({
-                            id: data.message.id || Date.now().toString(),
-                            type: data.message.type || "normal",
-                            sender: data.message.sender || "",
-                            message: data.message.message,
-                            timestamp: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-                        });
-                    }
-                    // Handle clear chat
-                    if (data.clearChat) {
-                        chatStore.clearChatMessages();
-                    }
-                    break;
-                }
-                case "teamChatUpdate":
-                    useChatStore.getState().setTeamChatState(data);
-                    break;
-                default:
-                    if (action) {
-                        console.warn("[HUD] Unknown NUI event:", action, JSON.stringify(data));
-                    }
-                    break;
+            if (action === "ping") {
+                console.log("[HUD DEBUG] Lua -> Web ping received");
+                sendNuiCallback("pong");
+                return;
+            }
+
+            const handler = actionHandlerMap[action];
+            if (handler) {
+                handler(data);
+            } else if (action) {
+                console.warn("[HUD] Unknown NUI event:", action, JSON.stringify(data));
             }
         };
 
