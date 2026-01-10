@@ -287,6 +287,9 @@ const HUDWidgetComponent = ({
 
     const isSubWidget = !(onPositionChange || onVisibilityToggle || onScaleChange || onReset);
 
+    // Check if className contains a z-index class (z-50, z-40, etc.)
+    const hasCustomZIndex = className?.includes("z-");
+
     return (
         <div
             id={`hud-widget-${id}`}
@@ -313,7 +316,8 @@ const HUDWidgetComponent = ({
                 // Hide via visibility instead of unmounting
                 visibility: isHidden || isSuspended ? "hidden" : "visible",
                 pointerEvents: isHidden || isSubWidget || isSuspended || !hasAccess ? "none" : "auto",
-                zIndex: 10,
+                // Only set default zIndex if no custom z-index class is provided
+                zIndex: hasCustomZIndex ? undefined : 10,
                 // CEF Fix: Prevent black box artifacts
                 willChange: isDragging || isResizing ? "transform" : "auto",
                 // Selected state background glow
