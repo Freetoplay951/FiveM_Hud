@@ -28,11 +28,12 @@ const staticStarAnimation = { scale: 1, rotate: 0, opacity: 1 } as const;
 const blinkAnimation = {
     scale: 1,
     rotate: 0,
-    opacity: [1, 0.3, 1] as number[],
+    opacity: [1, 0.4, 1] as number[],
     transition: {
-        duration: 1.5,
+        duration: 1.2,
         repeat: Infinity,
-        ease: "easeInOut" as const,
+        ease: [0.45, 0.05, 0.55, 0.95] as const, // Smooth sine-like easing
+        repeatType: "loop" as const,
     },
 } as const;
 
@@ -59,7 +60,7 @@ const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetP
             <AnimatePresence mode="popLayout">
                 {stars.map(({ index, active }) => (
                     <motion.div
-                        key={`${index}-${active}-${shouldBlink}`}
+                        key={index}
                         {...starMotion}
                         animate={active && shouldBlink ? blinkAnimation : staticStarAnimation}
                         transition={{
