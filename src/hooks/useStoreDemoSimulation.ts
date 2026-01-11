@@ -36,7 +36,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
     const setTeamChatAccess = useChatStore((state) => state.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((state) => state.setTeamChatIsAdmin);
     const setDeathState = useDeathStore((state) => state.setDeathState);
-    
+
     const setPing = useUtilityStore((state) => state.setPing);
     const setWantedLevel = useUtilityStore((state) => state.setWantedLevel);
     const setIsEvading = useUtilityStore((state) => state.setIsEvading);
@@ -295,23 +295,8 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             // Wanted level toggle (w key)
             if (e.key === "w" && !editMode) {
                 const current = useUtilityStore.getState();
-                const dir = (current as { wantedDirection?: number }).wantedDirection ?? 1;
-                let newLevel = current.wantedLevel + dir;
-                let newDir = dir;
-                
-                // Bounce at boundaries
-                if (newLevel >= 5) {
-                    newLevel = 5;
-                    newDir = -1;
-                } else if (newLevel <= 0) {
-                    newLevel = 0;
-                    newDir = 1;
-                }
-                
+                const newLevel = (current.wantedLevel + 1) % 6;
                 setWantedLevel(newLevel);
-                useUtilityStore.setState({ wantedDirection: newDir } as Partial<typeof current>);
-                
-                // Toggle evading when level > 0
                 if (newLevel > 0) {
                     setIsEvading(!current.isEvading);
                 } else {
