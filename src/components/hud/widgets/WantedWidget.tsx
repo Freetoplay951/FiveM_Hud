@@ -53,6 +53,15 @@ const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetP
     // Should blink when evading and has wanted level
     const shouldBlink = isEvading && wantedLevel > 0;
 
+    // Re-create blink object when wantedLevel changes to keep all active stars in sync
+    const syncedBlinkAnimation = useMemo(
+        () => ({
+            ...blinkAnimation,
+            transition: { ...blinkAnimation.transition },
+        }),
+        [wantedLevel, shouldBlink]
+    );
+
     return (
         <motion.div
             className="glass-panel rounded-lg px-2.5 py-1.5 flex items-center gap-0.5"
@@ -62,13 +71,17 @@ const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetP
                     <motion.div
                         key={index}
                         {...starMotion}
-                        animate={active && shouldBlink ? blinkAnimation : staticStarAnimation}
-                        transition={{
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 15,
-                            delay: index * 0.05,
-                        }}>
+                        animate={active && shouldBlink ? syncedBlinkAnimation : staticStarAnimation}
+                        transition={
+                            active && shouldBlink
+                                ? undefined
+                                : {
+                                      type: "spring",
+                                      stiffness: 400,
+                                      damping: 15,
+                                      delay: index * 0.05,
+                                  }
+                        }>
                         <Star
                             size={14}
                             className={active ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}
