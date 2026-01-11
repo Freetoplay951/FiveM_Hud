@@ -295,8 +295,22 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             // Wanted level toggle (w key)
             if (e.key === "w" && !editMode) {
                 const current = useUtilityStore.getState();
-                const newLevel = (current.wantedLevel + 1) % 6;
+                const dir = (current as { wantedDirection?: number }).wantedDirection ?? 1;
+                let newLevel = current.wantedLevel + dir;
+                let newDir = dir;
+                
+                // Bounce at boundaries
+                if (newLevel >= 5) {
+                    newLevel = 5;
+                    newDir = -1;
+                } else if (newLevel <= 0) {
+                    newLevel = 0;
+                    newDir = 1;
+                }
+                
                 setWantedLevel(newLevel);
+                useUtilityStore.setState({ wantedDirection: newDir } as Partial<typeof current>);
+                
                 // Toggle evading when level > 0
                 if (newLevel > 0) {
                     setIsEvading(!current.isEvading);
