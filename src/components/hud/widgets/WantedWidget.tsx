@@ -30,7 +30,7 @@ const blinkAnimation = {
     rotate: 0,
     opacity: [1, 0.4, 1] as number[],
     transition: {
-        duration: 1.2,
+        duration: 1.5,
         repeat: Infinity,
         ease: [0.45, 0.05, 0.55, 0.95] as const, // Smooth sine-like easing
         repeatType: "loop" as const,
