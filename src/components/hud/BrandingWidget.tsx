@@ -231,8 +231,8 @@ export const BrandingWidget = () => {
                         background:
                             "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 30%, transparent 35%)",
                     }}
-                    initial={{ x: "-150%" }}
-                    animate={{ x: "150%" }}
+                    initial={{ x: "-150%", skewX: -15 }}
+                    animate={{ x: "150%", skewX: 15 }}
                     transition={{
                         duration: 2.5,
                         repeat: Infinity,
