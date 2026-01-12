@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Navigation2 } from "lucide-react";
 import { MinimapShape } from "@/types/widget";
+import { getMinimapSize } from "@/lib/minimapUtils";
 
 interface MinimapWidgetProps {
     shape?: MinimapShape;
@@ -9,19 +10,7 @@ interface MinimapWidgetProps {
 
 export const MinimapWidget = ({ shape = "square" }: MinimapWidgetProps) => {
     const isRound = shape === "round";
-
-    // GTA Default Minimap Größen (relativ)
-    const mapWidthRel = 0.15;
-    const mapHeightRel = 0.188;
-
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    const widthPx = viewportWidth * mapWidthRel;
-    const heightPx = viewportHeight * mapHeightRel;
-
-    // Rund = quadratisch
-    const size = isRound ? Math.min(widthPx, heightPx) : null;
+    const { width: widthPx, height: heightPx } = getMinimapSize(isRound);
 
     return (
         <div className="relative">
@@ -29,8 +18,8 @@ export const MinimapWidget = ({ shape = "square" }: MinimapWidgetProps) => {
             <div
                 className="relative overflow-hidden"
                 style={{
-                    width: isRound ? `${size}px` : `${widthPx}px`,
-                    height: isRound ? `${size}px` : `${heightPx}px`,
+                    width: `${widthPx}px`,
+                    height: `${heightPx}px`,
                 }}>
                 <div
                     className={cn(
