@@ -949,20 +949,20 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "location",
             type: "location",
-            position: (id, _el, resolver) => {
+            position: (_id, _el, resolver) => {
                 const minimapRect = resolver.getWidgetRect("minimap");
-                const { width, height } = resolver.getWidgetSize(id);
+                const { height } = resolver.getWidgetSize("location");
 
                 if (minimapRect) {
-                    const minimapCenterX = minimapRect.x + minimapRect.width / 2;
+                    // Position at minimap X - the widget will center its content internally
                     return {
-                        x: minimapCenterX - width / 2,
+                        x: minimapRect.x,
                         y: minimapRect.y - GAP - height,
                     };
                 }
 
                 return {
-                    x: resolver.screen.width - MARGIN - width,
+                    x: MARGIN,
                     y: MARGIN + 50 + GAP,
                 };
             },
