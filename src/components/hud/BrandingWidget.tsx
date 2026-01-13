@@ -225,7 +225,7 @@ export const BrandingWidget = () => {
                 ))}
 
                 {/* Holographic shimmer effect */}
-                <motion.div
+                {/* <motion.div
                     className="absolute inset-0 pointer-events-none"
                     style={{
                         background:
@@ -239,7 +239,7 @@ export const BrandingWidget = () => {
                         repeatDelay: 3,
                         ease: "easeInOut",
                     }}
-                />
+                /> */}
 
                 {/* Corner accents */}
                 <motion.div
