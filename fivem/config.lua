@@ -4,7 +4,6 @@ Config = {}
 Config.StatusUpdateInterval = 500      -- Wie oft Status-Werte aktualisiert werden
 Config.VehicleUpdateInterval = 100     -- Wie oft Fahrzeug-Daten aktualisiert werden
 Config.LocationUpdateInterval = 1000   -- Wie oft Location aktualisiert wird
-Config.UtilityUpdateInterval = 500     -- Wie oft FPS/Ping/Wanted aktualisiert werden
 
 -- Deaktivierte Widgets
 Config.DisabledWidgets = {
@@ -172,14 +171,6 @@ Config.BodyHealth = {
 
 Config.ServerName = "RP Server"        -- Server Name im HUD
 Config.MaxPlayers = 128                -- Maximale Spieleranzahl
-
--- ============================================================================
--- PING WIDGET
--- ============================================================================
--- Uses NetworkGetAverageLatencyForPlayer (client-side native)
--- Updates every 5 seconds for stability
-
-Config.enablePing = true               -- Ping-Widget aktivieren/deaktivieren
 
 -- Debug
 Config.Debug = true

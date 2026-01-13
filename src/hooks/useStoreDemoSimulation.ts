@@ -37,7 +37,6 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
     const setTeamChatIsAdmin = useChatStore((state) => state.setTeamChatIsAdmin);
     const setDeathState = useDeathStore((state) => state.setDeathState);
 
-    const setPing = useUtilityStore((state) => state.setPing);
     const setWantedLevel = useUtilityStore((state) => state.setWantedLevel);
     const setIsEvading = useUtilityStore((state) => state.setIsEvading);
     const notifySuccess = useNotificationStore((state) => state.success);
@@ -135,13 +134,10 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                 const change = Math.random() > 0.5 ? 45 : -45;
                 setLocation({ heading: (currentHeading + change + 360) % 360 });
             }
-
-            // Ping simulation
-            setPing(Math.floor(30 + Math.random() * 40));
         }, 500);
 
         return () => clearInterval(interval);
-    }, [isDemoMode, setStatus, setVehicleState, setVoiceActive, setLocation, setPing]);
+    }, [isDemoMode, setStatus, setVehicleState, setVoiceActive, setLocation]);
 
     // Demo: Random Chat messages
     useEffect(() => {

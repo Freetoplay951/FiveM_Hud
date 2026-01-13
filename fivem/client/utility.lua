@@ -1,11 +1,9 @@
--- Utility Updates (Wanted Level, Ping, Server Info)
+-- Utility Updates (Wanted Level, Server Info)
 -- Performance optimized with change detection
--- Uses NetworkGetAverageLatencyForPlayer for ping (client-side)
 
 local lastUtilityData = {
     wantedLevel = nil,
     isEvading = nil,
-    ping = nil,
     playerCount = nil
 }
 
@@ -38,14 +36,7 @@ AddEventHandler("hud:loading", function()
         maxPlayers = Config.MaxPlayers or GetConvarInt('sv_maxclients', 64),
         playerCount = #GetActivePlayers()
     })
-    
-    -- Send initial ping using NetworkGetAverageLatencyForPlayer
-    if Config.enablePing then
-        local playerId = PlayerId()
-        local latency = NetworkGetAverageLatencyForPlayer(playerId) * 1000 -- Convert to ms
-        SendNUI('updateUtility', { ping = math.floor(latency) })
-    end
-    
+        
     -- Send initial wanted level and evading status
     local playerId = PlayerId()
     local wantedLevel = GetPlayerWantedLevel(playerId)
@@ -55,16 +46,8 @@ AddEventHandler("hud:loading", function()
         isEvading = isEvading
     })
     
-    -- Disable ping widget if not enabled
-    if not Config.enablePing then
-        SendNUI('updateDisabledWidgets', { ping = true })
-    end
-    
     if Config.Debug then
         print('[HUD Utility] Initial data sent via hud:loading event')
-        if not Config.enablePing then
-            print('[HUD Utility] Ping widget disabled via config')
-        end
     end
 end)
 
@@ -81,28 +64,6 @@ CreateThread(function()
             SendNUI('updateUtility', {
                 playerCount = playerCount
             })
-        end
-    end
-end)
-
--- ============================================================================
--- PING UPDATE LOOP (every 5 seconds - less frequent since it's stable)
--- Uses NetworkGetAverageLatencyForPlayer (client-side native)
--- ============================================================================
-
-CreateThread(function()
-    while true do
-        Wait(5000)
-        
-        if Config.enablePing then
-            local playerId = PlayerId()
-            local latency = NetworkGetAverageLatencyForPlayer(playerId) * 1000 -- Convert to ms
-            local ping = math.floor(latency)
-            
-            if ping ~= lastUtilityData.ping then
-                lastUtilityData.ping = ping
-                SendNUI('updateUtility', { ping = ping })
-            end
         end
     end
 end)
@@ -147,11 +108,6 @@ end)
 exports('setWantedLevel', function(level)
     local clampedLevel = math.max(0, math.min(5, level or 0))
     SendNUI('updateUtility', { wantedLevel = clampedLevel })
-end)
-
--- Update Ping manually
-exports('setPing', function(ping)
-    SendNUI('updateUtility', { ping = ping })
 end)
 
 -- Update server info

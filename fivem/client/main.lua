@@ -176,7 +176,7 @@ local function SendInitialData()
         blackMoney = 0
     })
     
-    -- Fire hud:loading event for utility data (server info, ping, wanted)
+    -- Fire hud:loading event for utility data (server info, wanted)
     -- This ensures all data is sent BEFORE the HUD becomes visible
     TriggerEvent("hud:loading")
     

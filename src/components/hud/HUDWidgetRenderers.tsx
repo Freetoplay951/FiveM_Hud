@@ -8,7 +8,6 @@ import { ClockWidget } from "./widgets/ClockWidget";
 import { DateWidget } from "./widgets/DateWidget";
 
 import { WantedWidget } from "./widgets/WantedWidget";
-import { PingWidget } from "./widgets/PingWidget";
 import { ServerInfoWidget } from "./widgets/ServerInfoWidget";
 import { ServerNameWidget } from "./widgets/ServerNameWidget";
 import { CompassWidget } from "./widgets/CompassWidget";
@@ -32,7 +31,7 @@ import { useLocationData, useHeading } from "@/stores/locationStore";
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
-import { useWantedLevel, useIsEvading, usePing, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
+import { useWantedLevel, useIsEvading, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 // ==========================================
@@ -766,58 +765,6 @@ const TeamChatWidgetRendererComponent = ({
 export const TeamChatWidgetRenderer = memo(TeamChatWidgetRendererComponent);
 
 // ==========================================
-// PING WIDGET - Subscribes to utility store
-// ==========================================
-const PingWidgetRendererComponent = ({
-    editMode,
-    snapToGrid,
-    gridSize,
-    hasSignaledReady,
-    getWidget,
-    updateWidgetPosition,
-    updateWidgetScale,
-    toggleWidgetVisibility,
-    resetWidget,
-    isWidgetDisabled,
-    getMultiSelectProps,
-}: LayoutOnlyProps) => {
-    const widget = getWidget("ping");
-    const isDead = useIsDead();
-
-    const ping = usePing();
-
-    const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
-    );
-
-    if (!widget) return null;
-
-    const baseVisible = widget.visible && (editMode ? true : !isDead);
-
-    return (
-        <HUDWidget
-            id={widget.id}
-            position={widget.position}
-            visible={baseVisible}
-            scale={widget.scale}
-            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
-            editMode={editMode}
-            snapToGrid={snapToGrid}
-            gridSize={gridSize}
-            onPositionChange={updateWidgetPosition}
-            onVisibilityToggle={toggleWidgetVisibility}
-            onScaleChange={updateWidgetScale}
-            onReset={handleReset}
-            {...getMultiSelectProps(widget.id)}>
-            <PingWidget ping={ping} />
-        </HUDWidget>
-    );
-};
-
-export const PingWidgetRenderer = memo(PingWidgetRendererComponent);
-
-// ==========================================
 // WANTED WIDGET - Subscribes to utility store
 // ==========================================
 const WantedWidgetRendererComponent = ({
@@ -865,8 +812,8 @@ const WantedWidgetRendererComponent = ({
             onScaleChange={updateWidgetScale}
             onReset={handleReset}
             {...getMultiSelectProps(widget.id)}>
-            <WantedWidget 
-                wantedLevel={editMode && wantedLevel === 0 ? 3 : wantedLevel} 
+            <WantedWidget
+                wantedLevel={editMode && wantedLevel === 0 ? 3 : wantedLevel}
                 isEvading={editMode ? true : isEvading}
             />
         </HUDWidget>
@@ -1044,7 +991,6 @@ const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
             <MoneyWidgetRenderer {...props} />
             <ClockWidgetRenderer {...props} />
             <DateWidgetRenderer {...props} />
-            <PingWidgetRenderer {...props} />
             <WantedWidgetRenderer {...props} />
             <ServerInfoWidgetRenderer {...props} />
             <ServerNameWidgetRenderer {...props} />

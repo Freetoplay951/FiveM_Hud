@@ -43,9 +43,7 @@ export type WidgetType =
     | "voice"
     | "radio"
     | "location"
-    
     | "wanted"
-    | "ping"
     | "date"
     | "serverinfo"
     | "servername"
@@ -965,37 +963,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                     x: MARGIN,
                     y: MARGIN + 50 + GAP,
                 };
-            },
-            visible: true,
-            scale: 1,
-        },
-        // Ping centered above location (which is above minimap)
-        {
-            id: "ping",
-            type: "ping",
-            position: (_id, el, resolver) => {
-                const locationRect = resolver.getWidgetRect("location");
-                const width = el?.offsetWidth ?? 0;
-                const height = el?.offsetHeight ?? 0;
-                
-                if (locationRect) {
-                    const locationCenterX = locationRect.x + locationRect.width / 2;
-                    return {
-                        x: locationCenterX - width / 2,
-                        y: locationRect.y - GAP - height,
-                    };
-                }
-                
-                // Fallback: above minimap
-                const minimapRect = resolver.getWidgetRect("minimap");
-                if (minimapRect) {
-                    const minimapCenterX = minimapRect.x + minimapRect.width / 2;
-                    return {
-                        x: minimapCenterX - width / 2,
-                        y: minimapRect.y - GAP * 2 - 40 - height,
-                    };
-                }
-                return { x: MARGIN, y: resolver.screen.height - MARGIN - 150 };
             },
             visible: true,
             scale: 1,
