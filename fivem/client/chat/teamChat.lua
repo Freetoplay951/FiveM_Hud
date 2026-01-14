@@ -13,7 +13,7 @@ local cachedStaffRankConfig = nil
 local cachedIsAdmin = false
 local cachedOnlineCount = 0
 
-local sendFirstData = true
+local sendInitialData = true
 
 -- ============================================================================
 -- PERMISSIONS
@@ -31,8 +31,8 @@ RegisterNetEvent("hud:teamPermissionsResponse", function(data)
     cachedIsAdmin = data.isAdmin or false
     cachedOnlineCount = data.onlineCount or 0
     
-    if sendFirstData then
-        sendFirstData = false
+    if sendInitialData then
+        sendInitialData = false
         SendNUI("teamChatUpdate", {
             hasAccess = cachedTeamAccess,
             teamType = cachedStaffRank or "supporter",
