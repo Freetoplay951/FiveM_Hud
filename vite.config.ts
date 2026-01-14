@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
                 compact: true, // komprimiert Code
                 controlFlowFlattening: false, // nicht aktivieren, kann JS-FiveM brechen
                 deadCodeInjection: false, // deaktiviert
-                disableConsoleOutput: true, // console.log unterdrücken
+                disableConsoleOutput: false, // console.log unterdrücken
                 identifierNamesGenerator: "hexadecimal", // Variablen schwerer lesbar
                 renameGlobals: true, // globale Variablen umbenennen
                 selfDefending: true, // leicht schwerer zu debuggen
