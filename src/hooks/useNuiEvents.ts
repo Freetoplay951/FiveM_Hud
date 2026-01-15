@@ -9,6 +9,7 @@ import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useUtilityStore } from "@/stores/utilityStore";
+import { useKeybindsStore, Keybind } from "@/stores/keybindsStore";
 import { isNuiEnvironment, GetParentResourceName } from "@/lib/nuiUtils";
 import {
     StatusWidgetState,
@@ -55,6 +56,9 @@ interface NuiEventHandlers {
             clearChat?: boolean;
         }
     ) => void;
+    onToggleKeybinds?: (visible?: boolean) => void;
+    onUpdateKeybinds?: (data: { keybinds: Keybind[] }) => void;
+    onKeybindsUpdate?: (data: { isVisible?: boolean; keybinds?: Keybind[] }) => void;
 }
 
 interface UseNuiEventsProps {
@@ -212,6 +216,26 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     chatStore.setTeamChatState(stateUpdate);
                 }
             },
+            onToggleKeybinds: (visible) => {
+                const keybindsStore = useKeybindsStore.getState();
+                if (typeof visible === "boolean") {
+                    keybindsStore.setVisible(visible);
+                } else {
+                    keybindsStore.toggleVisible();
+                }
+            },
+            onUpdateKeybinds: (data) => {
+                useKeybindsStore.getState().setKeybinds(data.keybinds);
+            },
+            onKeybindsUpdate: (data: { isVisible?: boolean; keybinds?: Keybind[] }) => {
+                const keybindsStore = useKeybindsStore.getState();
+                if (typeof data.isVisible === "boolean") {
+                    keybindsStore.setVisible(data.isVisible);
+                }
+                if (data.keybinds) {
+                    keybindsStore.setKeybinds(data.keybinds);
+                }
+            },
         };
 
         const actionHandlerMap: Record<string, (data: unknown) => void> = {
@@ -231,6 +255,9 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             updateDisabledWidgets: handlers.onUpdateDisabledWidgets as (data: unknown) => void,
             chatUpdate: handlers.onChatUpdate as (data: unknown) => void,
             teamChatUpdate: handlers.onTeamChatUpdate as (data: unknown) => void,
+            toggleKeybinds: handlers.onToggleKeybinds as (data: unknown) => void,
+            updateKeybinds: handlers.onUpdateKeybinds as (data: unknown) => void,
+            keybindsUpdate: handlers.onKeybindsUpdate as (data: unknown) => void,
         };
 
         const handleMessage = (event: MessageEvent) => {

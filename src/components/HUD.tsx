@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { SubwidgetRenderer } from "./hud/SubwidgetRenderer";
 import { HUDWidgetRenderers } from "./hud/HUDWidgetRenderers";
+import { KeybindsOverlay } from "./hud/keybinds";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useNuiEvents, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useStoreDemoSimulation } from "@/hooks/useStoreDemoSimulation";
@@ -22,6 +23,7 @@ import { useRenderLogger } from "@/hooks/useRenderLogger";
 import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
 import { useIsDead, useDeathData } from "@/stores/deathStore";
 import { useChatStore } from "@/stores/chatStore";
+import { useKeybindsStore } from "@/stores/keybindsStore";
 
 export const HUD = () => {
     const [editMenuOpen, setEditMenuOpen] = useState(false);
@@ -395,6 +397,9 @@ export const HUD = () => {
                     visible={isDead}
                 />
             )}
+
+            {/* Keybinds Overlay */}
+            <KeybindsOverlay />
         </div>
     );
 };

@@ -24,6 +24,7 @@ Config.ReviveLocations = {
 Config.EditModeKey = 'F7'              -- Taste für Edit-Mode
 Config.ChatKey = 'T'                   -- Taste für Chat
 Config.TeamChatKey = 'Y'               -- Taste für Team-Chat
+Config.KeybindsKey = 'K'               -- Taste für Keybinds-Menü
 
 -- Voice (für pma-voice / mumble-voip / saltychat)
 -- 'auto' = automatische Erkennung, 'none' = deaktiviert

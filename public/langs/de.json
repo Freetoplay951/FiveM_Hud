@@ -108,5 +108,19 @@
         "teamChatVisibility": "Sichtbarkeit",
         "hidden": "Versteckt",
         "locked": "Gesperrt"
+    },
+    "keybinds": {
+        "title": "Tastenbelegungen",
+        "subtitle": "Alle verfügbaren Commands und Keybinds",
+        "search": "Suchen...",
+        "keyboard": "Tastatur",
+        "noBinding": "Keine Belegung",
+        "oneBinding": "Eine Belegung",
+        "conflict": "Konflikt (≥2)",
+        "filter": "Filter",
+        "noKeybindsFound": "Keine Keybinds gefunden",
+        "key": "Taste",
+        "closeHint": "Drücke <esc>ESC</esc> oder <key>K</key> zum Schließen",
+        "action": "Aktion"
     }
 }

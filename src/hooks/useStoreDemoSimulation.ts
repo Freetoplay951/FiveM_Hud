@@ -8,6 +8,7 @@ import { useDeathStore } from "@/stores/deathStore";
 import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useUtilityStore } from "@/stores/utilityStore";
+import { useKeybindsStore } from "@/stores/keybindsStore";
 import { DEMO_CHAT_MESSAGES, DEMO_TEAM_MESSAGES } from "@/components/hud/data/demoData";
 
 interface UseStoreDemoSimulationProps {
@@ -268,8 +269,13 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             if (!editMode) {
                 if (e.key === "h") notifySuccess("Erfolg!", "Aktion erfolgreich ausgeführt.");
                 if (e.key === "j") notifyError("Fehler!", "Etwas ist schief gelaufen.");
-                if (e.key === "k") notifyWarning("Warnung!", "Bitte beachten.");
                 if (e.key === "l") notifyInfo("Info", "Hier ist eine Information.");
+            }
+
+            // Keybinds toggle - 'k' key
+            if (e.key === "k" && !editMode) {
+                e.preventDefault();
+                useKeybindsStore.getState().toggleVisible();
             }
 
             // Death toggle

@@ -108,5 +108,19 @@
         "teamChatVisibility": "Visibility",
         "hidden": "Hidden",
         "locked": "Locked"
+    },
+    "keybinds": {
+        "title": "Keybindings",
+        "subtitle": "All available commands and keybinds",
+        "search": "Search...",
+        "keyboard": "Keyboard",
+        "noBinding": "No binding",
+        "oneBinding": "One binding",
+        "conflict": "Conflict (≥2)",
+        "filter": "Filter",
+        "noKeybindsFound": "No keybinds found",
+        "key": "Key",
+        "closeHint": "Press <esc>ESC</esc> or <key>K</key> to close",
+        "action": "Action"
     }
 }

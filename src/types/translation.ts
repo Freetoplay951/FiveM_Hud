@@ -122,4 +122,18 @@ export interface Translations {
         hidden: string;
         locked: string;
     };
+    keybinds: {
+        title: string;
+        subtitle: string;
+        search: string;
+        keyboard: string;
+        noBinding: string;
+        oneBinding: string;
+        conflict: string;
+        filter: string;
+        noKeybindsFound: string;
+        key: string;
+        closeHint: string;
+        action: string;
+    };
 }
