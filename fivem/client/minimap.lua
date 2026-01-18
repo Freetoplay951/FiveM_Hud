@@ -5,12 +5,6 @@ MinimapShape = {
 
 local function SetMinimapShape(shape)
     print("Shape changed to " .. tostring(shape))
-
-    if shape == MinimapShape.ROUND then
-        SetMinimapClipType(1)
-    else
-        SetMinimapClipType(0) 
-    end
 end
 
 RegisterNUICallback("onMinimapShapeChange", function(data, cb)
