@@ -54,11 +54,12 @@ interface NuiEventHandlers {
         data: Omit<Partial<TeamChatState>, "isVisible"> & {
             message?: TeamChatMessage;
             clearChat?: boolean;
-        }
+        },
     ) => void;
     onToggleKeybinds?: (visible?: boolean) => void;
     onUpdateKeybinds?: (data: { keybinds: Keybind[] }) => void;
     onKeybindsUpdate?: (data: { isVisible?: boolean; keybinds?: Keybind[] }) => void;
+    onUpdateCommands?: (data: { command: string; description: string }[]) => void;
 }
 
 interface UseNuiEventsProps {
@@ -68,7 +69,7 @@ interface UseNuiEventsProps {
 
 export const sendNuiCallback = async <TResponse = unknown, TPayload = unknown>(
     eventName: string,
-    data?: TPayload
+    data?: TPayload,
 ): Promise<TResponse | null> => {
     if (!isNuiEnvironment()) {
         console.log("[DEV] NUI Callback:", eventName, data);
@@ -236,6 +237,9 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                     keybindsStore.setKeybinds(data.keybinds);
                 }
             },
+            onUpdateCommands: (data) => {
+                useChatStore.getState().setCommands(data);
+            },
         };
 
         const actionHandlerMap: Record<string, (data: unknown) => void> = {
@@ -258,6 +262,7 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             toggleKeybinds: handlers.onToggleKeybinds as (data: unknown) => void,
             updateKeybinds: handlers.onUpdateKeybinds as (data: unknown) => void,
             keybindsUpdate: handlers.onKeybindsUpdate as (data: unknown) => void,
+            updateCommands: handlers.onUpdateCommands as (data: unknown) => void,
         };
 
         const handleMessage = (event: MessageEvent) => {

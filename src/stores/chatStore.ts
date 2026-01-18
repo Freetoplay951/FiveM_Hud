@@ -4,12 +4,18 @@ import { ChatState, ChatMessage, TeamChatState, TeamChatMessage, TeamType } from
 import { DEMO_CHAT, DEMO_TEAM_CHAT } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
+export interface ChatCommand {
+    command: string;
+    description: string;
+}
+
 interface ChatStore {
     // Regular chat
     chatMessages: ChatMessage[];
     chatInputActive: boolean;
     chatVisible: boolean;
     chatUnreadCount: number;
+    commands: ChatCommand[];
 
     // Team chat
     teamChatMessages: TeamChatMessage[];
@@ -27,6 +33,7 @@ interface ChatStore {
     setChatInputActive: (active: boolean) => void;
     addChatMessage: (message: ChatMessage) => void;
     clearChatMessages: () => void;
+    setCommands: (commands: ChatCommand[]) => void;
 
     setTeamChatState: (state: Partial<TeamChatState>) => void;
     setTeamChatInputActive: (active: boolean) => void;
@@ -42,16 +49,17 @@ export const useChatStore = create<ChatStore>((set) => ({
     // Regular chat initial state
     chatMessages: isDemoMode ? DEMO_CHAT.messages : [],
     chatInputActive: false,
-    chatVisible: isDemoMode ? DEMO_CHAT.isVisible ?? false : false,
+    chatVisible: isDemoMode ? (DEMO_CHAT.isVisible ?? false) : false,
     chatUnreadCount: 0,
+    commands: [],
 
     // Team chat initial state
     teamChatMessages: isDemoMode ? DEMO_TEAM_CHAT.messages : [],
     teamChatInputActive: false,
-    teamChatVisible: isDemoMode ? DEMO_TEAM_CHAT.isVisible ?? false : false,
+    teamChatVisible: isDemoMode ? (DEMO_TEAM_CHAT.isVisible ?? false) : false,
     teamChatUnreadCount: 0,
     teamChatHasAccess: isDemoMode ? DEMO_TEAM_CHAT.hasAccess : false,
-    teamChatIsAdmin: isDemoMode ? DEMO_TEAM_CHAT.isAdmin ?? false : false,
+    teamChatIsAdmin: isDemoMode ? (DEMO_TEAM_CHAT.isAdmin ?? false) : false,
     teamType: isDemoMode ? DEMO_TEAM_CHAT.teamType : "supporter",
     teamName: isDemoMode ? DEMO_TEAM_CHAT.teamName : "",
     onlineMembers: isDemoMode ? DEMO_TEAM_CHAT.onlineMembers : 0,
@@ -80,6 +88,8 @@ export const useChatStore = create<ChatStore>((set) => ({
         })),
 
     clearChatMessages: () => set({ chatMessages: [], chatUnreadCount: 0 }),
+
+    setCommands: (commands) => set({ commands }),
 
     // Team chat actions
     setTeamChatState: (state) =>
@@ -121,6 +131,7 @@ export const useChatMessages = () => useChatStore((state) => state.chatMessages)
 export const useChatInputActive = () => useChatStore((state) => state.chatInputActive);
 export const useChatVisible = () => useChatStore((state) => state.chatVisible);
 export const useChatUnreadCount = () => useChatStore((state) => state.chatUnreadCount);
+export const useChatCommands = () => useChatStore((state) => state.commands);
 export const useChatData = () =>
     useChatStore(
         useShallow((state) => ({
@@ -128,7 +139,7 @@ export const useChatData = () =>
             isInputActive: state.chatInputActive,
             isVisible: state.chatVisible,
             unreadCount: state.chatUnreadCount,
-        }))
+        })),
     );
 
 // Team chat selectors
@@ -153,5 +164,5 @@ export const useTeamChatData = () =>
             teamType: state.teamType,
             teamName: state.teamName,
             onlineMembers: state.onlineMembers,
-        }))
+        })),
     );

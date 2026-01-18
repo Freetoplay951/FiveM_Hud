@@ -6,27 +6,21 @@ import { ChatMessage } from "@/types/hud";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 import { useChatHistory } from "@/hooks/useChatHistory";
-import { useChatStore, useChatData } from "@/stores/chatStore";
+import { useChatStore, useChatData, useChatCommands, ChatCommand } from "@/stores/chatStore";
 import { useIsDemoMode } from "@/stores/hudStore";
 
-interface ChatCommand {
-    command: string;
-    description: string;
-    usage?: string;
-}
-
 const DEMO_COMMANDS: ChatCommand[] = [
-    { command: "/me", description: "Aktion ausführen", usage: "/me [text]" },
-    { command: "/do", description: "Umgebungsbeschreibung", usage: "/do [text]" },
-    { command: "/ooc", description: "Out of Character", usage: "/ooc [text]" },
-    { command: "/whisper", description: "Flüstern", usage: "/whisper [text]" },
-    { command: "/shout", description: "Schreien", usage: "/shout [text]" },
-    { command: "/tc", description: "Team Chat öffnen", usage: "/tc" },
-    { command: "/clear", description: "Chat leeren", usage: "/clear" },
-    { command: "/help", description: "Hilfe anzeigen", usage: "/help" },
-    { command: "/report", description: "Report erstellen", usage: "/report [spieler] [grund]" },
-    { command: "/pm", description: "Private Nachricht", usage: "/pm [id] [text]" },
-    { command: "/hudedit", description: "HUD Editor öffnen", usage: "/hudedit" },
+    { command: "/me", description: "Aktion ausführen" },
+    { command: "/do", description: "Umgebungsbeschreibung" },
+    { command: "/ooc", description: "Out of Character" },
+    { command: "/whisper", description: "Flüstern" },
+    { command: "/shout", description: "Schreien" },
+    { command: "/tc", description: "Team Chat öffnen" },
+    { command: "/clear", description: "Chat leeren" },
+    { command: "/help", description: "Hilfe anzeigen" },
+    { command: "/report", description: "Report erstellen" },
+    { command: "/pm", description: "Private Nachricht" },
+    { command: "/hudedit", description: "HUD Editor öffnen" },
 ];
 
 interface ChatWidgetProps {
@@ -40,11 +34,11 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
     const isDemoMode = useIsDemoMode();
     const setChatInputActive = useChatStore((s) => s.setChatInputActive);
     const addChatMessage = useChatStore((s) => s.addChatMessage);
+    const nuiCommands = useChatCommands();
 
     const [inputValue, setInputValue] = useState("");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
-    const [nuiCommands, setNuiCommands] = useState<ChatCommand[]>([]);
     const [isAutoHidden, setIsAutoHidden] = useState(false);
     const [isUserScrolled, setIsUserScrolled] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -105,25 +99,11 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
         };
     }, []);
 
-    // Load commands from FiveM
+    // Request commands on mount (initial load)
     useEffect(() => {
         if (isNuiEnvironment()) {
-            sendNuiCallback<{ success: boolean; commands: ChatCommand[] }>("getCommands").then((response) => {
-                if (response?.success && response.commands) {
-                    setNuiCommands(response.commands);
-                }
-            });
+            sendNuiCallback("getCommands");
         }
-
-        const handleMessage = (event: MessageEvent) => {
-            const { action, data } = event.data;
-            if (action === "updateCommands" && Array.isArray(data)) {
-                setNuiCommands(data);
-            }
-        };
-
-        window.addEventListener("message", handleMessage);
-        return () => window.removeEventListener("message", handleMessage);
     }, []);
 
     const availableCommands = useMemo(() => {
@@ -154,7 +134,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                 messagesEndRef.current?.scrollIntoView({ behavior });
             }
         },
-        [isUserScrolled]
+        [isUserScrolled],
     );
 
     // Handle scroll to detect if user manually scrolled up
@@ -188,18 +168,10 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
         }
     }, [selectedCommandIndex, showCommandSuggestions]);
 
-    const selectCommand = useCallback(
-        (command: string) => {
-            const cmd = availableCommands.find((c) => c.command === command);
-            if (cmd?.usage?.includes("[")) {
-                setInputValue(command + " ");
-            } else {
-                setInputValue(command);
-            }
-            setShowCommandSuggestions(false);
-        },
-        [availableCommands]
-    );
+    const selectCommand = useCallback((commandName: string) => {
+        setInputValue(commandName);
+        setShowCommandSuggestions(false);
+    }, []);
 
     const closeChat = useCallback(() => {
         setShowCommandSuggestions(false);
@@ -285,7 +257,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                 if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     const exactMatch = availableCommands.find(
-                        (cmd) => cmd.command.toLowerCase() === inputValue.toLowerCase()
+                        (cmd) => cmd.command.toLowerCase() === inputValue.toLowerCase(),
                     );
                     if (exactMatch) {
                         handleSend();
@@ -329,7 +301,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
             closeChat,
             navigatePrevious,
             navigateNext,
-        ]
+        ],
     );
 
     const getMessageColor = (type: ChatMessage["type"]) => {
@@ -420,7 +392,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                     <span
                                         className={cn(
                                             "font-medium mr-1",
-                                            msg.type === "system" ? "text-warning" : "text-primary"
+                                            msg.type === "system" ? "text-warning" : "text-primary",
                                         )}>
                                         {msg.sender}:
                                     </span>
@@ -461,7 +433,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                                         "flex items-center gap-2 px-2 py-1.5 cursor-pointer transition-colors",
                                                         index === selectedCommandIndex
                                                             ? "bg-primary/20 text-foreground"
-                                                            : "hover:bg-accent/50"
+                                                            : "hover:bg-accent/50",
                                                     )}>
                                                     <Terminal
                                                         size={12}
@@ -469,7 +441,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                                             "shrink-0",
                                                             index === selectedCommandIndex
                                                                 ? "text-primary"
-                                                                : "text-muted-foreground"
+                                                                : "text-muted-foreground",
                                                         )}
                                                     />
                                                     <div className="flex flex-col flex-1 min-w-0">
@@ -478,7 +450,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                                                 "text-xs font-medium",
                                                                 index === selectedCommandIndex
                                                                     ? "text-primary"
-                                                                    : "text-foreground"
+                                                                    : "text-foreground",
                                                             )}>
                                                             {cmd.command}
                                                         </span>
@@ -486,11 +458,12 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                                             {cmd.description}
                                                         </span>
                                                     </div>
+                                                    {/*                                                     
                                                     {cmd.usage && (
                                                         <span className="text-[9px] text-muted-foreground/60 shrink-0 font-mono">
                                                             {cmd.usage}
                                                         </span>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                             ))}
                                         </div>
@@ -525,7 +498,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                     "p-1.5 rounded transition-colors",
                                     inputValue.trim()
                                         ? "bg-primary/20 text-primary hover:bg-primary/30"
-                                        : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
+                                        : "bg-background/20 text-muted-foreground/50 cursor-not-allowed",
                                 )}>
                                 <Send size={12} />
                             </button>
