@@ -68,15 +68,10 @@ end)
 -- ============================================================================
 
 local function CreateTeamChatMessageData(sender, rank, message, isImportant)
-    local displayRank = rank
-    if cachedStaffRankConfig and cachedStaffRankName then
-        displayRank = cachedStaffRankName
-    end
-    
     return {
         id = tostring(GetGameTimer()),
         sender = sender,
-        rank = displayRank,
+        rank = rank,
         message = message,
         isImportant = isImportant or false
     }
