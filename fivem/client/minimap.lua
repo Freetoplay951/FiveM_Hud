@@ -77,8 +77,3 @@ RegisterNUICallback("onMinimapShapeChange", function(data, cb)
     SetMinimapShape(shape)
     cb({ success = true })
 end)
-
-AddEventHandler("onClientResourceStart", function(res)
-    if res ~= GetCurrentResourceName() then return end
-    SetMinimapShape(MinimapShape.SQUARE)
-end)

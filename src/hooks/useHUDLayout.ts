@@ -214,17 +214,24 @@ const normalizeState = (raw: Partial<HUDLayoutState>): HUDLayoutState => {
 export const useHUDLayout = () => {
     const [state, setState] = useState<HUDLayoutState>(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
+
+        let initialState: HUDLayoutState;
         if (saved) {
             try {
                 const { editMode, widgetsDistributed, ...data } = JSON.parse(saved);
                 // If we have saved positions, mark as already distributed
                 const normalized = normalizeState(data);
-                return { ...normalized, widgetsDistributed: true };
+                initialState = { ...normalized, widgetsDistributed: true };
             } catch {
-                return normalizeState(getDefaultState());
+                initialState = normalizeState(getDefaultState());
             }
+        } else {
+            initialState = normalizeState(getDefaultState());
         }
-        return normalizeState(getDefaultState());
+
+        sendNuiCallback("onMinimapShapeChange", { shape: initialState.minimapShape });
+
+        return initialState;
     });
 
     useEffect(() => {
