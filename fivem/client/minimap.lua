@@ -69,7 +69,9 @@ local function SetMinimapShape(shape)
         SetBigmapActive(false, false)
     end
 
-    print("Shape changed to " .. tostring(shape))
+    if Config.Debug then
+        print('[HUD Minimap] Minimap Shape changed to ' .. tostring(shape))
+    end
 end
 
 RegisterNUICallback("onMinimapShapeChange", function(data, cb)
