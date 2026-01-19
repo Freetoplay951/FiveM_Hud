@@ -91,7 +91,7 @@ const extractWidgetDependencies = (widgetConfigs: WidgetConfig[]): Record<string
  */
 const buildReverseDependencyMap = (
     directDeps: Record<string, Set<string>>,
-    widgetConfigs: WidgetConfig[]
+    widgetConfigs: WidgetConfig[],
 ): Record<string, string[]> => {
     const reverseMap: Record<string, Set<string>> = {};
     const widgetIds = widgetConfigs.map((w) => w.id);
@@ -292,10 +292,10 @@ export const useHUDLayout = () => {
             lastDefaultRectsRef.current = resolveDefaultPositions(
                 defaultWidgetConfigs,
                 isWidgetDisabled,
-                hasSignaledReady
+                hasSignaledReady,
             );
         },
-        []
+        [],
     );
 
     /**
@@ -339,7 +339,7 @@ export const useHUDLayout = () => {
                 });
             });
         },
-        [isPositionClose]
+        [isPositionClose],
     );
 
     /**
@@ -358,7 +358,7 @@ export const useHUDLayout = () => {
                 })
                 .map((w) => w.id);
         },
-        [state.widgets, isPositionClose]
+        [state.widgets, isPositionClose],
     );
 
     const startAutoRelayout = useCallback(
@@ -375,7 +375,7 @@ export const useHUDLayout = () => {
 
             return uniq;
         },
-        [captureDefaultRects, getWidgetsToMove]
+        [captureDefaultRects, getWidgetsToMove],
     );
 
     const setStatusDesign = useCallback(
@@ -388,7 +388,7 @@ export const useHUDLayout = () => {
             // After render, compute new defaults and apply (without flicker: widgets are hidden during this)
             runAutoRelayout(affected, isWidgetDisabled);
         },
-        [runAutoRelayout, startAutoRelayout]
+        [runAutoRelayout, startAutoRelayout],
     );
 
     const setSpeedometerType = useCallback((type: SpeedometerType) => {
@@ -404,7 +404,7 @@ export const useHUDLayout = () => {
 
             runAutoRelayout(affected, isWidgetDisabled);
         },
-        [runAutoRelayout, startAutoRelayout]
+        [runAutoRelayout, startAutoRelayout],
     );
 
     const resetLayout = useCallback(
@@ -444,7 +444,7 @@ export const useHUDLayout = () => {
                 }));
             });
         },
-        [setMinimapShape, setStatusDesign, setSpeedometerType, state]
+        [setMinimapShape, setStatusDesign, setSpeedometerType, state],
     );
 
     const resetWidget = useCallback(
@@ -465,11 +465,11 @@ export const useHUDLayout = () => {
                               scale: defaultWidget.scale ?? 1,
                               visible: defaultWidget.visible,
                           }
-                        : w
+                        : w,
                 ),
             }));
         },
-        []
+        [],
     );
 
     /**
@@ -490,7 +490,7 @@ export const useHUDLayout = () => {
                 const resolvedRects = resolveDefaultPositions(
                     widgetConfigsWithCurrentScales,
                     isWidgetDisabled,
-                    hasSignaledReady
+                    hasSignaledReady,
                 );
 
                 const rect = resolvedRects.get(id);
@@ -504,19 +504,19 @@ export const useHUDLayout = () => {
                                   ...w,
                                   position: clampPosition({ x: rect.x, y: rect.y }),
                               }
-                            : w
+                            : w,
                     ),
                 };
             });
         },
-        []
+        [],
     );
 
     const getWidget = useCallback(
         (id: string): ResolvedWidgetConfig | undefined => {
             return state.widgets.find((w) => w.id === id);
         },
-        [state.widgets]
+        [state.widgets],
     );
 
     const setSimpleMode = useCallback((enabled: boolean) => {
