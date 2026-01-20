@@ -4,6 +4,14 @@ MinimapShape = {
 }
 
 local function SetMinimapShape(shape)
+    local defaultAspectRatio = 1920 / 1080
+    local resX, resY = GetActiveScreenResolution()
+    local aspectRatio = resX / resY
+    local minimapOffset = 0.0
+    if aspectRatio > defaultAspectRatio then
+        minimapOffset = ((defaultAspectRatio - aspectRatio) / 3.6) - 0.008
+    end
+        
     if shape == MinimapShape.SQUARE then
         RequestStreamedTextureDict("squaremap", false)
         while not HasStreamedTextureDictLoaded("squaremap") do
@@ -13,14 +21,6 @@ local function SetMinimapShape(shape)
         SetMinimapClipType(0)
         AddReplaceTexture("platform:/textures/graphics", "radarmasksm", "squaremap", "radarmasksm")
         AddReplaceTexture("platform:/textures/graphics", "radarmask1g", "squaremap", "radarmasksm")
-
-        local defaultAspectRatio = 1920 / 1080
-        local resX, resY = GetActiveScreenResolution()
-        local aspectRatio = resX / resY
-        local minimapOffset = 0.0
-        if aspectRatio > defaultAspectRatio then
-            minimapOffset = ((defaultAspectRatio - aspectRatio) / 3.6) - 0.008
-        end
 
         local sizeXOffset = -0.02
         
@@ -44,14 +44,6 @@ local function SetMinimapShape(shape)
         SetMinimapClipType(1)
         AddReplaceTexture("platform:/textures/graphics", "radarmasksm", "circlemap", "radarmasksm")
         AddReplaceTexture("platform:/textures/graphics", "radarmask1g", "circlemap", "radarmasksm")
-
-        local defaultAspectRatio = 1920 / 1080
-        local resX, resY = GetActiveScreenResolution()
-        local aspectRatio = resX / resY
-        local minimapOffset = 0.0
-        if aspectRatio > defaultAspectRatio then
-            minimapOffset = ((defaultAspectRatio - aspectRatio) / 3.6) - 0.008
-        end
 
         local sizeX = 0.175
         local sizeY = 0.279
