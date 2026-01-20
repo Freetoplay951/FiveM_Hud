@@ -3,6 +3,9 @@ MinimapShape = {
     ROUND = "round"
 }
 
+-- The bars (healthbar, ...) will only be deactivated if you ensure the
+-- script before joining the server. Else it won't load the Scaleform (.gfx file).
+
 local function SetMinimapShape(shape)
     local defaultAspectRatio = 1920 / 1080
     local resX, resY = GetActiveScreenResolution()
