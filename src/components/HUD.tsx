@@ -173,17 +173,17 @@ export const HUD = () => {
                 });
             }
         },
-        [setSimpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady, getWidget]
+        [setSimpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady, getWidget],
     );
 
     // Stabilized callbacks for demo mode switches
     const handleTeamChatAccessChange = useCallback(
         (checked: boolean) => setTeamChatAccess(checked),
-        [setTeamChatAccess]
+        [setTeamChatAccess],
     );
     const handleTeamChatAdminChange = useCallback(
         (checked: boolean) => setTeamChatIsAdmin(checked),
-        [setTeamChatIsAdmin]
+        [setTeamChatIsAdmin],
     );
 
     // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data, NO notifications
@@ -225,7 +225,7 @@ export const HUD = () => {
             resetWidget,
             isWidgetDisabled,
             getMultiSelectProps,
-        ]
+        ],
     );
 
     // Subwidget props - memoized separately
@@ -261,7 +261,7 @@ export const HUD = () => {
             reflowWidgetPosition,
             isWidgetDisabled,
             getMultiSelectProps,
-        ]
+        ],
     );
 
     if (!isVisible || !t) return null;
@@ -275,6 +275,21 @@ export const HUD = () => {
             onMouseLeave={handleSelectionEnd}>
             {/* Branding */}
             {!isDead && <BrandingWidget />}
+
+            {/* Grid overlay when in edit mode */}
+            {editMode && snapToGrid && (
+                <motion.div
+                    className="fixed inset-0 z-30 pointer-events-none"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        backgroundImage:
+                            "linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)",
+                        backgroundSize: `${gridSize * 2}px ${gridSize * 2}px`,
+                    }}
+                />
+            )}
 
             {/* Selection Box */}
             {selectionBox && (
