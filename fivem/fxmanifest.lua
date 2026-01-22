@@ -42,7 +42,6 @@ escrow_ignore {
     'client/death.lua',
     'client/radio.lua',
     'client/utility.lua',
-    'client/keybinds.lua',
     'client/chat/playerChat.lua',
     'client/chat/teamChat.lua',
     'config.lua',
