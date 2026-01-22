@@ -128,6 +128,7 @@ export interface TeamChatMessage {
     id: string;
     sender: string;
     rank?: string;
+    rankColor?: string;
     message: string;
     timestamp: string;
     isImportant?: boolean;

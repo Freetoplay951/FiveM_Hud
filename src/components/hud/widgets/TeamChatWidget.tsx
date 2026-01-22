@@ -96,7 +96,7 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                 messagesEndRef.current?.scrollIntoView({ behavior });
             }
         },
-        [isUserScrolled]
+        [isUserScrolled],
     );
 
     // Handle scroll to detect if user manually scrolled up
@@ -175,7 +175,7 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                 if (next !== null) setInputValue(next);
             }
         },
-        [handleSend, closeChat, navigatePrevious, navigateNext, inputValue]
+        [handleSend, closeChat, navigatePrevious, navigateNext, inputValue],
     );
 
     // Visibility state for opacity-based hiding
@@ -210,7 +210,7 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                     className={cn(
                         "flex items-center justify-between px-3 py-2 border-b",
                         teamColor.border,
-                        teamColor.bg
+                        teamColor.bg,
                     )}>
                     <div className="flex items-center gap-2">
                         <TeamIcon
@@ -254,31 +254,46 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                     onScroll={handleScroll}
                     className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin">
                     <AnimatePresence initial={false}>
-                        {teamChat.messages.map((msg) => (
-                            <motion.div
-                                key={msg.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 10 }}
-                                className="text-xs leading-relaxed">
-                                <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
-                                {msg.rank && (
+                        {teamChat.messages.map((msg) => {
+                            // Use individual sender's rank color if available, fallback to teamColor
+                            const senderColor = msg.rankColor || null;
+                            const colorStyle = senderColor ? { color: senderColor } : undefined;
+                            const bgStyle = senderColor ? { backgroundColor: `${senderColor}20` } : undefined;
+
+                            return (
+                                <motion.div
+                                    key={msg.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 10 }}
+                                    className="text-xs leading-relaxed">
+                                    <span className="text-[10px] text-muted-foreground/50 mr-1.5">{msg.timestamp}</span>
+                                    {msg.rank && (
+                                        <span
+                                            className={cn(
+                                                "text-[9px] px-1 py-0.5 rounded mr-1",
+                                                !senderColor && teamColor.bg,
+                                                !senderColor && teamColor.text,
+                                            )}
+                                            style={senderColor ? { ...colorStyle, ...bgStyle } : undefined}>
+                                            {msg.rank}
+                                        </span>
+                                    )}
+                                    <span
+                                        className={cn("font-medium mr-1", !senderColor && teamColor.text)}
+                                        style={colorStyle}>
+                                        {msg.sender}:
+                                    </span>
                                     <span
                                         className={cn(
-                                            "text-[9px] px-1 py-0.5 rounded mr-1",
-                                            teamColor.bg,
-                                            teamColor.text
+                                            "text-foreground",
+                                            msg.isImportant && "font-semibold text-warning",
                                         )}>
-                                        {msg.rank}
+                                        {msg.message}
                                     </span>
-                                )}
-                                <span className={cn("font-medium mr-1", teamColor.text)}>{msg.sender}:</span>
-                                <span
-                                    className={cn("text-foreground", msg.isImportant && "font-semibold text-warning")}>
-                                    {msg.message}
-                                </span>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </AnimatePresence>
                     <div ref={messagesEndRef} />
                 </div>
@@ -300,7 +315,7 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                                 placeholder="Team-Nachricht..."
                                 className={cn(
                                     "flex-1 bg-background/30 border rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors",
-                                    teamColor.border
+                                    teamColor.border,
                                 )}
                             />
                             <button
@@ -310,7 +325,7 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                                     "p-1.5 rounded transition-colors",
                                     inputValue.trim()
                                         ? cn(teamColor.bg, teamColor.text, "hover:opacity-80")
-                                        : "bg-background/20 text-muted-foreground/50 cursor-not-allowed"
+                                        : "bg-background/20 text-muted-foreground/50 cursor-not-allowed",
                                 )}>
                                 <Send size={12} />
                             </button>

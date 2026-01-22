@@ -67,19 +67,20 @@ end)
 -- TEAM CHAT LOGIC
 -- ============================================================================
 
-local function CreateTeamChatMessageData(sender, rank, message, isImportant)
+local function CreateTeamChatMessageData(sender, rank, message, isImportant, rankColor)
     return {
         id = tostring(GetGameTimer()),
         sender = sender,
         rank = rank,
+        rankColor = rankColor,
         message = message,
         isImportant = isImportant or false
     }
 end
 
-local function CreateTeamChatMessage(sender, rank, message, isImportant)
+local function CreateTeamChatMessage(sender, rank, message, isImportant, rankColor)
     SendNUI("teamChatUpdate", {
-        message = CreateTeamChatMessageData(sender, rank, message, isImportant)
+        message = CreateTeamChatMessageData(sender, rank, message, isImportant, rankColor)
     })
 end
 
@@ -140,7 +141,8 @@ RegisterNUICallback("sendTeamChatMessage", function(data, cb)
         TriggerServerEvent("hud:sendTeamChatMessage", data.message)
         
         local name = GetPlayerName(PlayerId()) or "Unknown"
-        CloseTeamChat(CreateTeamChatMessageData(name, cachedStaffRankName, data.message, false))
+        local rankColor = cachedStaffRankConfig and cachedStaffRankConfig.color or nil
+        CloseTeamChat(CreateTeamChatMessageData(name, cachedStaffRankName, data.message, false, rankColor))
     end
     cb({ success = true })
 end)
@@ -154,8 +156,8 @@ end)
 -- EVENTS
 -- ============================================================================
 
-RegisterNetEvent("hud:receiveTeamChatMessage", function(sender, rank, message, isImportant)
-    CreateTeamChatMessage(sender, rank, message, isImportant)
+RegisterNetEvent("hud:receiveTeamChatMessage", function(sender, rank, message, isImportant, rankColor)
+    CreateTeamChatMessage(sender, rank, message, isImportant, rankColor)
 end)
 
 RegisterNetEvent("hud:clearTeamChat", function()
