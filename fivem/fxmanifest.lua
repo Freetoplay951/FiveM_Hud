@@ -44,5 +44,8 @@ escrow_ignore {
     'client/utility.lua',
     'client/keybinds.lua',
     'client/chat/playerChat.lua',
-    'client/chat/teamChat.lua'
+    'client/chat/teamChat.lua',
+    'config.lua',
+    'shared/utils.lua',
+    'server/main.lua'
 }
