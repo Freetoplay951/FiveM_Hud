@@ -3,12 +3,18 @@ export type Language = "de" | "en";
 export interface LanguageConfig {
     name: string;
     locale: string;
+    keyboard: string;
 }
 
 export interface Locales {
     defaultLanguage: Language;
     locale: string;
     languages: Record<Language, LanguageConfig>;
+}
+
+export interface KeyboardLayoutData {
+    name: string;
+    rows: string[][];
 }
 
 export interface Translations {

@@ -4,11 +4,13 @@
     "languages": {
         "de": {
             "name": "Deutsch",
-            "locale": "de-DE"
+            "locale": "de-DE",
+            "keyboard": "qwertz"
         },
         "en": {
             "name": "English",
-            "locale": "en-US"
+            "locale": "en-US",
+            "keyboard": "qwerty"
         }
     }
 }
