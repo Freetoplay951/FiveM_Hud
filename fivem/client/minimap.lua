@@ -74,3 +74,61 @@ RegisterNUICallback("onMinimapShapeChange", function(data, cb)
     SetMinimapShape(shape)
     cb({ success = true })
 end)
+
+-- Show/Hide minimap
+
+local isMinimapVisible = true
+local function UpdateMinimapVisibility(inVehicle)
+    if not Config.MinimapOnlyInVehicle then
+        if not isMinimapVisible then
+            DisplayRadar(true)
+            isMinimapVisible = true
+            if Config.Debug then
+                print('[HUD Minimap] Minimap visibility: always visible (option disabled)')
+            end
+        end
+        return
+    end
+    
+    if inVehicle and not isMinimapVisible then
+        DisplayRadar(true)
+        isMinimapVisible = true
+        if Config.Debug then
+            print('[HUD Minimap] Minimap shown (entered vehicle)')
+        end
+    elseif not inVehicle and isMinimapVisible then
+        DisplayRadar(false)
+        isMinimapVisible = false
+        if Config.Debug then
+            print('[HUD Minimap] Minimap hidden (left vehicle)')
+        end
+    end
+end
+
+CreateThread(function()
+    local wasInVehicle = false
+    
+    Wait(1000)
+    local ped = PlayerPedId()
+    wasInVehicle = IsPedInAnyVehicle(ped, false)
+    UpdateMinimapVisibility(wasInVehicle)
+    
+    while true do
+        Wait(500)
+        
+        ped = PlayerPedId()
+        local inVehicle = IsPedInAnyVehicle(ped, false)
+        
+        if inVehicle ~= wasInVehicle then
+            wasInVehicle = inVehicle
+            UpdateMinimapVisibility(inVehicle)
+        end
+    end
+end)
+
+exports('setMinimapVehicleOnly', function(enabled)
+    Config.MinimapOnlyInVehicle = enabled
+    local ped = PlayerPedId()
+    local inVehicle = IsPedInAnyVehicle(ped, false)
+    UpdateMinimapVisibility(inVehicle)
+end)

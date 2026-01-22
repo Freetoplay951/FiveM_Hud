@@ -615,22 +615,13 @@ export const VehicleNameWidgetRenderer = memo(VehicleNameWidgetRendererComponent
 // ==========================================
 const MinimapWidgetRendererComponent = ({
     editMode,
-    snapToGrid,
-    gridSize,
     minimapShape,
     hasSignaledReady,
     autoLayoutHiddenIds,
     getWidget,
-    toggleWidgetVisibility,
-    resetWidget,
     isWidgetDisabled,
 }: LayoutOnlyProps) => {
     const widget = getWidget("minimap");
-
-    const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
-    );
 
     if (!widget) return null;
 
@@ -646,8 +637,8 @@ const MinimapWidgetRendererComponent = ({
             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
             suspended={autoLayoutHiddenIds.includes(widget.id)}
             editMode={editMode}
-            snapToGrid={snapToGrid}
-            gridSize={gridSize}
+            snapToGrid={false}
+            gridSize={0}
             onPositionChange={undefined}
             onVisibilityToggle={undefined}
             onScaleChange={undefined}

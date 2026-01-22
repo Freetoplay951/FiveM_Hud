@@ -69,13 +69,12 @@ Config.VoiceRanges = {
 -- Geld (für esx/qb)
 Config.Framework = 'auto'              -- 'esx', 'qb', oder 'auto' für automatische Erkennung
 
--- Minimap
--- WICHTIG: Setze auf FALSE damit die echte GTA Karte angezeigt wird!
--- Das HUD positioniert die GTA-Minimap automatisch an die richtige Stelle.
-Config.HideDefaultMinimap = false
-
 -- Minimap Form: 'square' (Standard) oder 'round' (Rund)
 Config.MinimapShape = 'square'
+
+-- Minimap nur in Fahrzeugen anzeigen (default: false)
+-- Wenn true, wird die Minimap nur angezeigt wenn der Spieler in einem Fahrzeug ist
+Config.MinimapOnlyInVehicle = false
 
 -- ============================================================================
 -- TEAM-CHAT KONFIGURATION (Staff-Ränge)

@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect, ReactNode, memo } from "react";
-import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw } from "lucide-react";
+import { Eye, EyeOff, GripVertical, MoveDiagonal, RotateCcw, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WidgetPosition } from "@/types/widget";
 import { useRenderLogger } from "@/hooks/useRenderLogger";
+import { isWidgetLocked } from "@/lib/widgetConfig";
 
 interface HUDWidgetProps {
     id: string;
@@ -126,7 +127,7 @@ const HUDWidgetComponent = ({
                 y: Math.max(0, Math.min(maxY, y)),
             };
         },
-        [elementSize.w, elementSize.h, localScale, scale]
+        [elementSize.w, elementSize.h, localScale, scale],
     );
 
     const handleMouseDown = useCallback(
@@ -155,7 +156,7 @@ const HUDWidgetComponent = ({
                 onDragStart(id, position);
             }
         },
-        [editMode, onPositionChange, isResizing, position, onSelect, onDragStart, id]
+        [editMode, onPositionChange, isResizing, position, onSelect, onDragStart, id],
     );
 
     const localPositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -217,7 +218,18 @@ const HUDWidgetComponent = ({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, snapToGrid, gridSize, id, onPositionChange, clampToViewport, onDragMove, onDragEnd, isSelected]);
+    }, [
+        isDragging,
+        snapToGrid,
+        gridSize,
+        id,
+        onPositionChange,
+        clampToViewport,
+        onDragMove,
+        onDragEnd,
+        isSelected,
+        onLiveDrag,
+    ]);
 
     const handleResizeMouseDown = (e: React.MouseEvent) => {
         if (!editMode) return;
@@ -274,7 +286,7 @@ const HUDWidgetComponent = ({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isResizing, onScaleChange, id, localScale]);
+    }, [isResizing, onScaleChange, id, localScale, onLiveScale]);
 
     // Display position - use local during drag, otherwise use stored position
     const displayPosition = localPosition ?? position;
@@ -286,6 +298,9 @@ const HUDWidgetComponent = ({
     const isSuspended = suspended;
 
     const isSubWidget = !(onPositionChange || onVisibilityToggle || onScaleChange || onReset);
+
+    // Check if this widget is locked (not editable)
+    const isLocked = isWidgetLocked(id);
 
     // Check if className contains a z-index class (z-50, z-40, etc.)
     const hasCustomZIndex = className?.includes("z-");
@@ -303,7 +318,7 @@ const HUDWidgetComponent = ({
                     "ring-[3px] ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
                 (isDragging || isResizing) && "z-50",
                 !visible && editMode && "opacity-40",
-                className
+                className,
             )}
             style={{
                 left: displayPosition.x,
@@ -331,16 +346,25 @@ const HUDWidgetComponent = ({
             {/* Edit Mode Controls */}
             {editMode && (
                 <div className="absolute -top-7 left-0 right-0 flex items-center justify-between gap-1">
-                    {!isSubWidget && (
+                    {(!isSubWidget || isLocked) && (
                         <div className="flex items-center gap-1 bg-background/60 border border-border/30 rounded px-1 py-0.5">
-                            <GripVertical
-                                size={10}
-                                className="text-muted-foreground"
-                            />
+                            {isLocked ? (
+                                <Lock
+                                    size={10}
+                                    className="text-warning"
+                                />
+                            ) : (
+                                <GripVertical
+                                    size={10}
+                                    className="text-muted-foreground"
+                                />
+                            )}
                             <span className="text-[8px] text-muted-foreground uppercase">{id}</span>
-                            <span className="text-[8px] text-muted-foreground ml-1">
-                                {Math.round(displayScale * 100)}%
-                            </span>
+                            {!isLocked && (
+                                <span className="text-[8px] text-muted-foreground ml-1">
+                                    {Math.round(displayScale * 100)}%
+                                </span>
+                            )}
                         </div>
                     )}
 
@@ -401,7 +425,7 @@ const HUDWidgetComponent = ({
                     onMouseDown={handleResizeMouseDown}
                     className={cn(
                         "absolute -right-2 -bottom-2 p-1 rounded-md bg-background/60 border border-border/30",
-                        "cursor-nwse-resize hover:bg-muted/30 transition-colors"
+                        "cursor-nwse-resize hover:bg-muted/30 transition-colors",
                     )}>
                     <MoveDiagonal
                         size={12}

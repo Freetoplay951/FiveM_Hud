@@ -7,6 +7,7 @@ import {
     calcGroupClampAdjust,
     isWidgetVisible,
 } from "@/lib/widgetUtils";
+import { isExcludedFromMultiSelect } from "@/lib/widgetConfig";
 
 interface UseMultiSelectionProps {
     editMode: boolean;
@@ -15,12 +16,7 @@ interface UseMultiSelectionProps {
     updateWidgetPosition: (id: string, position: WidgetPosition) => void;
 }
 
-export const useMultiSelection = ({
-    editMode,
-    widgets,
-    getWidget,
-    updateWidgetPosition,
-}: UseMultiSelectionProps) => {
+export const useMultiSelection = ({ editMode, widgets, getWidget, updateWidgetPosition }: UseMultiSelectionProps) => {
     const [selectedWidgets, setSelectedWidgets] = useState<Set<string>>(new Set());
     const [selectionBox, setSelectionBox] = useState<{
         startX: number;
@@ -60,7 +56,7 @@ export const useMultiSelection = ({
                 }
             });
         },
-        [selectedWidgets, getWidget]
+        [selectedWidgets, getWidget],
     );
 
     const handleWidgetDragMove = useCallback((deltaX: number, deltaY: number) => {
@@ -100,7 +96,7 @@ export const useMultiSelection = ({
                 setSelectedWidgets(new Set());
             }
         },
-        [editMode]
+        [editMode],
     );
 
     const handleSelectionMove = useCallback(
@@ -114,7 +110,7 @@ export const useMultiSelection = ({
                 endY: e.clientY,
             });
         },
-        [isSelecting]
+        [isSelecting],
     );
 
     const handleSelectionEnd = useCallback(() => {
@@ -131,6 +127,7 @@ export const useMultiSelection = ({
 
         const newSelection = new Set(selectedWidgets);
         widgets.forEach((widget) => {
+            if (isExcludedFromMultiSelect(widget.id)) return;
             if (!isWidgetVisible(widget.id)) return;
 
             const el = getWidgetElement(widget.id);
@@ -164,7 +161,7 @@ export const useMultiSelection = ({
             onDragEnd: selectedWidgets.has(id) && selectedWidgets.size > 1 ? handleWidgetDragEnd : undefined,
             onClearSelection: () => setSelectedWidgets(new Set()),
         }),
-        [selectedWidgets, handleWidgetSelect, handleWidgetDragStart, handleWidgetDragMove, handleWidgetDragEnd]
+        [selectedWidgets, handleWidgetSelect, handleWidgetDragStart, handleWidgetDragMove, handleWidgetDragEnd],
     );
 
     return {
