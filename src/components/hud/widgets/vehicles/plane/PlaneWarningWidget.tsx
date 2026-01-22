@@ -6,9 +6,7 @@ interface PlaneWarningWidgetProps {
     visible: boolean;
 }
 
-export const PlaneWarningWidget = ({ bodyHealth, visible }: PlaneWarningWidgetProps) => {
-    if (bodyHealth === undefined) return null;
-
+export const PlaneWarningWidget = ({ bodyHealth = 1000, visible }: PlaneWarningWidgetProps) => {
     return (
         <motion.div
             initial={false}

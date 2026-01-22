@@ -6,9 +6,7 @@ interface HeliWarningWidgetProps {
     visible: boolean;
 }
 
-export const HeliWarningWidget = ({ bodyHealth, visible }: HeliWarningWidgetProps) => {
-    if (bodyHealth === undefined) return null;
-
+export const HeliWarningWidget = ({ bodyHealth = 1000, visible }: HeliWarningWidgetProps) => {
     return (
         <motion.div
             initial={false}

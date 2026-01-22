@@ -6,9 +6,7 @@ interface CarWarningWidgetProps {
     visible: boolean;
 }
 
-export const CarWarningWidget = ({ bodyHealth, visible }: CarWarningWidgetProps) => {
-    if (bodyHealth === undefined) return null;
-
+export const CarWarningWidget = ({ bodyHealth = 1000, visible }: CarWarningWidgetProps) => {
     return (
         <motion.div
             initial={false}

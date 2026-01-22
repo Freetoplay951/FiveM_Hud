@@ -6,9 +6,7 @@ interface BoatWarningWidgetProps {
     visible: boolean;
 }
 
-export const BoatWarningWidget = ({ bodyHealth, visible }: BoatWarningWidgetProps) => {
-    if (bodyHealth === undefined) return null;
-
+export const BoatWarningWidget = ({ bodyHealth = 1000, visible }: BoatWarningWidgetProps) => {
     return (
         <motion.div
             initial={false}

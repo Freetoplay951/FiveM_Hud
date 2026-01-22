@@ -6,9 +6,7 @@ interface BicycleWarningWidgetProps {
     visible: boolean;
 }
 
-export const BicycleWarningWidget = ({ bodyHealth, visible }: BicycleWarningWidgetProps) => {
-    if (bodyHealth === undefined) return null;
-
+export const BicycleWarningWidget = ({ bodyHealth = 1000, visible }: BicycleWarningWidgetProps) => {
     return (
         <motion.div
             initial={false}
