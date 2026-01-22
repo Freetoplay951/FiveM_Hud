@@ -87,7 +87,7 @@ const NotificationsRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     const handleClose = useCallback(
@@ -96,7 +96,7 @@ const NotificationsRendererComponent = ({
                 removeNotification(id);
             }
         },
-        [isUsingEditDemoNotifications, removeNotification]
+        [isUsingEditDemoNotifications, removeNotification],
     );
 
     if (!widget) return null;
@@ -158,7 +158,7 @@ const StatusWidgetItemComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -234,7 +234,7 @@ const MoneyWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -287,7 +287,7 @@ const ClockWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -343,7 +343,7 @@ const VoiceWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -401,7 +401,7 @@ const RadioWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -460,7 +460,7 @@ const LocationWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -517,7 +517,7 @@ const CompassWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -575,7 +575,7 @@ const VehicleNameWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -629,7 +629,7 @@ const MinimapWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -649,9 +649,9 @@ const MinimapWidgetRendererComponent = ({
             snapToGrid={snapToGrid}
             gridSize={gridSize}
             onPositionChange={undefined}
-            onVisibilityToggle={toggleWidgetVisibility}
+            onVisibilityToggle={undefined}
             onScaleChange={undefined}
-            onReset={handleReset}>
+            onReset={undefined}>
             <MinimapWidget shape={minimapShape} />
         </HUDWidget>
     );
@@ -680,7 +680,7 @@ const ChatWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -733,7 +733,7 @@ const TeamChatWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -788,7 +788,7 @@ const WantedWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -843,7 +843,7 @@ const DateWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -896,7 +896,7 @@ const ServerInfoWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
@@ -951,7 +951,7 @@ const ServerNameWidgetRendererComponent = ({
 
     const handleReset = useCallback(
         (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady]
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
     );
 
     if (!widget) return null;
