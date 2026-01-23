@@ -54,13 +54,13 @@ RegisterNetEvent('hud:sendChatMessage', function(message)
     end
 
     if Config and Config.Debug then
-        print('[HUD Chat] [' .. "normal" .. '] ' .. playerName .. ': ' .. message)
+        print('[HUD Chat] [' .. ChatMessageType.NORMAL .. '] ' .. playerName .. ': ' .. message)
     end
 end)
 
 -- System-Nachricht an alle senden
 function SendSystemMessage(message)
-    TriggerClientEvent('hud:receiveChatMessage', -1, 'system', nil, message)
+    TriggerClientEvent('hud:receiveChatMessage', -1, ChatMessageType.SYSTEM, nil, message)
 end
 
 -- ============================================================================
@@ -288,7 +288,7 @@ end)
 RegisterCommand('notifyall', function(source, args)
     if source == 0 or IsPlayerAceAllowed(source, 'command.notifyall') then
         local message = table.concat(args, ' ')
-        NotifyAll('info', 'Server', message, 10000)
+        NotifyAll(NotificationType.INFO, 'Server', message, 10000)
     end
 end, true)
 

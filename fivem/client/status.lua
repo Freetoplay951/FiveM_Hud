@@ -26,12 +26,12 @@ local function GetFrameworkData()
     if success and fw then
         Framework = fw
         
-        if Framework == 'esx' then
+        if Framework == FrameworkType.ESX then
             TriggerEvent('esx:getSharedObject', function(obj) FrameworkObject = obj end)
             if not FrameworkObject then
                 pcall(function() FrameworkObject = exports['es_extended']:getSharedObject() end)
             end
-        elseif Framework == 'qb' then
+        elseif Framework == FrameworkType.QB then
             pcall(function() FrameworkObject = exports['qb-core']:GetCoreObject() end)
         end
     end
@@ -57,12 +57,12 @@ end
 local function GetHunger(ped)
     local fw, fwObj = GetFrameworkData()
     
-    if fw == 'esx' and fwObj then
+    if fw == FrameworkType.ESX and fwObj then
         local playerData = fwObj.GetPlayerData()
         if playerData and playerData.metadata and playerData.metadata.hunger then
             return math.floor(playerData.metadata.hunger)
         end
-    elseif fw == 'qb' and fwObj then
+    elseif fw == FrameworkType.QB and fwObj then
         local PlayerData = fwObj.Functions.GetPlayerData()
         if PlayerData and PlayerData.metadata and PlayerData.metadata.hunger then
             return math.floor(PlayerData.metadata.hunger)
@@ -75,12 +75,12 @@ end
 local function GetThirst(ped)
     local fw, fwObj = GetFrameworkData()
     
-    if fw == 'esx' and fwObj then
+    if fw == FrameworkType.ESX and fwObj then
         local playerData = fwObj.GetPlayerData()
         if playerData and playerData.metadata and playerData.metadata.thirst then
             return math.floor(playerData.metadata.thirst)
         end
-    elseif fw == 'qb' and fwObj then
+    elseif fw == FrameworkType.QB and fwObj then
         local PlayerData = fwObj.Functions.GetPlayerData()
         if PlayerData and PlayerData.metadata and PlayerData.metadata.thirst then
             return math.floor(PlayerData.metadata.thirst)
@@ -99,12 +99,12 @@ end
 local function GetStress(ped)
     local fw, fwObj = GetFrameworkData()
     
-    if fw == 'esx' and fwObj then
+    if fw == FrameworkType.ESX and fwObj then
         local playerData = fwObj.GetPlayerData()
         if playerData and playerData.metadata and playerData.metadata.stress then
             return math.floor(playerData.metadata.stress)
         end
-    elseif fw == 'qb' and fwObj then
+    elseif fw == FrameworkType.QB and fwObj then
         local PlayerData = fwObj.Functions.GetPlayerData()
         if PlayerData and PlayerData.metadata and PlayerData.metadata.stress then
             return math.floor(PlayerData.metadata.stress)

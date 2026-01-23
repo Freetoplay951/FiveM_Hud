@@ -5,7 +5,7 @@
 local function CreateChatMessageData(msgType, sender, message)
     return {
         id = tostring(GetGameTimer()),
-        type = msgType or "normal",
+        type = msgType or ChatMessageType.NORMAL,
         sender = sender,
         message = message
     }
@@ -183,7 +183,7 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
     local name = GetPlayerName(PlayerId()) or "Unknown"
     
     TriggerServerEvent("hud:sendChatMessage", msg)
-    CloseChat(CreateChatMessageData("normal", name, msg))
+    CloseChat(CreateChatMessageData(ChatMessageType.NORMAL, name, msg))
     
     cb({ success = true })
 end)
@@ -231,7 +231,7 @@ RegisterNetEvent("hud:receiveChatMessage", function(msgType, sender, message)
 end)
 
 RegisterNetEvent("hud:systemMessage", function(message)
-    CreateChatMessage("system", nil, message)
+    CreateChatMessage(ChatMessageType.SYSTEM, nil, message)
 end)
 
 RegisterNetEvent("hud:clearChat", function()
@@ -250,7 +250,7 @@ exports("isChatOpen", function() return chatOpen end)
 exports("isChatInputActive", function() return chatInputActive end)
 exports("sendChatMessage", CreateChatMessage)
 exports("sendSystemMessage", function(msg)
-    CreateChatMessage("system", nil, msg)
+    CreateChatMessage(ChatMessageType.SYSTEM, nil, msg)
 end)
 exports("clearChat", function()
     SendNUI("chatUpdate", {

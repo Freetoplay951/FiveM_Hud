@@ -25,6 +25,22 @@ local wasInVehicle = false
 local cachedVehicleType = nil
 
 -- ============================================================================
+-- HELPER FUNCTIONS
+-- ============================================================================
+
+--- Validiert ob ein Wert ein gültiger VehicleType ist
+--- @param value string Der zu prüfende Wert
+--- @return boolean isValid Ob der Wert gültig ist
+function IsValidVehicleType(value)
+    for _, v in pairs(VehicleType) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
+-- ============================================================================
 -- VEHICLE TYPE DETECTION
 -- ============================================================================
 

@@ -131,7 +131,7 @@ RegisterNUICallback('deathCallHelp', function(_, cb)
     TriggerServerEvent('hud:callMedic', GetEntityCoords(PlayerPedId()))
     
     SendNUI('notify', {
-        type = 'info',
+        type = NotificationType.INFO,
         title = 'Hilferuf',
         message = 'Der Rettungsdienst wurde benachrichtigt.',
         duration = 5000

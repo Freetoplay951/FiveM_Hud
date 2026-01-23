@@ -90,7 +90,7 @@ end
 
 function OpenTeamChat()
     if not cachedTeamAccess then
-        TriggerEvent('hud:notify', 'error', 'Kein Zugriff', 'Nur für Team-Mitglieder.', 3000)
+        TriggerEvent('hud:notify', NotificationType.ERROR, 'Kein Zugriff', 'Nur für Team-Mitglieder.', 3000)
         return
     end
 

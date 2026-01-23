@@ -36,9 +36,9 @@ end
 -- ============================================================================
 
 local function DetectFramework()
-    if Config.Framework == 'auto' then
+    if Config.Framework == FrameworkType.AUTO then
         if IsResourceStarted('es_extended') then
-            Framework = 'esx'
+            Framework = FrameworkType.ESX
             -- ESX Object holen
             while FrameworkObject == nil do
                 TriggerEvent('esx:getSharedObject', function(obj) FrameworkObject = obj end)
@@ -48,11 +48,11 @@ local function DetectFramework()
                 Wait(100)
             end
         elseif IsResourceStarted('qb-core') then
-            Framework = 'qb'
+            Framework = FrameworkType.QB
             FrameworkObject = exports['qb-core']:GetCoreObject()
         end
-    elseif Config.Framework == 'esx' then
-        Framework = 'esx'
+    elseif Config.Framework == FrameworkType.ESX then
+        Framework = FrameworkType.ESX
         while FrameworkObject == nil do
             TriggerEvent('esx:getSharedObject', function(obj) FrameworkObject = obj end)
             if FrameworkObject == nil then
@@ -60,8 +60,8 @@ local function DetectFramework()
             end
             Wait(100)
         end
-    elseif Config.Framework == 'qb' then
-        Framework = 'qb'
+    elseif Config.Framework == FrameworkType.QB then
+        Framework = FrameworkType.QB
         FrameworkObject = exports['qb-core']:GetCoreObject()
     end
     
@@ -158,7 +158,7 @@ local function SendInitialData()
     -- Voice Initial
     SendNUI('updateVoice', {
         active = false,
-        range = 'normal'
+        range = VoiceRange.NORMAL
     })
     
     -- Player Info Initial (Server ID)
@@ -290,7 +290,7 @@ end)
 local function GetPlayerMoney()
     if not isPlayerLoaded then return nil end
     
-    if Framework == 'esx' and FrameworkObject then
+    if Framework == FrameworkType.ESX and FrameworkObject then
         local playerData = FrameworkObject.GetPlayerData()
         if playerData and playerData.accounts then
             local cash = 0
@@ -309,7 +309,7 @@ local function GetPlayerMoney()
             
             return { cash = cash, bank = bank, blackMoney = black }
         end
-    elseif Framework == 'qb' and FrameworkObject then
+    elseif Framework == FrameworkType.QB and FrameworkObject then
         local PlayerData = FrameworkObject.Functions.GetPlayerData()
         if PlayerData and PlayerData.money then
             return {
@@ -421,7 +421,7 @@ CreateThread(function()
         
         if isHudVisible then
             local isTalking = NetworkIsPlayerTalking(PlayerId())
-            local voiceRange = 'normal' -- Unified type: whisper, normal, shout, megaphone
+            local voiceRange = VoiceRange.NORMAL
             
             if VoiceResource == 'pma-voice' then
                 -- pma-voice Mode holen
@@ -431,11 +431,11 @@ CreateThread(function()
                 
                 if success and mode then
                     if mode == 1 then
-                        voiceRange = 'whisper'
+                        voiceRange = VoiceRange.WHISPER
                     elseif mode == 2 then
-                        voiceRange = 'normal'
+                        voiceRange = VoiceRange.NORMAL
                     elseif mode == 3 then
-                        voiceRange = 'shout'
+                        voiceRange = VoiceRange.SHOUT
                     end
                 end
             elseif VoiceResource == 'saltychat' then
@@ -445,11 +445,11 @@ CreateThread(function()
                 end)
                 if success and range then
                     if range == 1 or range == "1" then
-                        voiceRange = 'whisper'
+                        voiceRange = VoiceRange.WHISPER
                     elseif range == 2 or range == "2" then
-                        voiceRange = 'normal'
+                        voiceRange = VoiceRange.NORMAL
                     elseif range == 3 or range == "3" then
-                        voiceRange = 'shout'
+                        voiceRange = VoiceRange.SHOUT
                     end
                 end
                 
@@ -458,7 +458,7 @@ CreateThread(function()
                     return exports['saltychat']:GetRadioChannel() ~= ""
                 end)
                 if megaSuccess and isMegaphone then
-                    voiceRange = 'megaphone'
+                    voiceRange = VoiceRange.MEGAPHONE
                 end
             elseif VoiceResource == 'mumble-voip' then
                 local success, mode = pcall(function()
@@ -466,11 +466,11 @@ CreateThread(function()
                 end)
                 if success and mode then
                     if mode == 1 then
-                        voiceRange = 'whisper'
+                        voiceRange = VoiceRange.WHISPER
                     elseif mode == 2 then
-                        voiceRange = 'normal'
+                        voiceRange = VoiceRange.NORMAL
                     elseif mode == 3 then
-                        voiceRange = 'shout'
+                        voiceRange = VoiceRange.SHOUT
                     end
                 end
             elseif VoiceResource == 'tokovoip' then
@@ -479,11 +479,11 @@ CreateThread(function()
                 end)
                 if success and range then
                     if range == "short" then
-                        voiceRange = 'whisper'
+                        voiceRange = VoiceRange.WHISPER
                     elseif range == "medium" then
-                        voiceRange = 'normal'
+                        voiceRange = VoiceRange.NORMAL
                     elseif range == "long" then
-                        voiceRange = 'shout'
+                        voiceRange = VoiceRange.SHOUT
                     end
                 end
             end
@@ -511,7 +511,7 @@ local function GetPlayerInfo()
     
     local serverId = GetPlayerServerId(PlayerId())
     
-    if Framework == 'esx' and FrameworkObject then
+    if Framework == FrameworkType.ESX and FrameworkObject then
         local playerData = FrameworkObject.GetPlayerData()
         if playerData then
             return {
@@ -520,7 +520,7 @@ local function GetPlayerInfo()
                 rank = playerData.job and playerData.job.grade_label or ''
             }
         end
-    elseif Framework == 'qb' and FrameworkObject then
+    elseif Framework == FrameworkType.QB and FrameworkObject then
         local PlayerData = FrameworkObject.Functions.GetPlayerData()
         if PlayerData then
             return {
