@@ -22,7 +22,6 @@ import { useRenderLogger } from "@/hooks/useRenderLogger";
 import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
 import { useIsDead, useDeathData } from "@/stores/deathStore";
 import { useChatStore } from "@/stores/chatStore";
-import { useKeybindsStore } from "@/stores/keybindsStore";
 
 export const HUD = () => {
     const [editMenuOpen, setEditMenuOpen] = useState(false);

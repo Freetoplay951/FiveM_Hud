@@ -7,9 +7,14 @@
                 "from": "188 100% 50%",
                 "to": "270 100% 60%",
                 "angle": 90
-            }
+            },
+            "sequentialLetters": true
         },
-        { "text": "RP", "color": "0 100% 50%" }
+        { 
+            "text": "RP", 
+            "color": "0 100% 50%",
+            "pulseScale": true
+        }
     ],
     "style": {
         "fontSize": "lg",
@@ -23,5 +28,10 @@
     "decorations": {
         "type": "dots",
         "showDecorations": true
+    },
+    "animation": {
+        "sequentialDuration": 3,
+        "pulseDuration": 2,
+        "pulseScale": 1.08
     }
 }
