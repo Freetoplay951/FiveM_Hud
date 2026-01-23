@@ -49,7 +49,7 @@ interface RenderLoggerOptions {
 export function useRenderLogger(
     componentName: string,
     trackedValues: Record<string, unknown>,
-    options: RenderLoggerOptions = {}
+    options: RenderLoggerOptions = {},
 ) {
     const { logInitial = false, frequencyWarningThreshold = 10, groupLogs = true } = options;
 
@@ -87,7 +87,7 @@ export function useRenderLogger(
                     `%c[Render] %c${componentName} %c(initial)`,
                     `color: ${COLORS.initial}`,
                     `color: ${COLORS.component}; font-weight: bold`,
-                    `color: ${COLORS.initial}`
+                    `color: ${COLORS.initial}`,
                 );
             }
             return;
@@ -115,7 +115,7 @@ export function useRenderLogger(
                     `color: ${isFrequent ? COLORS.warning : COLORS.props}`,
                     `color: ${COLORS.component}; font-weight: bold`,
                     `color: ${COLORS.count}`,
-                    `color: ${COLORS.props}`
+                    `color: ${COLORS.props}`,
                 );
 
                 changes.forEach(({ key, from, to }) => {
@@ -130,7 +130,7 @@ export function useRenderLogger(
                     `color: ${isFrequent ? COLORS.warning : COLORS.props}`,
                     `color: ${COLORS.component}; font-weight: bold`,
                     `color: ${COLORS.count}`,
-                    `color: ${COLORS.store}`
+                    `color: ${COLORS.store}`,
                 );
             } else {
                 // No tracked values but component re-rendered (parent re-render)
@@ -139,7 +139,7 @@ export function useRenderLogger(
                     `color: ${isFrequent ? COLORS.warning : COLORS.initial}`,
                     `color: ${COLORS.component}; font-weight: bold`,
                     `color: ${COLORS.count}`,
-                    `color: ${COLORS.initial}`
+                    `color: ${COLORS.initial}`,
                 );
             }
         }
@@ -164,7 +164,7 @@ export function useRenderCount(componentName: string) {
             `%c[Render] %c${componentName} %c#${countRef.current}`,
             `color: ${COLORS.initial}`,
             `color: ${COLORS.component}; font-weight: bold`,
-            `color: ${COLORS.count}`
+            `color: ${COLORS.count}`,
         );
     });
 
@@ -199,7 +199,7 @@ export function logRenderSummary(): void {
         console.log(
             `%c${name}: %c${count}${isHot ? " 🔥" : ""}`,
             `color: ${COLORS.store}`,
-            `color: ${isHot ? COLORS.warning : COLORS.count}; font-weight: bold`
+            `color: ${isHot ? COLORS.warning : COLORS.count}; font-weight: bold`,
         );
     });
     console.groupEnd();
