@@ -19,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { useRenderLogger } from "@/hooks/useRenderLogger";
 
 // Import stores - HUD only uses global state, widgets fetch their own data
-import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
+import { useHUDGlobalStore, useIsVisible, useIsDemoMode, useAreAllAsyncWidgetsReady } from "@/stores/hudStore";
 import { useIsDead, useDeathData } from "@/stores/deathStore";
 import { useChatStore } from "@/stores/chatStore";
 
@@ -30,6 +30,7 @@ export const HUD = () => {
     // Global HUD state from stores (NOT widget data)
     const isVisible = useIsVisible();
     const isDemoMode = useIsDemoMode();
+    const areAllAsyncWidgetsReady = useAreAllAsyncWidgetsReady();
     const isWidgetDisabled = useHUDGlobalStore((s) => s.isWidgetDisabled);
 
     // Death state - needed for death screen overlay
@@ -132,22 +133,37 @@ export const HUD = () => {
         exitEditMode,
     });
 
-    // Ready signal
-    const allDataLoaded = isVisible && isLanguageLoaded && t !== null;
+    // Ready signal - waits for language, visibility, AND async widgets
+    // Note: areAllAsyncWidgetsReady is checked both reactively AND inside RAF to handle registration timing
+    const baseDataLoaded = isVisible && isLanguageLoaded && t !== null;
     useEffect(() => {
-        if (allDataLoaded && !hasSignaledReady) {
+        if (baseDataLoaded && areAllAsyncWidgetsReady && !hasSignaledReady) {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
+                    // Re-check async widget readiness at execution time (widgets may have registered during RAF)
+                    const currentlyReady = useHUDGlobalStore.getState().areAllAsyncWidgetsReady();
+                    if (!currentlyReady) {
+                        console.log("[HUD] Async widgets registered during RAF, waiting for them to be ready...");
+                        return; // Effect will re-run when areAllAsyncWidgetsReady changes
+                    }
+
                     if (!widgetsDistributed) {
                         distributeWidgets(isWidgetDisabled, false);
                     }
-                    console.log("[HUD] AllThingsLoaded - all data loaded and DOM rendered");
+                    console.log("[HUD] AllThingsLoaded - all data loaded, async widgets ready, and DOM rendered");
                     sendNuiCallback("AllThingsLoaded");
                     setHasSignaledReady(true);
                 });
             });
         }
-    }, [allDataLoaded, hasSignaledReady, widgetsDistributed, distributeWidgets, isWidgetDisabled]);
+    }, [
+        baseDataLoaded,
+        areAllAsyncWidgetsReady,
+        hasSignaledReady,
+        widgetsDistributed,
+        distributeWidgets,
+        isWidgetDisabled,
+    ]);
 
     // Handle simple mode toggle - syncs subwidgets to their base widget's scale
     const handleSimpleModeChange = useCallback(

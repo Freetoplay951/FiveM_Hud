@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
+import { useHUDGlobalStore } from "@/stores/hudStore";
 
 const WIDGET_ID = "branding";
 /* ────────────────────────────────────────────── */
@@ -227,6 +228,13 @@ const StaticSegment = ({ text, color, letterSpacing, fontSize }: StaticSegmentPr
 
 export const BrandingWidget = () => {
     const [config, setConfig] = useState<BrandingConfig | null>(null);
+    const registerAsyncWidget = useHUDGlobalStore((s) => s.registerAsyncWidget);
+    const markWidgetReady = useHUDGlobalStore((s) => s.markWidgetReady);
+
+    // Register as async widget on mount
+    useEffect(() => {
+        registerAsyncWidget(WIDGET_ID);
+    }, [registerAsyncWidget]);
 
     // Fetch branding config
     useEffect(() => {
@@ -235,24 +243,28 @@ export const BrandingWidget = () => {
                 const res = await fetch("/branding.json");
                 if (!res.ok) {
                     console.log("[BrandingWidget] branding.json not found, disabling widget");
+                    markWidgetReady(WIDGET_ID); // Mark as ready even when disabled - the HUD can proceed
                     return;
                 }
 
                 const data = await res.json();
                 if (!data || !data.segments || data.segments.length === 0) {
                     console.log("[BrandingWidget] branding.json returned null or invalid config, disabling widget");
+                    markWidgetReady(WIDGET_ID); // Mark as ready even when disabled - the HUD can proceed
                     return;
                 }
 
                 console.log("[BrandingWidget] Config loaded successfully");
                 setConfig(data);
+                markWidgetReady(WIDGET_ID); // Mark as ready even when disabled - the HUD can proceed
             } catch (error) {
                 console.log("[BrandingWidget] Failed to load branding.json, disabling widget");
+                markWidgetReady(WIDGET_ID); // Mark as ready even when disabled - the HUD can proceed
             }
         };
 
         loadConfig();
-    }, []);
+    }, [markWidgetReady]);
 
     // Memoized values
     const { segments, style, decorations, animSettings } = useMemo(() => {
