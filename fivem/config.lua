@@ -208,12 +208,5 @@ Config.BodyHealth = {
     end,
 }
 
--- ============================================================================
--- SERVER INFO
--- ============================================================================
-
-Config.ServerName = "RP Server"        -- Server Name im HUD
-Config.MaxPlayers = 128                -- Maximale Spieleranzahl
-
 -- Debug
 Config.Debug = true
