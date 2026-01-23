@@ -6,6 +6,7 @@ import { SubwidgetRenderer } from "./hud/SubwidgetRenderer";
 import { HUDWidgetRenderers } from "./hud/HUDWidgetRenderers";
 import { KeybindsOverlay } from "./hud/keybinds";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
+import { useHUDReadiness } from "@/hooks/useHUDReadiness";
 import { useNuiEvents, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useStoreDemoSimulation } from "@/hooks/useStoreDemoSimulation";
 import { useMultiSelection } from "@/hooks/useMultiSelection";
@@ -19,18 +20,16 @@ import { Switch } from "@/components/ui/switch";
 import { useRenderLogger } from "@/hooks/useRenderLogger";
 
 // Import stores - HUD only uses global state, widgets fetch their own data
-import { useHUDGlobalStore, useIsVisible, useIsDemoMode, useAreAllAsyncWidgetsReady } from "@/stores/hudStore";
+import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
 import { useIsDead, useDeathData } from "@/stores/deathStore";
 import { useChatStore } from "@/stores/chatStore";
 
 export const HUD = () => {
     const [editMenuOpen, setEditMenuOpen] = useState(false);
-    const [hasSignaledReady, setHasSignaledReady] = useState(false);
 
     // Global HUD state from stores (NOT widget data)
     const isVisible = useIsVisible();
     const isDemoMode = useIsDemoMode();
-    const areAllAsyncWidgetsReady = useAreAllAsyncWidgetsReady();
     const isWidgetDisabled = useHUDGlobalStore((s) => s.isWidgetDisabled);
 
     // Death state - needed for death screen overlay
@@ -42,17 +41,6 @@ export const HUD = () => {
     const teamChatIsAdmin = useChatStore((s) => s.teamChatIsAdmin);
     const setTeamChatAccess = useChatStore((s) => s.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((s) => s.setTeamChatIsAdmin);
-
-    // Render logging for performance debugging
-    useRenderLogger("HUD", {
-        editMenuOpen,
-        hasSignaledReady,
-        isVisible,
-        isDemoMode,
-        isDead,
-        teamChatHasAccess,
-        teamChatIsAdmin,
-    });
 
     // Layout management - pure layout, no widget data
     const {
@@ -85,6 +73,27 @@ export const HUD = () => {
     } = useHUDLayout();
 
     const { t, isLoaded: isLanguageLoaded } = useTranslation();
+
+    // HUD Readiness - clean phase-based async widget coordination
+    const { hasSignaledReady } = useHUDReadiness({
+        isVisible,
+        isLanguageLoaded,
+        hasTranslations: t !== null,
+        widgetsDistributed,
+        distributeWidgets,
+        isWidgetDisabled,
+    });
+
+    // Render logging for performance debugging
+    useRenderLogger("HUD", {
+        editMenuOpen,
+        hasSignaledReady,
+        isVisible,
+        isDemoMode,
+        isDead,
+        teamChatHasAccess,
+        teamChatIsAdmin,
+    });
 
     // Multi-selection
     const {
@@ -133,38 +142,6 @@ export const HUD = () => {
         exitEditMode,
     });
 
-    // Ready signal - waits for language, visibility, AND async widgets
-    // Note: areAllAsyncWidgetsReady is checked both reactively AND inside RAF to handle registration timing
-    const baseDataLoaded = isVisible && isLanguageLoaded && t !== null;
-    useEffect(() => {
-        if (baseDataLoaded && areAllAsyncWidgetsReady && !hasSignaledReady) {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    // Re-check async widget readiness at execution time (widgets may have registered during RAF)
-                    const currentlyReady = useHUDGlobalStore.getState().areAllAsyncWidgetsReady();
-                    if (!currentlyReady) {
-                        console.log("[HUD] Async widgets registered during RAF, waiting for them to be ready...");
-                        return; // Effect will re-run when areAllAsyncWidgetsReady changes
-                    }
-
-                    if (!widgetsDistributed) {
-                        distributeWidgets(isWidgetDisabled, false);
-                    }
-                    console.log("[HUD] AllThingsLoaded - all data loaded, async widgets ready, and DOM rendered");
-                    sendNuiCallback("AllThingsLoaded");
-                    setHasSignaledReady(true);
-                });
-            });
-        }
-    }, [
-        baseDataLoaded,
-        areAllAsyncWidgetsReady,
-        hasSignaledReady,
-        widgetsDistributed,
-        distributeWidgets,
-        isWidgetDisabled,
-    ]);
-
     // Handle simple mode toggle - syncs subwidgets to their base widget's scale
     const handleSimpleModeChange = useCallback(
         (enabled: boolean) => {
@@ -202,10 +179,8 @@ export const HUD = () => {
     );
 
     // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data, NO notifications
-    // Notifications are now self-subscribed via notificationStore
     const layoutProps = useMemo(
         () => ({
-            // Layout settings only
             editMode,
             snapToGrid,
             gridSize,
@@ -214,8 +189,6 @@ export const HUD = () => {
             minimapShape,
             hasSignaledReady,
             autoLayoutHiddenIds,
-
-            // Layout functions only
             getWidget,
             updateWidgetPosition,
             updateWidgetScale,
