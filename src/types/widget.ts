@@ -203,7 +203,7 @@ const getStatusWidgetPosition = (
     widgetElement: HTMLElement | null,
     resolver: PositionResolver,
 ): WidgetPosition => {
-    const currentIndex = STATUS_WIDGET_IDS.indexOf(widgetId as typeof STATUS_WIDGET_IDS[number]);
+    const currentIndex = STATUS_WIDGET_IDS.indexOf(widgetId as (typeof STATUS_WIDGET_IDS)[number]);
 
     let x = resolver.getWidgetRect("minimap").right + GAP;
 
