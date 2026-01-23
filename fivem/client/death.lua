@@ -140,6 +140,23 @@ RegisterNUICallback('deathCallHelp', function(_, cb)
     cb({ success = true })
 end)
 
+local function LoadArea(x, y, z)
+    RequestCollisionAtCoord(x, y, z)
+    NewLoadSceneStart(x, y, z, x, y, z, 50.0, 0)
+
+    local timeout = GetGameTimer() + 5000
+    while not HasCollisionLoadedAroundEntity(PlayerPedId())
+        or IsNetworkLoadingScene() do
+
+        if GetGameTimer() > timeout then
+            break
+        end
+        Wait(0)
+    end
+
+    NewLoadSceneStop()
+end
+
 local function RespawnPlayer(opts)
     local ped = PlayerPedId()
     if not ped or ped == -1 then return false end
@@ -156,8 +173,19 @@ local function RespawnPlayer(opts)
         w = GetEntityHeading(ped)
     end
 
+    FreezeEntityPosition(ped, true)
+    SetEntityInvincible(ped, true)
+
+    LoadArea(x, y, z)
+
     NetworkResurrectLocalPlayer(x, y, z, w, true, false)
     SetEntityCoordsNoOffset(ped, x, y, z, false, false, false)
+
+    ClearPedTasksImmediately(ped)
+    ClearPedSecondaryTask(ped)
+    SetPedCanRagdoll(ped, false)
+    SetEntityVelocity(ped, 0.0, 0.0, 0.0)
+    SetPedToRagdoll(ped, 0, 0, 0, false, false, false)
 
     local maxHealth = GetEntityMaxHealth(ped)
     local health = opts.healAmount
@@ -170,13 +198,19 @@ local function RespawnPlayer(opts)
     ClearPedWetness(ped)
     ResetPedVisibleDamage(ped)
 
+    Wait(200)
+
+    FreezeEntityPosition(ped, false)
+    SetEntityInvincible(ped, false)
+    SetPedCanRagdoll(ped, true)
+
     if opts.triggerEvents then
         TriggerEvent('esx_ambulancejob:respawn')
         TriggerServerEvent('hud:playerRespawned')
     end
 
     CloseDeathScreen()
-
+    
     return true
 end
 
@@ -188,7 +222,7 @@ RegisterNUICallback('deathRespawn', function(_, cb)
         cb({ success = false })
         return
     end
-
+    
     local success = RespawnPlayer({
         coords = spawn,
         triggerEvents = true
