@@ -198,14 +198,19 @@ local function GetVehicleData(vehicle, vehicleType)
         if type(fn) == 'function' then
             local ok, result = pcall(fn, vehicle, vehicleType)
             if not ok then
-                print(('[BodyHealth] ERROR in custom calc(): %s | vehicle=%s type=%s'):format(result, tostring(vehicle), tostring(vehicleType)))
+                print(('[HUD Vehicle] ERROR in custom calc(): %s | vehicle=%s type=%s'):format(result, tostring(vehicle), tostring(vehicleType)))
             elseif IsValidHealthStatus(result) then
                 return result
             else
-                print(('[BodyHealth] WARNING: Invalid return value from calc(): %s | vehicle=%s type=%s'):format(tostring(result), tostring(vehicle), tostring(vehicleType)))
+                print(('[HUD Vehicle] WARNING: Invalid return value from calc(): %s | vehicle=%s type=%s'):format(tostring(result), tostring(vehicle), tostring(vehicleType)))
             end
         else
-            print('[BodyHealth] INFO: No valid custom calc() function found, using fallback.')
+            print('[HUD Vehicle] INFO: No valid custom calc() function found, using fallback.')
+        end
+        
+        if not IsVehicleDriveable(vehicle, false) then
+            print("[HUD Vehicle] Using fallback | vehicle is not drivable")
+            return VehicleHealthStatus.CRITICAL
         end
         
         local engineHealth = math.max(0, math.floor(GetVehicleEngineHealth(vehicle) / 10))
@@ -216,7 +221,7 @@ local function GetVehicleData(vehicle, vehicleType)
         local b = tonumber(bodyHealth) or 100
         local t = tonumber(tankHealth) or 100
         
-        print(('[BodyHealth] Using fallback | engine=%s body=%s tank=%s avg=%.1f'):format(e, b, t, avg))
+        print(('[HUD Vehicle] Using fallback | engine=%s body=%s tank=%s avg=%.1f'):format(e, b, t, avg))
 
         local avg = (e + b + t) / 3
         if avg < 40 then
