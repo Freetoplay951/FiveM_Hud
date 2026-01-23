@@ -17,6 +17,8 @@ Config.DisabledWidgets = {
 -- Death Screen Einstellungen
 Config.EarlyRespawnTimer = 60          -- Sekunden bis Respawn möglich ist
 Config.BleedoutTimer = 300             -- Sekunden bis automatischer Respawn
+Config.SyncTimer = 5
+Config.HelpTimer = 5
 Config.ReviveLocations = {
     {
         coords = vec4(341.2093, -1396.7168, 31.5093, 48.9265),

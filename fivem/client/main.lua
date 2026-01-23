@@ -76,7 +76,7 @@ end
 
 CreateThread(function()
     while true do
-        Wait(500)
+        Wait(200)
         
         local isPaused = IsPauseMenuActive()
         if isPaused ~= lastPauseState then

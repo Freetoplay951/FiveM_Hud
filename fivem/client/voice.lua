@@ -217,22 +217,6 @@ local function SetupYacaVoice()
         lastVoiceData.isMuted = isMuted
         UpdateVoiceUI()
     end)
-    
-    RegisterNetEvent('yaca:external:isRadioTalking', function(isTalking, channel)
-        if Config.Debug then
-            print('[HUD Voice] YaCA radio talking: ' .. tostring(isTalking) .. ' on channel ' .. tostring(channel))
-        end
-        
-        -- Could be used for radio UI updates
-    end)
-    
-    RegisterNetEvent('yaca:external:isRadioReceiving', function(isReceiving, channel, members)
-        if Config.Debug then
-            print('[HUD Voice] YaCA radio receiving: ' .. tostring(isReceiving) .. ' on channel ' .. tostring(channel))
-        end
-        
-        -- Could be used for radio UI updates
-    end)
 end
 
 -- ============================================================================

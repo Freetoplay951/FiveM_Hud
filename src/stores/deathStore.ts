@@ -5,62 +5,49 @@ import { DEMO_DEATH } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 interface DeathStore extends DeathState {
+    config: DeathState["config"];
     setDeathState: (state: Partial<DeathState>) => void;
     setIsDead: (isDead: boolean) => void;
-    setCanRespawn: (canRespawn: boolean) => void;
-    setTimers: (respawnTimer: number, waitTimer: number) => void;
 }
 
 const isDemoMode = !isNuiEnvironment();
 
+export const DEFAULT_DEATH_CONFIG: DeathState["config"] = {
+    respawnTimer: 300,
+    bleedoutTimer: 600,
+    syncTimer: 10,
+    helpTimer: 60,
+};
+
 export const useDeathStore = create<DeathStore>((set) => ({
     isDead: isDemoMode ? DEMO_DEATH.isDead : false,
-    respawnTimer: DEMO_DEATH.respawnTimer,
-    waitTimer: DEMO_DEATH.waitTimer,
-    canCallHelp: DEMO_DEATH.canCallHelp,
-    canRespawn: DEMO_DEATH.canRespawn,
     message: DEMO_DEATH.message,
+    config: DEFAULT_DEATH_CONFIG,
 
     setDeathState: (state) =>
         set((prev) => ({
             ...prev,
             ...state,
-        })),
-
-    setIsDead: (isDead) =>
-        set((prev) => ({
-            ...prev,
-            isDead,
-            // Reset timers when dying
-            ...(isDead && !prev.isDead
+            config: state.config
                 ? {
-                      respawnTimer: 14,
-                      waitTimer: 59,
-                      canRespawn: false,
+                      ...prev.config,
+                      ...state.config,
                   }
-                : {}),
+                : prev.config,
         })),
 
-    setCanRespawn: (canRespawn) => set({ canRespawn }),
-
-    setTimers: (respawnTimer, waitTimer) => set({ respawnTimer, waitTimer }),
+    setIsDead: (isDead) => set({ isDead }),
 }));
 
 // Selectors
 export const useIsDead = () => useDeathStore((state) => state.isDead);
-export const useRespawnTimer = () => useDeathStore((state) => state.respawnTimer);
-export const useWaitTimer = () => useDeathStore((state) => state.waitTimer);
-export const useCanRespawn = () => useDeathStore((state) => state.canRespawn);
-export const useCanCallHelp = () => useDeathStore((state) => state.canCallHelp);
 export const useDeathMessage = () => useDeathStore((state) => state.message);
+export const useDeathConfig = () => useDeathStore((state) => state.config);
 export const useDeathData = () =>
     useDeathStore(
         useShallow((state) => ({
             isDead: state.isDead,
-            respawnTimer: state.respawnTimer,
-            waitTimer: state.waitTimer,
-            canCallHelp: state.canCallHelp,
-            canRespawn: state.canRespawn,
             message: state.message,
-        }))
+            config: state.config,
+        })),
     );

@@ -43,11 +43,7 @@ export const DEMO_LOCATION: LocationState = {
 
 // Demo Death State
 export const DEMO_DEATH: DeathState = {
-    isDead: false, // Default: alive - press D to toggle
-    respawnTimer: 14,
-    waitTimer: 59,
-    canCallHelp: true,
-    canRespawn: false,
+    isDead: false,
     message: "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
 };
 

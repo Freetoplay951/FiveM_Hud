@@ -40,10 +40,52 @@ local function DetectVoiceResource()
         VoiceResource = 'mumble-voip'
     elseif IsResourceStarted('tokovoip') then
         VoiceResource = 'tokovoip'
+    elseif IsResourceStarted('yaca-voice') then
+        VoiceResource = 'yaca-voice'
     end
     
     if Config and Config.Debug then
         print('[HUD Radio] Voice resource: ' .. (VoiceResource or 'none'))
+    end
+end
+
+-- ============================================================================
+-- HELPER FUNCTIONS FOR MEMBER MANAGEMENT
+-- ============================================================================
+
+local function AddOrUpdateMember(id, name, talking)
+    for i, member in ipairs(radioMembers) do
+        if member.id == id then
+            radioMembers[i].talking = talking
+            UpdateRadioUI()
+            return
+        end
+    end
+    table.insert(radioMembers, {
+        id = id,
+        name = name or ("Spieler " .. id),
+        talking = talking
+    })
+    UpdateRadioUI()
+end
+
+local function UpdateMemberTalking(id, talking)
+    for i, member in ipairs(radioMembers) do
+        if member.id == id then
+            radioMembers[i].talking = talking
+            UpdateRadioUI()
+            return
+        end
+    end
+end
+
+local function RemoveMemberById(id)
+    for i, member in ipairs(radioMembers) do
+        if member.id == id then
+            table.remove(radioMembers, i)
+            UpdateRadioUI()
+            return
+        end
     end
 end
 
@@ -147,6 +189,83 @@ local function SetupSaltyChat()
 end
 
 -- ============================================================================
+-- YACA-VOICE INTEGRATION
+-- ============================================================================
+
+local function SetupYacaVoice()
+    if VoiceResource ~= 'yaca-voice' then return end
+    
+    if Config and Config.Debug then
+        print('[HUD Radio] Setting up YaCA-Voice radio event handlers')
+    end
+    
+    -- Radio enabled/disabled
+    RegisterNetEvent('yaca:external:isRadioEnabled', function(state)
+        if Config and Config.Debug then
+            print('[HUD Radio] YaCA radio enabled: ' .. tostring(state))
+        end
+        
+        radioActive = state
+        if not state then
+            radioChannel = ""
+            radioMembers = {}
+        end
+        UpdateRadioUI()
+    end)
+    
+    -- Radio frequency changed
+    RegisterNetEvent('yaca:external:setRadioFrequency', function(channel, frequency)
+        if Config and Config.Debug then
+            print('[HUD Radio] YaCA radio frequency: channel=' .. tostring(channel) .. ', freq=' .. tostring(frequency))
+        end
+        
+        if frequency and frequency ~= "" and frequency ~= "0" then
+            radioActive = true
+            radioChannel = tostring(frequency)
+        else
+            radioActive = false
+            radioChannel = ""
+            radioMembers = {}
+        end
+        UpdateRadioUI()
+    end)
+    
+    -- Local player talking on radio
+    RegisterNetEvent('yaca:external:isRadioTalking', function(isTalking, channel)
+        if Config and Config.Debug then
+            print('[HUD Radio] YaCA radio talking: ' .. tostring(isTalking) .. ' on channel ' .. tostring(channel))
+        end
+        
+        local localId = GetPlayerServerId(PlayerId())
+        local localName = GetPlayerName(PlayerId())
+        
+        if isTalking then
+            AddOrUpdateMember(localId, localName, true)
+        else
+            UpdateMemberTalking(localId, false)
+        end
+    end)
+    
+    -- Receiving radio from another player
+    RegisterNetEvent('yaca:external:isRadioReceiving', function(isReceiving, channel, playerId)
+        if Config and Config.Debug then
+            print('[HUD Radio] YaCA radio receiving: ' .. tostring(isReceiving) .. ' from player ' .. tostring(playerId))
+        end
+        
+        if isReceiving then
+            local playerName = nil
+            local player = GetPlayerFromServerId(playerId)
+            if player and player ~= -1 then
+                playerName = GetPlayerName(player)
+            end
+            AddOrUpdateMember(playerId, playerName, true)
+        else
+            UpdateMemberTalking(playerId, false)
+        end
+    end)
+end
+
+-- ============================================================================
 -- INITIALIZATION
 -- ============================================================================
 
@@ -160,6 +279,8 @@ AddEventHandler('onClientResourceStart', function(resourceName)
         SetupPmaVoice()
     elseif VoiceResource == 'saltychat' then
         SetupSaltyChat()
+    elseif VoiceResource == 'yaca-voice' then
+        SetupYacaVoice()
     end
 end)
 

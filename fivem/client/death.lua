@@ -8,14 +8,6 @@ local deathOpen = false
 -- CONFIGURATION (from Config or defaults)
 -- ============================================================================
 
-local function GetEarlyRespawnTime()
-    return Config and Config.EarlyRespawnTimer or 60
-end
-
-local function GetBleedoutTime()
-    return Config and Config.BleedoutTimer or 300
-end
-
 local function GetClosestReviveLocation()
     local playerCoords = GetEntityCoords(PlayerPedId())
     local closestLocation = nil
@@ -54,20 +46,19 @@ function OpenDeathScreen()
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
     
-    local respawnTime = GetEarlyRespawnTime()
-    local bleedoutTime = GetBleedoutTime()
-    
     SendNUI("updateDeath", {
         isDead = true,
-        respawnTimer = respawnTime,
-        waitTimer = bleedoutTime,
-        canCallHelp = true,
-        canRespawn = false,
-        message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
+        message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
+        config = {
+            respawnTimer = Config and Config.EarlyRespawnTimer or 60,
+            bleedoutTimer = Config and Config.BleedoutTimer or 300,
+            syncTimer = Config and Config.SyncTimer or 5,
+            helpTimer = Config and Config.HelpTimer or 5,
+        }
     })
     
     if Config and Config.Debug then
-        print('[HUD Death] Death screen activated, ' .. respawnTime .. ' seconds')
+        print('[HUD Death] Death screen activated')
     end
 end
 
@@ -79,11 +70,7 @@ function CloseDeathScreen()
     SetNuiFocusKeepInput(false)
     
     SendNUI("updateDeath", {
-        isDead = false,
-        respawnTimer = 0,
-        waitTimer = 0,
-        canCallHelp = true,
-        canRespawn = false
+        isDead = false
     })
     
     if Config and Config.Debug then
@@ -236,16 +223,6 @@ RegisterNUICallback('deathSyncPosition', function(_, cb)
     local c = GetEntityCoords(ped)
     SetEntityCoords(ped, c.x, c.y, c.z)
     cb({ success = true })
-end)
-
--- ============================================================================
--- COOLDOWN UPDATE (from Server)
--- ============================================================================
-
-RegisterNetEvent('hud:helpCooldownUpdate', function(seconds)
-    SendNUI("updateDeath", {
-        canCallHelp = seconds <= 0
-    })
 end)
 
 -- ============================================================================

@@ -98,11 +98,13 @@ export interface NotificationData {
 // Death Screen State
 export interface DeathState {
     isDead: boolean;
-    respawnTimer: number; // Seconds until respawn is allowed
-    waitTimer: number; // Seconds of total wait time remaining
-    canCallHelp?: boolean;
-    canRespawn?: boolean;
     message?: string;
+    config?: {
+        respawnTimer: number;
+        bleedoutTimer: number;
+        syncTimer: number;
+        helpTimer: number;
+    };
 }
 
 // Chat Message Types

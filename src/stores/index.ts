@@ -99,11 +99,8 @@ export {
 export {
     useDeathStore,
     useIsDead,
-    useRespawnTimer,
-    useWaitTimer,
-    useCanRespawn,
-    useCanCallHelp,
     useDeathMessage,
+    useDeathConfig,
     useDeathData,
 } from "./deathStore";
 

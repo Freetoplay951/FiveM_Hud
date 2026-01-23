@@ -178,31 +178,6 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
         };
     }, [isDemoMode, editMode, addChatMessage, addTeamChatMessage]);
 
-    // Demo: Death Timer Animation
-    useEffect(() => {
-        const deathState = useDeathStore.getState();
-        const shouldRunTimer = isDemoMode && deathState.isDead;
-
-        if (!shouldRunTimer) {
-            return;
-        }
-
-        const timerInterval = setInterval(() => {
-            const current = useDeathStore.getState();
-            const newWaitTimer = current.waitTimer > 0 ? current.waitTimer - 1 : 59;
-            const newRespawnTimer = current.respawnTimer > 0 ? current.respawnTimer - 1 : 14;
-            const canRespawn = newRespawnTimer === 0;
-
-            setDeathState({
-                respawnTimer: newRespawnTimer,
-                waitTimer: newWaitTimer,
-                canRespawn,
-            });
-        }, 1000);
-
-        return () => clearInterval(timerInterval);
-    }, [isDemoMode, setDeathState]);
-
     // Demo key controls
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -289,17 +264,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             // Death toggle
             if (e.key === "f" && !editMode) {
                 const current = useDeathStore.getState();
-                if (current.isDead) {
-                    setDeathState({ isDead: false });
-                } else {
-                    setDeathState({
-                        isDead: true,
-                        respawnTimer: 14,
-                        waitTimer: 59,
-                        canCallHelp: true,
-                        canRespawn: false,
-                    });
-                }
+                setDeathState({ isDead: !current.isDead });
             }
 
             // Wanted level toggle (w key)

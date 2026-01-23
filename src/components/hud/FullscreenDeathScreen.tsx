@@ -8,6 +8,7 @@ import { formatTime } from "@/lib/formatUtils";
 import type { DeathState } from "@/types/hud";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { DEFAULT_DEATH_CONFIG } from "@/stores/deathStore";
 
 interface FullscreenDeathScreenProps {
     death: DeathState;
@@ -16,13 +17,12 @@ interface FullscreenDeathScreenProps {
 
 export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenProps) => {
     const { t } = useTranslation();
-    const {
-        isDead,
-        respawnTimer: initialRespawnTimer,
-        waitTimer: initialWaitTimer,
-        canCallHelp = true,
-        message,
-    } = death;
+    const { isDead, message, config } = death;
+
+    const initialRespawnTimer = config?.respawnTimer ?? DEFAULT_DEATH_CONFIG.respawnTimer;
+    const initialWaitTimer = config?.bleedoutTimer ?? DEFAULT_DEATH_CONFIG.bleedoutTimer;
+    const helpCooldownTime = config?.helpTimer ?? DEFAULT_DEATH_CONFIG.helpTimer;
+    const syncCooldownTime = config?.syncTimer ?? DEFAULT_DEATH_CONFIG.syncTimer;
 
     // Local countdown state
     const [respawnTimer, setRespawnTimer] = useState(initialRespawnTimer);
@@ -31,9 +31,9 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     const [syncCooldown, setSyncCooldown] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Reset timers when death state changes (new death event)
+    // Reset timers when death state changes
     useEffect(() => {
-        if (isDead && initialRespawnTimer > 0) {
+        if (isDead) {
             setRespawnTimer(initialRespawnTimer);
             setWaitTimer(initialWaitTimer);
         }
@@ -59,8 +59,9 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     }, [isDead, visible]);
 
     const canRespawn = respawnTimer <= 0;
-    const canHelp = canCallHelp && helpCooldown <= 0;
+    const canHelp = helpCooldown <= 0;
     const canSync = syncCooldown <= 0;
+
     const displayMessage = message || t.death.defaultMessage;
     const waitProgress = initialWaitTimer > 0 ? ((initialWaitTimer - waitTimer) / initialWaitTimer) * 100 : 100;
     const isVisible = visible && isDead;
@@ -68,9 +69,9 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     const handleCallHelp = useCallback(() => {
         if (canHelp) {
             sendNuiCallback("deathCallHelp");
-            setHelpCooldown(5);
+            setHelpCooldown(helpCooldownTime);
         }
-    }, [canHelp]);
+    }, [canHelp, helpCooldownTime]);
 
     const handleRespawn = useCallback(() => {
         if (canRespawn) {
@@ -81,9 +82,9 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     const handleSyncPosition = useCallback(() => {
         if (canSync) {
             sendNuiCallback("deathSyncPosition");
-            setSyncCooldown(5);
+            setSyncCooldown(syncCooldownTime);
         }
-    }, [canSync]);
+    }, [canSync, syncCooldownTime]);
 
     // Keyboard controls for death screen (works in both FiveM and demo mode)
     useEffect(() => {
