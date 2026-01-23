@@ -12,6 +12,7 @@ files {
 }
 
 shared_scripts {
+    'shared/enums.lua',
     'config.lua',
     'shared/utils.lua'
 }
@@ -45,6 +46,7 @@ escrow_ignore {
     'client/chat/playerChat.lua',
     'client/chat/teamChat.lua',
     'config.lua',
+    'shared/enums.lua',
     'shared/utils.lua',
     'server/main.lua'
 }

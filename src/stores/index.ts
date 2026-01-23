@@ -33,7 +33,7 @@ export {
     useVehicleGear,
     useVehicleFuel,
     useVehicleRpm,
-    useVehicleBodyHealth,
+    useVehicleHealthStatus,
     useVehicleName,
     useAircraftData,
     useBoatData,

@@ -67,10 +67,10 @@ Config.VoiceRanges = {
 }
 
 -- Geld (für esx/qb)
-Config.Framework = 'auto'              -- 'esx', 'qb', oder 'auto' für automatische Erkennung
+Config.Framework = FrameworkType.AUTO  -- FrameworkType.ESX, .QB, oder .AUTO für automatische Erkennung
 
--- Minimap Form: 'square' (Standard) oder 'round' (Rund)
-Config.MinimapShape = 'square'
+-- Minimap Form: MinimapShape.SQUARE (Standard) oder MinimapShape.ROUND (Rund)
+Config.MinimapShape = MinimapShape.SQUARE
 
 -- Minimap nur in Fahrzeugen anzeigen (default: false)
 -- Wenn true, wird die Minimap nur angezeigt wenn der Spieler in einem Fahrzeug ist
@@ -156,27 +156,48 @@ Config.StopVehicleRadioOnEnter = true
 -- ============================================================================
 -- Schwellwerte für die Ampelfarben-Anzeige des Karosserie-Zustands
 -- Werte in Prozent (0% = kaputt, 100% = heile)
+--
+-- Parameter:
+--   engineHealth: Motor-Gesundheit in Prozent (0-100)
+--   bodyHealth:   Karosserie-Gesundheit in Prozent (0-100)
+--   vehicleType:  Fahrzeugtyp (VehicleType.CAR, VehicleType.PLANE, etc.)
+--
+-- Rückgabe: VehicleHealthStatus.GOOD, .WARNING oder .CRITICAL
 -- ============================================================================
 
 Config.BodyHealth = {
     -- =====================================================================
     -- Vollständig frei konfigurierbar:
-    --  - muss "critical", "warning" oder "good" zurückgeben
+    --  - muss VehicleHealthStatus.CRITICAL, .WARNING oder .GOOD zurückgeben
     --  - engineHealth/bodyHealth sind Prozentwerte (0-100)
+    --  - vehicleType ist der Fahrzeugtyp (z.B. VehicleType.CAR)
     --
     -- Hinweis: Clientseitige Funktion
     -- =====================================================================
-    calc = function(engineHealth, bodyHealth)
+    calc = function(engineHealth, bodyHealth, vehicleType)
         local e = tonumber(engineHealth) or 100
         local b = tonumber(bodyHealth) or 100
 
+        -- Beispiel: Flugzeuge haben strengere Schwellwerte
+        if vehicleType == VehicleType.PLANE or vehicleType == VehicleType.HELICOPTER then
+            local avg = (e + b) / 2
+            if avg < 50 then
+                return VehicleHealthStatus.CRITICAL
+            elseif avg < 80 then
+                return VehicleHealthStatus.WARNING
+            else
+                return VehicleHealthStatus.GOOD
+            end
+        end
+
+        -- Standard für andere Fahrzeuge
         local avg = (e + b) / 2
         if avg < 40 then
-            return "critical"
+            return VehicleHealthStatus.CRITICAL
         elseif avg < 70 then
-            return "warning"
+            return VehicleHealthStatus.WARNING
         else
-            return "good"
+            return VehicleHealthStatus.GOOD
         end
     end,
 }

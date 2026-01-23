@@ -34,31 +34,31 @@ local function GetVehicleTypeFromModel(vehicle)
     
     -- Helikopter (Class 15)
     if vehicleClass == 15 or IsThisModelAHeli(model) then
-        return 'helicopter'
+        return VehicleType.HELICOPTER
     end
     
     -- Flugzeug (Class 16)
     if vehicleClass == 16 or IsThisModelAPlane(model) then
-        return 'plane'
+        return VehicleType.PLANE
     end
     
     -- Boot (Class 14)
     if vehicleClass == 14 or IsThisModelABoat(model) then
-        return 'boat'
+        return VehicleType.BOAT
     end
     
     -- Fahrrad (Class 13)
     if vehicleClass == 13 or IsThisModelABicycle(model) then
-        return 'bicycle'
+        return VehicleType.BICYCLE
     end
     
     -- Motorrad (Class 8)
     if vehicleClass == 8 or IsThisModelABike(model) then
-        return 'motorcycle'
+        return VehicleType.MOTORCYCLE
     end
     
     -- Standard: Auto
-    return 'car'
+    return VehicleType.CAR
 end
 
 -- ============================================================================
@@ -193,16 +193,16 @@ local function GetVehicleData(vehicle, vehicleType)
         heading = GetEntityHeading(vehicle)
     }
 
-    local function CalcHealthStatus(engineHealth, bodyHealth)
+    local function CalcHealthStatus(engineHealth, bodyHealth, vehType)
         local fn = Config and Config.BodyHealth and Config.BodyHealth.calc
         if type(fn) == 'function' then
-            local ok, result = pcall(fn, engineHealth, bodyHealth)
+            local ok, result = pcall(fn, engineHealth, bodyHealth, vehType)
             if not ok then
-                print(('[BodyHealth] ERROR in custom calc(): %s | engine=%s body=%s'):format(result, tostring(engineHealth), tostring(bodyHealth)))
-            elseif result == 'critical' or result == 'warning' or result == 'good' then
+                print(('[BodyHealth] ERROR in custom calc(): %s | engine=%s body=%s type=%s'):format(result, tostring(engineHealth), tostring(bodyHealth), tostring(vehType)))
+            elseif IsValidHealthStatus(result) then
                 return result
             else
-                print(('[BodyHealth] WARNING: Invalid return value from calc(): %s | engine=%s body=%s'):format(tostring(result), tostring(engineHealth), tostring(bodyHealth)))
+                print(('[BodyHealth] WARNING: Invalid return value from calc(): %s | engine=%s body=%s type=%s'):format(tostring(result), tostring(engineHealth), tostring(bodyHealth), tostring(vehType)))
             end
         else
             print('[BodyHealth] INFO: No valid custom calc() function found, using fallback.')
@@ -215,14 +215,14 @@ local function GetVehicleData(vehicle, vehicleType)
 
         print(('[BodyHealth] Fallback used | engine=%s body=%s avg=%.1f'):format(e, b, avg))
 
-        if avg < 40 then return 'result' end
-        if avg < 70 then return 'warning' end
-        return 'good'
+        if avg < 40 then return VehicleHealthStatus.CRITICAL end
+        if avg < 70 then return VehicleHealthStatus.WARNING end
+        return VehicleHealthStatus.GOOD
     end
 
     local engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10)
     local bodyHealth = math.floor(GetVehicleBodyHealth(vehicle) / 10)
-    data.healthStatus = CalcHealthStatus(engineHealth, bodyHealth)
+    data.healthStatus = CalcHealthStatus(engineHealth, bodyHealth, vehicleType)
     
     -- ================================================================
     -- AUTO / MOTORRAD
@@ -336,9 +336,7 @@ local function refreshVehicle()
         -- Spieler hat Fahrzeug verlassen
         if wasInVehicle then
             SendNUI('updateVehicle', {
-                inVehicle = false,
-                vehicleType = 'car',
-                speed = 0
+                inVehicle = false
             })
             
             wasInVehicle = false
