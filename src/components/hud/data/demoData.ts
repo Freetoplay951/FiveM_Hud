@@ -29,7 +29,7 @@ export const DEMO_VEHICLE: VehicleState = {
     speed: 127,
     gear: 4,
     fuel: 65,
-    bodyHealth: 85, // Good condition (85%) - press B to cycle through states
+    healthStatus: "good",
 };
 
 export const DEMO_MONEY: MoneyState = { cash: 15420, bank: 234567, blackMoney: 5000 };

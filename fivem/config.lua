@@ -159,10 +159,26 @@ Config.StopVehicleRadioOnEnter = true
 -- ============================================================================
 
 Config.BodyHealth = {
-    -- Ab welchem Prozent wird Gelb angezeigt? (Warnung)
-    yellowThreshold = 70,  -- Unter 70% = Gelb
-    -- Ab welchem Prozent wird Rot angezeigt? (Kritisch)
-    redThreshold = 40,     -- Unter 40% = Rot
+    -- =====================================================================
+    -- Vollständig frei konfigurierbar:
+    --  - muss "red", "yellow" oder "green" zurückgeben
+    --  - engineHealth/bodyHealth sind Prozentwerte (0-100)
+    --
+    -- Hinweis: Clientseitige Funktion
+    -- =====================================================================
+    calc = function(engineHealth, bodyHealth)
+        local e = tonumber(engineHealth) or 100
+        local b = tonumber(bodyHealth) or 100
+
+        local avg = (e + b) / 2
+        if avg < 40 then
+            return "red"
+        elseif avg < 70 then
+            return "yellow"
+        else
+            return "green"
+        end
+    end,
 }
 
 -- ============================================================================

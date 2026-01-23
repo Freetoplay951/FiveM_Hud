@@ -1,19 +1,20 @@
 import { motion } from "framer-motion";
 import { BodyHealthIndicator } from "../shared/BodyHealthIndicator";
+import { VehicleHealthStatus } from "@/types/hud";
 
 interface MotorcycleWarningWidgetProps {
-    bodyHealth?: number;
+    healthStatus: VehicleHealthStatus;
     visible: boolean;
 }
 
-export const MotorcycleWarningWidget = ({ bodyHealth = 1000, visible }: MotorcycleWarningWidgetProps) => {
+export const MotorcycleWarningWidget = ({ healthStatus, visible }: MotorcycleWarningWidgetProps) => {
     return (
         <motion.div
             initial={false}
             animate={{ opacity: visible ? 1 : 0 }}
             transition={{ duration: 0.3 }}
             className="rounded-full glass-panel border-none">
-            <BodyHealthIndicator bodyHealth={bodyHealth} />
+            <BodyHealthIndicator status={healthStatus} />
         </motion.div>
     );
 };

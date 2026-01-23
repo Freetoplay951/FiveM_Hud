@@ -10,6 +10,7 @@ import { useNotificationStore } from "@/stores/notificationStore";
 import { useUtilityStore } from "@/stores/utilityStore";
 import { useKeybindsStore } from "@/stores/keybindsStore";
 import { DEMO_CHAT_MESSAGES, DEMO_TEAM_MESSAGES } from "@/components/hud/data/demoData";
+import { VehicleHealthStatus } from "@/types/hud";
 
 interface UseStoreDemoSimulationProps {
     editMode: boolean;
@@ -84,7 +85,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                     airspeed: Math.min(400, Math.max(150, (vehicleState.airspeed || 250) + (Math.random() - 0.5) * 30)),
                     altitude: Math.min(
                         2000,
-                        Math.max(100, (vehicleState.altitude || 500) + (Math.random() - 0.5) * 50)
+                        Math.max(100, (vehicleState.altitude || 500) + (Math.random() - 0.5) * 50),
                     ),
                     pitch: Math.max(-30, Math.min(30, (vehicleState.pitch || 0) + (Math.random() - 0.5) * 5)),
                     roll: Math.max(-45, Math.min(45, (vehicleState.roll || 0) + (Math.random() - 0.5) * 8)),
@@ -101,7 +102,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                     heading: ((vehicleState.heading || 90) + (Math.random() - 0.5) * 5 + 360) % 360,
                     verticalSpeed: Math.max(
                         -20,
-                        Math.min(20, (vehicleState.verticalSpeed || 5) + (Math.random() - 0.5) * 8)
+                        Math.min(20, (vehicleState.verticalSpeed || 5) + (Math.random() - 0.5) * 8),
                     ),
                     rotorRpm: Math.min(100, Math.max(70, (vehicleState.rotorRpm || 95) + (Math.random() - 0.5) * 5)),
                     speed: Math.min(200, Math.max(0, (vehicleState.airspeed || 80) + (Math.random() - 0.5) * 20)),
@@ -227,7 +228,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             if (e.key === "r") {
                 const current = useVoiceStore.getState();
                 setVoiceRange(
-                    current.voiceRange === "whisper" ? "normal" : current.voiceRange === "normal" ? "shout" : "whisper"
+                    current.voiceRange === "whisper" ? "normal" : current.voiceRange === "normal" ? "shout" : "whisper",
                 );
             }
             if (e.key === "e") {
@@ -309,16 +310,16 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             // Body health toggle
             if (e.key === "b" && !editMode) {
                 const current = useVehicleStore.getState();
-                const bodyHealth = current.bodyHealth ?? 85;
-                let newHealth: number;
-                if (bodyHealth >= 70) {
-                    newHealth = 55;
-                } else if (bodyHealth >= 40) {
-                    newHealth = 20;
-                } else {
-                    newHealth = 85;
-                }
-                setVehicleState({ bodyHealth: newHealth });
+
+                const nextStatus: Record<VehicleHealthStatus, VehicleHealthStatus> = {
+                    good: "warning",
+                    warning: "critical",
+                    critical: "good",
+                };
+
+                setVehicleState({
+                    healthStatus: nextStatus[current.healthStatus],
+                });
             }
 
             // Chat toggle

@@ -194,6 +194,38 @@ local function GetVehicleData(vehicle, vehicleType)
         bodyHealth = math.floor(GetVehicleBodyHealth(vehicle) / 10), -- 0-100 (Prozent)
         heading = GetEntityHeading(vehicle)
     }
+
+    -- ================================================================
+    -- BODY / ENGINE HEALTH STATUS (Lua configurable)
+    -- ================================================================
+    local function CalcHealthStatus(engineHealth, bodyHealth)
+        local fn = Config and Config.BodyHealth and Config.BodyHealth.calc
+        if type(fn) == 'function' then
+            local ok, result = pcall(fn, engineHealth, bodyHealth)
+            if not ok then
+                print(('[BodyHealth] ERROR in custom calc(): %s | engine=%s body=%s'):format(result, tostring(engineHealth), tostring(bodyHealth)))
+            elseif result == 'red' or result == 'yellow' or result == 'green' then
+                return result
+            else
+                print(('[BodyHealth] WARNING: Invalid return value from calc(): %s | engine=%s body=%s'):format(tostring(result), tostring(engineHealth), tostring(bodyHealth)))
+            end
+        else
+            print('[BodyHealth] INFO: No valid custom calc() function found, using fallback.')
+        end
+
+        -- Fallback (safe default)
+        local e = tonumber(engineHealth) or 100
+        local b = tonumber(bodyHealth) or 100
+        local avg = (e + b) / 2
+
+        print(('[BodyHealth] Fallback used | engine=%s body=%s avg=%.1f'):format(e, b, avg))
+
+        if avg < 40 then return 'red' end
+        if avg < 70 then return 'yellow' end
+        return 'green'
+    end
+
+    data.healthStatus = CalcHealthStatus(data.engineHealth, data.bodyHealth)
     
     -- ================================================================
     -- AUTO / MOTORRAD

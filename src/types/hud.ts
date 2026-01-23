@@ -16,6 +16,7 @@ import { WidgetType } from "./widget";
 export type DisabledWidgets = Partial<Record<WidgetType, boolean>>;
 
 export type VehicleType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
+export type VehicleHealthStatus = "good" | "warning" | "critical";
 
 export interface VehicleState {
     inVehicle: boolean;
@@ -24,10 +25,10 @@ export interface VehicleState {
     vehicleSpawnName?: string; // Spawn name for tx (e.g., "adder", "zentorno")
     speed: number;
     gear: number;
+    healthStatus: VehicleHealthStatus;
     fuel: number;
     rpm?: number;
     engineOn?: boolean;
-    bodyHealth?: number; // 0-1000, GetVehicleBodyHealth(vehicle)
     // Car specific
     seatbelt?: boolean;
     lights?: "off" | "low" | "high";

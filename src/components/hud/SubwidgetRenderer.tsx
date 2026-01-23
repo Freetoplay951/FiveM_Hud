@@ -63,7 +63,7 @@ const createVehicleSubwidgetRenderer = (
     subwidgetTypes: readonly string[],
     baseWidgetId: string,
     renderBaseWidget: (visible: boolean) => React.ReactNode,
-    renderWidgetContent: (widgetType: string, contentVisible: boolean) => React.ReactNode
+    renderWidgetContent: (widgetType: string, contentVisible: boolean) => React.ReactNode,
 ) => {
     return (props: SubwidgetRendererProps) => {
         const {
@@ -88,9 +88,7 @@ const createVehicleSubwidgetRenderer = (
         const currentVehicleType = useVehicleStore((s) => s.vehicleType);
         const isDead = useIsDead();
 
-        const isActive = editMode
-            ? speedometerType === vehicleType
-            : inVehicle && currentVehicleType === vehicleType;
+        const isActive = editMode ? speedometerType === vehicleType : inVehicle && currentVehicleType === vehicleType;
 
         const handleBasePositionChange = useCallback(
             (id: string, newPosition: WidgetPosition) => {
@@ -115,7 +113,7 @@ const createVehicleSubwidgetRenderer = (
                     }
                 });
             },
-            [simpleMode, getWidget, updateWidgetPosition]
+            [simpleMode, getWidget, updateWidgetPosition],
         );
 
         const handleLiveDrag = useCallback(
@@ -140,7 +138,7 @@ const createVehicleSubwidgetRenderer = (
                     }
                 });
             },
-            [simpleMode, getWidget]
+            [simpleMode, getWidget],
         );
 
         const handleBaseScaleChange = useCallback(
@@ -161,7 +159,7 @@ const createVehicleSubwidgetRenderer = (
                     });
                 }
             },
-            [simpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady]
+            [simpleMode, updateWidgetScale, reflowWidgetPosition, isWidgetDisabled, hasSignaledReady],
         );
 
         const handleLiveScale = useCallback(
@@ -179,7 +177,7 @@ const createVehicleSubwidgetRenderer = (
                 requestAnimationFrame(() => {
                     const defaultWidgets = getDefaultWidgets();
                     const subConfigs = defaultWidgets.filter(
-                        (w) => subwidgetTypes.includes(w.id) && w.id !== baseWidgetId
+                        (w) => subwidgetTypes.includes(w.id) && w.id !== baseWidgetId,
                     );
 
                     const resolvedRects = new Map<
@@ -238,7 +236,7 @@ const createVehicleSubwidgetRenderer = (
                     });
                 });
             },
-            [simpleMode]
+            [simpleMode],
         );
 
         const handleBaseReset = useCallback(
@@ -252,7 +250,7 @@ const createVehicleSubwidgetRenderer = (
                     });
                 }
             },
-            [simpleMode, resetWidget, isWidgetDisabled]
+            [simpleMode, resetWidget, isWidgetDisabled],
         );
 
         const handleBaseVisibilityToggle = useCallback(() => {
@@ -343,13 +341,23 @@ const HeliSubwidgetRenderer = createVehicleSubwidgetRenderer(
     HELI_SUBWIDGET_TYPES,
     "heli-base",
     (visible) => <HeliBaseWidgetConnected visible={visible} />,
-    (widgetType, visible) => <HeliSubwidgetConnected widgetType={widgetType} visible={visible} />
+    (widgetType, visible) => (
+        <HeliSubwidgetConnected
+            widgetType={widgetType}
+            visible={visible}
+        />
+    ),
 );
 
 // Connected components that subscribe to store
 const HeliBaseWidgetConnected = ({ visible }: { visible: boolean }) => {
     const vehicle = useVehicleStore();
-    return <HeliBaseWidget vehicle={vehicle} visible={visible} />;
+    return (
+        <HeliBaseWidget
+            vehicle={vehicle}
+            visible={visible}
+        />
+    );
 };
 
 const HeliSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; visible: boolean }) => {
@@ -359,23 +367,58 @@ const HeliSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; v
     const heading = useVehicleStore((s) => s.heading ?? 0);
     const rotorRpm = useVehicleStore((s) => s.rotorRpm ?? 0);
     const fuel = useVehicleStore((s) => s.fuel ?? 0);
-    const bodyHealth = useVehicleStore((s) => s.bodyHealth);
+    const healthStatus = useVehicleStore((s) => s.healthStatus);
 
     switch (widgetType) {
         case "heli-kts":
-            return <HeliKtsWidget airspeed={airspeed} visible={visible} />;
+            return (
+                <HeliKtsWidget
+                    airspeed={airspeed}
+                    visible={visible}
+                />
+            );
         case "heli-altitude":
-            return <HeliAltitudeWidget altitude={altitude} visible={visible} />;
+            return (
+                <HeliAltitudeWidget
+                    altitude={altitude}
+                    visible={visible}
+                />
+            );
         case "heli-vspeed":
-            return <HeliVSpeedWidget verticalSpeed={verticalSpeed} visible={visible} />;
+            return (
+                <HeliVSpeedWidget
+                    verticalSpeed={verticalSpeed}
+                    visible={visible}
+                />
+            );
         case "heli-heading":
-            return <HeliHeadingWidget heading={heading} visible={visible} />;
+            return (
+                <HeliHeadingWidget
+                    heading={heading}
+                    visible={visible}
+                />
+            );
         case "heli-rotor":
-            return <HeliRotorWidget rotorRpm={rotorRpm} visible={visible} />;
+            return (
+                <HeliRotorWidget
+                    rotorRpm={rotorRpm}
+                    visible={visible}
+                />
+            );
         case "heli-fuel":
-            return <HeliFuelWidget fuel={fuel} visible={visible} />;
+            return (
+                <HeliFuelWidget
+                    fuel={fuel}
+                    visible={visible}
+                />
+            );
         case "heli-warning":
-            return <HeliWarningWidget bodyHealth={bodyHealth} visible={visible} />;
+            return (
+                <HeliWarningWidget
+                    healthStatus={healthStatus}
+                    visible={visible}
+                />
+            );
         default:
             return null;
     }
@@ -387,23 +430,43 @@ const CarSubwidgetRenderer = createVehicleSubwidgetRenderer(
     CAR_SUBWIDGET_TYPES,
     "car-base",
     (visible) => <CarBaseWidgetConnected visible={visible} />,
-    (widgetType, visible) => <CarSubwidgetConnected widgetType={widgetType} visible={visible} />
+    (widgetType, visible) => (
+        <CarSubwidgetConnected
+            widgetType={widgetType}
+            visible={visible}
+        />
+    ),
 );
 
 const CarBaseWidgetConnected = ({ visible }: { visible: boolean }) => {
     const vehicle = useVehicleStore();
-    return <CarBaseWidget vehicle={vehicle} visible={visible} />;
+    return (
+        <CarBaseWidget
+            vehicle={vehicle}
+            visible={visible}
+        />
+    );
 };
 
 const CarSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; visible: boolean }) => {
     const fuel = useVehicleStore((s) => s.fuel ?? 0);
-    const bodyHealth = useVehicleStore((s) => s.bodyHealth);
+    const healthStatus = useVehicleStore((s) => s.healthStatus);
 
     switch (widgetType) {
         case "car-warning":
-            return <CarWarningWidget bodyHealth={bodyHealth} visible={visible} />;
+            return (
+                <CarWarningWidget
+                    healthStatus={healthStatus}
+                    visible={visible}
+                />
+            );
         case "car-fuel":
-            return <CarFuelWidget fuel={fuel} visible={visible} />;
+            return (
+                <CarFuelWidget
+                    fuel={fuel}
+                    visible={visible}
+                />
+            );
         default:
             return null;
     }
@@ -415,12 +478,22 @@ const PlaneSubwidgetRenderer = createVehicleSubwidgetRenderer(
     PLANE_SUBWIDGET_TYPES,
     "plane-base",
     (visible) => <PlaneBaseWidgetConnected visible={visible} />,
-    (widgetType, visible) => <PlaneSubwidgetConnected widgetType={widgetType} visible={visible} />
+    (widgetType, visible) => (
+        <PlaneSubwidgetConnected
+            widgetType={widgetType}
+            visible={visible}
+        />
+    ),
 );
 
 const PlaneBaseWidgetConnected = ({ visible }: { visible: boolean }) => {
     const vehicle = useVehicleStore();
-    return <PlaneBaseWidget vehicle={vehicle} visible={visible} />;
+    return (
+        <PlaneBaseWidget
+            vehicle={vehicle}
+            visible={visible}
+        />
+    );
 };
 
 const PlaneSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; visible: boolean }) => {
@@ -430,23 +503,58 @@ const PlaneSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; 
     const landingGear = useVehicleStore((s) => s.landingGear ?? true);
     const flaps = useVehicleStore((s) => s.flaps ?? 0);
     const fuel = useVehicleStore((s) => s.fuel ?? 0);
-    const bodyHealth = useVehicleStore((s) => s.bodyHealth);
+    const healthStatus = useVehicleStore((s) => s.healthStatus);
 
     switch (widgetType) {
         case "plane-kts":
-            return <PlaneKtsWidget airspeed={airspeed} visible={visible} />;
+            return (
+                <PlaneKtsWidget
+                    airspeed={airspeed}
+                    visible={visible}
+                />
+            );
         case "plane-altitude":
-            return <PlaneAltitudeWidget altitude={altitude} visible={visible} />;
+            return (
+                <PlaneAltitudeWidget
+                    altitude={altitude}
+                    visible={visible}
+                />
+            );
         case "plane-warning":
-            return <PlaneWarningWidget bodyHealth={bodyHealth} visible={visible} />;
+            return (
+                <PlaneWarningWidget
+                    healthStatus={healthStatus}
+                    visible={visible}
+                />
+            );
         case "plane-heading":
-            return <PlaneHeadingWidget heading={heading} visible={visible} />;
+            return (
+                <PlaneHeadingWidget
+                    heading={heading}
+                    visible={visible}
+                />
+            );
         case "plane-gear":
-            return <PlaneGearWidget landingGear={landingGear} visible={visible} />;
+            return (
+                <PlaneGearWidget
+                    landingGear={landingGear}
+                    visible={visible}
+                />
+            );
         case "plane-flaps":
-            return <PlaneFlapsWidget flaps={flaps} visible={visible} />;
+            return (
+                <PlaneFlapsWidget
+                    flaps={flaps}
+                    visible={visible}
+                />
+            );
         case "plane-fuel":
-            return <PlaneFuelWidget fuel={fuel} visible={visible} />;
+            return (
+                <PlaneFuelWidget
+                    fuel={fuel}
+                    visible={visible}
+                />
+            );
         default:
             return null;
     }
@@ -458,23 +566,43 @@ const BoatSubwidgetRenderer = createVehicleSubwidgetRenderer(
     BOAT_SUBWIDGET_TYPES,
     "boat-base",
     (visible) => <BoatBaseWidgetConnected visible={visible} />,
-    (widgetType, visible) => <BoatSubwidgetConnected widgetType={widgetType} visible={visible} />
+    (widgetType, visible) => (
+        <BoatSubwidgetConnected
+            widgetType={widgetType}
+            visible={visible}
+        />
+    ),
 );
 
 const BoatBaseWidgetConnected = ({ visible }: { visible: boolean }) => {
     const vehicle = useVehicleStore();
-    return <BoatBaseWidget vehicle={vehicle} visible={visible} />;
+    return (
+        <BoatBaseWidget
+            vehicle={vehicle}
+            visible={visible}
+        />
+    );
 };
 
 const BoatSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; visible: boolean }) => {
     const fuel = useVehicleStore((s) => s.fuel ?? 0);
-    const bodyHealth = useVehicleStore((s) => s.bodyHealth);
+    const healthStatus = useVehicleStore((s) => s.healthStatus);
 
     switch (widgetType) {
         case "boat-warning":
-            return <BoatWarningWidget bodyHealth={bodyHealth} visible={visible} />;
+            return (
+                <BoatWarningWidget
+                    healthStatus={healthStatus}
+                    visible={visible}
+                />
+            );
         case "boat-fuel":
-            return <BoatFuelWidget fuel={fuel} visible={visible} />;
+            return (
+                <BoatFuelWidget
+                    fuel={fuel}
+                    visible={visible}
+                />
+            );
         default:
             return null;
     }
@@ -486,23 +614,43 @@ const MotorcycleSubwidgetRenderer = createVehicleSubwidgetRenderer(
     MOTORCYCLE_SUBWIDGET_TYPES,
     "motorcycle-base",
     (visible) => <MotorcycleBaseWidgetConnected visible={visible} />,
-    (widgetType, visible) => <MotorcycleSubwidgetConnected widgetType={widgetType} visible={visible} />
+    (widgetType, visible) => (
+        <MotorcycleSubwidgetConnected
+            widgetType={widgetType}
+            visible={visible}
+        />
+    ),
 );
 
 const MotorcycleBaseWidgetConnected = ({ visible }: { visible: boolean }) => {
     const vehicle = useVehicleStore();
-    return <MotorcycleBaseWidget vehicle={vehicle} visible={visible} />;
+    return (
+        <MotorcycleBaseWidget
+            vehicle={vehicle}
+            visible={visible}
+        />
+    );
 };
 
 const MotorcycleSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; visible: boolean }) => {
     const fuel = useVehicleStore((s) => s.fuel ?? 0);
-    const bodyHealth = useVehicleStore((s) => s.bodyHealth);
+    const healthStatus = useVehicleStore((s) => s.healthStatus);
 
     switch (widgetType) {
         case "motorcycle-warning":
-            return <MotorcycleWarningWidget bodyHealth={bodyHealth} visible={visible} />;
+            return (
+                <MotorcycleWarningWidget
+                    healthStatus={healthStatus}
+                    visible={visible}
+                />
+            );
         case "motorcycle-fuel":
-            return <MotorcycleFuelWidget fuel={fuel} visible={visible} />;
+            return (
+                <MotorcycleFuelWidget
+                    fuel={fuel}
+                    visible={visible}
+                />
+            );
         default:
             return null;
     }
@@ -514,20 +662,35 @@ const BicycleSubwidgetRenderer = createVehicleSubwidgetRenderer(
     BICYCLE_SUBWIDGET_TYPES,
     "bicycle-base",
     (visible) => <BicycleBaseWidgetConnected visible={visible} />,
-    (widgetType, visible) => <BicycleSubwidgetConnected widgetType={widgetType} visible={visible} />
+    (widgetType, visible) => (
+        <BicycleSubwidgetConnected
+            widgetType={widgetType}
+            visible={visible}
+        />
+    ),
 );
 
 const BicycleBaseWidgetConnected = ({ visible }: { visible: boolean }) => {
     const vehicle = useVehicleStore();
-    return <BicycleBaseWidget vehicle={vehicle} visible={visible} />;
+    return (
+        <BicycleBaseWidget
+            vehicle={vehicle}
+            visible={visible}
+        />
+    );
 };
 
 const BicycleSubwidgetConnected = ({ widgetType, visible }: { widgetType: string; visible: boolean }) => {
-    const bodyHealth = useVehicleStore((s) => s.bodyHealth);
+    const healthStatus = useVehicleStore((s) => s.healthStatus);
 
     switch (widgetType) {
         case "bicycle-warning":
-            return <BicycleWarningWidget bodyHealth={bodyHealth} visible={visible} />;
+            return (
+                <BicycleWarningWidget
+                    healthStatus={healthStatus}
+                    visible={visible}
+                />
+            );
         default:
             return null;
     }

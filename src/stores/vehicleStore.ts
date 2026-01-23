@@ -16,6 +16,7 @@ const initialState: VehicleState = isNuiEnvironment()
           speed: 0,
           gear: 1,
           fuel: 100,
+          healthStatus: "good",
       }
     : DEMO_VEHICLE;
 
@@ -40,7 +41,7 @@ export const useVehicleSpeed = () => useVehicleStore((state) => state.speed);
 export const useVehicleGear = () => useVehicleStore((state) => state.gear);
 export const useVehicleFuel = () => useVehicleStore((state) => state.fuel);
 export const useVehicleRpm = () => useVehicleStore((state) => state.rpm);
-export const useVehicleBodyHealth = () => useVehicleStore((state) => state.bodyHealth);
+export const useVehicleHealthStatus = () => useVehicleStore((state) => state.healthStatus);
 export const useVehicleName = () =>
     useVehicleStore((state) => ({
         vehicleName: state.vehicleName,
