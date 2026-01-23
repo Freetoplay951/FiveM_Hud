@@ -44,11 +44,11 @@ const defaultConfig: BrandingConfig = {
 };
 
 const fontSizeMap: Record<string, string> = {
-    "sm": "text-lg md:text-xl",
-    "md": "text-xl md:text-2xl",
-    "lg": "text-2xl md:text-3xl",
-    "xl": "text-3xl md:text-4xl",
-    "2xl": "text-4xl md:text-5xl",
+    "sm": "text-xl",
+    "md": "text-2xl",
+    "lg": "text-3xl",
+    "xl": "text-4xl",
+    "2xl": "text-5xl",
 };
 
 export const BrandingWidget = () => {
@@ -62,7 +62,7 @@ export const BrandingWidget = () => {
     }, []);
 
     const { segments, style, decorations } = config;
-    const fontSize = fontSizeMap[style.fontSize] || fontSizeMap["2xl"];
+    const fontSize = fontSizeMap[style.fontSize] || fontSizeMap["lg"];
 
     // Get first and last colors for decorations/underline
     const firstColor = segments[0]?.color || "188 100% 50%";
