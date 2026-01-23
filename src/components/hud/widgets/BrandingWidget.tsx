@@ -4,7 +4,7 @@ export const BrandingWidget = () => {
     return (
         <div
             id="branding"
-            className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-none z-40">
+            className="pointer-events-none">
             <motion.div
                 initial={{ opacity: 0, y: -30, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}

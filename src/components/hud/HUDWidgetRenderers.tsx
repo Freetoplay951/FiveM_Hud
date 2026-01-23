@@ -6,7 +6,7 @@ import { VoiceWidget } from "./widgets/VoiceWidget";
 import { LocationWidget } from "./widgets/LocationWidget";
 import { ClockWidget } from "./widgets/ClockWidget";
 import { DateWidget } from "./widgets/DateWidget";
-
+import { BrandingWidget } from "./widgets/BrandingWidget";
 import { WantedWidget } from "./widgets/WantedWidget";
 import { ServerInfoWidget } from "./widgets/ServerInfoWidget";
 import { ServerNameWidget } from "./widgets/ServerNameWidget";
@@ -265,6 +265,56 @@ const MoneyWidgetRendererComponent = ({
 };
 
 export const MoneyWidgetRenderer = memo(MoneyWidgetRendererComponent);
+
+// ==========================================
+// BRANDING WIDGET - Self-contained, no external data
+// ==========================================
+const BrandingWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("branding");
+    const isDead = useIsDead();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
+        [resetWidget, isWidgetDisabled, hasSignaledReady],
+    );
+
+    if (!widget) return null;
+
+    const baseVisible = widget.visible && (editMode ? true : !isDead);
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={widget.position}
+            visible={baseVisible}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={undefined}
+            onScaleChange={undefined}
+            onReset={handleReset}
+            {...getMultiSelectProps(widget.id)}>
+            <BrandingWidget />
+        </HUDWidget>
+    );
+};
+
+export const BrandingWidgetRenderer = memo(BrandingWidgetRendererComponent);
 
 // ==========================================
 // CLOCK WIDGET - Self-contained, no external data
@@ -980,6 +1030,7 @@ const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
             <NotificationsRenderer {...props} />
             <StatusWidgetsRenderer {...props} />
             <MoneyWidgetRenderer {...props} />
+            <BrandingWidgetRenderer {...props} />
             <ClockWidgetRenderer {...props} />
             <DateWidgetRenderer {...props} />
             <WantedWidgetRenderer {...props} />

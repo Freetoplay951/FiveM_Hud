@@ -47,6 +47,7 @@ export type WidgetType =
     | "date"
     | "serverinfo"
     | "servername"
+    | "branding"
     // Helicopter subwidgets
     | "heli-base"
     | "heli-kts"
@@ -767,13 +768,33 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
         {
-            id: "clock",
-            type: "clock",
+            id: "branding",
+            type: "branding",
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
                 return {
                     x: resolver.screen.width / 2 - width / 2,
-                    y: MARGIN + (document.getElementById("branding")?.offsetHeight ?? 0),
+                    y: MARGIN,
+                };
+            },
+            visible: true,
+            scale: 1,
+        },
+        {
+            id: "clock",
+            type: "clock",
+            position: (_id, el, resolver) => {
+                const brandingRect = resolver.getWidgetRect("branding");
+                const width = el?.offsetWidth ?? 0;
+                if (brandingRect) {
+                    return {
+                        x: resolver.screen.width / 2 - width / 2,
+                        y: brandingRect.bottom + GAP,
+                    };
+                }
+                return {
+                    x: resolver.screen.width / 2 - width / 2,
+                    y: MARGIN + 60,
                 };
             },
             visible: true,
@@ -793,7 +814,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 }
                 return {
                     x: resolver.screen.width / 2 - width / 2,
-                    y: MARGIN + 40,
+                    y: MARGIN + 100,
                 };
             },
             visible: true,
