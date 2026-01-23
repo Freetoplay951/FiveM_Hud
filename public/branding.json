@@ -1,0 +1,19 @@
+{
+    "segments": [
+        { "text": "COMMUNITY", "color": "188 100% 50%" },
+        { "text": "RP", "color": "0 100% 50%" }
+    ],
+    "style": {
+        "fontSize": "2xl",
+        "letterSpacing": "0.25em",
+        "showUnderline": true,
+        "showParticles": true,
+        "showGlitchEffect": true,
+        "showScanlines": false,
+        "particleCount": 6
+    },
+    "decorations": {
+        "type": "dots",
+        "showDecorations": true
+    }
+}
