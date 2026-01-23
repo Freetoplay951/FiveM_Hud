@@ -123,6 +123,7 @@ export interface ChatState {
     isVisible?: boolean; // Ob Chat sichtbar ist (für Fade-Out)
     messages: ChatMessage[];
     unreadCount: number;
+    commandOnly?: boolean; // Ob Chat nur für Commands genutzt werden kann
 }
 
 // Team Chat Types (Staff only - Supporter, Admin, etc.)

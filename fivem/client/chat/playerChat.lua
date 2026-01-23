@@ -130,7 +130,8 @@ function OpenChat()
     SetNuiFocus(true, false)
 
     SendNUI("chatUpdate", {
-        isInputActive = true
+        isInputActive = true,
+        commandOnly = Config.ChatCommandOnly or false
     })
 end
 
@@ -178,6 +179,12 @@ RegisterNUICallback("sendChatMessage", function(data, cb)
         end
         
         return cb({ success = true })
+    end
+    
+    -- Command-Only Mode: Blockiere normale Nachrichten
+    if Config.ChatCommandOnly then
+        TriggerEvent("hud:warning", "Nur Commands", "Der Chat ist nur für Commands verfügbar. Nutze /command")
+        return cb({ success = false, commandOnly = true })
     end
     
     local name = GetPlayerName(PlayerId()) or "Unknown"

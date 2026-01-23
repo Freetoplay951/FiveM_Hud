@@ -15,6 +15,7 @@ interface ChatStore {
     chatInputActive: boolean;
     chatVisible: boolean;
     chatUnreadCount: number;
+    chatCommandOnly: boolean;
     commands: ChatCommand[];
 
     // Team chat
@@ -31,6 +32,7 @@ interface ChatStore {
     // Actions
     setChatState: (state: Partial<ChatState>) => void;
     setChatInputActive: (active: boolean) => void;
+    setChatCommandOnly: (commandOnly: boolean) => void;
     addChatMessage: (message: ChatMessage) => void;
     clearChatMessages: () => void;
     setCommands: (commands: ChatCommand[]) => void;
@@ -51,6 +53,7 @@ export const useChatStore = create<ChatStore>((set) => ({
     chatInputActive: false,
     chatVisible: isDemoMode ? (DEMO_CHAT.isVisible ?? false) : false,
     chatUnreadCount: 0,
+    chatCommandOnly: false,
     commands: [],
 
     // Team chat initial state
@@ -72,6 +75,7 @@ export const useChatStore = create<ChatStore>((set) => ({
             chatInputActive: state.isInputActive ?? prev.chatInputActive,
             chatVisible: state.isVisible ?? prev.chatVisible,
             chatUnreadCount: state.unreadCount ?? prev.chatUnreadCount,
+            chatCommandOnly: state.commandOnly ?? prev.chatCommandOnly,
         })),
 
     setChatInputActive: (active) =>
@@ -79,6 +83,8 @@ export const useChatStore = create<ChatStore>((set) => ({
             chatInputActive: active,
             chatUnreadCount: active ? 0 : prev.chatUnreadCount,
         })),
+
+    setChatCommandOnly: (commandOnly) => set({ chatCommandOnly: commandOnly }),
 
     addChatMessage: (message) =>
         set((prev) => ({
@@ -131,6 +137,7 @@ export const useChatMessages = () => useChatStore((state) => state.chatMessages)
 export const useChatInputActive = () => useChatStore((state) => state.chatInputActive);
 export const useChatVisible = () => useChatStore((state) => state.chatVisible);
 export const useChatUnreadCount = () => useChatStore((state) => state.chatUnreadCount);
+export const useChatCommandOnly = () => useChatStore((state) => state.chatCommandOnly);
 export const useChatCommands = () => useChatStore((state) => state.commands);
 export const useChatData = () =>
     useChatStore(
@@ -139,6 +146,7 @@ export const useChatData = () =>
             isInputActive: state.chatInputActive,
             isVisible: state.chatVisible,
             unreadCount: state.chatUnreadCount,
+            commandOnly: state.chatCommandOnly,
         })),
     );
 

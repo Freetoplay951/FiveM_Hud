@@ -36,7 +36,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
     const addChatMessage = useChatStore((s) => s.addChatMessage);
     const nuiCommands = useChatCommands();
 
-    const [inputValue, setInputValue] = useState("");
+    const [inputValue, setInputValue] = useState(chat.commandOnly ? "/" : "");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const [isAutoHidden, setIsAutoHidden] = useState(false);
@@ -54,6 +54,13 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
     const isVisible = chat.isVisible ?? true;
     const isInputActive = chat.isInputActive || editMode;
     const hasMessages = chat.messages.length > 0;
+
+    // Auto-prefix "/" when commandOnly mode is enabled and input becomes active
+    useEffect(() => {
+        if (chat.isInputActive && chat.commandOnly && !inputValue.startsWith("/")) {
+            setInputValue("/");
+        }
+    }, [chat.isInputActive, chat.commandOnly]);
 
     // Auto-hide Timer Logic
     const resetAutoHideTimer = useCallback(() => {
@@ -477,6 +484,14 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                             )}
                         </AnimatePresence>
 
+                        {/* Command-Only Hint */}
+                        {chat.commandOnly && (
+                            <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded bg-warning/10 border border-warning/20">
+                                <Terminal size={10} className="text-warning shrink-0" />
+                                <span className="text-[10px] text-warning">Nur Commands erlaubt</span>
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-2">
                             <input
                                 autoFocus={!editMode && isInputActive}
@@ -488,7 +503,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Nachricht eingeben... (/ für Commands)"
+                                placeholder={chat.commandOnly ? "Command eingeben... (z.B. /help)" : "Nachricht eingeben... (/ für Commands)"}
                                 className="flex-1 bg-background/30 border border-border/30 rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
                             />
                             <button

@@ -36,11 +36,13 @@ export const HUD = () => {
     const isDead = useIsDead();
     const deathData = useDeathData();
 
-    // Team chat access for demo mode badge
+    // Team chat access and command-only mode for demo mode badge
     const teamChatHasAccess = useChatStore((s) => s.teamChatHasAccess);
     const teamChatIsAdmin = useChatStore((s) => s.teamChatIsAdmin);
+    const chatCommandOnly = useChatStore((s) => s.chatCommandOnly);
     const setTeamChatAccess = useChatStore((s) => s.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((s) => s.setTeamChatIsAdmin);
+    const setChatCommandOnly = useChatStore((s) => s.setChatCommandOnly);
 
     // Layout management - pure layout, no widget data
     const {
@@ -176,6 +178,10 @@ export const HUD = () => {
     const handleTeamChatAdminChange = useCallback(
         (checked: boolean) => setTeamChatIsAdmin(checked),
         [setTeamChatIsAdmin],
+    );
+    const handleChatCommandOnlyChange = useCallback(
+        (checked: boolean) => setChatCommandOnly(checked),
+        [setChatCommandOnly],
     );
 
     // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data, NO notifications
@@ -379,6 +385,14 @@ export const HUD = () => {
                                         checked={teamChatIsAdmin}
                                         onCheckedChange={handleTeamChatAdminChange}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">Chat Cmd Only</span>
+                                    <Switch
+                                        checked={chatCommandOnly}
+                                        onCheckedChange={handleChatCommandOnlyChange}
+                                        className="data-[state=checked]:bg-warning data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
                             </div>

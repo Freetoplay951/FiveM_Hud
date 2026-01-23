@@ -31,6 +31,9 @@ Config.ChatKey = 'T'                   -- Taste für Chat
 Config.TeamChatKey = 'Y'               -- Taste für Team-Chat
 Config.KeybindsKey = 'K'               -- Taste für Keybinds-Menü
 
+-- Chat Einstellungen
+Config.ChatCommandOnly = false         -- true = Chat nur für Commands (keine normalen Nachrichten)
+
 -- Voice (für pma-voice / mumble-voip / saltychat)
 -- 'auto' = automatische Erkennung, 'none' = deaktiviert
 Config.VoiceResource = 'auto'
