@@ -367,6 +367,7 @@ export const HUD = () => {
                                         <span>Edit: E</span>
                                         <span>Death: F</span>
                                         <span>Voice: R</span>
+                                        <span>Mute: M</span>
                                         <span>Body: B</span>
                                         <span>Notify: H︱J︱K︱L</span>
                                         <span>Chat: T</span>

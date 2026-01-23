@@ -92,7 +92,8 @@
         "whisper": "Flüstern",
         "normal": "Normal",
         "shout": "Schreien",
-        "megaphone": "Megafon"
+        "megaphone": "Megafon",
+        "muted": "Stumm"
     },
     "radio": {
         "title": "Funk",

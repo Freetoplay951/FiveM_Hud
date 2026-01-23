@@ -63,6 +63,7 @@ export interface PlayerState {
 export interface VoiceState {
     active: boolean;
     range: "whisper" | "normal" | "shout" | "megaphone";
+    isMuted?: boolean;
 }
 
 export interface RadioMember {

@@ -92,7 +92,8 @@
         "whisper": "Whisper",
         "normal": "Normal",
         "shout": "Shout",
-        "megaphone": "Megaphone"
+        "megaphone": "Megaphone",
+        "muted": "Muted"
     },
     "radio": {
         "title": "Radio",

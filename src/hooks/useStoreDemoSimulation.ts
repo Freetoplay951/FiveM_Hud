@@ -10,7 +10,7 @@ import { useNotificationStore } from "@/stores/notificationStore";
 import { useUtilityStore } from "@/stores/utilityStore";
 import { useKeybindsStore } from "@/stores/keybindsStore";
 import { DEMO_CHAT_MESSAGES, DEMO_TEAM_MESSAGES } from "@/components/hud/data/demoData";
-import { VehicleHealthStatus } from "@/types/hud";
+import { VehicleHealthStatus, VoiceState } from "@/types/hud";
 
 interface UseStoreDemoSimulationProps {
     editMode: boolean;
@@ -30,6 +30,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
     const setVehicleState = useVehicleStore((state) => state.setVehicleState);
     const setVoiceActive = useVoiceStore((state) => state.setVoiceActive);
     const setVoiceRange = useVoiceStore((state) => state.setVoiceRange);
+    const setIsVoiceMuted = useVoiceStore((state) => state.setIsVoiceMuted);
     const setLocation = useLocationStore((state) => state.setLocation);
     const addChatMessage = useChatStore((state) => state.addChatMessage);
     const addTeamChatMessage = useChatStore((state) => state.addTeamChatMessage);
@@ -227,9 +228,15 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             }
             if (e.key === "r") {
                 const current = useVoiceStore.getState();
-                setVoiceRange(
-                    current.voiceRange === "whisper" ? "normal" : current.voiceRange === "normal" ? "shout" : "whisper",
-                );
+
+                const nextRange: Record<VoiceState["range"], VoiceState["range"]> = {
+                    whisper: "normal",
+                    normal: "shout",
+                    shout: "megaphone",
+                    megaphone: "whisper",
+                };
+
+                setVoiceRange(nextRange[current.voiceRange]);
             }
             if (e.key === "e") {
                 if (editMode) {
@@ -335,6 +342,13 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                 const current = useChatStore.getState();
                 setTeamChatInputActive(!current.teamChatInputActive);
             }
+
+            // Mute toggle
+            if (e.key === "m" && !editMode) {
+                e.preventDefault();
+                const current = useVoiceStore.getState();
+                setIsVoiceMuted(!current.isVoiceMuted);
+            }
         };
 
         window.addEventListener("keypress", handleKeyPress);
@@ -358,6 +372,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
         setTeamChatInputActive,
         setWantedLevel,
         setIsEvading,
+        setIsVoiceMuted,
     ]);
 
     // Expose store setters for demo badge toggles

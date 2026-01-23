@@ -2,7 +2,6 @@ import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Mic, MicOff, Volume2 } from "lucide-react";
 import { VoiceState } from "@/types/hud";
-import { cn } from "@/lib/utils";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useRenderLogger } from "@/hooks/useRenderLogger";
 
@@ -28,75 +27,89 @@ const VOICE_RANGE_CONFIG = {
 const BAR_HEIGHTS = [8, 12, 16]; // px values for bars 1, 2, 3
 
 // Memoized voice bar component
-const VoiceBar = memo(({ 
-    index, 
-    isActive, 
-    color, 
-    voiceActive 
-}: { 
-    index: number; 
-    isActive: boolean; 
-    color: string; 
-    voiceActive: boolean;
-}) => {
-    const style = useMemo(() => ({
-        height: `${BAR_HEIGHTS[index]}px`,
-        backgroundColor: isActive ? `hsl(var(--${color}))` : "hsl(var(--muted) / 0.3)",
-        boxShadow: isActive && voiceActive ? `0 0 6px hsl(var(--${color}))` : "none",
-    }), [index, isActive, color, voiceActive]);
+const VoiceBar = memo(
+    ({
+        index,
+        isActive,
+        color,
+        voiceActive,
+    }: {
+        index: number;
+        isActive: boolean;
+        color: string;
+        voiceActive: boolean;
+    }) => {
+        const style = useMemo(
+            () => ({
+                height: `${BAR_HEIGHTS[index]}px`,
+                backgroundColor: isActive ? `hsl(var(--${color}))` : "hsl(var(--muted) / 0.3)",
+                boxShadow: isActive && voiceActive ? `0 0 6px hsl(var(--${color}))` : "none",
+            }),
+            [index, isActive, color, voiceActive],
+        );
 
-    const animate = useMemo(() => 
-        voiceActive && isActive
-            ? { opacity: [0.7, 1, 0.7], scaleY: [0.9, 1, 0.9] }
-            : {},
-        [voiceActive, isActive]
-    );
+        const animate = useMemo(
+            () => (voiceActive && isActive ? { opacity: [0.7, 1, 0.7], scaleY: [0.9, 1, 0.9] } : {}),
+            [voiceActive, isActive],
+        );
 
-    const transition = useMemo(() => ({
-        duration: 0.3,
-        repeat: Infinity,
-        delay: index * 0.1,
-    }), [index]);
+        const transition = useMemo(
+            () => ({
+                duration: 0.3,
+                repeat: Infinity,
+                delay: index * 0.1,
+            }),
+            [index],
+        );
 
-    return (
-        <motion.div
-            className="w-1 rounded-full transition-colors"
-            style={style}
-            animate={animate}
-            transition={transition}
-        />
-    );
-});
+        return (
+            <motion.div
+                className="w-1 rounded-full transition-colors"
+                style={style}
+                animate={voiceActive && isActive ? animate : undefined}
+                transition={voiceActive && isActive ? transition : undefined}
+            />
+        );
+    },
+);
 VoiceBar.displayName = "VoiceBar";
 
 const VoiceWidgetComponent = ({ voice }: VoiceWidgetProps) => {
     const { t } = useTranslation();
-    
+
     // Performance logging
-    useRenderLogger("VoiceWidget", { active: voice.active, range: voice.range });
-    
+    useRenderLogger("VoiceWidget", { active: voice.active, range: voice.range, isMuted: voice.isMuted });
+
     const config = VOICE_RANGE_CONFIG[voice.range];
     const isMegaphone = voice.range === "megaphone";
+    const isMuted = voice.isMuted === true;
 
     // Memoize icon style
-    const iconStyle = useMemo(() => ({
-        filter: `drop-shadow(0 0 6px hsl(var(--${config.color})))`,
-    }), [config.color]);
+    const iconStyle = useMemo(
+        () => ({
+            filter: `drop-shadow(0 0 6px hsl(var(--${isMuted ? "critical" : config.color})))`,
+        }),
+        [config.color, isMuted],
+    );
 
     // Memoize label style
-    const labelStyle = useMemo(() => 
-        voice.active
+    const labelStyle = useMemo(() => {
+        if (isMuted) {
+            return {
+                color: `hsl(var(--critical))`,
+                textShadow: `0 0 6px hsl(var(--critical) / 0.4)`,
+            };
+        }
+        return voice.active
             ? {
                   color: `hsl(var(--${config.color}))`,
                   textShadow: `0 0 6px hsl(var(--${config.color}) / 0.4)`,
               }
-            : {},
-        [voice.active, config.color]
-    );
+            : {};
+    }, [voice.active, config.color, isMuted]);
 
-    const Icon = voice.active 
-        ? (isMegaphone ? Volume2 : Mic) 
-        : MicOff;
+    // Show MicOff only when actually muted (e.g., on TeamSpeak), not when just not talking
+    const Icon = isMuted ? MicOff : isMegaphone ? Volume2 : Mic;
 
     return (
         <motion.div
@@ -104,8 +117,8 @@ const VoiceWidgetComponent = ({ voice }: VoiceWidgetProps) => {
             {...motionConfig}>
             <Icon
                 size={14}
-                className={voice.active ? `text-${config.color}` : "text-muted-foreground"}
-                style={voice.active ? iconStyle : undefined}
+                className={isMuted ? "text-critical" : voice.active ? `text-${config.color}` : "text-muted-foreground"}
+                style={voice.active || isMuted ? iconStyle : undefined}
             />
 
             <div className="flex items-end gap-0.5 h-4">
@@ -114,16 +127,16 @@ const VoiceWidgetComponent = ({ voice }: VoiceWidgetProps) => {
                         key={index}
                         index={index}
                         isActive={index < config.bars}
-                        color={config.color}
-                        voiceActive={voice.active}
+                        color={isMuted ? "critical" : config.color}
+                        voiceActive={voice.active && !isMuted}
                     />
                 ))}
             </div>
 
             <span
-                className="text-[10px] text-muted-foreground uppercase tracking-wider"
+                className="text-[10px] text-muted-foreground uppercase tracking-wider min-w-[52px] text-center"
                 style={labelStyle}>
-                {t.general[config.labelKey]}
+                {isMuted ? t.general.muted : t.general[config.labelKey]}
             </span>
         </motion.div>
     );

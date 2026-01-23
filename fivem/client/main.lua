@@ -158,7 +158,8 @@ local function SendInitialData()
     -- Voice Initial
     SendNUI('updateVoice', {
         active = false,
-        range = VoiceRange.NORMAL
+        range = VoiceRange.NORMAL,
+        isMuted = false
     })
     
     -- Player Info Initial (Server ID)
@@ -404,13 +405,104 @@ CreateThread(function()
 end)
 
 -- ============================================================================
--- VOICE UPDATES (with change detection)
+-- VOICE UPDATES (with change detection + mute detection)
 -- ============================================================================
 
 local lastVoiceData = {
     active = nil,
-    range = nil
+    range = nil,
+    isMuted = nil
 }
+
+-- Mute detection functions for different voice systems
+local function GetPmaVoiceMuted()
+    -- pma-voice uses mumble internally
+    local success, isMuted = pcall(function()
+        return exports['pma-voice']:isMuted()
+    end)
+    if success then
+        return isMuted == true
+    end
+    
+    -- Fallback: check MumbleIsPlayerMuted native
+    local playerServerId = GetPlayerServerId(PlayerId())
+    local success2, muted = pcall(function()
+        return MumbleIsPlayerMuted(playerServerId)
+    end)
+    if success2 then
+        return muted == true
+    end
+    
+    return false
+end
+
+local function GetSaltyChatMuted()
+    -- SaltyChat mute state
+    local success, isMuted = pcall(function()
+        return exports['saltychat']:GetPluginState() == "disabled" or 
+               exports['saltychat']:GetMicrophoneMuted()
+    end)
+    if success then
+        return isMuted == true
+    end
+    
+    -- Alternative: Check via event state variable if available
+    local success2, micMuted = pcall(function()
+        return exports['saltychat']:IsMicrophoneMuted()
+    end)
+    if success2 then
+        return micMuted == true
+    end
+    
+    return false
+end
+
+local function GetMumbleVoipMuted()
+    -- mumble-voip mute state
+    local success, isMuted = pcall(function()
+        return exports['mumble-voip']:isMuted()
+    end)
+    if success then
+        return isMuted == true
+    end
+    
+    -- Fallback: MumbleIsPlayerMuted native
+    local playerServerId = GetPlayerServerId(PlayerId())
+    local success2, muted = pcall(function()
+        return MumbleIsPlayerMuted(playerServerId)
+    end)
+    if success2 then
+        return muted == true
+    end
+    
+    return false
+end
+
+local function GetTokoVoipMuted()
+    -- TokoVOIP mute state
+    local success, isMuted = pcall(function()
+        return exports['tokovoip_script']:isMuted()
+    end)
+    if success then
+        return isMuted == true
+    end
+    
+    return false
+end
+
+-- Get mute state based on detected voice resource
+local function GetVoiceMuted()
+    if VoiceResource == 'pma-voice' then
+        return GetPmaVoiceMuted()
+    elseif VoiceResource == 'saltychat' then
+        return GetSaltyChatMuted()
+    elseif VoiceResource == 'mumble-voip' then
+        return GetMumbleVoipMuted()
+    elseif VoiceResource == 'tokovoip' then
+        return GetTokoVoipMuted()
+    end
+    return false
+end
 
 CreateThread(function()
     -- Warten bis Voice Resource erkannt
@@ -422,6 +514,7 @@ CreateThread(function()
         if isHudVisible then
             local isTalking = NetworkIsPlayerTalking(PlayerId())
             local voiceRange = VoiceRange.NORMAL
+            local isMuted = GetVoiceMuted()
             
             if VoiceResource == 'pma-voice' then
                 -- pma-voice Mode holen
@@ -489,13 +582,15 @@ CreateThread(function()
             end
             
             -- Only send if something changed
-            if isTalking ~= lastVoiceData.active or voiceRange ~= lastVoiceData.range then
+            if isTalking ~= lastVoiceData.active or voiceRange ~= lastVoiceData.range or isMuted ~= lastVoiceData.isMuted then
                 lastVoiceData.active = isTalking
                 lastVoiceData.range = voiceRange
+                lastVoiceData.isMuted = isMuted
                 
                 SendNUI('updateVoice', {
                     active = isTalking,
-                    range = voiceRange
+                    range = voiceRange,
+                    isMuted = isMuted
                 })
             end
         end
@@ -713,6 +808,33 @@ RegisterNetEvent('hud:disableWidget', function(widgetId)
     DisableWidget(widgetId)
 end)
 
+-- Voice mute exports
+exports('isVoiceMuted', function()
+    return lastVoiceData.isMuted or false
+end)
+
+exports('setVoiceMuted', function(muted)
+    -- This sends a manual override to the UI
+    -- Note: This does NOT actually mute the microphone in the voice system
+    -- It only updates the HUD display. Use your voice system's mute function for actual muting.
+    lastVoiceData.isMuted = muted
+    SendNUI('updateVoice', {
+        active = lastVoiceData.active or false,
+        range = lastVoiceData.range or VoiceRange.NORMAL,
+        isMuted = muted
+    })
+end)
+
+-- Voice mute events
+RegisterNetEvent('hud:setVoiceMuted', function(muted)
+    lastVoiceData.isMuted = muted
+    SendNUI('updateVoice', {
+        active = lastVoiceData.active or false,
+        range = lastVoiceData.range or VoiceRange.NORMAL,
+        isMuted = muted
+    })
+end)
+
 -- ============================================================================
 -- COMMANDS (Debug)
 -- ============================================================================
@@ -728,6 +850,7 @@ if Config.Debug then
         print('[HUD Core] Voice: ' .. (VoiceResource or 'none'))
         print('[HUD Core] Visible: ' .. tostring(isHudVisible))
         print('[HUD Core] Player loaded: ' .. tostring(isPlayerLoaded))
+        print('[HUD Core] Voice muted: ' .. tostring(lastVoiceData.isMuted or false))
     end, false)
     
     -- Debug command to test widget disabling
@@ -747,5 +870,12 @@ if Config.Debug then
         else
             print('[HUD Widgets] Usage: /hud_enable <widgetId>')
         end
+    end, false)
+    
+    -- Debug command to test voice mute
+    RegisterCommand('hud_mute', function()
+        local currentMuted = lastVoiceData.isMuted or false
+        exports[GetCurrentResourceName()]:setVoiceMuted(not currentMuted)
+        print('[HUD Voice] Muted: ' .. tostring(not currentMuted))
     end, false)
 end

@@ -112,6 +112,7 @@ export interface Translations {
         normal: string;
         shout: string;
         megaphone: string;
+        muted: string;
     };
     radio: {
         title: string;
