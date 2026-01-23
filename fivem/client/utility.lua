@@ -32,7 +32,7 @@ AddEventHandler("hud:loading", function()
     
     -- Send initial server info
     SendNUI('updateUtility', {
-        serverName = GetConvar('sv_hostname', 'IronSystems'),
+        serverName = Config.ServerName or 'IronSystems',
         maxPlayers = GetConvarInt('sv_maxclients', 64),
         playerCount = #GetActivePlayers()
     })

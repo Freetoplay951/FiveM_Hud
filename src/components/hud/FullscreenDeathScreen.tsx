@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skull, Phone, RotateCcw, RefreshCw, Clock, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,8 +27,8 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     // Local countdown state
     const [respawnTimer, setRespawnTimer] = useState(initialRespawnTimer);
     const [waitTimer, setWaitTimer] = useState(initialWaitTimer);
-    const [lastCallHelpTime, setLastCallHelpTime] = useState(0);
-    const [lastSyncTime, setLastSyncTime] = useState(0);
+    const [helpCooldown, setHelpCooldown] = useState(0);
+    const [syncCooldown, setSyncCooldown] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Reset timers when death state changes (new death event)
@@ -45,6 +45,8 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
             intervalRef.current = setInterval(() => {
                 setRespawnTimer((prev) => Math.max(0, prev - 1));
                 setWaitTimer((prev) => Math.max(0, prev - 1));
+                setHelpCooldown((prev) => Math.max(0, prev - 1));
+                setSyncCooldown((prev) => Math.max(0, prev - 1));
             }, 1000);
         }
 
@@ -57,49 +59,46 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
     }, [isDead, visible]);
 
     const canRespawn = respawnTimer <= 0;
+    const canHelp = canCallHelp && helpCooldown <= 0;
+    const canSync = syncCooldown <= 0;
     const displayMessage = message || t.death.defaultMessage;
     const waitProgress = initialWaitTimer > 0 ? ((initialWaitTimer - waitTimer) / initialWaitTimer) * 100 : 100;
     const isVisible = visible && isDead;
 
-    const handleCallHelp = () => {
-        const now = Date.now();
-        if (now - lastCallHelpTime >= 5000) {
+    const handleCallHelp = useCallback(() => {
+        if (canHelp) {
             sendNuiCallback("deathCallHelp");
-            setLastCallHelpTime(now);
+            setHelpCooldown(5);
         }
-    };
+    }, [canHelp]);
 
-    const handleRespawn = () => {
+    const handleRespawn = useCallback(() => {
         if (canRespawn) {
             sendNuiCallback("deathRespawn");
         }
-    };
+    }, [canRespawn]);
 
-    const handleSyncPosition = () => {
-        const now = Date.now();
-        if (now - lastSyncTime >= 5000) {
+    const handleSyncPosition = useCallback(() => {
+        if (canSync) {
             sendNuiCallback("deathSyncPosition");
-            setLastSyncTime(now);
+            setSyncCooldown(5);
         }
-    };
+    }, [canSync]);
 
     // Keyboard controls for death screen (works in both FiveM and demo mode)
     useEffect(() => {
         if (!isVisible) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            // E key - Call for help
-            if (e.key.toLowerCase() === "e" && canCallHelp) {
+            if (e.key.toLowerCase() === "e" && canHelp) {
                 e.preventDefault();
                 handleCallHelp();
             }
-            // Enter key - Respawn
             if (e.key === "Enter" && canRespawn) {
                 e.preventDefault();
                 handleRespawn();
             }
-            // F5 key - Sync position
-            if (e.key === "F5") {
+            if (e.key === "F5" && canSync) {
                 e.preventDefault();
                 handleSyncPosition();
             }
@@ -107,7 +106,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isVisible, canCallHelp, canRespawn]);
+    }, [isVisible, canHelp, canRespawn, canSync, handleCallHelp, handleRespawn, handleSyncPosition]);
 
     return (
         <AnimatePresence>
@@ -411,17 +410,17 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                 {/* Call Help Button */}
                                 <motion.button
                                     onClick={handleCallHelp}
-                                    disabled={!canCallHelp}
-                                    whileHover={canCallHelp ? { scale: 1.03 } : {}}
-                                    whileTap={canCallHelp ? { scale: 0.97 } : {}}
+                                    disabled={!canHelp}
+                                    whileHover={canHelp ? { scale: 1.03 } : {}}
+                                    whileTap={canHelp ? { scale: 0.97 } : {}}
                                     className={cn(
                                         "relative flex items-center gap-2 px-4 py-2.5 transition-all overflow-hidden clip-corner",
-                                        canCallHelp
+                                        canHelp
                                             ? "text-primary cursor-pointer"
-                                            : "text-muted-foreground cursor-not-allowed opacity-40"
+                                            : "text-muted-foreground cursor-not-allowed opacity-40",
                                     )}
                                     style={{
-                                        background: canCallHelp
+                                        background: canHelp
                                             ? "linear-gradient(135deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.08) 100%)"
                                             : "hsl(var(--muted) / 0.1)",
                                         clipPath:
@@ -430,7 +429,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                     <div
                                         className="absolute inset-0 pointer-events-none"
                                         style={{
-                                            background: canCallHelp
+                                            background: canHelp
                                                 ? "linear-gradient(135deg, hsl(var(--primary) / 0.6) 0%, hsl(var(--primary) / 0.2) 100%)"
                                                 : "hsl(var(--muted) / 0.3)",
                                             clipPath:
@@ -442,7 +441,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                             padding: "1px",
                                         }}
                                     />
-                                    {canCallHelp && (
+                                    {canHelp && (
                                         <motion.div
                                             className="absolute inset-0 pointer-events-none"
                                             animate={{ opacity: [0.3, 0.6, 0.3] }}
@@ -464,8 +463,12 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                             {t.death.helpButton}
                                         </div>
                                     </div>
-                                    <span className="relative z-10 ml-1 px-2 py-1 bg-background/40 rounded text-[10px] font-bold tracking-wider border border-primary/30">
-                                        E
+                                    <span
+                                        className={cn(
+                                            "relative z-10 ml-1 px-2 py-1 bg-background/40 rounded text-[10px] font-bold tracking-wider border tabular-nums min-w-[28px] text-center",
+                                            helpCooldown > 0 ? "border-warning/50 text-warning" : "border-primary/30",
+                                        )}>
+                                        {helpCooldown > 0 ? helpCooldown : "E"}
                                     </span>
                                 </motion.button>
 
@@ -479,7 +482,7 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                         "relative flex items-center gap-2 px-4 py-2.5 transition-all overflow-hidden",
                                         canRespawn
                                             ? "text-foreground cursor-pointer"
-                                            : "text-muted-foreground cursor-not-allowed opacity-40"
+                                            : "text-muted-foreground cursor-not-allowed opacity-40",
                                     )}
                                     style={{
                                         background: canRespawn
@@ -525,8 +528,12 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                             {t.death.respawnButton}
                                         </div>
                                     </div>
-                                    <span className="relative z-10 ml-1 px-2 py-1 bg-background/40 rounded text-[10px] font-bold tracking-wider border border-foreground/20">
-                                        ↵
+                                    <span
+                                        className={cn(
+                                            "relative z-10 ml-1 px-2 py-1 bg-background/40 rounded text-[10px] font-bold tracking-wider border tabular-nums min-w-[28px] text-center",
+                                            !canRespawn ? "border-warning/50 text-warning" : "border-foreground/20",
+                                        )}>
+                                        {!canRespawn ? respawnTimer : "↵"}
                                     </span>
                                 </motion.button>
                             </div>
@@ -534,9 +541,15 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                             {/* Sync Position Button */}
                             <motion.button
                                 onClick={handleSyncPosition}
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.97 }}
-                                className="relative flex items-center gap-2 px-3 py-2 text-muted-foreground transition-all overflow-hidden hover:text-foreground"
+                                disabled={!canSync}
+                                whileHover={canSync ? { scale: 1.03 } : {}}
+                                whileTap={canSync ? { scale: 0.97 } : {}}
+                                className={cn(
+                                    "relative flex items-center gap-2 px-3 py-2 transition-all overflow-hidden",
+                                    canSync
+                                        ? "text-muted-foreground hover:text-foreground cursor-pointer"
+                                        : "text-muted-foreground cursor-not-allowed opacity-40",
+                                )}
                                 style={{
                                     background:
                                         "linear-gradient(135deg, hsl(var(--muted) / 0.15) 0%, hsl(var(--muted) / 0.05) 100%)",
@@ -565,8 +578,12 @@ export const FullscreenDeathScreen = ({ death, visible }: FullscreenDeathScreenP
                                     style={{ fontFamily: "Orbitron, sans-serif" }}>
                                     {t.death.syncButton}
                                 </span>
-                                <span className="relative z-10 px-1.5 py-0.5 bg-background/40 rounded text-[9px] font-bold border border-muted/30">
-                                    F5
+                                <span
+                                    className={cn(
+                                        "relative z-10 px-1.5 py-0.5 bg-background/40 rounded text-[9px] font-bold border tabular-nums min-w-[24px] text-center",
+                                        syncCooldown > 0 ? "border-warning/50 text-warning" : "border-muted/30",
+                                    )}>
+                                    {syncCooldown > 0 ? syncCooldown : "F5"}
                                 </span>
                             </motion.button>
                         </motion.div>

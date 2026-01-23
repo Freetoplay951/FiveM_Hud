@@ -19,6 +19,7 @@ shared_scripts {
 
 client_scripts {
     'client/main.lua',
+    'client/voice.lua',
     'client/vehicle.lua',
     'client/status.lua',
     'client/notifications.lua',

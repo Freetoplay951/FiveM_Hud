@@ -1,5 +1,8 @@
 Config = {}
 
+-- Server Info
+Config.ServerName = "IronSystems"
+
 -- HUD Update Intervalle (in ms)
 Config.StatusUpdateInterval = 500      -- Wie oft Status-Werte aktualisiert werden
 Config.VehicleUpdateInterval = 100     -- Wie oft Fahrzeug-Daten aktualisiert werden
@@ -44,26 +47,31 @@ Config.VoiceResource = 'auto'
 -- ============================================================================
 
 Config.VoiceRanges = {
-    -- Standard Ranges (pma-voice, mumble-voip)
-    whisper = { bars = 1, color = "muted-foreground", label = "Flüstern" },
-    normal = { bars = 2, color = "warning", label = "Normal" },
-    shout = { bars = 3, color = "critical", label = "Schreien" },
-    
-    -- SaltyChat Ranges (numerische Werte werden als String gesendet)
-    ["1"] = { bars = 1, color = "muted-foreground", label = "Flüstern" },
-    ["2"] = { bars = 2, color = "warning", label = "Normal" },
-    ["3"] = { bars = 3, color = "critical", label = "Schreien" },
-    
-    -- SaltyChat Range-Namen (falls andere Bezeichnungen verwendet werden)
-    whisper_range = { bars = 1, color = "muted-foreground", label = "Flüstern" },
-    normal_range = { bars = 2, color = "warning", label = "Normal" },
-    shouting = { bars = 3, color = "critical", label = "Schreien" },
-    megaphone = { bars = 3, color = "primary", label = "Megafon" },
-    
-    -- TokoVOIP Ranges
-    short = { bars = 1, color = "muted-foreground", label = "Kurz" },
-    medium = { bars = 2, color = "warning", label = "Mittel" },
-    long = { bars = 3, color = "critical", label = "Weit" },
+    default = {
+        whisper = { bars = 1, color = "muted-foreground", label = "Flüstern" },
+        normal = { bars = 2, color = "warning", label = "Normal" },
+        shout = { bars = 3, color = "critical", label = "Schreien" },
+    },
+    salty = {
+        ["1"] = { bars = 1, color = "muted-foreground", label = "Flüstern" },
+        ["2"] = { bars = 2, color = "warning", label = "Normal" },
+        ["3"] = { bars = 3, color = "critical", label = "Schreien" },
+        
+        whisper_range = { bars = 1, color = "muted-foreground", label = "Flüstern" },
+        normal_range = { bars = 2, color = "warning", label = "Normal" },
+        shouting = { bars = 3, color = "critical", label = "Schreien" },
+        megaphone = { bars = 3, color = "primary", label = "Megafon" },
+    },
+    toko = {
+        short = { bars = 1, color = "muted-foreground", label = "Kurz" },
+        medium = { bars = 2, color = "warning", label = "Mittel" },
+        long = { bars = 3, color = "critical", label = "Weit" },
+    },
+    yaca = {
+        [1] = { bars = 1, color = "muted-foreground", label = "Flüstern" },
+        [2] = { bars = 2, color = "warning", label = "Normal" },
+        [3] = { bars = 3, color = "critical", label = "Schreien" },
+    },
 }
 
 -- Geld (für esx/qb)
