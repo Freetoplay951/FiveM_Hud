@@ -33,7 +33,6 @@ interface BrandingConfig {
         showUnderline: boolean;
         showParticles: boolean;
         showGlitchEffect: boolean;
-        showScanlines: boolean;
         particleCount: number;
     };
     decorations: {
@@ -430,17 +429,6 @@ export const BrandingWidget = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 1 }}
                     className="relative flex flex-col items-center">
-                    {/* Scanlines */}
-                    {style?.showScanlines && (
-                        <div
-                            className="absolute inset-0 opacity-10 pointer-events-none"
-                            style={{
-                                background:
-                                    "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 4px)",
-                            }}
-                        />
-                    )}
-
                     {/* Text with inline decorations */}
                     <div className="relative flex gap-4 items-center">
                         {renderLeftDecoration()}
@@ -497,6 +485,23 @@ export const BrandingWidget = () => {
                                 />
                             );
                         })}
+
+                    {/* Holographic shimmer effect */}
+                    {/* <motion.div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            background:
+                                "linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 30%, transparent 35%)",
+                        }}
+                        initial={{ x: "-150%", skewX: -25 }}
+                        animate={{ x: "150%", skewX: 25 }}
+                        transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 3,
+                            ease: "easeInOut",
+                        }}
+                    /> */}
                 </motion.div>
             </div>
         </AnimatePresence>

@@ -10,8 +10,8 @@
             },
             "sequentialLetters": true
         },
-        { 
-            "text": "RP", 
+        {
+            "text": "RP",
             "color": "0 100% 50%",
             "pulseScale": true
         }
@@ -22,7 +22,6 @@
         "showUnderline": true,
         "showParticles": true,
         "showGlitchEffect": true,
-        "showScanlines": false,
         "particleCount": 6
     },
     "decorations": {

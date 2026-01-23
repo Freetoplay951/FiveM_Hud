@@ -28,7 +28,6 @@ Die Datei `public/branding.json` ermöglicht die vollständige Anpassung des Bra
         "showUnderline": true,
         "showParticles": true,
         "showGlitchEffect": true,
-        "showScanlines": false,
         "particleCount": 6
     },
     "decorations": {
@@ -71,7 +70,6 @@ Die Datei `public/branding.json` ermöglicht die vollständige Anpassung des Bra
 - showUnderline: true / false
 - showParticles: true / false
 - showGlitchEffect: true / false
-- showScanlines: true / false
 - particleCount: 1--12 empfohlen
 
 ---
