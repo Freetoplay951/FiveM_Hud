@@ -110,6 +110,7 @@
     "demo": {
         "title": "Demo Modus",
         "teamChatAccess": "Team-Chat",
+        "commandOnly": "Nur Chat-Commands",
         "adminRights": "Admin",
         "teamChatVisibility": "Sichtbarkeit",
         "hidden": "Versteckt",

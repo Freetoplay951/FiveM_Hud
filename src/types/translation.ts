@@ -129,6 +129,7 @@ export interface Translations {
     demo: {
         title: string;
         teamChatAccess: string;
+        commandOnly: string;
         adminRights: string;
         teamChatVisibility: string;
         hidden: string;

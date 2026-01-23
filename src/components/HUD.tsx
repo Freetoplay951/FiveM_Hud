@@ -370,6 +370,14 @@ export const HUD = () => {
                             </div>
                             <div className="flex flex-wrap items-center gap-3 border-t border-destructive-foreground/20 pt-2">
                                 <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">{t.demo.commandOnly}</span>
+                                    <Switch
+                                        checked={chatCommandOnly}
+                                        onCheckedChange={handleChatCommandOnlyChange}
+                                        className="data-[state=checked]:bg-warning data-[state=unchecked]:bg-muted/50"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <span className="text-xs text-destructive-foreground/80">
                                         {t.demo.teamChatAccess}
                                     </span>
@@ -385,14 +393,6 @@ export const HUD = () => {
                                         checked={teamChatIsAdmin}
                                         onCheckedChange={handleTeamChatAdminChange}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-destructive-foreground/80">Chat Cmd Only</span>
-                                    <Switch
-                                        checked={chatCommandOnly}
-                                        onCheckedChange={handleChatCommandOnlyChange}
-                                        className="data-[state=checked]:bg-warning data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>
                             </div>
