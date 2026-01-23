@@ -194,35 +194,32 @@ LandingGearState = {
 -- HELPER FUNCTIONS
 -- ============================================================================
 
+local function IsEnumValue(enumTable, value)
+    for _, v in pairs(enumTable) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
 --- Validiert ob ein Wert ein gültiger VehicleHealthStatus ist
 --- @param value string Der zu prüfende Wert
 --- @return boolean isValid Ob der Wert gültig ist
 function IsValidHealthStatus(value)
-    return value == VehicleHealthStatus.GOOD 
-        or value == VehicleHealthStatus.WARNING 
-        or value == VehicleHealthStatus.CRITICAL
+    return IsEnumValue(VehicleHealthStatus, value)
 end
 
 --- Validiert ob ein Wert ein gültiger NotificationType ist
 --- @param value string Der zu prüfende Wert
 --- @return boolean isValid Ob der Wert gültig ist
 function IsValidNotificationType(value)
-    for _, v in pairs(NotificationType) do
-        if v == value then
-            return true
-        end
-    end
-    return false
+    return IsEnumValue(NotificationType, value)
 end
 
 --- Validiert ob ein Wert ein gültiger VoiceRange ist
 --- @param value string Der zu prüfende Wert
 --- @return boolean isValid Ob der Wert gültig ist
 function IsValidVoiceRange(value)
-    for _, v in pairs(VoiceRange) do
-        if v == value then
-            return true
-        end
-    end
-    return false
+    return IsEnumValue(VoiceRange, value)
 end
