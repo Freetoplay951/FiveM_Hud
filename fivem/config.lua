@@ -174,13 +174,21 @@ Config.BodyHealth = {
     --
     -- Hinweis: Clientseitige Funktion
     -- =====================================================================
-    calc = function(engineHealth, bodyHealth, vehicleType)
+    calc = function(vehicle, vehicleType)
+        if not IsVehicleDriveable(vehicle, false) then
+            return VehicleHealthStatus.CRITICAL
+        end
+        
+        local engineHealth = math.max(0, math.floor(GetVehicleEngineHealth(vehicle) / 10))
+        local bodyHealth = math.max(0, math.floor(GetVehicleBodyHealth(vehicle) / 10))
+        local tankHealth = math.max(0, math.floor(GetVehiclePetrolTankHealth(vehicle) / 10))
+        
         local e = tonumber(engineHealth) or 100
         local b = tonumber(bodyHealth) or 100
-
-        -- Beispiel: Flugzeuge haben strengere Schwellwerte
+        local t = tonumber(tankHealth) or 100
+        
+        local avg = (e + b + t) / 3
         if vehicleType == VehicleType.PLANE or vehicleType == VehicleType.HELICOPTER then
-            local avg = (e + b) / 2
             if avg < 50 then
                 return VehicleHealthStatus.CRITICAL
             elseif avg < 80 then
@@ -190,8 +198,6 @@ Config.BodyHealth = {
             end
         end
 
-        -- Standard für andere Fahrzeuge
-        local avg = (e + b) / 2
         if avg < 40 then
             return VehicleHealthStatus.CRITICAL
         elseif avg < 70 then

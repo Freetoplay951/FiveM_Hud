@@ -193,36 +193,42 @@ local function GetVehicleData(vehicle, vehicleType)
         heading = GetEntityHeading(vehicle)
     }
 
-    local function CalcHealthStatus(engineHealth, bodyHealth, vehType)
+    local function CalcHealthStatus(vehicle, vehicleType)
         local fn = Config and Config.BodyHealth and Config.BodyHealth.calc
         if type(fn) == 'function' then
-            local ok, result = pcall(fn, engineHealth, bodyHealth, vehType)
+            local ok, result = pcall(fn, vehicle, vehicleType)
             if not ok then
-                print(('[BodyHealth] ERROR in custom calc(): %s | engine=%s body=%s type=%s'):format(result, tostring(engineHealth), tostring(bodyHealth), tostring(vehType)))
+                print(('[BodyHealth] ERROR in custom calc(): %s | vehicle=%s type=%s'):format(result, tostring(vehicle), tostring(vehicleType)))
             elseif IsValidHealthStatus(result) then
                 return result
             else
-                print(('[BodyHealth] WARNING: Invalid return value from calc(): %s | engine=%s body=%s type=%s'):format(tostring(result), tostring(engineHealth), tostring(bodyHealth), tostring(vehType)))
+                print(('[BodyHealth] WARNING: Invalid return value from calc(): %s | vehicle=%s type=%s'):format(tostring(result), tostring(vehicle), tostring(vehicleType)))
             end
         else
             print('[BodyHealth] INFO: No valid custom calc() function found, using fallback.')
         end
-
-        -- Fallback
+        
+        local engineHealth = math.max(0, math.floor(GetVehicleEngineHealth(vehicle) / 10))
+        local bodyHealth = math.max(0, math.floor(GetVehicleBodyHealth(vehicle) / 10))
+        local tankHealth = math.max(0, math.floor(GetVehiclePetrolTankHealth(vehicle) / 10))
+        
         local e = tonumber(engineHealth) or 100
         local b = tonumber(bodyHealth) or 100
-        local avg = (e + b) / 2
+        local t = tonumber(tankHealth) or 100
+        
+        print(('[BodyHealth] Using fallback | engine=%s body=%s tank=%s avg=%.1f'):format(e, b, t, avg))
 
-        print(('[BodyHealth] Fallback used | engine=%s body=%s avg=%.1f'):format(e, b, avg))
-
-        if avg < 40 then return VehicleHealthStatus.CRITICAL end
-        if avg < 70 then return VehicleHealthStatus.WARNING end
-        return VehicleHealthStatus.GOOD
+        local avg = (e + b + t) / 3
+        if avg < 40 then
+            return VehicleHealthStatus.CRITICAL
+        elseif avg < 70 then
+            return VehicleHealthStatus.WARNING
+        else
+            return VehicleHealthStatus.GOOD
+        end
     end
 
-    local engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10)
-    local bodyHealth = math.floor(GetVehicleBodyHealth(vehicle) / 10)
-    data.healthStatus = CalcHealthStatus(engineHealth, bodyHealth, vehicleType)
+    data.healthStatus = CalcHealthStatus(vehicle, vehicleType)
     
     -- ================================================================
     -- AUTO / MOTORRAD
