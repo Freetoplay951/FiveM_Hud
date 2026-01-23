@@ -2,7 +2,7 @@
 
 ## Branding Widget Konfiguration
 
-Die Datei `public/branding.json` ermöglicht die vollständige Anpassung des Branding-Widgets im HUD.
+Die Datei `branding.json` ermöglicht die vollständige Anpassung des Branding-Widgets im HUD.
 
 ---
 

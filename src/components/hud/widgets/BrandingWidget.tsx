@@ -239,7 +239,7 @@ export const BrandingWidget = () => {
     useEffect(() => {
         const loadConfig = async () => {
             try {
-                const res = await fetch("/branding.json");
+                const res = await fetch("branding.json");
                 if (!res.ok) {
                     console.log("[BrandingWidget] branding.json not found, disabling widget");
                     markWidgetReady(WIDGET_ID); // Mark as ready even when disabled - the HUD can proceed
