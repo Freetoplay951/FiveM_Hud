@@ -227,53 +227,31 @@ const StaticSegment = ({ text, color, letterSpacing, fontSize }: StaticSegmentPr
 
 export const BrandingWidget = () => {
     const [config, setConfig] = useState<BrandingConfig | null>(null);
-    const [loadingState, setLoadingState] = useState<LoadingState>("loading");
 
     // Fetch branding config
     useEffect(() => {
-        let cancelled = false;
-
         const loadConfig = async () => {
             try {
                 const res = await fetch("/branding.json");
-
                 if (!res.ok) {
                     console.log("[BrandingWidget] branding.json not found, disabling widget");
-                    if (!cancelled) {
-                        setLoadingState("disabled");
-                    }
                     return;
                 }
 
                 const data = await res.json();
-
-                // Check if config is null or invalid
                 if (!data || !data.segments || data.segments.length === 0) {
                     console.log("[BrandingWidget] branding.json returned null or invalid config, disabling widget");
-                    if (!cancelled) {
-                        setLoadingState("disabled");
-                    }
                     return;
                 }
 
-                if (!cancelled) {
-                    setConfig(data);
-                    console.log("[BrandingWidget] Config loaded successfully");
-                    setLoadingState("ready");
-                }
+                console.log("[BrandingWidget] Config loaded successfully");
+                setConfig(data);
             } catch (error) {
                 console.log("[BrandingWidget] Failed to load branding.json, disabling widget");
-                if (!cancelled) {
-                    setLoadingState("disabled");
-                }
             }
         };
 
         loadConfig();
-
-        return () => {
-            cancelled = true;
-        };
     }, []);
 
     // Memoized values
@@ -429,19 +407,6 @@ export const BrandingWidget = () => {
             />
         );
     };
-
-    /* ────────────────────────────────────────────── */
-    /* Render                                        */
-    /* ────────────────────────────────────────────── */
-
-    // Don't render anything if disabled or still loading
-    if (loadingState === "disabled") {
-        return null;
-    }
-
-    if (loadingState === "loading") {
-        return null;
-    }
 
     return (
         <AnimatePresence>
