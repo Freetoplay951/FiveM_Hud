@@ -223,3 +223,10 @@ end
 function IsValidVoiceRange(value)
     return IsEnumValue(VoiceRange, value)
 end
+
+--- Validiert ob ein Wert ein gültiger VehicleType ist
+--- @param value string Der zu prüfende Wert
+--- @return boolean isValid Ob der Wert gültig ist
+function IsValidVehicleType(value)
+    return IsEnumValue(VehicleType, value)
+end
