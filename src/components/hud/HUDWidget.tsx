@@ -297,10 +297,10 @@ const HUDWidgetComponent = ({
 
     const isSuspended = suspended;
 
-    const isSubWidget = !(onPositionChange || onVisibilityToggle || onScaleChange || onReset);
-
     // Check if this widget is locked (not editable)
     const isLocked = isWidgetLocked(id);
+
+    const isSubWidget = !(onPositionChange || onVisibilityToggle || onScaleChange || onReset) && !isLocked;
 
     // Check if className contains a z-index class (z-50, z-40, etc.)
     const hasCustomZIndex = className?.includes("z-");
@@ -346,7 +346,7 @@ const HUDWidgetComponent = ({
             {/* Edit Mode Controls */}
             {editMode && (
                 <div className="absolute -top-7 left-0 right-0 flex items-center justify-between gap-1">
-                    {(!isSubWidget || isLocked) && (
+                    {!isSubWidget && (
                         <div className="flex items-center gap-1 bg-background/60 border border-border/30 rounded px-1 py-0.5">
                             {isLocked ? (
                                 <Lock
