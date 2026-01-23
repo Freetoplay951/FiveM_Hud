@@ -74,16 +74,6 @@ Du kannst beliebig viele Segmente hinzufügen:
 | `showScanlines`    | `boolean` | Scanlines-Overlay anzeigen    | `true` / `false`                        |
 | `particleCount`    | `number`  | Anzahl der Partikel           | `1` - `12` empfohlen                    |
 
-### Schriftgrößen
-
-| Wert  | Desktop    | Mobile     |
-| ----- | ---------- | ---------- |
-| `sm`  | `text-xl`  | `text-lg`  |
-| `md`  | `text-2xl` | `text-xl`  |
-| `lg`  | `text-3xl` | `text-2xl` |
-| `xl`  | `text-4xl` | `text-3xl` |
-| `2xl` | `text-5xl` | `text-4xl` |
-
 ---
 
 ## Decorations (Dekorationen)
