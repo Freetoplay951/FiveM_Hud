@@ -134,7 +134,6 @@ export const HUD = () => {
 
     // Ready signal
     const allDataLoaded = isVisible && isLanguageLoaded && t !== null;
-
     useEffect(() => {
         if (allDataLoaded && !hasSignaledReady) {
             requestAnimationFrame(() => {
@@ -323,7 +322,7 @@ export const HUD = () => {
                     </motion.div>
                     <PopoverTrigger asChild>
                         <button
-                            className="fixed z-50 p-2 bg-card/90 rounded-lg border border-primary/40 hover:border-primary/70 transition-colors pointer-events-auto opacity-0 pointer-events-none"
+                            className="fixed z-50 p-2 bg-card/90 rounded-lg border border-primary/40 hover:border-primary/70 transition-colors opacity-0 pointer-events-none"
                             style={{ top: "50%", right: 10, transform: "translateY(-50%)" }}
                             onPointerDown={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}>
