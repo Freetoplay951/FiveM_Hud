@@ -34,6 +34,10 @@ export interface Translations {
         commands: string;
         send: string;
         placeholder: string;
+        commandOnlyPlaceholder: string;
+        commandOnlyHint: string;
+        commandOnlyError: string;
+        navigation: string;
     };
     teamChat: {
         title: string;

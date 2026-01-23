@@ -48,13 +48,7 @@ function OpenDeathScreen()
     
     SendNUI("updateDeath", {
         isDead = true,
-        message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe",
-        config = {
-            respawnTimer = Config and Config.EarlyRespawnTimer or 60,
-            bleedoutTimer = Config and Config.BleedoutTimer or 300,
-            syncTimer = Config and Config.SyncTimer or 5,
-            helpTimer = Config and Config.HelpTimer or 5,
-        }
+        message = "Du wurdest schwer verletzt und benötigst medizinische Hilfe"
     })
     
     if Config and Config.Debug then
@@ -233,6 +227,26 @@ RegisterNetEvent('hud:revivePlayer', function(healAmount)
     RespawnPlayer({
         healAmount = healAmount
     })
+end)
+
+-- ============================================================================
+-- CONFIG SYNC (On HUD Loading - before visible)
+-- ============================================================================
+
+AddEventHandler("hud:loading", function()
+    SendNUI("updateDeath", {
+        isDead = false,
+        config = {
+            respawnTimer = Config and Config.EarlyRespawnTimer or 60,
+            bleedoutTimer = Config and Config.BleedoutTimer or 300,
+            syncTimer = Config and Config.SyncTimer or 5,
+            helpTimer = Config and Config.HelpTimer or 5,
+        }
+    })
+    
+    if Config and Config.Debug then
+        print('[HUD Death] Config sent on loading')
+    end
 end)
 
 -- ============================================================================

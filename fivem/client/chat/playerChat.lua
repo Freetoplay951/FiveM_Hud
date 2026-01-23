@@ -130,8 +130,7 @@ function OpenChat()
     SetNuiFocus(true, false)
 
     SendNUI("chatUpdate", {
-        isInputActive = true,
-        commandOnly = Config.ChatCommandOnly or false
+        isInputActive = true
     })
 end
 
@@ -209,6 +208,18 @@ end)
 -- COMMAND SYNC
 -- ============================================================================
 
+-- Config beim Loading senden (bevor HUD sichtbar wird)
+AddEventHandler("hud:loading", function()
+    SendNUI("chatUpdate", {
+        commandOnly = Config.ChatCommandOnly or false
+    })
+    
+    if Config.Debug then
+        print('[HUD Chat] Sent commandOnly config: ' .. tostring(Config.ChatCommandOnly or false))
+    end
+end)
+
+-- Commands beim Loaded senden (nachdem HUD sichtbar ist)
 AddEventHandler("hud:loaded", function()
     if Config.Debug then
         print('[HUD Chat] Loading commands')

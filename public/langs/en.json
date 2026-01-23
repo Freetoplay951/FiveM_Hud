@@ -14,7 +14,11 @@
         "title": "Chat",
         "commands": "Commands",
         "send": "Send",
-        "placeholder": "Enter message..."
+        "placeholder": "Enter message...",
+        "commandOnlyPlaceholder": "Enter command... (e.g. /help)",
+        "commandOnlyHint": "Commands only",
+        "commandOnlyError": "Chat is only available for commands",
+        "navigation": "↑↓ navigate • Tab/Enter select • Esc close"
     },
     "teamChat": {
         "title": "Team Chat",

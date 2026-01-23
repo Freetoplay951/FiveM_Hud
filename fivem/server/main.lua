@@ -43,6 +43,13 @@ local function GetPlayerDisplayName(source)
 end
 
 RegisterNetEvent('hud:sendChatMessage', function(message)
+    if Config and Config.ChatCommandOnly then
+        if Config.Debug then
+            print('[HUD Chat] Blocked message (CommandOnly mode): ' .. tostring(message))
+        end
+        return
+    end
+    
     local playerName = GetPlayerDisplayName(source)
     local senderId = tonumber(source)
 

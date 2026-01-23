@@ -8,6 +8,8 @@ import { isNuiEnvironment } from "@/lib/nuiUtils";
 import { useChatHistory } from "@/hooks/useChatHistory";
 import { useChatStore, useChatData, useChatCommands, ChatCommand } from "@/stores/chatStore";
 import { useIsDemoMode } from "@/stores/hudStore";
+import { useTranslation } from "@/contexts/LanguageContext";
+import { useNotificationStore } from "@/stores/notificationStore";
 
 const DEMO_COMMANDS: ChatCommand[] = [
     { command: "/me", description: "Aktion ausführen" },
@@ -30,11 +32,14 @@ interface ChatWidgetProps {
 
 export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps) => {
     // Zustand store access
+    const { t } = useTranslation();
+
     const chat = useChatData();
     const isDemoMode = useIsDemoMode();
+    const nuiCommands = useChatCommands();
     const setChatInputActive = useChatStore((s) => s.setChatInputActive);
     const addChatMessage = useChatStore((s) => s.addChatMessage);
-    const nuiCommands = useChatCommands();
+    const showWarning = useNotificationStore((s) => s.warning);
 
     const [inputValue, setInputValue] = useState(chat.commandOnly ? "/" : "");
     const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
@@ -195,9 +200,20 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
         if (!inputValue.trim()) return;
 
         const msg = inputValue.trim();
+
+        // Command-Only: Block non-command messages
+        if (chat.commandOnly && !msg.startsWith("/")) {
+            return;
+        }
+
         addToHistory(msg);
 
         if (isDemoMode) {
+            // In Demo-Mode with Command-Only, only allow commands
+            if (chat.commandOnly && !msg.startsWith("/")) {
+                return;
+            }
+
             addChatMessage({
                 id: Date.now().toString(),
                 type: "normal",
@@ -210,7 +226,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
             sendNuiCallback("sendChatMessage", { message: msg });
         }
 
-        setInputValue("");
+        setInputValue(chat.commandOnly ? "/" : "");
         setShowCommandSuggestions(false);
 
         const isValidCommand =
@@ -220,7 +236,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
         if (isValidCommand) {
             setChatInputActive(false);
         }
-    }, [inputValue, addToHistory, isDemoMode, addChatMessage, setChatInputActive, availableCommands]);
+    }, [inputValue, addToHistory, isDemoMode, addChatMessage, setChatInputActive, availableCommands, chat.commandOnly]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
@@ -362,7 +378,20 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                             size={14}
                             className="text-primary"
                         />
-                        <span className="text-xs font-medium text-foreground uppercase tracking-wider">Chat</span>
+                        <span className="text-xs font-medium text-foreground uppercase tracking-wider">
+                            {t.chat.title}
+                        </span>
+                        {/* Command-Only Indicator */}
+                        {chat.commandOnly && (
+                            <div
+                                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-warning/20 border border-warning/30"
+                                title={t.chat.commandOnlyHint}>
+                                <Terminal
+                                    size={10}
+                                    className="text-warning"
+                                />
+                            </div>
+                        )}
                         {chat.unreadCount > 0 && (
                             <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/20 text-primary">
                                 {chat.unreadCount}
@@ -476,7 +505,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                         </div>
                                         <div className="px-2 py-1 border-t border-border/30 bg-background/30">
                                             <span className="text-[9px] text-muted-foreground">
-                                                ↑↓ navigieren • Tab/Enter auswählen • Esc schließen
+                                                {t.chat.navigation}
                                             </span>
                                         </div>
                                     </div>
@@ -487,8 +516,11 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                         {/* Command-Only Hint */}
                         {chat.commandOnly && (
                             <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded bg-warning/10 border border-warning/20">
-                                <Terminal size={10} className="text-warning shrink-0" />
-                                <span className="text-[10px] text-warning">Nur Commands erlaubt</span>
+                                <Terminal
+                                    size={10}
+                                    className="text-warning shrink-0"
+                                />
+                                <span className="text-[10px] text-warning">{t.chat.commandOnlyHint}</span>
                             </div>
                         )}
 
@@ -501,9 +533,18 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                 }}
                                 type="text"
                                 value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
+                                onChange={(e) => {
+                                    const newValue = e.target.value;
+                                    // Im Command-Only Modus "/" nicht entfernbar
+                                    if (chat.commandOnly && !newValue.startsWith("/")) {
+                                        setInputValue("/" + newValue.replace(/^\/+/, ""));
+                                        showWarning(t.chat.commandOnlyHint, t.chat.commandOnlyError, 3000);
+                                        return;
+                                    }
+                                    setInputValue(newValue);
+                                }}
                                 onKeyDown={handleKeyDown}
-                                placeholder={chat.commandOnly ? "Command eingeben... (z.B. /help)" : "Nachricht eingeben... (/ für Commands)"}
+                                placeholder={chat.commandOnly ? t.chat.commandOnlyPlaceholder : t.chat.placeholder}
                                 className="flex-1 bg-background/30 border border-border/30 rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
                             />
                             <button
