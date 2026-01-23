@@ -195,9 +195,6 @@ local function GetVehicleData(vehicle, vehicleType)
         heading = GetEntityHeading(vehicle)
     }
 
-    -- ================================================================
-    -- BODY / ENGINE HEALTH STATUS (Lua configurable)
-    -- ================================================================
     local function CalcHealthStatus(engineHealth, bodyHealth)
         local fn = Config and Config.BodyHealth and Config.BodyHealth.calc
         if type(fn) == 'function' then
@@ -213,7 +210,7 @@ local function GetVehicleData(vehicle, vehicleType)
             print('[BodyHealth] INFO: No valid custom calc() function found, using fallback.')
         end
 
-        -- Fallback (safe default)
+        -- Fallback
         local e = tonumber(engineHealth) or 100
         local b = tonumber(bodyHealth) or 100
         local avg = (e + b) / 2
