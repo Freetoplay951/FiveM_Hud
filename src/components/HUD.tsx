@@ -63,6 +63,7 @@ export const HUD = () => {
         statusDesign,
         speedometerType,
         minimapShape,
+        brandingPosition,
         simpleMode,
         widgetsDistributed,
         autoLayoutHiddenIds,
@@ -71,6 +72,7 @@ export const HUD = () => {
         setStatusDesign,
         setSpeedometerType,
         setMinimapShape,
+        setBrandingPosition,
         setSimpleMode,
         updateWidgetPosition,
         updateWidgetScale,
@@ -338,11 +340,13 @@ export const HUD = () => {
                         statusDesign={statusDesign}
                         speedometerType={speedometerType}
                         minimapShape={minimapShape}
+                        brandingPosition={brandingPosition}
                         simpleMode={simpleMode}
                         onSnapToGridChange={setSnapToGrid}
                         onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled)}
                         onSpeedometerTypeChange={setSpeedometerType}
                         onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled)}
+                        onBrandingPositionChange={(pos) => setBrandingPosition(pos, isWidgetDisabled)}
                         onSimpleModeChange={handleSimpleModeChange}
                         onReset={() => resetLayout(false, isWidgetDisabled, hasSignaledReady)}
                         onExitEditMode={exitEditMode}

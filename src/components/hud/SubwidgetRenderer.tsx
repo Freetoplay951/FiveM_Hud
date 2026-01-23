@@ -39,6 +39,7 @@ import { BicycleBaseWidget, BicycleWarningWidget } from "./widgets/vehicles/bicy
 // Import stores - widgets subscribe to their own data
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useIsDead } from "@/stores/deathStore";
+import { DEFAULT_LAYOUT_SETTINGS } from "@/lib/widgetConfig";
 
 export interface SubwidgetRendererProps {
     editMode: boolean;
@@ -185,7 +186,7 @@ const createVehicleSubwidgetRenderer = (
                         { x: number; y: number; width: number; height: number; right: number; bottom: number }
                     >();
 
-                    const resolver = {
+                    const resolver: import("@/lib/widgetPositionResolver").PositionResolver = {
                         getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
                         getWidgetCurrentRect: (id: string) => {
                             const el = document.getElementById(`hud-widget-${id}`);
@@ -208,6 +209,7 @@ const createVehicleSubwidgetRenderer = (
                         screen: { width: window.innerWidth, height: window.innerHeight },
                         isWidgetDisabled: () => false,
                         hasSignaledReady: true,
+                        layout: DEFAULT_LAYOUT_SETTINGS,
                     };
 
                     subConfigs.forEach((config) => {

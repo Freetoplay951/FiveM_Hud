@@ -59,11 +59,16 @@
         "statusDesign": "Status Design",
         "minimapShape": "Minimap Form",
         "speedometerType": "Tacho Typ",
+        "brandingPosition": "Branding Position",
         "simpleMode": "Simple Mode",
         "options": "Optionen",
         "snapToGrid": "Am Raster ausrichten",
         "exitEdit": "Bearbeitung beenden",
         "resetLayout": "Layout zurücksetzen"
+    },
+    "brandingPositions": {
+        "center": "Mittig",
+        "right": "Rechts"
     },
     "statusDesigns": {
         "circular": "Kreis",

@@ -7,13 +7,12 @@ import {
     StatusDesign,
     SpeedometerType,
     MinimapShape,
+    BrandingPosition,
     getDefaultWidgets,
     WidgetConfig,
 } from "@/types/widget";
 import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
-
-// Base tolerance for position comparison (added to gridSize)
-const POSITION_TOLERANCE_BASE = 5;
+import { DEFAULT_LAYOUT_SETTINGS, POSITION_TOLERANCE_BASE } from "@/lib/widgetConfig";
 
 /**
  * Programmatically extract widget dependencies by analyzing position functions.
@@ -46,6 +45,7 @@ const extractWidgetDependencies = (widgetConfigs: WidgetConfig[]): Record<string
             screen: { width: 1920, height: 1080 },
             isWidgetDisabled: () => false,
             hasSignaledReady: false,
+            layout: DEFAULT_LAYOUT_SETTINGS,
         };
 
         // Create a mock element with all properties that position functions might access
@@ -167,11 +167,10 @@ const getDefaultState = (): HUDLayoutState => ({
     editMode: false,
     snapToGrid: true,
     gridSize: 10,
-    statusDesign: "circular",
     speedometerType: "car",
-    minimapShape: "square",
     widgetsDistributed: false,
     simpleMode: true,
+    ...DEFAULT_LAYOUT_SETTINGS,
 });
 
 const STORAGE_KEY = "hud-layout";
@@ -206,6 +205,7 @@ const normalizeState = (raw: Partial<HUDLayoutState>): HUDLayoutState => {
 
     next.widgets = clampAllWidgets(mergedWidgets);
     next.minimapShape = next.minimapShape ?? "square";
+    next.brandingPosition = next.brandingPosition ?? "center";
     next.widgetsDistributed = next.widgetsDistributed ?? false;
 
     return next;
@@ -241,19 +241,25 @@ export const useHUDLayout = () => {
 
     // Distribute widgets using the resolver - computes all default positions in order
     const distributeWidgets = useCallback((isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
-        const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
+        setState((prev) => {
+            const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady, {
+                brandingPosition: prev.brandingPosition,
+                minimapShape: prev.minimapShape,
+                statusDesign: prev.statusDesign,
+            });
 
-        setState((prev) => ({
-            ...prev,
-            widgets: prev.widgets.map((w) => {
-                const rect = resolvedRects.get(w.id);
-                return {
-                    ...w,
-                    position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
-                };
-            }),
-            widgetsDistributed: true,
-        }));
+            return {
+                ...prev,
+                widgets: prev.widgets.map((w) => {
+                    const rect = resolvedRects.get(w.id);
+                    return {
+                        ...w,
+                        position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
+                    };
+                }),
+                widgetsDistributed: true,
+            };
+        });
     }, []);
 
     const toggleEditMode = useCallback(() => {
@@ -300,9 +306,14 @@ export const useHUDLayout = () => {
                 defaultWidgetConfigs,
                 isWidgetDisabled,
                 hasSignaledReady,
+                {
+                    brandingPosition: state.brandingPosition,
+                    minimapShape: state.minimapShape,
+                    statusDesign: state.statusDesign,
+                },
             );
         },
-        [],
+        [state.brandingPosition, state.minimapShape, state.statusDesign],
     );
 
     /**
@@ -318,28 +329,40 @@ export const useHUDLayout = () => {
             // Wait for DOM to update with new sizes, then compute new defaults
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    const newRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
+                    setState((prev) => {
+                        // Use prev state to get correct layout settings
+                        const newRects = resolveDefaultPositions(
+                            defaultWidgetConfigs,
+                            isWidgetDisabled,
+                            hasSignaledReady,
+                            {
+                                brandingPosition: prev.brandingPosition,
+                                minimapShape: prev.minimapShape,
+                                statusDesign: prev.statusDesign,
+                            },
+                        );
 
-                    setState((prev) => ({
-                        ...prev,
-                        widgets: prev.widgets.map((w) => {
-                            if (!affectedWidgetIds.includes(w.id)) return w;
+                        return {
+                            ...prev,
+                            widgets: prev.widgets.map((w) => {
+                                if (!affectedWidgetIds.includes(w.id)) return w;
 
-                            const oldRect = oldRects.get(w.id);
-                            const newRect = newRects.get(w.id);
-                            if (!oldRect || !newRect) return w;
+                                const oldRect = oldRects.get(w.id);
+                                const newRect = newRects.get(w.id);
+                                if (!oldRect || !newRect) return w;
 
-                            // Only move if it was at the old default position
-                            if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, prev.gridSize)) {
-                                return {
-                                    ...w,
-                                    position: clampPosition({ x: newRect.x, y: newRect.y }),
-                                };
-                            }
+                                // Only move if it was at the old default position
+                                if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, prev.gridSize)) {
+                                    return {
+                                        ...w,
+                                        position: clampPosition({ x: newRect.x, y: newRect.y }),
+                                    };
+                                }
 
-                            return w;
-                        }),
-                    }));
+                                return w;
+                            }),
+                        };
+                    });
 
                     // Unhide after positions have been updated
                     setAutoLayoutHiddenIds([]);
@@ -365,7 +388,7 @@ export const useHUDLayout = () => {
                 })
                 .map((w) => w.id);
         },
-        [state.widgets, isPositionClose],
+        [state.widgets, state.gridSize, isPositionClose],
     );
 
     const startAutoRelayout = useCallback(
@@ -414,6 +437,20 @@ export const useHUDLayout = () => {
         [runAutoRelayout, startAutoRelayout],
     );
 
+    const setBrandingPosition = useCallback(
+        (position: BrandingPosition, isWidgetDisabled?: (id: string) => boolean) => {
+            const affected = startAutoRelayout(
+                [...(WIDGET_DEPENDENCIES["branding"] || []), "branding"],
+                isWidgetDisabled,
+            );
+
+            setState((prev) => ({ ...prev, brandingPosition: position }));
+
+            runAutoRelayout(affected, isWidgetDisabled);
+        },
+        [runAutoRelayout, startAutoRelayout],
+    );
+
     const resetLayout = useCallback(
         (force: boolean, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
             const defaultState = getDefaultState();
@@ -422,14 +459,20 @@ export const useHUDLayout = () => {
                 setSpeedometerType(defaultState.speedometerType);
                 setMinimapShape(defaultState.minimapShape);
                 setStatusDesign(defaultState.statusDesign);
+                setBrandingPosition(defaultState.brandingPosition);
             } else {
                 defaultState.speedometerType = state.speedometerType ?? defaultState.speedometerType;
                 defaultState.minimapShape = state.minimapShape ?? defaultState.minimapShape;
                 defaultState.statusDesign = state.statusDesign ?? defaultState.statusDesign;
+                defaultState.brandingPosition = state.brandingPosition ?? defaultState.brandingPosition;
             }
 
             requestAnimationFrame(() => {
-                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, false);
+                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, false, {
+                    brandingPosition: defaultState.brandingPosition,
+                    minimapShape: defaultState.minimapShape,
+                    statusDesign: defaultState.statusDesign,
+                });
 
                 const resetWidgets = defaultWidgetConfigs.map((w) => {
                     const rect = resolvedRects.get(w.id);
@@ -451,7 +494,7 @@ export const useHUDLayout = () => {
                 }));
             });
         },
-        [setMinimapShape, setStatusDesign, setSpeedometerType, state],
+        [setBrandingPosition, setMinimapShape, setStatusDesign, setSpeedometerType, state],
     );
 
     const resetWidget = useCallback(
@@ -459,22 +502,33 @@ export const useHUDLayout = () => {
             const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
             if (!defaultWidget) return;
 
-            const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady);
-            const rect = resolvedRects.get(id);
+            setState((prev) => {
+                const resolvedRects = resolveDefaultPositions(
+                    defaultWidgetConfigs,
+                    isWidgetDisabled,
+                    hasSignaledReady,
+                    {
+                        brandingPosition: prev.brandingPosition,
+                        minimapShape: prev.minimapShape,
+                        statusDesign: prev.statusDesign,
+                    },
+                );
+                const rect = resolvedRects.get(id);
 
-            setState((prev) => ({
-                ...prev,
-                widgets: prev.widgets.map((w) =>
-                    w.id === id
-                        ? {
-                              ...w,
-                              position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
-                              scale: defaultWidget.scale ?? 1,
-                              visible: defaultWidget.visible,
-                          }
-                        : w,
-                ),
-            }));
+                return {
+                    ...prev,
+                    widgets: prev.widgets.map((w) =>
+                        w.id === id
+                            ? {
+                                  ...w,
+                                  position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
+                                  scale: defaultWidget.scale ?? 1,
+                                  visible: defaultWidget.visible,
+                              }
+                            : w,
+                    ),
+                };
+            });
         },
         [],
     );
@@ -498,6 +552,11 @@ export const useHUDLayout = () => {
                     widgetConfigsWithCurrentScales,
                     isWidgetDisabled,
                     hasSignaledReady,
+                    {
+                        brandingPosition: prev.brandingPosition,
+                        minimapShape: prev.minimapShape,
+                        statusDesign: prev.statusDesign,
+                    },
                 );
 
                 const rect = resolvedRects.get(id);
@@ -541,6 +600,7 @@ export const useHUDLayout = () => {
         setStatusDesign,
         setSpeedometerType,
         setMinimapShape,
+        setBrandingPosition,
         setSimpleMode,
         resetLayout,
         resetWidget,

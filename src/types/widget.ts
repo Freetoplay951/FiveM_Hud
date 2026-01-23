@@ -8,7 +8,7 @@ export interface WidgetPosition {
 export type WidgetPositionFunction = (
     id: string,
     widgetElement: HTMLElement | null,
-    resolver: PositionResolver
+    resolver: PositionResolver,
 ) => WidgetPosition;
 
 export interface WidgetConfig {
@@ -180,6 +180,7 @@ export const BICYCLE_SUBWIDGET_TYPES = [
 export type StatusDesign = "circular" | "bar" | "vertical" | "minimal" | "arc";
 export type SpeedometerType = "car" | "plane" | "boat" | "helicopter" | "motorcycle" | "bicycle";
 export type MinimapShape = "square" | "round";
+export type BrandingPosition = "center" | "right";
 
 export interface HUDLayoutState {
     widgets: ResolvedWidgetConfig[];
@@ -189,27 +190,26 @@ export interface HUDLayoutState {
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
+    brandingPosition: BrandingPosition;
     widgetsDistributed: boolean;
     simpleMode: boolean;
 }
 
-const MARGIN = 20;
-const GAP = 10;
+import { WIDGET_MARGIN as MARGIN, WIDGET_GAP as GAP, STATUS_WIDGET_IDS } from "@/lib/widgetConfig";
 
 // Helper to calculate status widget positions in a chain
 const getStatusWidgetPosition = (
     widgetId: string,
     widgetElement: HTMLElement | null,
-    resolver: PositionResolver
+    resolver: PositionResolver,
 ): WidgetPosition => {
-    const statusWidgetIds = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
-    const currentIndex = statusWidgetIds.indexOf(widgetId);
+    const currentIndex = STATUS_WIDGET_IDS.indexOf(widgetId as typeof STATUS_WIDGET_IDS[number]);
 
     let x = resolver.getWidgetRect("minimap").right + GAP;
 
     // Calculate x by summing widths of all previous ENABLED status widgets
     for (let i = 0; i < currentIndex; i++) {
-        const prevWidgetId = statusWidgetIds[i];
+        const prevWidgetId = STATUS_WIDGET_IDS[i];
 
         // Skip disabled widgets - they don't take up space
         if (resolver.isWidgetDisabled?.(prevWidgetId)) {
@@ -772,10 +772,17 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             type: "branding",
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
-                return {
-                    x: resolver.screen.width / 2 - width / 2,
-                    y: MARGIN,
-                };
+                if (resolver.layout.brandingPosition === "right") {
+                    return {
+                        x: resolver.screen.width - MARGIN - width,
+                        y: MARGIN,
+                    };
+                } else {
+                    return {
+                        x: resolver.screen.width / 2 - width / 2,
+                        y: MARGIN,
+                    };
+                }
             },
             visible: true,
             scale: 1,
@@ -784,18 +791,21 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "clock",
             type: "clock",
             position: (_id, el, resolver) => {
-                const brandingRect = resolver.getWidgetRect("branding");
                 const width = el?.offsetWidth ?? 0;
-                if (brandingRect) {
+
+                // Always call getWidgetRect to register dependency for auto-relayout
+                const brandingRect = resolver.getWidgetRect("branding");
+                if (resolver.layout.brandingPosition === "center" && brandingRect) {
                     return {
                         x: resolver.screen.width / 2 - width / 2,
                         y: brandingRect.bottom + GAP,
                     };
+                } else {
+                    return {
+                        x: resolver.screen.width / 2 - width / 2,
+                        y: MARGIN,
+                    };
                 }
-                return {
-                    x: resolver.screen.width / 2 - width / 2,
-                    y: MARGIN + 60,
-                };
             },
             visible: true,
             scale: 1,
@@ -814,7 +824,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 }
                 return {
                     x: resolver.screen.width / 2 - width / 2,
-                    y: MARGIN + 100,
+                    y: MARGIN + 40,
                 };
             },
             visible: true,
@@ -834,7 +844,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 }
                 return {
                     x: resolver.screen.width / 2 - width / 2,
-                    y: MARGIN + 80,
+                    y: MARGIN + 60,
                 };
             },
             visible: true,
@@ -845,7 +855,20 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             type: "money",
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
-                return { x: resolver.screen.width - MARGIN - width, y: MARGIN };
+
+                // Always call getWidgetRect to register dependency for auto-relayout
+                const brandingRect = resolver.getWidgetRect("branding");
+                if (resolver.layout.brandingPosition === "right" && brandingRect) {
+                    return {
+                        x: resolver.screen.width - MARGIN - width,
+                        y: brandingRect.bottom + GAP,
+                    };
+                } else {
+                    return {
+                        x: resolver.screen.width - MARGIN - width,
+                        y: MARGIN,
+                    };
+                }
             },
             visible: true,
             scale: 1,
@@ -859,7 +882,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 if (moneyRect) {
                     return {
                         x: moneyRect.x - GAP - width,
-                        y: MARGIN,
+                        y: moneyRect.y,
                     };
                 }
                 return { x: resolver.screen.width - MARGIN - width - 100, y: MARGIN };
@@ -925,8 +948,17 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             position: (_id, el, resolver) => {
                 const moneyRect = resolver.getWidgetRect("money");
                 const width = el?.offsetWidth ?? 0;
-                const x = moneyRect ? moneyRect.x - GAP - width : resolver.screen.width - MARGIN - width;
-                return { x, y: MARGIN };
+                if (moneyRect) {
+                    return {
+                        x: moneyRect.x - GAP - width,
+                        y: moneyRect.y,
+                    };
+                } else {
+                    return {
+                        x: resolver.screen.width - MARGIN - width,
+                        y: MARGIN,
+                    };
+                }
             },
             visible: true,
             scale: 1,

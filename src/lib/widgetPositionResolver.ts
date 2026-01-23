@@ -1,4 +1,5 @@
 import { WidgetPosition } from "@/types/widget";
+import { LayoutSettings, DEFAULT_LAYOUT_SETTINGS } from "@/lib/widgetConfig";
 
 export interface WidgetSize {
     width: number;
@@ -33,6 +34,8 @@ export interface PositionResolver {
     isWidgetDisabled?: (id: string) => boolean;
     /** Whether the HUD has signaled ready (all widgets are properly rendered) */
     hasSignaledReady: boolean;
+    /** Layout settings from the HUD state - use for conditional positioning */
+    layout: LayoutSettings;
 }
 
 /**
@@ -52,7 +55,8 @@ export function resolveDefaultPositions(
         position: (id: string, element: HTMLElement | null, resolver: PositionResolver) => WidgetPosition;
     }>,
     isWidgetDisabled?: (id: string) => boolean,
-    hasSignaledReady?: boolean
+    hasSignaledReady?: boolean,
+    layoutSettings: LayoutSettings = DEFAULT_LAYOUT_SETTINGS,
 ): Map<string, WidgetRect> {
     const resolvedRects = new Map<string, WidgetRect>();
 
@@ -116,6 +120,7 @@ export function resolveDefaultPositions(
         screen,
         isWidgetDisabled,
         hasSignaledReady,
+        layout: layoutSettings,
     };
 
     // Process widgets in order - earlier widgets are resolved first

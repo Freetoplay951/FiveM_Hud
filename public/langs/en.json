@@ -59,11 +59,16 @@
         "statusDesign": "Status Design",
         "minimapShape": "Minimap Shape",
         "speedometerType": "Speedometer Type",
+        "brandingPosition": "Branding Position",
         "simpleMode": "Simple Mode",
         "options": "Options",
         "snapToGrid": "Snap to Grid",
         "exitEdit": "Exit Edit Mode",
         "resetLayout": "Reset Layout"
+    },
+    "brandingPositions": {
+        "center": "Center",
+        "right": "Right"
     },
     "statusDesigns": {
         "circular": "Circle",

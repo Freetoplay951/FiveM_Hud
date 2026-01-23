@@ -1,3 +1,50 @@
+import { StatusType } from "@/types/hud";
+import { BrandingPosition, MinimapShape, StatusDesign } from "@/types/widget";
+
+// ============= Layout Spacing Constants =============
+
+/** Default margin from screen edges */
+export const WIDGET_MARGIN = 20;
+
+/** Default gap between widgets */
+export const WIDGET_GAP = 10;
+
+/** Base tolerance for position comparison (added to gridSize) */
+export const POSITION_TOLERANCE_BASE = 5;
+
+// ============= Widget ID Lists =============
+
+/** Status widget IDs in display order (left to right) */
+export const STATUS_WIDGET_IDS: StatusType[] = [
+    "health",
+    "armor",
+    "hunger",
+    "thirst",
+    "stamina",
+    "stress",
+    "oxygen",
+] as const;
+
+// ============= Layout Settings =============
+
+/**
+ * Layout settings passed to position functions for dynamic positioning.
+ * Add new settings here as needed - they'll be available in all position functions.
+ */
+export interface LayoutSettings {
+    brandingPosition: BrandingPosition;
+    minimapShape: MinimapShape;
+    statusDesign: StatusDesign;
+}
+
+export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
+    brandingPosition: "center",
+    minimapShape: "square",
+    statusDesign: "circular",
+};
+
+// ============= Widget Selection & Lock Config =============
+
 /**
  * Widgets that are excluded from multi-selection.
  * These widgets cannot be selected or moved via box selection.

@@ -78,11 +78,16 @@ export interface Translations {
         statusDesign: string;
         minimapShape: string;
         speedometerType: string;
+        brandingPosition: string;
         simpleMode: string;
         options: string;
         snapToGrid: string;
         exitEdit: string;
         resetLayout: string;
+    };
+    brandingPositions: {
+        center: string;
+        right: string;
     };
     statusDesigns: {
         circular: string;

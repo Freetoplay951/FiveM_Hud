@@ -12,12 +12,13 @@ import {
     Fan,
     Bike,
     Square,
-    Skull,
     Motorbike,
     Layers,
+    AlignHorizontalJustifyCenter,
+    AlignHorizontalJustifyEnd,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { StatusDesign, SpeedometerType, MinimapShape } from "@/types/widget";
+import { StatusDesign, SpeedometerType, MinimapShape, BrandingPosition } from "@/types/widget";
 import { PopoverContent } from "@/components/ui/popover";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { LanguageDropdown } from "../LanguageDropdown";
@@ -27,11 +28,13 @@ interface EditModeOverlayProps {
     statusDesign: StatusDesign;
     speedometerType: SpeedometerType;
     minimapShape: MinimapShape;
+    brandingPosition: BrandingPosition;
     simpleMode: boolean;
     onSnapToGridChange: (value: boolean) => void;
     onStatusDesignChange: (design: StatusDesign) => void;
     onSpeedometerTypeChange: (type: SpeedometerType) => void;
     onMinimapShapeChange: (shape: MinimapShape) => void;
+    onBrandingPositionChange: (position: BrandingPosition) => void;
     onSimpleModeChange: (enabled: boolean) => void;
     onReset: () => void;
     onExitEditMode: () => void;
@@ -71,16 +74,27 @@ const MINIMAP_SHAPE_OPTIONS: {
     { shape: "round", icon: Circle, labelKey: "round" },
 ];
 
+const BRANDING_POSITION_OPTIONS: {
+    position: BrandingPosition;
+    icon: React.ElementType;
+    labelKey: keyof import("@/types/translation").Translations["brandingPositions"];
+}[] = [
+    { position: "center", icon: AlignHorizontalJustifyCenter, labelKey: "center" },
+    { position: "right", icon: AlignHorizontalJustifyEnd, labelKey: "right" },
+];
+
 export const EditModeOverlay = ({
     snapToGrid,
     statusDesign,
     speedometerType,
     minimapShape,
+    brandingPosition,
     simpleMode,
     onSnapToGridChange,
     onStatusDesignChange,
     onSpeedometerTypeChange,
     onMinimapShapeChange,
+    onBrandingPositionChange,
     onSimpleModeChange,
     onReset,
     onExitEditMode,
@@ -117,7 +131,9 @@ export const EditModeOverlay = ({
                             onClick={() => onStatusDesignChange(design)}
                             className={cn(
                                 "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
-                                statusDesign === design ? "bg-primary/20 border border-primary/50" : "hover:bg-muted/20"
+                                statusDesign === design
+                                    ? "bg-primary/20 border border-primary/50"
+                                    : "hover:bg-muted/20",
                             )}
                             style={statusDesign === design ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}}>
                             <Icon
@@ -132,7 +148,7 @@ export const EditModeOverlay = ({
                             <span
                                 className={cn(
                                     "text-[10px]",
-                                    statusDesign === design ? "text-primary" : "text-muted-foreground"
+                                    statusDesign === design ? "text-primary" : "text-muted-foreground",
                                 )}>
                                 {t.statusDesigns[labelKey]}
                             </span>
@@ -151,7 +167,7 @@ export const EditModeOverlay = ({
                             onClick={() => onMinimapShapeChange(shape)}
                             className={cn(
                                 "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
-                                minimapShape === shape ? "bg-primary/20 border border-primary/50" : "hover:bg-muted/20"
+                                minimapShape === shape ? "bg-primary/20 border border-primary/50" : "hover:bg-muted/20",
                             )}
                             style={minimapShape === shape ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}}>
                             <Icon
@@ -164,9 +180,49 @@ export const EditModeOverlay = ({
                             <span
                                 className={cn(
                                     "text-[10px]",
-                                    minimapShape === shape ? "text-primary" : "text-muted-foreground"
+                                    minimapShape === shape ? "text-primary" : "text-muted-foreground",
                                 )}>
                                 {t.minimapShapes[labelKey]}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Branding Position */}
+            <div className="mb-4">
+                <h3 className="text-xs font-medium text-foreground mb-2">{t.editMode.brandingPosition}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                    {BRANDING_POSITION_OPTIONS.map(({ position, icon: Icon, labelKey }) => (
+                        <button
+                            key={position}
+                            onClick={() => onBrandingPositionChange(position)}
+                            className={cn(
+                                "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all",
+                                brandingPosition === position
+                                    ? "bg-primary/20 border border-primary/50"
+                                    : "hover:bg-muted/20",
+                            )}
+                            style={
+                                brandingPosition === position
+                                    ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" }
+                                    : {}
+                            }>
+                            <Icon
+                                size={18}
+                                className={brandingPosition === position ? "text-primary" : "text-muted-foreground"}
+                                style={
+                                    brandingPosition === position
+                                        ? { filter: "drop-shadow(0 0 4px hsl(var(--primary)))" }
+                                        : {}
+                                }
+                            />
+                            <span
+                                className={cn(
+                                    "text-[10px]",
+                                    brandingPosition === position ? "text-primary" : "text-muted-foreground",
+                                )}>
+                                {t.brandingPositions[labelKey]}
                             </span>
                         </button>
                     ))}
@@ -185,7 +241,7 @@ export const EditModeOverlay = ({
                                 "flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all w-[70px]",
                                 speedometerType === type
                                     ? "bg-primary/20 border border-primary/50"
-                                    : "hover:bg-muted/20"
+                                    : "hover:bg-muted/20",
                             )}
                             style={
                                 speedometerType === type ? { boxShadow: "0 0 14px hsl(var(--primary) / 0.25)" } : {}
@@ -202,7 +258,7 @@ export const EditModeOverlay = ({
                             <span
                                 className={cn(
                                     "text-[10px]",
-                                    speedometerType === type ? "text-primary" : "text-muted-foreground"
+                                    speedometerType === type ? "text-primary" : "text-muted-foreground",
                                 )}>
                                 {t.speedometerTypes[labelKey]}
                             </span>

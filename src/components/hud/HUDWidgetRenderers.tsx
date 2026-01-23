@@ -33,6 +33,7 @@ import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
 import { useWantedLevel, useIsEvading, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
+import { STATUS_WIDGET_IDS } from "@/lib/widgetConfig";
 
 // ==========================================
 // LAYOUT-ONLY PROPS INTERFACE
@@ -128,11 +129,6 @@ const NotificationsRendererComponent = ({
 
 export const NotificationsRenderer = memo(NotificationsRendererComponent);
 
-// ==========================================
-// STATUS WIDGETS - Each subscribes to its own value
-// ==========================================
-const STATUS_TYPES: StatusType[] = ["health", "armor", "hunger", "thirst", "stamina", "stress", "oxygen"];
-
 const StatusWidgetItemComponent = ({
     type,
     editMode,
@@ -196,7 +192,7 @@ const StatusWidgetItem = memo(StatusWidgetItemComponent);
 const StatusWidgetsRendererComponent = (props: LayoutOnlyProps) => {
     return (
         <>
-            {STATUS_TYPES.map((type) => (
+            {STATUS_WIDGET_IDS.map((type) => (
                 <StatusWidgetItem
                     key={type}
                     type={type}
