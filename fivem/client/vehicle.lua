@@ -190,8 +190,6 @@ local function GetVehicleData(vehicle, vehicleType)
         vehicleSpawnName = GetSpawnNameFromVehicle(vehicle),
         speed = GetEntitySpeed(vehicle) * 3.6, -- m/s zu km/h
         fuel = GetVehicleFuelLevel(vehicle),
-        engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10), -- 0-100
-        bodyHealth = math.floor(GetVehicleBodyHealth(vehicle) / 10), -- 0-100 (Prozent)
         heading = GetEntityHeading(vehicle)
     }
 
@@ -222,7 +220,9 @@ local function GetVehicleData(vehicle, vehicleType)
         return 'green'
     end
 
-    data.healthStatus = CalcHealthStatus(data.engineHealth, data.bodyHealth)
+    local engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10)
+    local bodyHealth = math.floor(GetVehicleBodyHealth(vehicle) / 10)
+    data.healthStatus = CalcHealthStatus(engineHealth, bodyHealth)
     
     -- ================================================================
     -- AUTO / MOTORRAD
