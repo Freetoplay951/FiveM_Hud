@@ -199,7 +199,7 @@ local function GetVehicleData(vehicle, vehicleType)
             local ok, result = pcall(fn, engineHealth, bodyHealth)
             if not ok then
                 print(('[BodyHealth] ERROR in custom calc(): %s | engine=%s body=%s'):format(result, tostring(engineHealth), tostring(bodyHealth)))
-            elseif result == 'red' or result == 'yellow' or result == 'green' then
+            elseif result == 'critical' or result == 'warning' or result == 'good' then
                 return result
             else
                 print(('[BodyHealth] WARNING: Invalid return value from calc(): %s | engine=%s body=%s'):format(tostring(result), tostring(engineHealth), tostring(bodyHealth)))
@@ -215,9 +215,9 @@ local function GetVehicleData(vehicle, vehicleType)
 
         print(('[BodyHealth] Fallback used | engine=%s body=%s avg=%.1f'):format(e, b, avg))
 
-        if avg < 40 then return 'red' end
-        if avg < 70 then return 'yellow' end
-        return 'green'
+        if avg < 40 then return 'result' end
+        if avg < 70 then return 'warning' end
+        return 'good'
     end
 
     local engineHealth = math.floor(GetVehicleEngineHealth(vehicle) / 10)

@@ -161,7 +161,7 @@ Config.StopVehicleRadioOnEnter = true
 Config.BodyHealth = {
     -- =====================================================================
     -- Vollständig frei konfigurierbar:
-    --  - muss "red", "yellow" oder "green" zurückgeben
+    --  - muss "critical", "warning" oder "good" zurückgeben
     --  - engineHealth/bodyHealth sind Prozentwerte (0-100)
     --
     -- Hinweis: Clientseitige Funktion
@@ -172,11 +172,11 @@ Config.BodyHealth = {
 
         local avg = (e + b) / 2
         if avg < 40 then
-            return "red"
+            return "critical"
         elseif avg < 70 then
-            return "yellow"
+            return "warning"
         else
-            return "green"
+            return "good"
         end
     end,
 }
