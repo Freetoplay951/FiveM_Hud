@@ -1,6 +1,14 @@
 {
     "segments": [
-        { "text": "COMMUNITY", "color": "188 100% 50%" },
+        {
+            "text": "COMMUNITY",
+            "color": {
+                "type": "gradient",
+                "from": "188 100% 50%",
+                "to": "270 100% 60%",
+                "angle": 90
+            }
+        },
         { "text": "RP", "color": "0 100% 50%" }
     ],
     "style": {
