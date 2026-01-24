@@ -65,7 +65,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
         if (chat.isInputActive && chat.commandOnly && !inputValue.startsWith("/")) {
             setInputValue("/");
         }
-    }, [chat.isInputActive, chat.commandOnly]);
+    }, [chat.isInputActive, chat.commandOnly, inputValue]);
 
     // Auto-hide Timer Logic
     const resetAutoHideTimer = useCallback(() => {
