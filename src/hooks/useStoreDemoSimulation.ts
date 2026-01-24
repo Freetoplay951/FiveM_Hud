@@ -47,6 +47,8 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
     const notifyWarning = useNotificationStore((state) => state.warning);
     const notifyInfo = useNotificationStore((state) => state.info);
 
+    const isCommandOnly = useChatStore((state) => state.chatCommandOnly);
+
     // Demo simulation with animated values - updates stores directly
     useEffect(() => {
         if (!isDemoMode) return;
@@ -147,6 +149,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
         if (!isDemoMode || editMode) return;
 
         const chatInterval = setInterval(() => {
+            if (isCommandOnly) return;
             if (Math.random() > 0.5) {
                 const randomMsg = DEMO_CHAT_MESSAGES[Math.floor(Math.random() * DEMO_CHAT_MESSAGES.length)];
                 addChatMessage({
@@ -176,7 +179,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             clearInterval(chatInterval);
             clearInterval(teamChatInterval);
         };
-    }, [isDemoMode, editMode, addChatMessage, addTeamChatMessage]);
+    }, [isDemoMode, editMode, addChatMessage, addTeamChatMessage, isCommandOnly]);
 
     // Demo key controls
     useEffect(() => {

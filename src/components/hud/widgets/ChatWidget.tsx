@@ -390,6 +390,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                     size={10}
                                     className="text-warning"
                                 />
+                                <span className="text-[10px] text-warning">{t.chat.commandOnlyHint}</span>
                             </div>
                         )}
                         {chat.unreadCount > 0 && (
@@ -459,7 +460,7 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                         </div>
                                         <div
                                             ref={commandListRef}
-                                            className="max-h-[150px] overflow-y-auto py-1">
+                                            className="max-h-[120px] overflow-y-auto py-1">
                                             {filteredCommands.map((cmd, index) => (
                                                 <div
                                                     key={cmd.command}
@@ -512,17 +513,6 @@ export const ChatWidget = ({ editMode, autoHideDelay = 10000 }: ChatWidgetProps)
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
-                        {/* Command-Only Hint */}
-                        {chat.commandOnly && (
-                            <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded bg-warning/10 border border-warning/20">
-                                <Terminal
-                                    size={10}
-                                    className="text-warning shrink-0"
-                                />
-                                <span className="text-[10px] text-warning">{t.chat.commandOnlyHint}</span>
-                            </div>
-                        )}
 
                         <div className="flex items-center gap-2">
                             <input
