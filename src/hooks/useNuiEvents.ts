@@ -49,7 +49,12 @@ interface NuiEventHandlers {
     onUpdateDeath?: (data: DeathState) => void;
     onSetVoiceEnabled?: (enabled: boolean) => void;
     onUpdateDisabledWidgets?: (data: DisabledWidgets) => void;
-    onChatUpdate?: (data: { isInputActive?: boolean; message?: ChatMessage; clearChat?: boolean }) => void;
+    onChatUpdate?: (data: {
+        isInputActive?: boolean;
+        message?: ChatMessage;
+        clearChat?: boolean;
+        commandOnly?: boolean;
+    }) => void;
     onTeamChatUpdate?: (
         data: Omit<Partial<TeamChatState>, "isVisible"> & {
             message?: TeamChatMessage;
@@ -170,6 +175,10 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             },
             onChatUpdate: (data) => {
                 const chatStore = useChatStore.getState();
+
+                if (typeof data.commandOnly === "boolean") {
+                    chatStore.setChatCommandOnly(data.commandOnly);
+                }
 
                 if (data.clearChat) {
                     chatStore.clearChatMessages();
