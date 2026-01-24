@@ -210,6 +210,7 @@ Config.BodyHealth = {
                 return VehicleHealthStatus.GOOD
             end
         end
+        
         if min < 40 then
             return VehicleHealthStatus.CRITICAL
         elseif min < 70 then
