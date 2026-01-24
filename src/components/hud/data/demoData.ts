@@ -97,7 +97,7 @@ export const DEMO_CHAT_MESSAGES = [
     { sender: "Sarah Wagner", message: "Komme gleich" },
 ];
 
-const RANKS = {
+export const RANKS = {
     ADMIN: {
         rank: "Admin",
         rankColor: "#a855f7",

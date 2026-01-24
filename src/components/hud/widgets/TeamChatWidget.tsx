@@ -6,6 +6,7 @@ import { useChatHistory } from "@/hooks/useChatHistory";
 import { useChatStore, useTeamChatData } from "@/stores/chatStore";
 import { useIsDemoMode } from "@/stores/hudStore";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
+import { RANKS } from "../data/demoData";
 
 interface TeamChatWidgetProps {
     editMode: boolean;
@@ -142,9 +143,9 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
             addTeamChatMessage({
                 id: Date.now().toString(),
                 sender: "Du",
-                rank: "Admin",
                 message: msg,
                 timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
+                ...RANKS.ADMIN,
             });
             setTeamChatInputActive(false);
         } else {
