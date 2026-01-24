@@ -97,11 +97,26 @@ export const DEMO_CHAT_MESSAGES = [
     { sender: "Sarah Wagner", message: "Komme gleich" },
 ];
 
+const RANKS = {
+    ADMIN: {
+        rank: "Admin",
+        rankColor: "#a855f7",
+    },
+    MOD: {
+        rank: "Moderator",
+        rankColor: "#3b82f6",
+    },
+    SUP: {
+        rank: "Supporter",
+        rankColor: "#22c55e",
+    },
+};
+
 export const DEMO_TEAM_MESSAGES = [
-    { sender: "Admin Max", rank: "Admin", message: "Bitte alle aufpassen" },
-    { sender: "Mod Lisa", rank: "Moderator", message: "Neuer Spieler braucht Hilfe" },
-    { sender: "Support Tom", rank: "Supporter", message: "Ticket wurde bearbeitet" },
-    { sender: "Admin Sarah", rank: "Admin", message: "Server Neustart in 30 Minuten" },
+    { sender: "Max", message: "Bitte alle aufpassen", ...RANKS.ADMIN },
+    { sender: "Lisa", message: "Neuer Spieler braucht Hilfe", ...RANKS.MOD },
+    { sender: "Tom", message: "Ticket wurde bearbeitet", ...RANKS.SUP },
+    { sender: "Sarah", message: "Server Neustart in 30 Minuten", ...RANKS.ADMIN },
 ];
 
 export const EDIT_MODE_DEMO_NOTIFICATIONS: NotificationData[] = [

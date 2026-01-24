@@ -74,7 +74,7 @@ end
 -- TEAM CHAT SYNCHRONIZATION (Staff only)
 -- ============================================================================
 
-function SendTeamChatMessage(source, rank, message, isImportant, rankColor)
+function SendTeamChatMessage(source, rank, message, rankColor)
     local playerName = GetPlayerDisplayName(source)
     local senderId = tonumber(source)
     
@@ -83,7 +83,7 @@ function SendTeamChatMessage(source, rank, message, isImportant, rankColor)
         local targetId = tonumber(playerId)
         if targetId ~= senderId then
             if HasTeamChatAccess(targetId) then
-                TriggerClientEvent('hud:receiveTeamChatMessage', targetId, playerName, rank, message, isImportant or false, rankColor)
+                TriggerClientEvent('hud:receiveTeamChatMessage', targetId, playerName, rank, message, rankColor)
             end
         end
     end
@@ -115,7 +115,7 @@ RegisterNetEvent('hud:sendTeamChatMessage', function(message)
         end
     end
     
-    SendTeamChatMessage(source, rank, message, false, rankColor)
+    SendTeamChatMessage(source, rank, message, rankColor)
 end)
 
 -- ============================================================================

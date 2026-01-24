@@ -170,6 +170,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                     sender: randomMsg.sender,
                     rank: randomMsg.rank,
                     message: randomMsg.message,
+                    rankColor: randomMsg.rankColor,
                     timestamp: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
                 });
             }

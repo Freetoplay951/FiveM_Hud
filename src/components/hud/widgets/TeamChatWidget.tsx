@@ -284,13 +284,7 @@ export const TeamChatWidget = ({ editMode, autoHideDelay = 10000 }: TeamChatWidg
                                         style={colorStyle}>
                                         {msg.sender}:
                                     </span>
-                                    <span
-                                        className={cn(
-                                            "text-foreground",
-                                            msg.isImportant && "font-semibold text-warning",
-                                        )}>
-                                        {msg.message}
-                                    </span>
+                                    <span className="text-foreground">{msg.message}</span>
                                 </motion.div>
                             );
                         })}

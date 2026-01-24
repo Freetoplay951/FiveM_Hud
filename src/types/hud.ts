@@ -136,7 +136,6 @@ export interface TeamChatMessage {
     rankColor?: string;
     message: string;
     timestamp: string;
-    isImportant?: boolean;
 }
 
 export interface TeamChatState {
