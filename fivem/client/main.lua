@@ -141,34 +141,28 @@ local function SendInitialData()
     
     SendNUI('updateDisabledWidgets', disabledWidgets)
     
-    -- Location
     local streetHash, crossingHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
     local streetName = GetStreetNameFromHashKey(streetHash)
     local zone = GetNameOfZone(coords.x, coords.y, coords.z)
     local zoneName = GetLabelText(zone)
-    
     SendNUI('updateLocation', {
         street = streetName,
         area = zoneName ~= "NULL" and zoneName or zone,
         heading = heading
     })
     
-    -- Voice Initial
     SendNUI('updateVoice', {
         active = false,
         range = VoiceRange.NORMAL,
         isMuted = false
     })
     
-    -- Player Info Initial (Server ID)
-    local serverId = GetPlayerServerId(PlayerId())
     SendNUI('updatePlayer', {
-        id = serverId,
+        id = GetPlayerServerId(PlayerId()),
         job = 'Arbeitslos',
         rank = ''
     })
     
-    -- Money Initial (defaults, will be updated by framework)
     SendNUI('updateMoney', {
         cash = 0,
         bank = 0,

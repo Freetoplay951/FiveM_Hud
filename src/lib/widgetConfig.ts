@@ -25,19 +25,19 @@ export const STATUS_WIDGET_IDS: StatusType[] = [
     "oxygen",
 ] as const;
 
-// ============= Layout Settings =============
+// ============= Layout Options =============
 
 /**
- * Layout settings passed to position functions for dynamic positioning.
+ * Layout options passed to position functions for dynamic positioning.
  * Add new settings here as needed - they'll be available in all position functions.
  */
-export interface LayoutSettings {
+export interface LayoutOptions {
     brandingPosition: BrandingPosition;
     minimapShape: MinimapShape;
     statusDesign: StatusDesign;
 }
 
-export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
+export const DEFAULT_LAYOUT_OPTIONS: LayoutOptions = {
     brandingPosition: "center",
     minimapShape: "square",
     statusDesign: "circular",

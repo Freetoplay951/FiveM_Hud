@@ -39,7 +39,7 @@ import { BicycleBaseWidget, BicycleWarningWidget } from "./widgets/vehicles/bicy
 // Import stores - widgets subscribe to their own data
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useIsDead } from "@/stores/deathStore";
-import { DEFAULT_LAYOUT_SETTINGS } from "@/lib/widgetConfig";
+import { DEFAULT_LAYOUT_OPTIONS } from "@/lib/widgetConfig";
 
 export interface SubwidgetRendererProps {
     editMode: boolean;
@@ -209,7 +209,7 @@ const createVehicleSubwidgetRenderer = (
                         screen: { width: window.innerWidth, height: window.innerHeight },
                         isWidgetDisabled: () => false,
                         hasSignaledReady: true,
-                        layout: DEFAULT_LAYOUT_SETTINGS,
+                        options: DEFAULT_LAYOUT_OPTIONS,
                     };
 
                     subConfigs.forEach((config) => {

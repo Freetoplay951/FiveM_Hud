@@ -85,10 +85,6 @@ Config.Framework = FrameworkType.AUTO  -- FrameworkType.ESX, .QB, oder .AUTO fü
 -- Minimap Form: MinimapShape.SQUARE (Standard) oder MinimapShape.ROUND (Rund)
 Config.MinimapShape = MinimapShape.SQUARE
 
--- Minimap nur in Fahrzeugen anzeigen (default: false)
--- Wenn true, wird die Minimap nur angezeigt wenn der Spieler in einem Fahrzeug ist
-Config.MinimapOnlyInVehicle = false
-
 -- ============================================================================
 -- TEAM-CHAT KONFIGURATION (Staff-Ränge)
 -- ============================================================================

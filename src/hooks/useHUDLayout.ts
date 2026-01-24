@@ -12,7 +12,7 @@ import {
     WidgetConfig,
 } from "@/types/widget";
 import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
-import { DEFAULT_LAYOUT_SETTINGS, POSITION_TOLERANCE_BASE } from "@/lib/widgetConfig";
+import { DEFAULT_LAYOUT_OPTIONS, LayoutOptions, POSITION_TOLERANCE_BASE } from "@/lib/widgetConfig";
 
 /**
  * Programmatically extract widget dependencies by analyzing position functions.
@@ -45,7 +45,7 @@ const extractWidgetDependencies = (widgetConfigs: WidgetConfig[]): Record<string
             screen: { width: 1920, height: 1080 },
             isWidgetDisabled: () => false,
             hasSignaledReady: false,
-            layout: DEFAULT_LAYOUT_SETTINGS,
+            options: DEFAULT_LAYOUT_OPTIONS,
         };
 
         // Create a mock element with all properties that position functions might access
@@ -170,7 +170,7 @@ const getDefaultState = (): HUDLayoutState => ({
     speedometerType: "car",
     widgetsDistributed: false,
     simpleMode: true,
-    ...DEFAULT_LAYOUT_SETTINGS,
+    ...DEFAULT_LAYOUT_OPTIONS,
 });
 
 const STORAGE_KEY = "hud-layout";
@@ -239,28 +239,40 @@ export const useHUDLayout = () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }, [state]);
 
-    // Distribute widgets using the resolver - computes all default positions in order
-    const distributeWidgets = useCallback((isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
-        setState((prev) => {
-            const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, hasSignaledReady, {
-                brandingPosition: prev.brandingPosition,
-                minimapShape: prev.minimapShape,
-                statusDesign: prev.statusDesign,
-            });
+    const getLayoutOptions = useCallback((): LayoutOptions => {
+        return {
+            brandingPosition: state.brandingPosition,
+            minimapShape: state.minimapShape,
+            statusDesign: state.statusDesign,
+        };
+    }, [state.brandingPosition, state.minimapShape, state.statusDesign]);
 
-            return {
-                ...prev,
-                widgets: prev.widgets.map((w) => {
-                    const rect = resolvedRects.get(w.id);
-                    return {
-                        ...w,
-                        position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
-                    };
-                }),
-                widgetsDistributed: true,
-            };
-        });
-    }, []);
+    // Distribute widgets using the resolver - computes all default positions in order
+    const distributeWidgets = useCallback(
+        (isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+            setState((prev) => {
+                const resolvedRects = resolveDefaultPositions(
+                    defaultWidgetConfigs,
+                    isWidgetDisabled,
+                    hasSignaledReady,
+                    getLayoutOptions(),
+                );
+
+                return {
+                    ...prev,
+                    widgets: prev.widgets.map((w) => {
+                        const rect = resolvedRects.get(w.id);
+                        return {
+                            ...w,
+                            position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
+                        };
+                    }),
+                    widgetsDistributed: true,
+                };
+            });
+        },
+        [getLayoutOptions],
+    );
 
     const toggleEditMode = useCallback(() => {
         setState((prev) => ({ ...prev, editMode: !prev.editMode }));
@@ -306,19 +318,14 @@ export const useHUDLayout = () => {
                 defaultWidgetConfigs,
                 isWidgetDisabled,
                 hasSignaledReady,
-                {
-                    brandingPosition: state.brandingPosition,
-                    minimapShape: state.minimapShape,
-                    statusDesign: state.statusDesign,
-                },
+                getLayoutOptions(),
             );
         },
-        [state.brandingPosition, state.minimapShape, state.statusDesign],
+        [getLayoutOptions],
     );
 
     /**
      * Auto-relayout: only move widgets that are still at their *previous* default position.
-     * This matches your requirement: do not touch widgets the user manually moved.
      */
     const runAutoRelayout = useCallback(
         (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
@@ -335,11 +342,7 @@ export const useHUDLayout = () => {
                             defaultWidgetConfigs,
                             isWidgetDisabled,
                             hasSignaledReady,
-                            {
-                                brandingPosition: prev.brandingPosition,
-                                minimapShape: prev.minimapShape,
-                                statusDesign: prev.statusDesign,
-                            },
+                            getLayoutOptions(),
                         );
 
                         return {
@@ -369,7 +372,7 @@ export const useHUDLayout = () => {
                 });
             });
         },
-        [isPositionClose],
+        [isPositionClose, getLayoutOptions],
     );
 
     /**
@@ -468,11 +471,12 @@ export const useHUDLayout = () => {
             }
 
             requestAnimationFrame(() => {
-                const resolvedRects = resolveDefaultPositions(defaultWidgetConfigs, isWidgetDisabled, false, {
-                    brandingPosition: defaultState.brandingPosition,
-                    minimapShape: defaultState.minimapShape,
-                    statusDesign: defaultState.statusDesign,
-                });
+                const resolvedRects = resolveDefaultPositions(
+                    defaultWidgetConfigs,
+                    isWidgetDisabled,
+                    false,
+                    getLayoutOptions(),
+                );
 
                 const resetWidgets = defaultWidgetConfigs.map((w) => {
                     const rect = resolvedRects.get(w.id);
@@ -494,7 +498,7 @@ export const useHUDLayout = () => {
                 }));
             });
         },
-        [setBrandingPosition, setMinimapShape, setStatusDesign, setSpeedometerType, state],
+        [setBrandingPosition, setMinimapShape, setStatusDesign, setSpeedometerType, state, getLayoutOptions],
     );
 
     const resetWidget = useCallback(
@@ -507,11 +511,7 @@ export const useHUDLayout = () => {
                     defaultWidgetConfigs,
                     isWidgetDisabled,
                     hasSignaledReady,
-                    {
-                        brandingPosition: prev.brandingPosition,
-                        minimapShape: prev.minimapShape,
-                        statusDesign: prev.statusDesign,
-                    },
+                    getLayoutOptions(),
                 );
                 const rect = resolvedRects.get(id);
 
@@ -530,7 +530,7 @@ export const useHUDLayout = () => {
                 };
             });
         },
-        [],
+        [getLayoutOptions],
     );
 
     /**
@@ -552,11 +552,7 @@ export const useHUDLayout = () => {
                     widgetConfigsWithCurrentScales,
                     isWidgetDisabled,
                     hasSignaledReady,
-                    {
-                        brandingPosition: prev.brandingPosition,
-                        minimapShape: prev.minimapShape,
-                        statusDesign: prev.statusDesign,
-                    },
+                    getLayoutOptions(),
                 );
 
                 const rect = resolvedRects.get(id);
@@ -575,7 +571,7 @@ export const useHUDLayout = () => {
                 };
             });
         },
-        [],
+        [getLayoutOptions],
     );
 
     const getWidget = useCallback(

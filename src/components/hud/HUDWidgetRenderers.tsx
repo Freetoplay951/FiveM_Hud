@@ -668,7 +668,6 @@ const MinimapWidgetRendererComponent = ({
     isWidgetDisabled,
 }: LayoutOnlyProps) => {
     const widget = getWidget("minimap");
-
     if (!widget) return null;
 
     const isNUI = isNuiEnvironment();

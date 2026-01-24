@@ -772,7 +772,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             type: "branding",
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
-                if (resolver.layout.brandingPosition === "right") {
+                if (resolver.options.brandingPosition === "right") {
                     return {
                         x: resolver.screen.width - MARGIN - width,
                         y: MARGIN,
@@ -795,7 +795,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
 
                 // Always call getWidgetRect to register dependency for auto-relayout
                 const brandingRect = resolver.getWidgetRect("branding");
-                if (resolver.layout.brandingPosition === "center" && brandingRect) {
+                if (resolver.options.brandingPosition === "center" && brandingRect) {
                     return {
                         x: resolver.screen.width / 2 - width / 2,
                         y: brandingRect.bottom + GAP,
@@ -858,7 +858,7 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
 
                 // Always call getWidgetRect to register dependency for auto-relayout
                 const brandingRect = resolver.getWidgetRect("branding");
-                if (resolver.layout.brandingPosition === "right" && brandingRect) {
+                if (resolver.options.brandingPosition === "right" && brandingRect) {
                     return {
                         x: resolver.screen.width - MARGIN - width,
                         y: brandingRect.bottom + GAP,
@@ -997,29 +997,6 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             visible: true,
             scale: 1,
         },
-        {
-            id: "location",
-            type: "location",
-            position: (_id, _el, resolver) => {
-                const minimapRect = resolver.getWidgetRect("minimap");
-                const { height } = resolver.getWidgetSize("location");
-
-                if (minimapRect) {
-                    // Position at minimap X - the widget will center its content internally
-                    return {
-                        x: minimapRect.x,
-                        y: minimapRect.y - GAP - height,
-                    };
-                }
-
-                return {
-                    x: MARGIN,
-                    y: MARGIN + 50 + GAP,
-                };
-            },
-            visible: true,
-            scale: 1,
-        },
 
         // === Status widgets (chain dependency) ===
         {
@@ -1072,6 +1049,27 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             scale: 1,
         },
 
+        {
+            id: "location",
+            type: "location",
+            position: (_id, _el, resolver) => {
+                const { height } = resolver.getWidgetSize("location");
+                const minimapRect = resolver.getWidgetRect("minimap");
+                if (minimapRect) {
+                    return {
+                        x: minimapRect.x,
+                        y: minimapRect.y - GAP - height,
+                    };
+                } else {
+                    return {
+                        x: MARGIN,
+                        y: MARGIN + 50 + GAP,
+                    };
+                }
+            },
+            visible: true,
+            scale: 1,
+        },
         {
             id: "voice",
             type: "voice",
