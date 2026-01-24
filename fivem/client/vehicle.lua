@@ -220,13 +220,13 @@ local function GetVehicleData(vehicle, vehicleType)
         local e = tonumber(engineHealth) or 100
         local b = tonumber(bodyHealth) or 100
         local t = tonumber(tankHealth) or 100
+        local min = math.min(e, b, t)        
         
-        print(('[HUD Vehicle] Using fallback | engine=%s body=%s tank=%s avg=%.1f'):format(e, b, t, avg))
+        print(('[HUD Vehicle] Using fallback | engine=%s body=%s tank=%s min=%.1f'):format(e, b, t, min))
 
-        local avg = (e + b + t) / 3
-        if avg < 40 then
+        if min < 40 then
             return VehicleHealthStatus.CRITICAL
-        elseif avg < 70 then
+        elseif min < 70 then
             return VehicleHealthStatus.WARNING
         else
             return VehicleHealthStatus.GOOD

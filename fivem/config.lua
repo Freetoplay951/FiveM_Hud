@@ -200,20 +200,19 @@ Config.BodyHealth = {
         local b = tonumber(bodyHealth) or 100
         local t = tonumber(tankHealth) or 100
         
-        local avg = (e + b + t) / 3
+        local min = math.min(e, b, t)
         if vehicleType == VehicleType.PLANE or vehicleType == VehicleType.HELICOPTER then
-            if avg < 50 then
+            if min < 50 then
                 return VehicleHealthStatus.CRITICAL
-            elseif avg < 80 then
+            elseif min < 80 then
                 return VehicleHealthStatus.WARNING
             else
                 return VehicleHealthStatus.GOOD
             end
         end
-
-        if avg < 40 then
+        if min < 40 then
             return VehicleHealthStatus.CRITICAL
-        elseif avg < 70 then
+        elseif min < 70 then
             return VehicleHealthStatus.WARNING
         else
             return VehicleHealthStatus.GOOD
