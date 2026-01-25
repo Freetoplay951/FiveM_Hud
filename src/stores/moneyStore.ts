@@ -3,8 +3,9 @@ import { useShallow } from "zustand/react/shallow";
 import { MoneyState, PlayerState } from "@/types/hud";
 import { DEMO_MONEY, DEMO_PLAYER } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
+import { mapPartialState } from "@/lib/utils";
 
-interface MoneyStore {
+interface MoneyStoreState {
     // Money state
     cash: number;
     bank: number;
@@ -14,38 +15,43 @@ interface MoneyStore {
     playerId: number;
     job: string;
     rank: string;
+}
 
-    // Actions
+interface MoneyStoreActions {
     setMoney: (state: Partial<MoneyState>) => void;
     setPlayer: (state: Partial<PlayerState>) => void;
 }
+
+type MoneyStore = MoneyStoreState & MoneyStoreActions;
 
 const isDemoMode = !isNuiEnvironment();
 
 export const useMoneyStore = create<MoneyStore>((set) => ({
     cash: isDemoMode ? DEMO_MONEY.cash : 0,
     bank: isDemoMode ? DEMO_MONEY.bank : 0,
-    blackMoney: isDemoMode ? DEMO_MONEY.blackMoney ?? 0 : 0,
+    blackMoney: isDemoMode ? (DEMO_MONEY.blackMoney ?? 0) : 0,
 
     playerId: isDemoMode ? DEMO_PLAYER.id : 0,
     job: isDemoMode ? DEMO_PLAYER.job : "",
     rank: isDemoMode ? DEMO_PLAYER.rank : "",
 
     setMoney: (state) =>
-        set((prev) => ({
-            ...prev,
-            cash: state.cash ?? prev.cash,
-            bank: state.bank ?? prev.bank,
-            blackMoney: state.blackMoney ?? prev.blackMoney,
-        })),
+        set((prev) =>
+            mapPartialState(prev, {
+                cash: state.cash,
+                bank: state.bank,
+                blackMoney: state.blackMoney,
+            }),
+        ),
 
     setPlayer: (state) =>
-        set((prev) => ({
-            ...prev,
-            playerId: state.id ?? prev.playerId,
-            job: state.job ?? prev.job,
-            rank: state.rank ?? prev.rank,
-        })),
+        set((prev) =>
+            mapPartialState(prev, {
+                playerId: state.id,
+                job: state.job,
+                rank: state.rank,
+            }),
+        ),
 }));
 
 // Selectors
@@ -61,7 +67,7 @@ export const useMoneyData = () =>
             cash: state.cash,
             bank: state.bank,
             blackMoney: state.blackMoney,
-        }))
+        })),
     );
 export const usePlayerData = () =>
     useMoneyStore(
@@ -69,5 +75,5 @@ export const usePlayerData = () =>
             id: state.playerId,
             job: state.job,
             rank: state.rank,
-        }))
+        })),
     );

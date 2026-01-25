@@ -3,13 +3,14 @@ import { useShallow } from "zustand/react/shallow";
 import { ChatState, ChatMessage, TeamChatState, TeamChatMessage, TeamType } from "@/types/hud";
 import { DEMO_CHAT, DEMO_TEAM_CHAT } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
+import { mapPartialState } from "@/lib/utils";
 
 export interface ChatCommand {
     command: string;
     description: string;
 }
 
-interface ChatStore {
+interface ChatStoreState {
     // Regular chat
     chatMessages: ChatMessage[];
     chatInputActive: boolean;
@@ -28,8 +29,10 @@ interface ChatStore {
     teamType: TeamType;
     teamName: string;
     onlineMembers: number;
+}
 
-    // Actions
+interface ChatStoreActions {
+    // Chat actions
     setChatState: (state: Partial<ChatState>) => void;
     setChatInputActive: (active: boolean) => void;
     setChatCommandOnly: (commandOnly: boolean) => void;
@@ -37,6 +40,7 @@ interface ChatStore {
     clearChatMessages: () => void;
     setCommands: (commands: ChatCommand[]) => void;
 
+    // Team chat actions
     setTeamChatState: (state: Partial<TeamChatState>) => void;
     setTeamChatInputActive: (active: boolean) => void;
     addTeamChatMessage: (message: TeamChatMessage) => void;
@@ -44,6 +48,8 @@ interface ChatStore {
     setTeamChatAccess: (hasAccess: boolean) => void;
     setTeamChatIsAdmin: (isAdmin: boolean) => void;
 }
+
+type ChatStore = ChatStoreState & ChatStoreActions;
 
 const isDemoMode = !isNuiEnvironment();
 
@@ -69,14 +75,15 @@ export const useChatStore = create<ChatStore>((set) => ({
 
     // Chat actions
     setChatState: (state) =>
-        set((prev) => ({
-            ...prev,
-            chatMessages: state.messages ?? prev.chatMessages,
-            chatInputActive: state.isInputActive ?? prev.chatInputActive,
-            chatVisible: state.isVisible ?? prev.chatVisible,
-            chatUnreadCount: state.unreadCount ?? prev.chatUnreadCount,
-            chatCommandOnly: state.commandOnly ?? prev.chatCommandOnly,
-        })),
+        set((prev) =>
+            mapPartialState(prev, {
+                chatMessages: state.messages,
+                chatInputActive: state.isInputActive,
+                chatVisible: state.isVisible,
+                chatUnreadCount: state.unreadCount,
+                chatCommandOnly: state.commandOnly,
+            }),
+        ),
 
     setChatInputActive: (active) =>
         set((prev) => ({
@@ -99,18 +106,19 @@ export const useChatStore = create<ChatStore>((set) => ({
 
     // Team chat actions
     setTeamChatState: (state) =>
-        set((prev) => ({
-            ...prev,
-            teamChatMessages: state.messages ?? prev.teamChatMessages,
-            teamChatInputActive: state.isInputActive ?? prev.teamChatInputActive,
-            teamChatVisible: state.isVisible ?? prev.teamChatVisible,
-            teamChatUnreadCount: state.unreadCount ?? prev.teamChatUnreadCount,
-            teamChatHasAccess: state.hasAccess ?? prev.teamChatHasAccess,
-            teamChatIsAdmin: state.isAdmin ?? prev.teamChatIsAdmin,
-            teamType: state.teamType ?? prev.teamType,
-            teamName: state.teamName ?? prev.teamName,
-            onlineMembers: state.onlineMembers ?? prev.onlineMembers,
-        })),
+        set((prev) =>
+            mapPartialState(prev, {
+                teamChatMessages: state.messages,
+                teamChatInputActive: state.isInputActive,
+                teamChatVisible: state.isVisible,
+                teamChatUnreadCount: state.unreadCount,
+                teamChatHasAccess: state.hasAccess,
+                teamChatIsAdmin: state.isAdmin,
+                teamType: state.teamType,
+                teamName: state.teamName,
+                onlineMembers: state.onlineMembers,
+            }),
+        ),
 
     setTeamChatInputActive: (active) =>
         set((prev) => ({

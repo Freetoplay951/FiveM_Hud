@@ -13,7 +13,7 @@ import {
 } from "@/types/hud";
 
 // Demo values for development/preview
-export const DEMO_HUD: StatusWidgetState = {
+export const STATUS_DATA: StatusWidgetState = {
     health: 85,
     armor: 50,
     hunger: 70,

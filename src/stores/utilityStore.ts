@@ -3,26 +3,29 @@ import { create } from "zustand";
 /**
  * Utility Store - For Wanted Level and Server Info
  */
-interface UtilityState {
+interface UtilityStoreState {
     // Wanted Level (0-5 stars like GTA)
     wantedLevel: number;
-
     // Is evading (cops lost sight) - stars should blink when true
     isEvading: boolean;
-
     // Server Info
     serverName: string;
     playerCount: number;
     maxPlayers: number;
-
-    // Actions
-    setWantedLevel: (level: number) => void;
-    setIsEvading: (isEvading: boolean) => void;
-    setServerInfo: (info: { serverName?: string; playerCount?: number; maxPlayers?: number }) => void;
-    setUtilityState: (state: Partial<UtilityState>) => void;
 }
 
-export const useUtilityStore = create<UtilityState>((set) => ({
+type ServerInfo = Partial<Pick<UtilityStoreState, "serverName" | "playerCount" | "maxPlayers">>;
+
+interface UtilityStoreActions {
+    setWantedLevel: (level: number) => void;
+    setIsEvading: (isEvading: boolean) => void;
+    setServerInfo: (info: ServerInfo) => void;
+    setUtilityState: (state: Partial<UtilityStoreState>) => void;
+}
+
+type UtilityStore = UtilityStoreState & UtilityStoreActions;
+
+export const useUtilityStore = create<UtilityStore>((set) => ({
     wantedLevel: 0,
     isEvading: false,
     serverName: "RP Server",

@@ -239,13 +239,17 @@ export const useHUDLayout = () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }, [state]);
 
-    const getLayoutOptions = useCallback((): LayoutOptions => {
-        return {
-            brandingPosition: state.brandingPosition,
-            minimapShape: state.minimapShape,
-            statusDesign: state.statusDesign,
-        };
-    }, [state.brandingPosition, state.minimapShape, state.statusDesign]);
+    const getLayoutOptions = useCallback(
+        (override: Partial<LayoutOptions>): LayoutOptions => {
+            return {
+                brandingPosition: state.brandingPosition,
+                minimapShape: state.minimapShape,
+                statusDesign: state.statusDesign,
+                ...override,
+            };
+        },
+        [state.brandingPosition, state.minimapShape, state.statusDesign],
+    );
 
     // Distribute widgets using the resolver - computes all default positions in order
     const distributeWidgets = useCallback(
@@ -255,7 +259,7 @@ export const useHUDLayout = () => {
                     defaultWidgetConfigs,
                     isWidgetDisabled,
                     hasSignaledReady,
-                    getLayoutOptions(),
+                    getLayoutOptions(prev),
                 );
 
                 return {
@@ -318,14 +322,30 @@ export const useHUDLayout = () => {
                 defaultWidgetConfigs,
                 isWidgetDisabled,
                 hasSignaledReady,
-                getLayoutOptions(),
+                getLayoutOptions(undefined),
             );
         },
         [getLayoutOptions],
     );
 
     /**
-     * Auto-relayout: only move widgets that are still at their *previous* default position.
+     * Runs the auto-relayout process after a state change has occurred.
+     *
+     * **IMPORTANT: This function MUST be called AFTER the state change that affects widget positions.**
+     *
+     * The function waits for the DOM to update with new sizes, then computes new default positions
+     * and moves widgets that were at their old default positions to the new ones.
+     *
+     * @example
+     * ```ts
+     * const affected = startAutoRelayout(["minimap", "status"], isWidgetDisabled);
+     * setState((prev) => ({ ...prev, minimapShape: "square" })); // State change
+     * runAutoRelayout(affected, isWidgetDisabled); // AFTER state change
+     * ```
+     *
+     * @param affectedWidgetIds - IDs of widgets that might need repositioning
+     * @param isWidgetDisabled - Optional function to check if a widget is disabled
+     * @param hasSignaledReady - Optional flag indicating if async widgets are ready
      */
     const runAutoRelayout = useCallback(
         (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
@@ -342,7 +362,7 @@ export const useHUDLayout = () => {
                             defaultWidgetConfigs,
                             isWidgetDisabled,
                             hasSignaledReady,
-                            getLayoutOptions(),
+                            getLayoutOptions(prev),
                         );
 
                         return {
@@ -356,6 +376,7 @@ export const useHUDLayout = () => {
 
                                 // Only move if it was at the old default position
                                 if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, prev.gridSize)) {
+                                    console.log("changing");
                                     return {
                                         ...w,
                                         position: clampPosition({ x: newRect.x, y: newRect.y }),
@@ -394,6 +415,27 @@ export const useHUDLayout = () => {
         [state.widgets, state.gridSize, isPositionClose],
     );
 
+    /**
+     * Prepares for an auto-relayout by capturing current default positions.
+     *
+     * **IMPORTANT: This function MUST be called BEFORE the state change that affects widget positions.**
+     *
+     * This function:
+     * 1. Captures the current default positions of all widgets
+     * 2. Hides widgets that will be moved to prevent visual flickering
+     * 3. Returns the deduplicated list of affected widget IDs
+     *
+     * @example
+     * ```ts
+     * const affected = startAutoRelayout(["minimap", "status"], isWidgetDisabled); // BEFORE state change
+     * setState((prev) => ({ ...prev, minimapShape: "square" })); // State change
+     * runAutoRelayout(affected, isWidgetDisabled);
+     * ```
+     *
+     * @param affectedWidgetIds - IDs of widgets that might need repositioning
+     * @param isWidgetDisabled - Optional function to check if a widget is disabled
+     * @returns Deduplicated array of affected widget IDs (pass this to runAutoRelayout)
+     */
     const startAutoRelayout = useCallback(
         (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean) => {
             const uniq = Array.from(new Set(affectedWidgetIds));
@@ -475,7 +517,7 @@ export const useHUDLayout = () => {
                     defaultWidgetConfigs,
                     isWidgetDisabled,
                     false,
-                    getLayoutOptions(),
+                    getLayoutOptions(undefined),
                 );
 
                 const resetWidgets = defaultWidgetConfigs.map((w) => {
@@ -511,7 +553,7 @@ export const useHUDLayout = () => {
                     defaultWidgetConfigs,
                     isWidgetDisabled,
                     hasSignaledReady,
-                    getLayoutOptions(),
+                    getLayoutOptions(prev),
                 );
                 const rect = resolvedRects.get(id);
 
@@ -552,7 +594,7 @@ export const useHUDLayout = () => {
                     widgetConfigsWithCurrentScales,
                     isWidgetDisabled,
                     hasSignaledReady,
-                    getLayoutOptions(),
+                    getLayoutOptions(prev),
                 );
 
                 const rect = resolvedRects.get(id);

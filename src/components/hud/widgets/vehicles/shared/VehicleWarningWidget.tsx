@@ -1,13 +1,17 @@
 import { motion } from "framer-motion";
-import { BodyHealthIndicator } from "../shared/BodyHealthIndicator";
+import { BodyHealthIndicator } from "./BodyHealthIndicator";
 import { VehicleHealthStatus } from "@/types/hud";
 
-interface MotorcycleWarningWidgetProps {
+interface VehicleWarningWidgetProps {
     healthStatus: VehicleHealthStatus;
     visible: boolean;
 }
 
-export const MotorcycleWarningWidget = ({ healthStatus, visible }: MotorcycleWarningWidgetProps) => {
+/**
+ * Shared warning widget for all vehicle types.
+ * Displays the vehicle body health indicator with fade animation.
+ */
+export const VehicleWarningWidget = ({ healthStatus, visible }: VehicleWarningWidgetProps) => {
     return (
         <motion.div
             initial={false}

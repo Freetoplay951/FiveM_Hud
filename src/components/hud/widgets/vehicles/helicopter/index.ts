@@ -5,4 +5,4 @@ export { HeliVSpeedWidget } from "./HeliVSpeedWidget";
 export { HeliHeadingWidget } from "./HeliHeadingWidget";
 export { HeliRotorWidget } from "./HeliRotorWidget";
 export { HeliFuelWidget } from "./HeliFuelWidget";
-export { HeliWarningWidget } from "./HeliWarningWidget";
+export { VehicleWarningWidget as HeliWarningWidget } from "../shared/VehicleWarningWidget";

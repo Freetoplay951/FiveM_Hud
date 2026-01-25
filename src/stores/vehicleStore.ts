@@ -3,11 +3,13 @@ import { VehicleState, VehicleType } from "@/types/hud";
 import { DEMO_VEHICLE } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
-interface VehicleStore extends VehicleState {
+interface VehicleStoreActions {
     setVehicleState: (state: Partial<VehicleState>) => void;
     setInVehicle: (value: boolean) => void;
     setVehicleType: (type: VehicleType) => void;
 }
+
+type VehicleStore = VehicleState & VehicleStoreActions;
 
 const initialState: VehicleState = isNuiEnvironment()
     ? {

@@ -1,2 +1,2 @@
 export { BicycleBaseWidget } from "./BicycleBaseWidget";
-export { BicycleWarningWidget } from "./BicycleWarningWidget";
+export { VehicleWarningWidget as BicycleWarningWidget } from "../shared/VehicleWarningWidget";

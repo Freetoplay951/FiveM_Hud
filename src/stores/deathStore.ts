@@ -4,20 +4,20 @@ import { DeathState } from "@/types/hud";
 import { DEMO_DEATH } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
-interface DeathStore extends DeathState {
-    config: DeathState["config"];
-    setDeathState: (state: Partial<DeathState>) => void;
-    setIsDead: (isDead: boolean) => void;
-}
-
-const isDemoMode = !isNuiEnvironment();
-
-export const DEFAULT_DEATH_CONFIG: DeathState["config"] = {
+export const DEFAULT_DEATH_CONFIG: NonNullable<DeathState["config"]> = {
     respawnTimer: 300,
     bleedoutTimer: 600,
     syncTimer: 10,
     helpTimer: 60,
 };
+
+interface DeathStore extends DeathState {
+    config: NonNullable<DeathState["config"]>;
+    setDeathState: (state: Partial<DeathState>) => void;
+    setIsDead: (isDead: boolean) => void;
+}
+
+const isDemoMode = !isNuiEnvironment();
 
 export const useDeathStore = create<DeathStore>((set) => ({
     isDead: isDemoMode ? DEMO_DEATH.isDead : false,

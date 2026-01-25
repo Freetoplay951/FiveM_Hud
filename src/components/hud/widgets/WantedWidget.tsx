@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star } from "lucide-react";
 import { useRenderLogger } from "@/hooks/useRenderLogger";
@@ -24,77 +24,70 @@ const starMotion = {
 // Static animation for non-blinking state
 const staticStarAnimation = { scale: 1, rotate: 0, opacity: 1 } as const;
 
-// Blinking animation for evading state - stable reference
-const blinkAnimation = {
+/**
+ * Synchronized blink animation for all stars.
+ * Using a single shared animation object ensures all stars animate in sync.
+ * The animation is defined outside the component so all instances share the same timing.
+ */
+const syncedBlinkAnimation = {
     scale: 1,
     rotate: 0,
-    opacity: [1, 0.4, 1] as number[],
+    opacity: [1, 0.4, 1],
     transition: {
         duration: 1.5,
         repeat: Infinity,
-        ease: [0.45, 0.05, 0.55, 0.95] as const, // Smooth sine-like easing
+        ease: [0.45, 0.05, 0.55, 0.95] as [number, number, number, number],
         repeatType: "loop" as const,
     },
-} as const;
+};
 
 const MAX_STARS = 5;
+
+// Pre-computed star array to avoid recreation
+const STAR_INDICES = Array.from({ length: MAX_STARS }, (_, i) => i);
 
 const WantedWidgetComponent = ({ wantedLevel, isEvading = false }: WantedWidgetProps) => {
     useRenderLogger("WantedWidget", { wantedLevel, isEvading });
 
-    const stars = useMemo(() => {
-        const level = Math.min(MAX_STARS, Math.max(0, wantedLevel));
-        return Array.from({ length: MAX_STARS }, (_, i) => ({
-            index: i,
-            active: i < level,
-        }));
-    }, [wantedLevel]);
-
-    // Should blink when evading and has wanted level
-    const shouldBlink = isEvading && wantedLevel > 0;
-
-    // Re-create blink object when wantedLevel changes to keep all active stars in sync
-    const syncedBlinkAnimation = useMemo(
-        () => ({
-            ...blinkAnimation,
-            transition: { ...blinkAnimation.transition },
-        }),
-        [wantedLevel, shouldBlink]
-    );
+    const level = Math.min(MAX_STARS, Math.max(0, wantedLevel));
+    const shouldBlink = isEvading && level > 0;
 
     return (
         <motion.div
             className="glass-panel rounded-lg px-2.5 py-1.5 flex items-center gap-0.5"
             {...containerMotion}>
             <AnimatePresence mode="popLayout">
-                {stars.map(({ index, active }) => (
-                    <motion.div
-                        key={index}
-                        {...starMotion}
-                        animate={active && shouldBlink ? syncedBlinkAnimation : staticStarAnimation}
-                        transition={
-                            active && shouldBlink
-                                ? undefined
-                                : {
-                                      type: "spring",
-                                      stiffness: 400,
-                                      damping: 15,
-                                      delay: index * 0.05,
-                                  }
-                        }>
-                        <Star
-                            size={14}
-                            className={active ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}
-                            style={
-                                active
-                                    ? {
-                                          filter: "drop-shadow(0 0 6px rgb(250 204 21 / 0.8))",
+                {STAR_INDICES.map((index) => {
+                    const active = index < level;
+                    return (
+                        <motion.div
+                            key={index}
+                            {...starMotion}
+                            animate={active && shouldBlink ? syncedBlinkAnimation : staticStarAnimation}
+                            transition={
+                                active && shouldBlink
+                                    ? undefined
+                                    : {
+                                          type: "spring",
+                                          stiffness: 400,
+                                          damping: 15,
+                                          delay: index * 0.05,
                                       }
-                                    : undefined
-                            }
-                        />
-                    </motion.div>
-                ))}
+                            }>
+                            <Star
+                                size={14}
+                                className={active ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}
+                                style={
+                                    active
+                                        ? {
+                                              filter: "drop-shadow(0 0 6px rgb(250 204 21 / 0.8))",
+                                          }
+                                        : undefined
+                                }
+                            />
+                        </motion.div>
+                    );
+                })}
             </AnimatePresence>
         </motion.div>
     );

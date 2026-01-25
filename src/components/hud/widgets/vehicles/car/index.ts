@@ -1,3 +1,3 @@
 export { CarBaseWidget } from "./CarBaseWidget";
-export { CarWarningWidget } from "./CarWarningWidget";
 export { CarFuelWidget } from "./CarFuelWidget";
+export { VehicleWarningWidget as CarWarningWidget } from "../shared/VehicleWarningWidget";

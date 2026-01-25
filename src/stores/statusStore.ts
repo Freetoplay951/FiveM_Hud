@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { StatusWidgetState, StatusType } from "@/types/hud";
-import { DEMO_HUD } from "@/components/hud/data/demoData";
+import { STATUS_DATA } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
-interface StatusStore {
-    // Individual status values
+interface StatusStoreState {
     health: number;
     armor: number;
     hunger: number;
@@ -13,14 +12,17 @@ interface StatusStore {
     stress: number;
     oxygen: number;
     isUnderwater: boolean;
+}
 
-    // Actions
+interface StatusStoreActions {
     setStatus: (status: Partial<StatusWidgetState>) => void;
     setStatusValue: (type: StatusType, value: number) => void;
     setIsUnderwater: (value: boolean) => void;
 }
 
-const initialState = isNuiEnvironment()
+type StatusStore = StatusStoreState & StatusStoreActions;
+
+const initialState: StatusStoreState = isNuiEnvironment()
     ? {
           health: 100,
           armor: 100,
@@ -32,14 +34,14 @@ const initialState = isNuiEnvironment()
           isUnderwater: false,
       }
     : {
-          health: DEMO_HUD.health,
-          armor: DEMO_HUD.armor,
-          hunger: DEMO_HUD.hunger,
-          thirst: DEMO_HUD.thirst,
-          stamina: DEMO_HUD.stamina,
-          stress: DEMO_HUD.stress ?? 0,
-          oxygen: DEMO_HUD.oxygen ?? 100,
-          isUnderwater: DEMO_HUD.isUnderwater ?? false,
+          health: STATUS_DATA.health,
+          armor: STATUS_DATA.armor,
+          hunger: STATUS_DATA.hunger,
+          thirst: STATUS_DATA.thirst,
+          stamina: STATUS_DATA.stamina,
+          stress: STATUS_DATA.stress ?? 0,
+          oxygen: STATUS_DATA.oxygen ?? 100,
+          isUnderwater: STATUS_DATA.isUnderwater ?? false,
       };
 
 export const useStatusStore = create<StatusStore>((set) => ({

@@ -4,12 +4,14 @@ import { LocationState } from "@/types/hud";
 import { DEMO_LOCATION } from "@/components/hud/data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
 
-interface LocationStore extends LocationState {
+interface LocationStoreActions {
     setLocation: (state: Partial<LocationState>) => void;
     setStreet: (street: string) => void;
     setArea: (area: string) => void;
     setHeading: (heading: number | undefined) => void;
 }
+
+type LocationStore = LocationState & LocationStoreActions;
 
 const initialState: LocationState = isNuiEnvironment()
     ? {
@@ -44,5 +46,5 @@ export const useLocationData = () =>
         useShallow((state) => ({
             street: state.street,
             area: state.area,
-        }))
+        })),
     );
