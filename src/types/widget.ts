@@ -1052,8 +1052,8 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
         {
             id: "location",
             type: "location",
-            position: (_id, _el, resolver) => {
-                const { height } = resolver.getWidgetSize("location");
+            position: (id, _el, resolver) => {
+                const { height } = resolver.getWidgetSize(id);
                 const minimapRect = resolver.getWidgetRect("minimap");
                 if (minimapRect) {
                     return {
