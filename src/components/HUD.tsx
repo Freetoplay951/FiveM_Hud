@@ -5,11 +5,14 @@ import { EditModeOverlay } from "./hud/EditModeOverlay";
 import { SubwidgetRenderer } from "./hud/SubwidgetRenderer";
 import { HUDWidgetRenderers } from "./hud/HUDWidgetRenderers";
 import { KeybindsOverlay } from "./hud/keybinds";
+import { SnapLinesOverlay } from "./hud/SnapLinesOverlay";
+import { SnapIndicator } from "./hud/SnapIndicator";
 import { useHUDLayout } from "@/hooks/useHUDLayout";
 import { useHUDReadiness } from "@/hooks/useHUDReadiness";
 import { useNuiEvents, sendNuiCallback } from "@/hooks/useNuiEvents";
 import { useStoreDemoSimulation } from "@/hooks/useStoreDemoSimulation";
 import { useMultiSelection } from "@/hooks/useMultiSelection";
+import { useSnapLines } from "@/hooks/useSnapLines";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { getWidgetGroupsMap } from "@/types/widget";
 import { FullscreenDeathScreen } from "./hud/FullscreenDeathScreen";
@@ -97,6 +100,12 @@ export const HUD = () => {
         teamChatIsAdmin,
     });
 
+    // Widget-to-widget snapping (must be before useMultiSelection to pass props)
+    const { isShiftPressed, activeSnapLines, getSnappedPosition, clearSnapLines, showSnapLinesTemporarily } = useSnapLines({
+        editMode,
+        simpleMode,
+    });
+
     // Multi-selection
     const {
         selectionBox,
@@ -110,6 +119,10 @@ export const HUD = () => {
         widgets,
         getWidget,
         updateWidgetPosition,
+        getSnappedPosition,
+        onSnapLinesClear: clearSnapLines,
+        onShowSnapLinesTemporarily: showSnapLinesTemporarily,
+        simpleMode,
     });
 
     // Edit mode controls
@@ -184,6 +197,11 @@ export const HUD = () => {
         [setChatCommandOnly],
     );
 
+    // Compute snap target IDs from active snap lines
+    const snapTargetIds = useMemo(() => {
+        return new Set(activeSnapLines.map(line => line.targetWidgetId));
+    }, [activeSnapLines]);
+
     // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data, NO notifications
     const layoutProps = useMemo(
         () => ({
@@ -202,6 +220,9 @@ export const HUD = () => {
             resetWidget,
             isWidgetDisabled,
             getMultiSelectProps,
+            getSnappedPosition,
+            onSnapLinesClear: clearSnapLines,
+            snapTargetIds,
         }),
         [
             editMode,
@@ -219,6 +240,9 @@ export const HUD = () => {
             resetWidget,
             isWidgetDisabled,
             getMultiSelectProps,
+            getSnappedPosition,
+            clearSnapLines,
+            snapTargetIds,
         ],
     );
 
@@ -290,6 +314,20 @@ export const HUD = () => {
                     endX={selectionBox.endX}
                     endY={selectionBox.endY}
                     isActive={isSelecting}
+                />
+            )}
+
+            {/* Snap Lines Overlay */}
+            <SnapLinesOverlay
+                snapLines={activeSnapLines}
+                isActive={editMode && (isShiftPressed || activeSnapLines.length > 0)}
+            />
+
+            {/* Snap Indicator */}
+            {editMode && (
+                <SnapIndicator
+                    isShiftPressed={isShiftPressed}
+                    hasActiveSnap={activeSnapLines.length > 0}
                 />
             )}
 

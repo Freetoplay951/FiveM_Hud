@@ -298,6 +298,42 @@
         }
     }
 
+    @keyframes shake-horizontal {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        20% {
+            transform: translateX(-4px);
+        }
+        40% {
+            transform: translateX(4px);
+        }
+        60% {
+            transform: translateX(-3px);
+        }
+        80% {
+            transform: translateX(3px);
+        }
+    }
+
+    @keyframes shake-vertical {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        20% {
+            transform: translateY(-4px);
+        }
+        40% {
+            transform: translateY(4px);
+        }
+        60% {
+            transform: translateY(-3px);
+        }
+        80% {
+            transform: translateY(3px);
+        }
+    }
+
     .animate-fade-in-up {
         animation: fade-in-up 0.3s ease-out forwards;
     }
@@ -316,5 +352,13 @@
 
     .animate-glow-pulse {
         animation: glow-pulse 2s ease-in-out infinite;
+    }
+
+    .animate-shake-horizontal {
+        animation: shake-horizontal 0.3s ease-out forwards;
+    }
+
+    .animate-shake-vertical {
+        animation: shake-vertical 0.3s ease-out forwards;
     }
 }

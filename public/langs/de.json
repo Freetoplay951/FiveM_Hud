@@ -68,7 +68,11 @@
         "options": "Optionen",
         "snapToGrid": "Am Raster ausrichten",
         "exitEdit": "Bearbeitung beenden",
-        "resetLayout": "Layout zurücksetzen"
+        "resetLayout": "Layout zurücksetzen",
+        "snappingTitle": "Snapping Tipps",
+        "snappingDrag": "Shift gedrückt halten beim Ziehen um an anderen Widgets zu snappen",
+        "snappingKeyboard": "Shift + Pfeiltasten: An nahegelegene Widgets snappen",
+        "snappingCtrl": "Strg + Pfeiltasten: Um 10px verschieben"
     },
     "brandingPositions": {
         "center": "Mittig",

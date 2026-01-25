@@ -68,7 +68,11 @@
         "options": "Options",
         "snapToGrid": "Snap to Grid",
         "exitEdit": "Exit Edit Mode",
-        "resetLayout": "Reset Layout"
+        "resetLayout": "Reset Layout",
+        "snappingTitle": "Snapping Tips",
+        "snappingDrag": "Hold Shift while dragging to snap to other widgets",
+        "snappingKeyboard": "Shift + Arrow keys: Snap to nearby widgets",
+        "snappingCtrl": "Ctrl + Arrow keys: Move 10px at a time"
     },
     "brandingPositions": {
         "center": "Center",

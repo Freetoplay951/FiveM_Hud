@@ -1,5 +1,5 @@
 import { StatusType } from "@/types/hud";
-import { BrandingPosition, MinimapShape, StatusDesign } from "@/types/widget";
+import { BrandingPosition, MinimapShape, StatusDesign, WIDGET_GROUPS, WidgetType } from "@/types/widget";
 
 // ============= Layout Spacing Constants =============
 
@@ -11,6 +11,11 @@ export const WIDGET_GAP = 10;
 
 /** Base tolerance for position comparison (added to gridSize) */
 export const POSITION_TOLERANCE_BASE = 5;
+
+// ============= Snap Visualization Config =============
+
+/** Duration in ms to show snap lines during keyboard navigation */
+export const SNAP_LINE_DISPLAY_DURATION = 1000;
 
 // ============= Widget ID Lists =============
 
@@ -67,3 +72,24 @@ export const isExcludedFromMultiSelect = (widgetId: string): boolean =>
  * Check if a widget is locked
  */
 export const isWidgetLocked = (widgetId: string): boolean => LOCKED_WIDGETS.has(widgetId);
+
+// ============= Subwidget Detection =============
+
+/**
+ * All subwidgets derived from WIDGET_GROUPS - single source of truth.
+ * This set is automatically updated when WIDGET_GROUPS changes.
+ */
+export const ALL_SUBWIDGETS: ReadonlySet<WidgetType> = new Set(
+    WIDGET_GROUPS.flatMap((group) => group.subwidgets)
+);
+
+/**
+ * Check if a widget is a subwidget (non-base vehicle widget).
+ * Subwidgets are vehicle-specific widgets like heli-kts, car-fuel, plane-altitude, etc.
+ * BaseWidgets (heli-base, car-base, etc.) are NOT subwidgets.
+ * 
+ * Uses WIDGET_GROUPS as single source of truth - no hardcoded suffixes.
+ */
+export const isSubwidget = (widgetId: string): boolean => {
+    return ALL_SUBWIDGETS.has(widgetId as WidgetType);
+};

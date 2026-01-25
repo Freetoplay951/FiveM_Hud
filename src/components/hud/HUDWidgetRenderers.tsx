@@ -39,6 +39,8 @@ import { STATUS_WIDGET_IDS } from "@/lib/widgetConfig";
 // LAYOUT-ONLY PROPS INTERFACE
 // No widget data, no notifications - only layout/edit concerns
 // ==========================================
+import { WidgetPosition as WP } from "@/types/widget";
+
 export interface LayoutOnlyProps {
     // Layout settings
     editMode: boolean;
@@ -58,6 +60,13 @@ export interface LayoutOnlyProps {
     resetWidget: (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => void;
     isWidgetDisabled: (id: string) => boolean;
     getMultiSelectProps: (id: string) => Record<string, unknown>;
+
+    // Widget-to-widget snapping
+    getSnappedPosition?: (widgetId: string, position: WP) => WP;
+    onSnapLinesClear?: () => void;
+
+    // Snap target highlighting
+    snapTargetIds?: Set<string>;
 }
 
 // ==========================================
@@ -74,6 +83,9 @@ const NotificationsRendererComponent = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
+    getSnappedPosition,
+    onSnapLinesClear,
+    snapTargetIds,
 }: LayoutOnlyProps) => {
     const widget = getWidget("notifications");
     const isDead = useIsDead();
@@ -118,6 +130,9 @@ const NotificationsRendererComponent = ({
             onReset={handleReset}
             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
             className={isDeadOverlay ? "z-50" : ""}
+            getSnappedPosition={getSnappedPosition}
+            onSnapLinesClear={onSnapLinesClear}
+            isSnapTarget={snapTargetIds?.has(widget.id)}
             {...getMultiSelectProps(widget.id)}>
             <NotificationContainer
                 notifications={displayedNotifications}
@@ -144,6 +159,9 @@ const StatusWidgetItemComponent = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
+    getSnappedPosition,
+    onSnapLinesClear,
+    snapTargetIds,
 }: LayoutOnlyProps & { type: StatusType }) => {
     const widget = getWidget(type);
     const isDead = useIsDead();
@@ -177,6 +195,9 @@ const StatusWidgetItemComponent = ({
             onVisibilityToggle={toggleWidgetVisibility}
             onScaleChange={updateWidgetScale}
             onReset={handleReset}
+            getSnappedPosition={getSnappedPosition}
+            onSnapLinesClear={onSnapLinesClear}
+            isSnapTarget={snapTargetIds?.has(type)}
             {...getMultiSelectProps(type)}>
             <StatusWidget
                 type={type}

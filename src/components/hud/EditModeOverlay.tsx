@@ -283,6 +283,16 @@ export const EditModeOverlay = ({
                 />
             </div>
 
+            {/* Snapping Info */}
+            <div className="mb-4 p-3 rounded-lg bg-muted/20 border border-border/30">
+                <h3 className="text-xs font-medium text-foreground mb-2">{t.editMode.snappingTitle}</h3>
+                <div className="space-y-1 text-[10px] text-muted-foreground">
+                    <p>{t.editMode.snappingDrag}</p>
+                    <p>{t.editMode.snappingKeyboard}</p>
+                    <p>{t.editMode.snappingCtrl}</p>
+                </div>
+            </div>
+
             {/* Actions */}
             <div className="flex flex-col gap-2">
                 <button

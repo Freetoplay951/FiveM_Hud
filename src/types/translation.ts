@@ -88,6 +88,10 @@ export interface Translations {
         snapToGrid: string;
         exitEdit: string;
         resetLayout: string;
+        snappingTitle: string;
+        snappingDrag: string;
+        snappingKeyboard: string;
+        snappingCtrl: string;
     };
     brandingPositions: {
         center: string;

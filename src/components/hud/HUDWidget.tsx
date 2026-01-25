@@ -38,6 +38,14 @@ interface HUDWidgetProps {
     onLiveDrag?: (id: string, currentPos: WidgetPosition) => void;
     /** Called during live scale with current scale */
     onLiveScale?: (id: string, currentScale: number) => void;
+    /** Widget-to-widget snapping */
+    getSnappedPosition?: (widgetId: string, position: WidgetPosition) => WidgetPosition;
+    /** Callback when snap lines should be cleared */
+    onSnapLinesClear?: () => void;
+    /** Shake animation direction (when snap jump fails) */
+    shakeDirection?: "horizontal" | "vertical";
+    /** Whether this widget is currently a snap target (highlighted green) */
+    isSnapTarget?: boolean;
 }
 
 const MIN_SCALE = 0.5;
@@ -68,6 +76,10 @@ const HUDWidgetComponent = ({
     onClearSelection,
     onLiveDrag,
     onLiveScale,
+    getSnappedPosition,
+    onSnapLinesClear,
+    shakeDirection,
+    isSnapTarget = false,
 }: HUDWidgetProps) => {
     // Performance logging
     useRenderLogger(`HUDWidget:${id}`, { position, visible, scale, editMode, disabled, isSelected });
@@ -177,7 +189,14 @@ const HUDWidgetComponent = ({
                 newY = Math.round(newY / gridSize) * gridSize;
             }
 
-            const clamped = clampToViewport(newX, newY);
+            let clamped = clampToViewport(newX, newY);
+
+            // Apply widget-to-widget snapping if available (Shift key)
+            // Works for both single widgets and selected widgets (group drag uses primary widget)
+            if (getSnappedPosition) {
+                clamped = getSnappedPosition(id, clamped);
+            }
+
             localPositionRef.current = { x: clamped.x, y: clamped.y };
 
             if (rootRef.current) {
@@ -205,6 +224,11 @@ const HUDWidgetComponent = ({
             setLocalPosition(null);
             setIsDragging(false);
 
+            // Clear snap lines when drag ends
+            if (onSnapLinesClear) {
+                onSnapLinesClear();
+            }
+
             // Notify parent drag ended
             if (onDragEnd) {
                 onDragEnd();
@@ -229,6 +253,8 @@ const HUDWidgetComponent = ({
         onDragEnd,
         isSelected,
         onLiveDrag,
+        getSnappedPosition,
+        onSnapLinesClear,
     ]);
 
     const handleResizeMouseDown = (e: React.MouseEvent) => {
@@ -309,15 +335,23 @@ const HUDWidgetComponent = ({
         <div
             id={`hud-widget-${id}`}
             ref={rootRef}
+            data-subwidget={isSubWidget ? "true" : undefined}
             className={cn(
                 "absolute pointer-events-auto select-none",
                 editMode && onPositionChange && "cursor-move",
-                editMode && !isSelected && !isSubWidget && "ring-2 ring-primary/50 ring-dashed rounded-lg",
+                editMode && !isSelected && !isSnapTarget && !isSubWidget && "ring-2 ring-primary/50 ring-dashed rounded-lg",
                 editMode &&
                     isSelected &&
-                    "ring-[3px] ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
+                    "ring-2 ring-warning rounded-lg shadow-[0_0_15px_hsl(var(--warning)/0.5)]",
+                editMode &&
+                    isSnapTarget &&
+                    !isSelected &&
+                    "ring-2 ring-green-500 rounded-lg shadow-[0_0_15px_rgba(34,197,94,0.5)]",
                 (isDragging || isResizing) && "z-50",
                 !visible && editMode && "opacity-40",
+                // Shake animation classes
+                shakeDirection === "horizontal" && "animate-shake-horizontal",
+                shakeDirection === "vertical" && "animate-shake-vertical",
                 className,
             )}
             style={{
