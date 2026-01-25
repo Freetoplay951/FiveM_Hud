@@ -377,7 +377,6 @@ export const useHUDLayout = () => {
 
                                 // Only move if it was at the old default position
                                 if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, prev.gridSize)) {
-                                    console.log("changing");
                                     return {
                                         ...w,
                                         position: clampPosition({ x: newRect.x, y: newRect.y }),
