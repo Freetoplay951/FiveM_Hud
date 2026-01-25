@@ -946,12 +946,12 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "teamchat",
             type: "teamchat",
             position: (_id, el, resolver) => {
-                const moneyRect = resolver.getWidgetRect("money");
+                const serverInfoRect = resolver.getWidgetRect("serverinfo");
                 const width = el?.offsetWidth ?? 0;
-                if (moneyRect) {
+                if (serverInfoRect) {
                     return {
-                        x: moneyRect.x - GAP - width,
-                        y: moneyRect.y,
+                        x: serverInfoRect.right - width,
+                        y: serverInfoRect.bottom + GAP,
                     };
                 } else {
                     return {
