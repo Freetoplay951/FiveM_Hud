@@ -39,14 +39,27 @@ export interface PositionResolver {
 }
 
 /**
- * Computes all default widget positions in order, building up a cache
- * so dependent widgets can query the resolved positions of their dependencies.
+ * Computes default positions and sizes for all widgets in order.
  *
- * Position functions can use getWidgetCurrentRect() to get actual DOM positions
- * of anchor widgets (like heli-base) for relative positioning.
+ * @param {Array<{id: string, scale?: number, position: (id: string, element: HTMLElement | null, resolver: PositionResolver) => WidgetPosition}>} widgetConfigs
+ *   - Array of widget configurations, each with a position function.
+ * @param {(id: string) => boolean} [isWidgetDisabled] - Optional callback to check if a widget is disabled.
+ * @param {boolean} [hasSignaledReady] - Whether the HUD has signaled that widgets are fully rendered;
+ *                                      affects whether current DOM positions are used.
+ * @param {LayoutOptions} [layoutOptions=DEFAULT_LAYOUT_OPTIONS] - Optional layout options to use during calculation.
+ * @returns {Map<string, WidgetRect>} - Map of widget ID to its computed rect (position + size).
  *
- * @param widgetConfigs - Array of widget configurations with position functions
- * @param isWidgetDisabled - Optional function to check if a widget is disabled
+ * @description
+ * Calculates positions and sizes for all widgets in the provided order.
+ * - Widgets earlier in the array are resolved first, so dependent widgets can query their positions.
+ * - Uses a PositionResolver to provide:
+ *   - Already computed rects (`getWidgetRect`)
+ *   - Current DOM rects (`getWidgetCurrentRect`)
+ *   - Widget sizes (`getWidgetSize`) and scales (`getWidgetScale`)
+ *   - Screen dimensions
+ *   - Layout options and disabled status
+ * - If `hasSignaledReady` is true, actual DOM positions and sizes are used when available.
+ * - Returns a map of all widget positions and sizes for further processing.
  */
 export function resolveDefaultPositions(
     widgetConfigs: Array<{

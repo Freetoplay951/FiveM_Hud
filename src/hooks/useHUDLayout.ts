@@ -544,6 +544,25 @@ export const useHUDLayout = () => {
         [setBrandingPosition, setMinimapShape, setStatusDesign, setSpeedometerType, state, getLayoutOptions],
     );
 
+    /**
+     * Resets a widget to its default configuration or keeps its current position
+     * depending on whether the HUD has signaled that all widgets are ready.
+     *
+     * @param {string} id - The ID of the widget to reset.
+     * @param {(id: string) => boolean} [isWidgetDisabled] - Optional function to check if a widget is disabled.
+     * @param {boolean} [hasSignaledReady] - If true, the widget keeps its current DOM position;
+     *                                      otherwise, the default position from configuration is used.
+     *
+     * @description
+     * Finds the default configuration for the widget and updates the state:
+     * - `position`: Uses the current DOM position if `hasSignaledReady` is true;
+     *               otherwise, computes the default position and clamps it.
+     * - `scale`: Uses the scale from default configuration (default 1).
+     * - `visible`: Sets to default visibility.
+     *
+     * Uses `resolveDefaultPositions` internally to compute standard positions for all widgets,
+     * taking into account disabled widgets, layout options, and current DOM positions.
+     */
     const resetWidget = useCallback(
         (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
             const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
@@ -556,6 +575,7 @@ export const useHUDLayout = () => {
                     hasSignaledReady,
                     getLayoutOptions(prev),
                 );
+
                 const rect = resolvedRects.get(id);
 
                 return {

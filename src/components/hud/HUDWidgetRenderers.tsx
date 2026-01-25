@@ -87,8 +87,8 @@ const NotificationsRendererComponent = ({
     const displayedNotifications = isUsingEditDemoNotifications ? EDIT_MODE_DEMO_NOTIFICATIONS : notifications;
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     const handleClose = useCallback(
@@ -153,8 +153,8 @@ const StatusWidgetItemComponent = ({
     const isUnderwater = useIsUnderwater();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -229,8 +229,8 @@ const MoneyWidgetRendererComponent = ({
     const player = usePlayerData();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -282,8 +282,8 @@ const BrandingWidgetRendererComponent = ({
     const isDead = useIsDead();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -332,8 +332,8 @@ const ClockWidgetRendererComponent = ({
     const isDead = useIsDead();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -388,8 +388,8 @@ const VoiceWidgetRendererComponent = ({
     const isVoiceEnabled = useIsVoiceEnabled();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -446,8 +446,8 @@ const RadioWidgetRendererComponent = ({
     const isVoiceEnabled = useIsVoiceEnabled();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -505,8 +505,8 @@ const LocationWidgetRendererComponent = ({
     const location = useLocationData();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -562,8 +562,8 @@ const CompassWidgetRendererComponent = ({
     const heading = useHeading();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -620,8 +620,8 @@ const VehicleNameWidgetRendererComponent = ({
     const vehicleSpawnName = useVehicleStore((s) => s.vehicleSpawnName);
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -715,8 +715,8 @@ const ChatWidgetRendererComponent = ({
     const isDead = useIsDead();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -768,8 +768,8 @@ const TeamChatWidgetRendererComponent = ({
     const hasTeamAccess = useTeamChatHasAccess();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -823,8 +823,8 @@ const WantedWidgetRendererComponent = ({
     const isEvading = useIsEvading();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -878,8 +878,8 @@ const DateWidgetRendererComponent = ({
     const isDead = useIsDead();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -931,8 +931,8 @@ const ServerInfoWidgetRendererComponent = ({
     const maxPlayers = useMaxPlayers();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;
@@ -986,8 +986,8 @@ const ServerNameWidgetRendererComponent = ({
     const serverName = useServerName();
 
     const handleReset = useCallback(
-        (id: string) => resetWidget(id, isWidgetDisabled, hasSignaledReady),
-        [resetWidget, isWidgetDisabled, hasSignaledReady],
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
     );
 
     if (!widget) return null;

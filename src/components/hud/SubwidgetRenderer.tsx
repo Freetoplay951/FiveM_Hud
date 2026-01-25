@@ -319,7 +319,17 @@ const createVehicleSubwidgetRenderer = (
                                 canDrag
                                     ? isBaseWidget && simpleMode
                                         ? handleBaseReset
-                                        : (id) => resetWidget(id, isWidgetDisabled, hasSignaledReady)
+                                        : (id) => {
+                                              if (isBaseWidget) {
+                                                  resetWidget(id, isWidgetDisabled, false);
+                                              } else {
+                                                  const baseScale = getWidget(baseWidgetId)?.scale ?? 1;
+                                                  updateWidgetScale(id, baseScale);
+                                                  requestAnimationFrame(() => {
+                                                      reflowWidgetPosition(id, isWidgetDisabled, hasSignaledReady);
+                                                  });
+                                              }
+                                          }
                                     : undefined
                             }
                             onLiveDrag={isBaseWidget && simpleMode ? handleLiveDrag : undefined}
