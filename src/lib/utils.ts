@@ -15,13 +15,15 @@ export function cn(...inputs: ClassValue[]) {
  *   chatInputActive: state.isInputActive,
  * }))
  */
-export function mapPartialState<T>(prev: T, mappings: { [K in keyof T]?: T[K] | undefined }): T {
+export function mapPartialState<T extends object>(prev: T, override: Partial<T>): T {
     const result = { ...prev };
 
-    for (const key of Object.keys(mappings) as (keyof T)[]) {
-        const value = mappings[key];
+    for (const key in override) {
+        const typedKey = key as keyof T;
+        const value = override[typedKey];
+
         if (value !== undefined) {
-            result[key] = value as T[keyof T];
+            result[typedKey] = value;
         }
     }
 

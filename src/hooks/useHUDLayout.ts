@@ -13,6 +13,7 @@ import {
 } from "@/types/widget";
 import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
 import { DEFAULT_LAYOUT_OPTIONS, LayoutOptions, POSITION_TOLERANCE_BASE } from "@/lib/widgetConfig";
+import { mapPartialState } from "@/lib/utils";
 
 /**
  * Programmatically extract widget dependencies by analyzing position functions.
@@ -240,13 +241,13 @@ export const useHUDLayout = () => {
     }, [state]);
 
     const getLayoutOptions = useCallback(
-        (override: Partial<LayoutOptions>): LayoutOptions => {
-            return {
+        (override?: Partial<LayoutOptions>): LayoutOptions => {
+            const original: LayoutOptions = {
                 brandingPosition: state.brandingPosition,
                 minimapShape: state.minimapShape,
                 statusDesign: state.statusDesign,
-                ...override,
             };
+            return mapPartialState(original, override ?? {});
         },
         [state.brandingPosition, state.minimapShape, state.statusDesign],
     );
@@ -322,7 +323,7 @@ export const useHUDLayout = () => {
                 defaultWidgetConfigs,
                 isWidgetDisabled,
                 hasSignaledReady,
-                getLayoutOptions(undefined),
+                getLayoutOptions(),
             );
         },
         [getLayoutOptions],
@@ -517,7 +518,7 @@ export const useHUDLayout = () => {
                     defaultWidgetConfigs,
                     isWidgetDisabled,
                     false,
-                    getLayoutOptions(undefined),
+                    getLayoutOptions(),
                 );
 
                 const resetWidgets = defaultWidgetConfigs.map((w) => {
