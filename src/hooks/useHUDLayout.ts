@@ -12,15 +12,10 @@ import {
     WidgetConfig,
 } from "@/types/widget";
 import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
-import { DEFAULT_LAYOUT_OPTIONS, LayoutOptions } from "@/lib/widgetConfig";
+import { DEFAULT_LAYOUT_OPTIONS, LayoutOptions, WidgetDisabledChecker } from "@/lib/widgetConfig";
 import { mapPartialState } from "@/lib/utils";
-import {
-    buildAffectedWidgetGraph,
-    buildCurrentRects,
-    buildMovedRects,
-    findExternalWidgetsToPull,
-    applyMoveVectors,
-} from "@/lib/relayoutUtils";
+import { buildAffectedWidgetGraph, buildCurrentRects, computeRelayoutPositions } from "@/lib/relayoutUtils";
+import { createMockResolver, createMockElement, clampToViewport, updateWidgetInArray } from "@/lib/widgetHelpers";
 
 /**
  * Programmatically extract widget dependencies by analyzing position functions.
@@ -39,45 +34,15 @@ const extractWidgetDependencies = (widgetConfigs: WidgetConfig[]): Record<string
     for (const config of widgetConfigs) {
         const trackedDeps: string[] = [];
 
-        const mockResolver: PositionResolver = {
-            getWidgetRect: (id: string) => {
-                trackedDeps.push(id);
-                // Return a mock rect - the actual values don't matter for dependency detection
-                return { x: 0, y: 0, width: 100, height: 100, right: 100, bottom: 100 };
-            },
-            getWidgetCurrentRect: (id: string) => {
-                trackedDeps.push(id);
-                return { x: 0, y: 0, width: 100, height: 100, right: 100, bottom: 100 };
-            },
-            getWidgetSize: () => ({ width: 100, height: 100 }),
-            screen: { width: 1920, height: 1080 },
-            isWidgetDisabled: () => false,
-            hasSignaledReady: false,
-            options: DEFAULT_LAYOUT_OPTIONS,
-        };
-
-        // Create a mock element with all properties that position functions might access
-        const mockElement = {
-            offsetWidth: 100,
-            offsetHeight: 100,
-            getBoundingClientRect: () => ({
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                top: 0,
-                left: 0,
-                right: 100,
-                bottom: 100,
-            }),
-        } as unknown as HTMLElement;
+        // Use factory function with tracking callback
+        const mockResolver = createMockResolver((id) => trackedDeps.push(id));
+        const mockElement = createMockElement();
 
         try {
             // Run the position function to see which widgets it queries
             config.position(config.id, mockElement, mockResolver);
         } catch (e) {
-            // Some position functions might fail with mock data
-            // Log for debugging but continue
+            // Some position functions might fail with mock data - continue
             console.debug(`Dependency extraction for ${config.id} failed:`, e);
         }
 
@@ -183,17 +148,10 @@ const getDefaultState = (): HUDLayoutState => ({
 
 const STORAGE_KEY = "hud-layout";
 
-const clampPosition = (pos: WidgetPosition): WidgetPosition => {
-    return {
-        x: Math.max(0, Math.min(window.innerWidth, pos.x)),
-        y: Math.max(0, Math.min(window.innerHeight, pos.y)),
-    };
-};
-
 const clampAllWidgets = (widgets: ResolvedWidgetConfig[]): ResolvedWidgetConfig[] =>
     widgets.map((w) => ({
         ...w,
-        position: clampPosition(w.position),
+        position: clampToViewport(w.position),
     }));
 
 const normalizeState = (raw: Partial<HUDLayoutState>): HUDLayoutState => {
@@ -261,7 +219,7 @@ export const useHUDLayout = () => {
 
     // Distribute widgets using the resolver - computes all default positions in order
     const distributeWidgets = useCallback(
-        (isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        (isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean) => {
             setState((prev) => {
                 const resolvedRects = resolveDefaultPositions(
                     defaultWidgetConfigs,
@@ -276,7 +234,7 @@ export const useHUDLayout = () => {
                         const rect = resolvedRects.get(w.id);
                         return {
                             ...w,
-                            position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
+                            position: rect ? clampToViewport({ x: rect.x, y: rect.y }) : w.position,
                         };
                     }),
                     widgetsDistributed: true,
@@ -295,37 +253,61 @@ export const useHUDLayout = () => {
     }, []);
 
     const updateWidgetPosition = useCallback((id: string, position: WidgetPosition) => {
-        const clampedPosition = clampPosition(position);
+        const clampedPosition = clampToViewport(position);
         setState((prev) => ({
             ...prev,
-            widgets: prev.widgets.map((w) => (w.id === id ? { ...w, position: clampedPosition } : w)),
+            widgets: updateWidgetInArray(prev.widgets, id, { position: clampedPosition }),
         }));
     }, []);
 
     const updateWidgetScale = useCallback((id: string, scale: number) => {
         setState((prev) => ({
             ...prev,
-            widgets: prev.widgets.map((w) => (w.id === id ? { ...w, scale } : w)),
+            widgets: updateWidgetInArray(prev.widgets, id, { scale }),
         }));
     }, []);
 
     const toggleWidgetVisibility = useCallback((id: string) => {
-        setState((prev) => ({
-            ...prev,
-            widgets: prev.widgets.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w)),
-        }));
+        setState((prev) => {
+            const widget = prev.widgets.find((w) => w.id === id);
+            if (!widget) return prev;
+            return {
+                ...prev,
+                widgets: updateWidgetInArray(prev.widgets, id, { visible: !widget.visible }),
+            };
+        });
     }, []);
 
     const [autoLayoutHiddenIds, setAutoLayoutHiddenIds] = useState<string[]>([]);
     const lastDefaultRectsRef = useRef<Map<string, WidgetRect> | null>(null);
 
     const captureDefaultRects = useCallback(
-        (isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        (isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean) => {
             lastDefaultRectsRef.current = resolveDefaultPositions(
                 defaultWidgetConfigs,
                 isWidgetDisabled,
                 hasSignaledReady,
                 getLayoutOptions(),
+            );
+        },
+        [getLayoutOptions],
+    );
+
+    /**
+     * Helper to resolve default widget positions with current layout options.
+     * Reduces duplication of resolveDefaultPositions calls.
+     */
+    const resolveWidgetRects = useCallback(
+        (
+            isWidgetDisabled?: WidgetDisabledChecker,
+            hasSignaledReady?: boolean,
+            layoutOverride?: Partial<LayoutOptions>,
+        ) => {
+            return resolveDefaultPositions(
+                defaultWidgetConfigs,
+                isWidgetDisabled,
+                hasSignaledReady,
+                getLayoutOptions(layoutOverride),
             );
         },
         [getLayoutOptions],
@@ -340,13 +322,9 @@ export const useHUDLayout = () => {
      * 1. Category A: Widgets at their default position → moved to new default
      * 2. Category B/C: Widgets near affected widgets → moved by the same vector (recursively)
      * 3. External: Widgets near moved widgets after relayout → pulled along
-     *
-     * @param _affectedWidgetIds - IDs of widgets that might need repositioning (now only used for hiding)
-     * @param isWidgetDisabled - Optional function to check if a widget is disabled
-     * @param hasSignaledReady - Optional flag indicating if async widgets are ready
      */
     const runAutoRelayout = useCallback(
-        (_affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        (isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean) => {
             // Ensure we have the "before" snapshot
             const oldRects = lastDefaultRectsRef.current;
             if (!oldRects) return;
@@ -355,55 +333,25 @@ export const useHUDLayout = () => {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     setState((prev) => {
-                        // Use prev state to get correct layout settings
-                        const newRects = resolveDefaultPositions(
-                            defaultWidgetConfigs,
-                            isWidgetDisabled,
-                            hasSignaledReady,
-                            getLayoutOptions(prev),
-                        );
+                        // Compute new default positions
+                        const newRects = resolveWidgetRects(isWidgetDisabled, hasSignaledReady, prev);
 
-                        // Build current rects from widget positions
-                        const currentRects = buildCurrentRects(prev.widgets);
-
-                        // Phase 1 & 2: Build the affected widget graph (recursive proximity detection)
-                        const affectedWidgets = buildAffectedWidgetGraph({
+                        // Use the new high-level function to compute all position changes
+                        const newPositions = computeRelayoutPositions({
                             widgets: prev.widgets,
                             oldDefaultRects: oldRects,
                             newDefaultRects: newRects,
-                            currentRects,
                             gridSize: prev.gridSize,
                         });
 
-                        // Phase 3: Build moved rects for external widget detection
-                        const movedRects = buildMovedRects(currentRects, affectedWidgets);
-
-                        // Phase 4: Find external widgets to pull along
-                        const externalMoves = findExternalWidgetsToPull({
-                            widgets: prev.widgets,
-                            affectedWidgets,
-                            movedRects,
-                            currentRects,
-                        });
-
-                        // Apply all moves
-                        const newPositions = applyMoveVectors(prev.widgets, affectedWidgets, externalMoves);
-
                         // CRITICAL: Update lastDefaultRectsRef for subsequent relayouts
-                        // This ensures the next relayout uses correct baseline positions
                         lastDefaultRectsRef.current = newRects;
 
                         return {
                             ...prev,
                             widgets: prev.widgets.map((w) => {
                                 const newPos = newPositions.get(w.id);
-                                if (newPos) {
-                                    return {
-                                        ...w,
-                                        position: clampPosition(newPos),
-                                    };
-                                }
-                                return w;
+                                return newPos ? { ...w, position: clampToViewport(newPos) } : w;
                             }),
                         };
                     });
@@ -413,7 +361,7 @@ export const useHUDLayout = () => {
                 });
             });
         },
-        [getLayoutOptions],
+        [resolveWidgetRects],
     );
 
     /**
@@ -421,7 +369,7 @@ export const useHUDLayout = () => {
      * Uses the same graph-building logic as runAutoRelayout for consistency.
      */
     const getWidgetsToMove = useCallback(
-        (_affectedWidgetIds: string[], oldRects: Map<string, WidgetRect>): string[] => {
+        (oldRects: Map<string, WidgetRect>): string[] => {
             const currentRects = buildCurrentRects(state.widgets);
 
             // Build the affected widget graph to find all widgets that will move
@@ -448,45 +396,40 @@ export const useHUDLayout = () => {
      * This function:
      * 1. Captures the current default positions of all widgets
      * 2. Hides widgets that will be moved to prevent visual flickering
-     * 3. Returns the deduplicated list of affected widget IDs
      *
      * @example
      * ```ts
-     * const affected = startAutoRelayout(["minimap", "status"], isWidgetDisabled); // BEFORE state change
+     * startAutoRelayout(["minimap", "status"], isWidgetDisabled); // BEFORE state change
      * setState((prev) => ({ ...prev, minimapShape: "square" })); // State change
-     * runAutoRelayout(affected, isWidgetDisabled);
+     * runAutoRelayout(isWidgetDisabled);
      * ```
      *
      * @param affectedWidgetIds - IDs of widgets that might need repositioning
      * @param isWidgetDisabled - Optional function to check if a widget is disabled
-     * @returns Deduplicated array of affected widget IDs (pass this to runAutoRelayout)
      */
     const startAutoRelayout = useCallback(
-        (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean) => {
-            const uniq = Array.from(new Set(affectedWidgetIds));
+        (affectedWidgetIds: string[], isWidgetDisabled?: WidgetDisabledChecker) => {
             captureDefaultRects(isWidgetDisabled);
 
             // Only hide widgets that are actually at their default position (will be moved)
             const oldRects = lastDefaultRectsRef.current;
             if (oldRects) {
-                const toHide = getWidgetsToMove(uniq, oldRects);
+                const toHide = getWidgetsToMove(oldRects);
                 setAutoLayoutHiddenIds(toHide);
             }
-
-            return uniq;
         },
         [captureDefaultRects, getWidgetsToMove],
     );
 
     const setStatusDesign = useCallback(
-        (design: StatusDesign, isWidgetDisabled?: (id: string) => boolean) => {
-            //We also want to refresh the health element, as it's gonna change
-            const affected = startAutoRelayout([...WIDGET_DEPENDENCIES["health"], "health"], isWidgetDisabled);
+        (design: StatusDesign, isWidgetDisabled?: WidgetDisabledChecker) => {
+            // Capture current positions before state change
+            startAutoRelayout([...WIDGET_DEPENDENCIES["health"], "health"], isWidgetDisabled);
 
             setState((prev) => ({ ...prev, statusDesign: design }));
 
             // After render, compute new defaults and apply (without flicker: widgets are hidden during this)
-            runAutoRelayout(affected, isWidgetDisabled);
+            runAutoRelayout(isWidgetDisabled);
         },
         [runAutoRelayout, startAutoRelayout],
     );
@@ -496,33 +439,30 @@ export const useHUDLayout = () => {
     }, []);
 
     const setMinimapShape = useCallback(
-        (shape: MinimapShape, isWidgetDisabled?: (id: string) => boolean) => {
-            const affected = startAutoRelayout(WIDGET_DEPENDENCIES["minimap"] || [], isWidgetDisabled);
+        (shape: MinimapShape, isWidgetDisabled?: WidgetDisabledChecker) => {
+            startAutoRelayout(WIDGET_DEPENDENCIES["minimap"] || [], isWidgetDisabled);
 
             setState((prev) => ({ ...prev, minimapShape: shape }));
             sendNuiCallback("onMinimapShapeChange", { shape });
 
-            runAutoRelayout(affected, isWidgetDisabled);
+            runAutoRelayout(isWidgetDisabled);
         },
         [runAutoRelayout, startAutoRelayout],
     );
 
     const setBrandingPosition = useCallback(
-        (position: BrandingPosition, isWidgetDisabled?: (id: string) => boolean) => {
-            const affected = startAutoRelayout(
-                [...(WIDGET_DEPENDENCIES["branding"] || []), "branding"],
-                isWidgetDisabled,
-            );
+        (position: BrandingPosition, isWidgetDisabled?: WidgetDisabledChecker) => {
+            startAutoRelayout([...(WIDGET_DEPENDENCIES["branding"] || []), "branding"], isWidgetDisabled);
 
             setState((prev) => ({ ...prev, brandingPosition: position }));
 
-            runAutoRelayout(affected, isWidgetDisabled);
+            runAutoRelayout(isWidgetDisabled);
         },
         [runAutoRelayout, startAutoRelayout],
     );
 
     const resetLayout = useCallback(
-        (force: boolean, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        (force: boolean, isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean) => {
             const defaultState = getDefaultState();
 
             if (force) {
@@ -538,19 +478,14 @@ export const useHUDLayout = () => {
             }
 
             requestAnimationFrame(() => {
-                const resolvedRects = resolveDefaultPositions(
-                    defaultWidgetConfigs,
-                    isWidgetDisabled,
-                    false,
-                    getLayoutOptions(),
-                );
+                const resolvedRects = resolveWidgetRects(isWidgetDisabled, false);
 
                 const resetWidgets = defaultWidgetConfigs.map((w) => {
                     const rect = resolvedRects.get(w.id);
                     return {
                         id: w.id,
                         type: w.type,
-                        position: rect ? clampPosition({ x: rect.x, y: rect.y }) : { x: 0, y: 0 },
+                        position: rect ? clampToViewport({ x: rect.x, y: rect.y }) : { x: 0, y: 0 },
                         visible: w.visible,
                         scale: w.scale ?? 1,
                     };
@@ -565,7 +500,7 @@ export const useHUDLayout = () => {
                 }));
             });
         },
-        [setBrandingPosition, setMinimapShape, setStatusDesign, setSpeedometerType, state, getLayoutOptions],
+        [setBrandingPosition, setMinimapShape, setStatusDesign, setSpeedometerType, state, resolveWidgetRects],
     );
 
     /**
@@ -588,43 +523,34 @@ export const useHUDLayout = () => {
      * taking into account disabled widgets, layout options, and current DOM positions.
      */
     const resetWidget = useCallback(
-        (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        (id: string, isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean) => {
             const defaultWidget = defaultWidgetConfigs.find((w) => w.id === id);
             if (!defaultWidget) return;
 
             setState((prev) => {
-                const resolvedRects = resolveDefaultPositions(
-                    defaultWidgetConfigs,
-                    isWidgetDisabled,
-                    hasSignaledReady,
-                    getLayoutOptions(prev),
-                );
-
+                const resolvedRects = resolveWidgetRects(isWidgetDisabled, hasSignaledReady, prev);
                 const rect = resolvedRects.get(id);
 
                 return {
                     ...prev,
-                    widgets: prev.widgets.map((w) =>
-                        w.id === id
-                            ? {
-                                  ...w,
-                                  position: rect ? clampPosition({ x: rect.x, y: rect.y }) : w.position,
-                                  scale: defaultWidget.scale ?? 1,
-                                  visible: defaultWidget.visible,
-                              }
-                            : w,
-                    ),
+                    widgets: updateWidgetInArray(prev.widgets, id, {
+                        position: rect
+                            ? clampToViewport({ x: rect.x, y: rect.y })
+                            : (prev.widgets.find((w) => w.id === id)?.position ?? { x: 0, y: 0 }),
+                        scale: defaultWidget.scale ?? 1,
+                        visible: defaultWidget.visible,
+                    }),
                 };
             });
         },
-        [getLayoutOptions],
+        [resolveWidgetRects],
     );
 
     /**
      * Recalculate a widget's position using the resolver, but keep its current scale/visibility.
      */
     const reflowWidgetPosition = useCallback(
-        (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        (id: string, isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean) => {
             setState((prev) => {
                 // Build widget configs with current scales from state
                 const widgetConfigsWithCurrentScales = defaultWidgetConfigs.map((config) => {
@@ -647,14 +573,9 @@ export const useHUDLayout = () => {
 
                 return {
                     ...prev,
-                    widgets: prev.widgets.map((w) =>
-                        w.id === id
-                            ? {
-                                  ...w,
-                                  position: clampPosition({ x: rect.x, y: rect.y }),
-                              }
-                            : w,
-                    ),
+                    widgets: updateWidgetInArray(prev.widgets, id, {
+                        position: clampToViewport({ x: rect.x, y: rect.y }),
+                    }),
                 };
             });
         },

@@ -1,5 +1,5 @@
 import { WidgetPosition } from "@/types/widget";
-import { LayoutOptions, DEFAULT_LAYOUT_OPTIONS } from "@/lib/widgetConfig";
+import { LayoutOptions, DEFAULT_LAYOUT_OPTIONS, getWidgetElementId } from "@/lib/widgetConfig";
 
 export interface WidgetSize {
     width: number;
@@ -84,7 +84,7 @@ export function resolveDefaultPositions(
     }
 
     const getWidgetSize = (id: string): WidgetSize => {
-        const element = document.getElementById(`hud-widget-${id}`);
+        const element = document.getElementById(getWidgetElementId(id));
         const scale = widgetScales.get(id) ?? 1;
 
         if (hasSignaledReady && element) {
@@ -108,7 +108,7 @@ export function resolveDefaultPositions(
             return resolvedRects.get(id) ?? null;
         }
 
-        const element = document.getElementById(`hud-widget-${id}`);
+        const element = document.getElementById(getWidgetElementId(id));
         if (!element) return resolvedRects.get(id) ?? null;
 
         // getBoundingClientRect already returns the scaled size (after CSS transform)
@@ -138,7 +138,7 @@ export function resolveDefaultPositions(
 
     // Process widgets in order - earlier widgets are resolved first
     for (const config of widgetConfigs) {
-        const element = document.getElementById(`hud-widget-${config.id}`);
+        const element = document.getElementById(getWidgetElementId(config.id));
 
         // Use rendered size when possible (so scale is respected), otherwise fallback to offset size * config scale
         const size = getWidgetSize(config.id);

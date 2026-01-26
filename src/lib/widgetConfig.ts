@@ -1,6 +1,17 @@
 import { StatusType } from "@/types/hud";
 import { BrandingPosition, MinimapShape, StatusDesign, WIDGET_GROUPS, WidgetType } from "@/types/widget";
 
+// ============= Re-exports from widgetHelpers =============
+// Centralized DOM utilities - use these instead of hardcoding "hud-widget-" prefix
+
+export { 
+    WIDGET_DOM_PREFIX, 
+    getWidgetElementId, 
+    getWidgetDOMElement,
+    type WidgetDisabledChecker,
+    type RelayoutContext,
+} from "@/lib/widgetHelpers";
+
 // ============= Layout Spacing Constants =============
 
 /** Default margin from screen edges */

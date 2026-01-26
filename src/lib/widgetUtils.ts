@@ -1,8 +1,8 @@
 import { WidgetPosition } from "@/types/widget";
+import { getWidgetElementId } from "@/lib/widgetConfig";
 
 /** Get widget DOM element by ID */
-export const getWidgetElement = (id: string): HTMLElement | null => 
-    document.getElementById(`hud-widget-${id}`);
+export const getWidgetElement = (id: string): HTMLElement | null => document.getElementById(getWidgetElementId(id));
 
 /** Get widget position from DOM */
 export const getWidgetDOMPosition = (id: string): WidgetPosition | null => {
@@ -25,15 +25,18 @@ export const setWidgetDOMPosition = (id: string, pos: WidgetPosition): void => {
 /** Calculate viewport clamp adjustment for a group of widgets */
 export const calcGroupClampAdjust = (
     widgetIds: string[],
-    getNewPos: (id: string) => WidgetPosition | null
+    getNewPos: (id: string) => WidgetPosition | null,
 ): { adjustX: number; adjustY: number } => {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    
+    let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+
     for (const id of widgetIds) {
         const el = getWidgetElement(id);
         const pos = getNewPos(id);
         if (!el || !pos) continue;
-        
+
         const rect = el.getBoundingClientRect();
         minX = Math.min(minX, pos.x);
         minY = Math.min(minY, pos.y);
@@ -42,8 +45,8 @@ export const calcGroupClampAdjust = (
     }
 
     return {
-        adjustX: minX < 0 ? -minX : (maxX > window.innerWidth ? window.innerWidth - maxX : 0),
-        adjustY: minY < 0 ? -minY : (maxY > window.innerHeight ? window.innerHeight - maxY : 0),
+        adjustX: minX < 0 ? -minX : maxX > window.innerWidth ? window.innerWidth - maxX : 0,
+        adjustY: minY < 0 ? -minY : maxY > window.innerHeight ? window.innerHeight - maxY : 0,
     };
 };
 
@@ -51,13 +54,15 @@ export const calcGroupClampAdjust = (
 export const isWidgetVisible = (id: string): boolean => {
     const el = getWidgetElement(id);
     if (!el) return false;
-    
+
     const style = window.getComputedStyle(el);
     const rect = el.getBoundingClientRect();
-    
-    return style.visibility !== 'hidden' 
-        && style.opacity !== '0'
-        && style.display !== 'none'
-        && rect.width > 0 
-        && rect.height > 0;
+
+    return (
+        style.visibility !== "hidden" &&
+        style.opacity !== "0" &&
+        style.display !== "none" &&
+        rect.width > 0 &&
+        rect.height > 0
+    );
 };

@@ -4,91 +4,15 @@ import {
     POSITION_TOLERANCE_BASE,
     PROXIMITY_THRESHOLD,
     EXTERNAL_PROXIMITY_THRESHOLD,
+    getWidgetElementId,
 } from "@/lib/widgetConfig";
+import { relayoutLogger } from "@/lib/relayoutLogger";
 
-// ============= Logging (styled like useRenderLogger) =============
+// Re-export logger for backwards compatibility
+export { relayoutLogger };
 
-const LOG_PREFIX = "[AutoRelayout]";
-const LOGGING_ENABLED = process.env.NODE_ENV === "development";
-
-// Color palette for console output (matching useRenderLogger style)
-const COLORS = {
-    prefix: "#4FC3F7",    // Light blue
-    phase: "#81C784",     // Green
-    widget: "#FFB74D",    // Orange
-    categoryA: "#4FC3F7", // Light blue
-    categoryB: "#BA68C8", // Purple
-    categoryC: "#F06292", // Pink
-    external: "#90A4AE",  // Gray
-    vector: "#81C784",    // Green
-    warning: "#FF7043",   // Red-orange
-    info: "#90A4AE",      // Gray
-    distance: "#64B5F6",  // Blue
-};
-
-const log = (message: string, color: string = COLORS.phase) => {
-    if (!LOGGING_ENABLED) return;
-    console.log(
-        `%c${LOG_PREFIX} %c${message}`,
-        `color: ${COLORS.prefix}; font-weight: bold`,
-        `color: ${color}`
-    );
-};
-
-const logWidget = (
-    category: "A" | "B" | "C" | "External",
-    id: string,
-    details: string
-) => {
-    if (!LOGGING_ENABLED) return;
-    
-    const categoryColor = {
-        A: COLORS.categoryA,
-        B: COLORS.categoryB,
-        C: COLORS.categoryC,
-        External: COLORS.external,
-    }[category];
-    
-    console.log(
-        `%c${LOG_PREFIX} %c  [${category}] %c${id}: %c${details}`,
-        `color: ${COLORS.prefix}`,
-        `color: ${categoryColor}; font-weight: bold`,
-        `color: ${COLORS.widget}`,
-        `color: ${COLORS.vector}`
-    );
-};
-
-const logGroup = (label: string) => {
-    if (!LOGGING_ENABLED) return;
-    console.groupCollapsed(
-        `%c${LOG_PREFIX} %c${label}`,
-        `color: ${COLORS.prefix}; font-weight: bold`,
-        `color: ${COLORS.phase}; font-weight: bold`
-    );
-};
-
-const logGroupEnd = () => {
-    if (!LOGGING_ENABLED) return;
-    console.groupEnd();
-};
-
-const logInfo = (message: string) => {
-    if (!LOGGING_ENABLED) return;
-    console.log(
-        `%c${LOG_PREFIX} %c  ℹ️ ${message}`,
-        `color: ${COLORS.prefix}`,
-        `color: ${COLORS.info}`
-    );
-};
-
-const logWarning = (message: string) => {
-    if (!LOGGING_ENABLED) return;
-    console.log(
-        `%c${LOG_PREFIX} %c  ⚠️ ${message}`,
-        `color: ${COLORS.prefix}`,
-        `color: ${COLORS.warning}; font-weight: bold`
-    );
-};
+// Destructure logger methods for cleaner usage
+const { log, logWidget, logGroup, logGroupEnd, logInfo, logWarning } = relayoutLogger;
 
 // ============= Types =============
 
@@ -288,7 +212,7 @@ export const buildAffectedWidgetGraph = ({
         }
     }
 
-    log(`${movingCategoryACount} of ${categoryA.length} Category A widgets have movement`, COLORS.info);
+    log(`${movingCategoryACount} of ${categoryA.length} Category A widgets have movement`);
     logGroupEnd(); // Phase 1
 
     // Phase 2: Iteratively find nearby widgets (Category B/C)
@@ -408,7 +332,7 @@ export const buildAffectedWidgetGraph = ({
     log(`Completed in ${iterationCount} iterations`);
     logGroupEnd(); // Phase 2
 
-    log(`Total affected widgets: ${affected.size}`, COLORS.phase);
+    log(`Total affected widgets: ${affected.size}`);
     logGroupEnd(); // Building Affected Widget Graph
 
     return affected;
@@ -616,6 +540,63 @@ export const applyMoveVectors = (
     return newPositions;
 };
 
+// ============= High-Level Relayout Computation =============
+
+export interface ComputeRelayoutParams {
+    /** All widgets with their current positions */
+    widgets: Array<{ id: string; position: WidgetPosition }>;
+    /** Old default positions (before the change) */
+    oldDefaultRects: Map<string, WidgetRect>;
+    /** New default positions (after the change) */
+    newDefaultRects: Map<string, WidgetRect>;
+    /** Grid size for position comparison tolerance */
+    gridSize: number;
+}
+
+/**
+ * Compute new positions for all affected widgets during a relayout.
+ * 
+ * This is the main entry point for the relayout algorithm:
+ * 1. Builds current rects from DOM
+ * 2. Identifies affected widgets (Category A/B/C)
+ * 3. Finds external widgets to pull along
+ * 4. Computes final positions for all moving widgets
+ * 
+ * @returns Map of widget ID to new position
+ */
+export const computeRelayoutPositions = ({
+    widgets,
+    oldDefaultRects,
+    newDefaultRects,
+    gridSize,
+}: ComputeRelayoutParams): Map<string, WidgetPosition> => {
+    // Step 1: Build current rects from widget positions
+    const currentRects = buildCurrentRects(widgets);
+
+    // Step 2: Build the affected widget graph (recursive proximity detection)
+    const affectedWidgets = buildAffectedWidgetGraph({
+        widgets,
+        oldDefaultRects,
+        newDefaultRects,
+        currentRects,
+        gridSize,
+    });
+
+    // Step 3: Build moved rects for external widget detection
+    const movedRects = buildMovedRects(currentRects, affectedWidgets);
+
+    // Step 4: Find external widgets to pull along
+    const externalMoves = findExternalWidgetsToPull({
+        widgets,
+        affectedWidgets,
+        movedRects,
+        currentRects,
+    });
+
+    // Step 5: Apply all moves and return new positions
+    return applyMoveVectors(widgets, affectedWidgets, externalMoves);
+};
+
 // ============= Build Current Rects from Widgets =============
 
 /**
@@ -627,7 +608,7 @@ export const buildCurrentRects = (
     const rects = new Map<string, WidgetRect>();
 
     for (const widget of widgets) {
-        const element = document.getElementById(`hud-widget-${widget.id}`);
+        const element = document.getElementById(getWidgetElementId(widget.id));
         if (!element) continue;
 
         const domRect = element.getBoundingClientRect();
