@@ -12,6 +12,12 @@ export const WIDGET_GAP = 10;
 /** Base tolerance for position comparison (added to gridSize) */
 export const POSITION_TOLERANCE_BASE = 5;
 
+/** Distance threshold for cascading widget relayout (nearby widgets get moved along) */
+export const PROXIMITY_THRESHOLD = 100;
+
+/** Distance threshold for external widgets to be pulled along (2 * WIDGET_GAP) */
+export const EXTERNAL_PROXIMITY_THRESHOLD = WIDGET_GAP * 2;
+
 // ============= Snap Visualization Config =============
 
 /** Duration in ms to show snap lines during keyboard navigation */

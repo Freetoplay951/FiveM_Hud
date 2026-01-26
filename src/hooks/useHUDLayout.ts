@@ -12,8 +12,15 @@ import {
     WidgetConfig,
 } from "@/types/widget";
 import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
-import { DEFAULT_LAYOUT_OPTIONS, LayoutOptions, POSITION_TOLERANCE_BASE } from "@/lib/widgetConfig";
+import { DEFAULT_LAYOUT_OPTIONS, LayoutOptions } from "@/lib/widgetConfig";
 import { mapPartialState } from "@/lib/utils";
+import {
+    buildAffectedWidgetGraph,
+    buildCurrentRects,
+    buildMovedRects,
+    findExternalWidgetsToPull,
+    applyMoveVectors,
+} from "@/lib/relayoutUtils";
 
 /**
  * Programmatically extract widget dependencies by analyzing position functions.
@@ -312,11 +319,6 @@ export const useHUDLayout = () => {
     const [autoLayoutHiddenIds, setAutoLayoutHiddenIds] = useState<string[]>([]);
     const lastDefaultRectsRef = useRef<Map<string, WidgetRect> | null>(null);
 
-    const isPositionClose = useCallback((a: WidgetPosition, b: WidgetPosition, gridSize: number) => {
-        const tolerance = gridSize + POSITION_TOLERANCE_BASE;
-        return Math.abs(a.x - b.x) <= tolerance && Math.abs(a.y - b.y) <= tolerance;
-    }, []);
-
     const captureDefaultRects = useCallback(
         (isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
             lastDefaultRectsRef.current = resolveDefaultPositions(
@@ -334,22 +336,17 @@ export const useHUDLayout = () => {
      *
      * **IMPORTANT: This function MUST be called AFTER the state change that affects widget positions.**
      *
-     * The function waits for the DOM to update with new sizes, then computes new default positions
-     * and moves widgets that were at their old default positions to the new ones.
+     * The function uses a recursive approach to move widgets:
+     * 1. Category A: Widgets at their default position → moved to new default
+     * 2. Category B/C: Widgets near affected widgets → moved by the same vector (recursively)
+     * 3. External: Widgets near moved widgets after relayout → pulled along
      *
-     * @example
-     * ```ts
-     * const affected = startAutoRelayout(["minimap", "status"], isWidgetDisabled);
-     * setState((prev) => ({ ...prev, minimapShape: "square" })); // State change
-     * runAutoRelayout(affected, isWidgetDisabled); // AFTER state change
-     * ```
-     *
-     * @param affectedWidgetIds - IDs of widgets that might need repositioning
+     * @param _affectedWidgetIds - IDs of widgets that might need repositioning (now only used for hiding)
      * @param isWidgetDisabled - Optional function to check if a widget is disabled
      * @param hasSignaledReady - Optional flag indicating if async widgets are ready
      */
     const runAutoRelayout = useCallback(
-        (affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
+        (_affectedWidgetIds: string[], isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => {
             // Ensure we have the "before" snapshot
             const oldRects = lastDefaultRectsRef.current;
             if (!oldRects) return;
@@ -366,23 +363,46 @@ export const useHUDLayout = () => {
                             getLayoutOptions(prev),
                         );
 
+                        // Build current rects from widget positions
+                        const currentRects = buildCurrentRects(prev.widgets);
+
+                        // Phase 1 & 2: Build the affected widget graph (recursive proximity detection)
+                        const affectedWidgets = buildAffectedWidgetGraph({
+                            widgets: prev.widgets,
+                            oldDefaultRects: oldRects,
+                            newDefaultRects: newRects,
+                            currentRects,
+                            gridSize: prev.gridSize,
+                        });
+
+                        // Phase 3: Build moved rects for external widget detection
+                        const movedRects = buildMovedRects(currentRects, affectedWidgets);
+
+                        // Phase 4: Find external widgets to pull along
+                        const externalMoves = findExternalWidgetsToPull({
+                            widgets: prev.widgets,
+                            affectedWidgets,
+                            movedRects,
+                            currentRects,
+                        });
+
+                        // Apply all moves
+                        const newPositions = applyMoveVectors(prev.widgets, affectedWidgets, externalMoves);
+
+                        // CRITICAL: Update lastDefaultRectsRef for subsequent relayouts
+                        // This ensures the next relayout uses correct baseline positions
+                        lastDefaultRectsRef.current = newRects;
+
                         return {
                             ...prev,
                             widgets: prev.widgets.map((w) => {
-                                if (!affectedWidgetIds.includes(w.id)) return w;
-
-                                const oldRect = oldRects.get(w.id);
-                                const newRect = newRects.get(w.id);
-                                if (!oldRect || !newRect) return w;
-
-                                // Only move if it was at the old default position
-                                if (isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, prev.gridSize)) {
+                                const newPos = newPositions.get(w.id);
+                                if (newPos) {
                                     return {
                                         ...w,
-                                        position: clampPosition({ x: newRect.x, y: newRect.y }),
+                                        position: clampPosition(newPos),
                                     };
                                 }
-
                                 return w;
                             }),
                         };
@@ -393,26 +413,31 @@ export const useHUDLayout = () => {
                 });
             });
         },
-        [isPositionClose, getLayoutOptions],
+        [getLayoutOptions],
     );
 
     /**
-     * Determine which widgets will actually be moved (are at their default position).
-     * Only those should be hidden during auto-relayout.
+     * Determine which widgets will actually be moved (are at their default position or nearby).
+     * Uses the same graph-building logic as runAutoRelayout for consistency.
      */
     const getWidgetsToMove = useCallback(
-        (affectedWidgetIds: string[], oldRects: Map<string, WidgetRect>): string[] => {
-            return state.widgets
-                .filter((w) => {
-                    if (!affectedWidgetIds.includes(w.id)) return false;
-                    const oldRect = oldRects.get(w.id);
-                    if (!oldRect) return false;
-                    // Only include if at old default position
-                    return isPositionClose(w.position, { x: oldRect.x, y: oldRect.y }, state.gridSize);
-                })
-                .map((w) => w.id);
+        (_affectedWidgetIds: string[], oldRects: Map<string, WidgetRect>): string[] => {
+            const currentRects = buildCurrentRects(state.widgets);
+
+            // Build the affected widget graph to find all widgets that will move
+            const affectedWidgets = buildAffectedWidgetGraph({
+                widgets: state.widgets,
+                oldDefaultRects: oldRects,
+                newDefaultRects: oldRects, // Use same rects since we just want to know who's affected
+                currentRects,
+                gridSize: state.gridSize,
+                // Prediction for hiding: we want the full affected set even before we know the true vectors
+                allowStaticSources: true,
+            });
+
+            return Array.from(affectedWidgets.keys());
         },
-        [state.widgets, state.gridSize, isPositionClose],
+        [state.widgets, state.gridSize],
     );
 
     /**
