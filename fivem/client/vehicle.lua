@@ -186,8 +186,8 @@ local function GetVehicleData(vehicle, vehicleType)
     local data = {
         inVehicle = true,
         vehicleType = vehicleType,
-        vehicleName = vehicleName,
-        vehicleSpawnName = GetSpawnNameFromVehicle(vehicle),
+        vehicleName = vehicleName or json.null,
+        vehicleSpawnName = GetSpawnNameFromVehicle(vehicle) or json.null,
         speed = GetEntitySpeed(vehicle) * 3.6, -- m/s zu km/h
         fuel = GetVehicleFuelLevel(vehicle),
         heading = GetEntityHeading(vehicle)
