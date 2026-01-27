@@ -12,6 +12,9 @@ interface UtilityStoreState {
     serverName: string;
     playerCount: number;
     maxPlayers: number;
+    // Config Options (from Lua Config)
+    minimapOnlyInVehicle: boolean;
+    locationOnlyInVehicle: boolean;
 }
 
 type ServerInfo = Partial<Pick<UtilityStoreState, "serverName" | "playerCount" | "maxPlayers">>;
@@ -20,6 +23,8 @@ interface UtilityStoreActions {
     setWantedLevel: (level: number) => void;
     setIsEvading: (isEvading: boolean) => void;
     setServerInfo: (info: ServerInfo) => void;
+    setMinimapOnlyInVehicle: (enabled: boolean) => void;
+    setLocationOnlyInVehicle: (enabled: boolean) => void;
     setUtilityState: (state: Partial<UtilityStoreState>) => void;
 }
 
@@ -31,6 +36,8 @@ export const useUtilityStore = create<UtilityStore>((set) => ({
     serverName: "RP Server",
     playerCount: 64,
     maxPlayers: 128,
+    minimapOnlyInVehicle: false,
+    locationOnlyInVehicle: false,
 
     setWantedLevel: (level) => set({ wantedLevel: Math.min(5, Math.max(0, level)) }),
     setIsEvading: (isEvading) => set({ isEvading }),
@@ -40,6 +47,8 @@ export const useUtilityStore = create<UtilityStore>((set) => ({
             playerCount: info.playerCount ?? state.playerCount,
             maxPlayers: info.maxPlayers ?? state.maxPlayers,
         })),
+    setMinimapOnlyInVehicle: (enabled) => set({ minimapOnlyInVehicle: enabled }),
+    setLocationOnlyInVehicle: (enabled) => set({ locationOnlyInVehicle: enabled }),
     setUtilityState: (state) => set((prev) => ({ ...prev, ...state })),
 }));
 
@@ -49,3 +58,5 @@ export const useIsEvading = () => useUtilityStore((state) => state.isEvading);
 export const useServerName = () => useUtilityStore((state) => state.serverName);
 export const usePlayerCount = () => useUtilityStore((state) => state.playerCount);
 export const useMaxPlayers = () => useUtilityStore((state) => state.maxPlayers);
+export const useMinimapOnlyInVehicle = () => useUtilityStore((state) => state.minimapOnlyInVehicle);
+export const useLocationOnlyInVehicle = () => useUtilityStore((state) => state.locationOnlyInVehicle);

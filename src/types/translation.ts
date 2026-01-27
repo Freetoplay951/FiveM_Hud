@@ -138,6 +138,8 @@ export interface Translations {
         title: string;
         teamChatAccess: string;
         commandOnly: string;
+        minimapOnlyInVehicle: string;
+        locationOnlyInVehicle: string;
         adminRights: string;
         teamChatVisibility: string;
         hidden: string;

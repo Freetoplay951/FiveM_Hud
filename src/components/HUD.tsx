@@ -26,6 +26,8 @@ import { useRenderLogger } from "@/hooks/useRenderLogger";
 import { useHUDGlobalStore, useIsVisible, useIsDemoMode } from "@/stores/hudStore";
 import { useIsDead, useDeathData } from "@/stores/deathStore";
 import { useChatStore } from "@/stores/chatStore";
+import { useUtilityStore } from "@/stores/utilityStore";
+import { useInVehicle } from "@/stores/vehicleStore";
 
 export const HUD = () => {
     const [editMenuOpen, setEditMenuOpen] = useState(false);
@@ -46,6 +48,13 @@ export const HUD = () => {
     const setTeamChatAccess = useChatStore((s) => s.setTeamChatAccess);
     const setTeamChatIsAdmin = useChatStore((s) => s.setTeamChatIsAdmin);
     const setChatCommandOnly = useChatStore((s) => s.setChatCommandOnly);
+
+    // Location vehicle-only options
+    const minimapOnlyInVehicle = useUtilityStore((s) => s.minimapOnlyInVehicle);
+    const locationOnlyInVehicle = useUtilityStore((s) => s.locationOnlyInVehicle);
+    const setMinimapOnlyInVehicle = useUtilityStore((s) => s.setMinimapOnlyInVehicle);
+    const setLocationOnlyInVehicle = useUtilityStore((s) => s.setLocationOnlyInVehicle);
+    const inVehicle = useInVehicle();
 
     // Layout management - pure layout, no widget data
     const {
@@ -75,6 +84,8 @@ export const HUD = () => {
         reflowWidgetPosition,
         getWidget,
         distributeWidgets,
+        startMinimapRelayout,
+        runMinimapRelayout,
     } = useHUDLayout();
 
     const { t, isLoaded: isLanguageLoaded } = useTranslation();
@@ -101,10 +112,11 @@ export const HUD = () => {
     });
 
     // Widget-to-widget snapping (must be before useMultiSelection to pass props)
-    const { isShiftPressed, activeSnapLines, getSnappedPosition, clearSnapLines, showSnapLinesTemporarily } = useSnapLines({
-        editMode,
-        simpleMode,
-    });
+    const { isShiftPressed, activeSnapLines, getSnappedPosition, clearSnapLines, showSnapLinesTemporarily } =
+        useSnapLines({
+            editMode,
+            simpleMode,
+        });
 
     // Multi-selection
     const {
@@ -199,8 +211,17 @@ export const HUD = () => {
 
     // Compute snap target IDs from active snap lines
     const snapTargetIds = useMemo(() => {
-        return new Set(activeSnapLines.map(line => line.targetWidgetId));
+        return new Set(activeSnapLines.map((line) => line.targetWidgetId));
     }, [activeSnapLines]);
+
+    const handleMinimapOnlyInVehicleChange = useCallback(
+        (checked: boolean) => setMinimapOnlyInVehicle(checked),
+        [setMinimapOnlyInVehicle],
+    );
+    const handleLocationOnlyInVehicleChange = useCallback(
+        (checked: boolean) => setLocationOnlyInVehicle(checked),
+        [setLocationOnlyInVehicle],
+    );
 
     // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data, NO notifications
     const layoutProps = useMemo(
@@ -223,6 +244,12 @@ export const HUD = () => {
             getSnappedPosition,
             onSnapLinesClear: clearSnapLines,
             snapTargetIds,
+            // Layout options for widget positioning
+            minimapOnlyInVehicle,
+            locationOnlyInVehicle,
+            inVehicle,
+            startMinimapRelayout,
+            runMinimapRelayout,
         }),
         [
             editMode,
@@ -243,6 +270,11 @@ export const HUD = () => {
             getSnappedPosition,
             clearSnapLines,
             snapTargetIds,
+            minimapOnlyInVehicle,
+            locationOnlyInVehicle,
+            inVehicle,
+            startMinimapRelayout,
+            runMinimapRelayout,
         ],
     );
 
@@ -430,6 +462,28 @@ export const HUD = () => {
                                     <Switch
                                         checked={teamChatIsAdmin}
                                         onCheckedChange={handleTeamChatAdminChange}
+                                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 border-t border-destructive-foreground/20 pt-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">
+                                        {t.demo.minimapOnlyInVehicle}
+                                    </span>
+                                    <Switch
+                                        checked={minimapOnlyInVehicle}
+                                        onCheckedChange={handleMinimapOnlyInVehicleChange}
+                                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">
+                                        {t.demo.locationOnlyInVehicle}
+                                    </span>
+                                    <Switch
+                                        checked={locationOnlyInVehicle}
+                                        onCheckedChange={handleLocationOnlyInVehicleChange}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>

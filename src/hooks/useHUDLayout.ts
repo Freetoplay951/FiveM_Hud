@@ -9,124 +9,18 @@ import {
     MinimapShape,
     BrandingPosition,
     getDefaultWidgets,
-    WidgetConfig,
 } from "@/types/widget";
-import { resolveDefaultPositions, PositionResolver, WidgetRect } from "@/lib/widgetPositionResolver";
+import { resolveDefaultPositions, WidgetRect } from "@/lib/widgetPositionResolver";
 import { DEFAULT_LAYOUT_OPTIONS, LayoutOptions, WidgetDisabledChecker } from "@/lib/widgetConfig";
 import { mapPartialState } from "@/lib/utils";
 import { buildAffectedWidgetGraph, buildCurrentRects, computeRelayoutPositions } from "@/lib/relayoutUtils";
-import { createMockResolver, createMockElement, clampToViewport, updateWidgetInArray } from "@/lib/widgetHelpers";
+import { clampToViewport, updateWidgetInArray } from "@/lib/widgetHelpers";
 
-/**
- * Programmatically extract widget dependencies by analyzing position functions.
- * Runs each widget's position function with a mock resolver that tracks getWidgetRect calls.
- */
-const extractWidgetDependencies = (widgetConfigs: WidgetConfig[]): Record<string, Set<string>> => {
-    const dependencyMap: Record<string, Set<string>> = {};
-    const widgetIds = widgetConfigs.map((w) => w.id);
-
-    // Initialize all widgets with empty dependency sets
-    for (const id of widgetIds) {
-        dependencyMap[id] = new Set();
-    }
-
-    // For each widget, run its position function with a tracking resolver
-    for (const config of widgetConfigs) {
-        const trackedDeps: string[] = [];
-
-        // Use factory function with tracking callback
-        const mockResolver = createMockResolver((id) => trackedDeps.push(id));
-        const mockElement = createMockElement();
-
-        try {
-            // Run the position function to see which widgets it queries
-            config.position(config.id, mockElement, mockResolver);
-        } catch (e) {
-            // Some position functions might fail with mock data - continue
-            console.debug(`Dependency extraction for ${config.id} failed:`, e);
-        }
-
-        // Record dependencies - this widget depends on the widgets it queried
-        for (const depId of trackedDeps) {
-            if (depId !== config.id) {
-                dependencyMap[config.id].add(depId);
-            }
-        }
-    }
-
-    return dependencyMap;
-};
-
-/**
- * Build a reverse dependency map: which widgets depend ON a given widget.
- * Also includes transitive dependencies (if A depends on B, and B depends on C,
- * then C's dependents include both A and B).
- */
-const buildReverseDependencyMap = (
-    directDeps: Record<string, Set<string>>,
-    widgetConfigs: WidgetConfig[],
-): Record<string, string[]> => {
-    const reverseMap: Record<string, Set<string>> = {};
-    const widgetIds = widgetConfigs.map((w) => w.id);
-    const widgetOrder = new Map(widgetIds.map((id, idx) => [id, idx]));
-
-    // Initialize
-    for (const id of widgetIds) {
-        reverseMap[id] = new Set();
-    }
-
-    // Build direct reverse dependencies
-    for (const [widgetId, deps] of Object.entries(directDeps)) {
-        for (const depId of deps) {
-            if (reverseMap[depId]) {
-                reverseMap[depId].add(widgetId);
-            }
-        }
-    }
-
-    // Expand to include transitive dependencies
-    // If minimap -> location -> something, then minimap's dependents should include location's dependents
-    let changed = true;
-    while (changed) {
-        changed = false;
-        for (const [anchorId, dependents] of Object.entries(reverseMap)) {
-            const currentSize = dependents.size;
-            const toAdd: string[] = [];
-
-            for (const depId of dependents) {
-                // This dependent's dependents are also affected by the anchor
-                for (const transitiveDep of reverseMap[depId] || []) {
-                    if (!dependents.has(transitiveDep) && transitiveDep !== anchorId) {
-                        toAdd.push(transitiveDep);
-                    }
-                }
-            }
-
-            for (const id of toAdd) {
-                dependents.add(id);
-            }
-
-            if (dependents.size > currentSize) {
-                changed = true;
-            }
-        }
-    }
-
-    // Convert to sorted arrays (by widget order for consistent processing)
-    const result: Record<string, string[]> = {};
-    for (const [id, deps] of Object.entries(reverseMap)) {
-        result[id] = Array.from(deps).sort((a, b) => (widgetOrder.get(a) ?? 0) - (widgetOrder.get(b) ?? 0));
-    }
-
-    return result;
-};
+import { useVehicleStore } from "@/stores/vehicleStore";
+import { useUtilityStore } from "@/stores/utilityStore";
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
-
-// Build the dependency maps once at module load
-const directDependencies = extractWidgetDependencies(defaultWidgetConfigs);
-const WIDGET_DEPENDENCIES = buildReverseDependencyMap(directDependencies, defaultWidgetConfigs);
 
 // Get dynamic default state based on current screen size
 const getDefaultState = (): HUDLayoutState => ({
@@ -143,7 +37,9 @@ const getDefaultState = (): HUDLayoutState => ({
     speedometerType: "car",
     widgetsDistributed: false,
     simpleMode: true,
-    ...DEFAULT_LAYOUT_OPTIONS,
+    brandingPosition: DEFAULT_LAYOUT_OPTIONS.brandingPosition,
+    minimapShape: DEFAULT_LAYOUT_OPTIONS.minimapShape,
+    statusDesign: DEFAULT_LAYOUT_OPTIONS.statusDesign,
 });
 
 const STORAGE_KEY = "hud-layout";
@@ -207,14 +103,22 @@ export const useHUDLayout = () => {
 
     const getLayoutOptions = useCallback(
         (override?: Partial<LayoutOptions>): LayoutOptions => {
+            const vehicleState = useVehicleStore.getState();
+            const utilityState = useUtilityStore.getState();
+
             const original: LayoutOptions = {
                 brandingPosition: state.brandingPosition,
                 minimapShape: state.minimapShape,
                 statusDesign: state.statusDesign,
+                isEditMode: state.editMode,
+                inVehicle: vehicleState.inVehicle,
+                locationOnlyInVehicle: utilityState.locationOnlyInVehicle,
+                minimapOnlyInVehicle: utilityState.minimapOnlyInVehicle,
             };
+
             return mapPartialState(original, override ?? {});
         },
-        [state.brandingPosition, state.minimapShape, state.statusDesign],
+        [state.brandingPosition, state.minimapShape, state.statusDesign, state.editMode],
     );
 
     // Distribute widgets using the resolver - computes all default positions in order
@@ -282,12 +186,12 @@ export const useHUDLayout = () => {
     const lastDefaultRectsRef = useRef<Map<string, WidgetRect> | null>(null);
 
     const captureDefaultRects = useCallback(
-        (isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean) => {
+        (isWidgetDisabled?: WidgetDisabledChecker, hasSignaledReady?: boolean, override?: Partial<LayoutOptions>) => {
             lastDefaultRectsRef.current = resolveDefaultPositions(
                 defaultWidgetConfigs,
                 isWidgetDisabled,
                 hasSignaledReady,
-                getLayoutOptions(),
+                getLayoutOptions(override),
             );
         },
         [getLayoutOptions],
@@ -408,8 +312,8 @@ export const useHUDLayout = () => {
      * @param isWidgetDisabled - Optional function to check if a widget is disabled
      */
     const startAutoRelayout = useCallback(
-        (affectedWidgetIds: string[], isWidgetDisabled?: WidgetDisabledChecker) => {
-            captureDefaultRects(isWidgetDisabled);
+        (isWidgetDisabled?: WidgetDisabledChecker, override?: Partial<LayoutOptions>) => {
+            captureDefaultRects(isWidgetDisabled, undefined, override);
 
             // Only hide widgets that are actually at their default position (will be moved)
             const oldRects = lastDefaultRectsRef.current;
@@ -424,7 +328,7 @@ export const useHUDLayout = () => {
     const setStatusDesign = useCallback(
         (design: StatusDesign, isWidgetDisabled?: WidgetDisabledChecker) => {
             // Capture current positions before state change
-            startAutoRelayout([...WIDGET_DEPENDENCIES["health"], "health"], isWidgetDisabled);
+            startAutoRelayout(isWidgetDisabled);
 
             setState((prev) => ({ ...prev, statusDesign: design }));
 
@@ -440,7 +344,7 @@ export const useHUDLayout = () => {
 
     const setMinimapShape = useCallback(
         (shape: MinimapShape, isWidgetDisabled?: WidgetDisabledChecker) => {
-            startAutoRelayout(WIDGET_DEPENDENCIES["minimap"] || [], isWidgetDisabled);
+            startAutoRelayout(isWidgetDisabled);
 
             setState((prev) => ({ ...prev, minimapShape: shape }));
             sendNuiCallback("onMinimapShapeChange", { shape });
@@ -452,13 +356,27 @@ export const useHUDLayout = () => {
 
     const setBrandingPosition = useCallback(
         (position: BrandingPosition, isWidgetDisabled?: WidgetDisabledChecker) => {
-            startAutoRelayout([...(WIDGET_DEPENDENCIES["branding"] || []), "branding"], isWidgetDisabled);
+            startAutoRelayout(isWidgetDisabled);
 
             setState((prev) => ({ ...prev, brandingPosition: position }));
 
             runAutoRelayout(isWidgetDisabled);
         },
         [runAutoRelayout, startAutoRelayout],
+    );
+
+    const startMinimapRelayout = useCallback(
+        (isWidgetDisabled?: WidgetDisabledChecker, override?: Partial<LayoutOptions>) => {
+            startAutoRelayout(isWidgetDisabled, override);
+        },
+        [startAutoRelayout],
+    );
+
+    const runMinimapRelayout = useCallback(
+        (isWidgetDisabled?: WidgetDisabledChecker) => {
+            runAutoRelayout(isWidgetDisabled);
+        },
+        [runAutoRelayout],
     );
 
     const resetLayout = useCallback(
@@ -611,5 +529,7 @@ export const useHUDLayout = () => {
         reflowWidgetPosition,
         getWidget,
         distributeWidgets,
+        startMinimapRelayout,
+        runMinimapRelayout,
     };
 };

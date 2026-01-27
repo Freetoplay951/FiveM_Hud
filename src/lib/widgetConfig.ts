@@ -4,9 +4,9 @@ import { BrandingPosition, MinimapShape, StatusDesign, WIDGET_GROUPS, WidgetType
 // ============= Re-exports from widgetHelpers =============
 // Centralized DOM utilities - use these instead of hardcoding "hud-widget-" prefix
 
-export { 
-    WIDGET_DOM_PREFIX, 
-    getWidgetElementId, 
+export {
+    WIDGET_DOM_PREFIX,
+    getWidgetElementId,
     getWidgetDOMElement,
     type WidgetDisabledChecker,
     type RelayoutContext,
@@ -57,12 +57,21 @@ export interface LayoutOptions {
     brandingPosition: BrandingPosition;
     minimapShape: MinimapShape;
     statusDesign: StatusDesign;
+    // Config options that affect widget visibility/positioning
+    minimapOnlyInVehicle: boolean;
+    locationOnlyInVehicle: boolean;
+    inVehicle: boolean;
+    isEditMode: boolean;
 }
 
 export const DEFAULT_LAYOUT_OPTIONS: LayoutOptions = {
     brandingPosition: "center",
     minimapShape: "square",
     statusDesign: "circular",
+    minimapOnlyInVehicle: false,
+    locationOnlyInVehicle: false,
+    inVehicle: false,
+    isEditMode: false,
 };
 
 // ============= Widget Selection & Lock Config =============
@@ -104,7 +113,7 @@ export const ALL_SUBWIDGETS: ReadonlySet<WidgetType> = new Set(
  * Check if a widget is a subwidget (non-base vehicle widget).
  * Subwidgets are vehicle-specific widgets like heli-kts, car-fuel, plane-altitude, etc.
  * BaseWidgets (heli-base, car-base, etc.) are NOT subwidgets.
- * 
+ *
  * Uses WIDGET_GROUPS as single source of truth - no hardcoded suffixes.
  */
 export const isSubwidget = (widgetId: string): boolean => {

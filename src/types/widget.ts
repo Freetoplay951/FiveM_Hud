@@ -204,8 +204,17 @@ const getStatusWidgetPosition = (
     resolver: PositionResolver,
 ): WidgetPosition => {
     const currentIndex = STATUS_WIDGET_IDS.indexOf(widgetId as (typeof STATUS_WIDGET_IDS)[number]);
+    const { minimapOnlyInVehicle, inVehicle, isEditMode } = resolver.options;
 
-    let x = resolver.getWidgetRect("minimap").right + GAP;
+    const minimapEffectivelyHidden = minimapOnlyInVehicle && !inVehicle && !isEditMode;
+
+    let x: number;
+    if (minimapEffectivelyHidden) {
+        x = MARGIN;
+    } else {
+        const minimapRect = resolver.getWidgetRect("minimap");
+        x = minimapRect ? minimapRect.right + GAP : MARGIN;
+    }
 
     // Calculate x by summing widths of all previous ENABLED status widgets
     for (let i = 0; i < currentIndex; i++) {
@@ -1054,17 +1063,35 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             type: "location",
             position: (id, _el, resolver) => {
                 const { height } = resolver.getWidgetSize(id);
-                const minimapRect = resolver.getWidgetRect("minimap");
-                if (minimapRect) {
-                    return {
-                        x: minimapRect.x,
-                        y: minimapRect.y - GAP - height,
-                    };
+                const { minimapOnlyInVehicle, inVehicle, isEditMode } = resolver.options;
+
+                const minimapEffectivelyHidden = minimapOnlyInVehicle && !inVehicle && !isEditMode;
+                if (minimapEffectivelyHidden) {
+                    const healthRect = resolver.getWidgetRect("health");
+                    if (healthRect) {
+                        return {
+                            x: healthRect.x,
+                            y: healthRect.y - GAP - height,
+                        };
+                    } else {
+                        return {
+                            x: MARGIN,
+                            y: resolver.screen.height - MARGIN - height - 60,
+                        };
+                    }
                 } else {
-                    return {
-                        x: MARGIN,
-                        y: MARGIN + 50 + GAP,
-                    };
+                    const minimapRect = resolver.getWidgetRect("minimap");
+                    if (minimapRect) {
+                        return {
+                            x: minimapRect.x,
+                            y: minimapRect.y - GAP - height,
+                        };
+                    } else {
+                        return {
+                            x: MARGIN,
+                            y: MARGIN + 50 + GAP,
+                        };
+                    }
                 }
             },
             visible: true,

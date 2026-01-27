@@ -32,6 +32,8 @@ interface UtilityData {
     serverName?: string;
     playerCount?: number;
     maxPlayers?: number;
+    minimapOnlyInVehicle?: boolean;
+    locationOnlyInVehicle?: boolean;
 }
 
 interface NuiEventHandlers {
@@ -148,6 +150,11 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
                         maxPlayers: data.maxPlayers,
                     });
                 }
+                if (data.minimapOnlyInVehicle !== undefined) {
+                    store.setMinimapOnlyInVehicle(data.minimapOnlyInVehicle);
+                }
+                if (data.locationOnlyInVehicle !== undefined)
+                    store.setLocationOnlyInVehicle(data.locationOnlyInVehicle);
             },
             onNotify: (data) => {
                 const store = useNotificationStore.getState();

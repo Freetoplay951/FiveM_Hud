@@ -141,6 +141,11 @@ local function SendInitialData()
     
     SendNUI('updateDisabledWidgets', disabledWidgets)
     
+    SendNUI('updateUtility', {
+        minimapOnlyInVehicle = Config.MinimapOnlyInVehicle,
+        locationOnlyInVehicle = Config.LocationOnlyInVehicle
+    })
+    
     local streetHash, crossingHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
     local streetName = GetStreetNameFromHashKey(streetHash)
     local zone = GetNameOfZone(coords.x, coords.y, coords.z)

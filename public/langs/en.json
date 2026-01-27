@@ -119,6 +119,8 @@
         "title": "Demo Mode",
         "teamChatAccess": "Team Chat",
         "commandOnly": "Chat-Commands only",
+        "minimapOnlyInVehicle": "Only show minimap in vehicles",
+        "locationOnlyInVehicle": "Only show location in vehicles",
         "adminRights": "Admin",
         "teamChatVisibility": "Visibility",
         "hidden": "Hidden",

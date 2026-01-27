@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { HUDWidget } from "./HUDWidget";
 import { StatusWidget } from "./widgets/StatusWidget";
 import { MoneyWidget } from "./widgets/MoneyWidget";
@@ -20,6 +20,8 @@ import { MinimapWidget } from "./widgets/MinimapWidget";
 import { StatusType } from "@/types/hud";
 import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
 import { DEMO_RADIO_ENABLED, EDIT_MODE_DEMO_NOTIFICATIONS } from "./data/demoData";
+import { isNuiEnvironment } from "@/lib/nuiUtils";
+import { LayoutOptions, STATUS_WIDGET_IDS } from "@/lib/widgetConfig";
 
 // Import stores - widgets subscribe to their own data
 import { useIsDemoMode } from "@/stores/hudStore";
@@ -32,14 +34,6 @@ import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
 import { useWantedLevel, useIsEvading, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
-import { isNuiEnvironment } from "@/lib/nuiUtils";
-import { STATUS_WIDGET_IDS } from "@/lib/widgetConfig";
-
-// ==========================================
-// LAYOUT-ONLY PROPS INTERFACE
-// No widget data, no notifications - only layout/edit concerns
-// ==========================================
-import { WidgetPosition as WP } from "@/types/widget";
 
 export interface LayoutOnlyProps {
     // Layout settings
@@ -52,6 +46,15 @@ export interface LayoutOnlyProps {
     hasSignaledReady: boolean;
     autoLayoutHiddenIds: string[];
 
+    // Layout options for vehicle-only visibility
+    minimapOnlyInVehicle?: boolean;
+    locationOnlyInVehicle?: boolean;
+    inVehicle?: boolean;
+
+    // Auto-relayout hooks (must come from the SAME useHUDLayout instance as the HUD)
+    startMinimapRelayout: (isWidgetDisabled?: (id: string) => boolean, override?: Partial<LayoutOptions>) => void;
+    runMinimapRelayout: (isWidgetDisabled?: (id: string) => boolean) => void;
+
     // Layout functions only
     getWidget: (id: string) => ResolvedWidgetConfig | undefined;
     updateWidgetPosition: (id: string, position: WidgetPosition) => void;
@@ -62,7 +65,7 @@ export interface LayoutOnlyProps {
     getMultiSelectProps: (id: string) => Record<string, unknown>;
 
     // Widget-to-widget snapping
-    getSnappedPosition?: (widgetId: string, position: WP) => WP;
+    getSnappedPosition?: (widgetId: string, position: WidgetPosition) => WidgetPosition;
     onSnapLinesClear?: () => void;
 
     // Snap target highlighting
@@ -511,6 +514,8 @@ const LocationWidgetRendererComponent = ({
     minimapShape,
     hasSignaledReady,
     autoLayoutHiddenIds,
+    locationOnlyInVehicle,
+    inVehicle,
     getWidget,
     updateWidgetPosition,
     updateWidgetScale,
@@ -532,7 +537,9 @@ const LocationWidgetRendererComponent = ({
 
     if (!widget) return null;
 
-    const baseVisible = widget.visible && (editMode ? true : !isDead);
+    // Hide location if locationOnlyInVehicle is true and not in vehicle (unless in edit mode)
+    const vehicleOnlyHidden = locationOnlyInVehicle && !inVehicle && !editMode;
+    const baseVisible = widget.visible && (editMode ? true : !isDead) && !vehicleOnlyHidden;
 
     return (
         <HUDWidget
@@ -685,14 +692,61 @@ const MinimapWidgetRendererComponent = ({
     minimapShape,
     hasSignaledReady,
     autoLayoutHiddenIds,
+    minimapOnlyInVehicle,
+    inVehicle,
     getWidget,
     isWidgetDisabled,
+    startMinimapRelayout,
+    runMinimapRelayout,
 }: LayoutOnlyProps) => {
     const widget = getWidget("minimap");
+
+    const isHiddenByVehicleOption = !!widget && !!minimapOnlyInVehicle && !inVehicle && !editMode;
+    const prevOptionsRef = useRef<{
+        minimapOnlyInVehicle: boolean;
+        inVehicle: boolean;
+        editMode: boolean;
+    } | null>(null);
+
+    useEffect(() => {
+        if (!widget) return;
+
+        const current = {
+            minimapOnlyInVehicle: !!minimapOnlyInVehicle,
+            inVehicle: !!inVehicle,
+            editMode: !!editMode,
+        };
+
+        // First mount: just initialize
+        if (!prevOptionsRef.current) {
+            prevOptionsRef.current = current;
+            return;
+        }
+
+        const prev = prevOptionsRef.current;
+        const prevHidden = prev.minimapOnlyInVehicle && !prev.inVehicle && !prev.editMode;
+        const nextHidden = current.minimapOnlyInVehicle && !current.inVehicle && !current.editMode;
+
+        // Only trigger relayout when the effective hidden state changes
+        if (prevHidden !== nextHidden) {
+            // Capture "before" defaults using the PREVIOUS options (even though we're now after the store update)
+            startMinimapRelayout(isWidgetDisabled, {
+                minimapOnlyInVehicle: prev.minimapOnlyInVehicle,
+                inVehicle: prev.inVehicle,
+                isEditMode: prev.editMode,
+            });
+
+            // Apply relayout using current options
+            runMinimapRelayout(isWidgetDisabled);
+        }
+
+        prevOptionsRef.current = current;
+    }, [widget, minimapOnlyInVehicle, inVehicle, editMode, isWidgetDisabled, startMinimapRelayout, runMinimapRelayout]);
+
     if (!widget) return null;
 
     const isNUI = isNuiEnvironment();
-    const baseVisible = widget.visible && (editMode || !isNUI);
+    const baseVisible = widget.visible && (editMode || !isNUI) && !isHiddenByVehicleOption;
 
     return (
         <HUDWidget
