@@ -140,6 +140,7 @@ export interface Translations {
         commandOnly: string;
         minimapOnlyInVehicle: string;
         locationOnlyInVehicle: string;
+        hideCompass: string;
         adminRights: string;
         teamChatVisibility: string;
         hidden: string;

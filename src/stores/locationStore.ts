@@ -41,6 +41,7 @@ export const useLocationStore = create<LocationStore>((set) => ({
 export const useStreet = () => useLocationStore((state) => state.street);
 export const useArea = () => useLocationStore((state) => state.area);
 export const useHeading = () => useLocationStore((state) => state.heading);
+export const useSetHeading = () => useLocationStore((state) => state.setHeading);
 export const useLocationData = () =>
     useLocationStore(
         useShallow((state) => ({

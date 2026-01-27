@@ -121,6 +121,7 @@
         "commandOnly": "Chat-Commands only",
         "minimapOnlyInVehicle": "Only show minimap in vehicles",
         "locationOnlyInVehicle": "Only show location in vehicles",
+        "hideCompass": "Hide compass",
         "adminRights": "Admin",
         "teamChatVisibility": "Visibility",
         "hidden": "Hidden",

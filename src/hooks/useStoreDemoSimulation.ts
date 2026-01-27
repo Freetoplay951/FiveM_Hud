@@ -48,6 +48,7 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
     const notifyInfo = useNotificationStore((state) => state.info);
 
     const isCommandOnly = useChatStore((state) => state.chatCommandOnly);
+    const heading = useLocationStore((state) => state.heading);
 
     // Demo simulation with animated values - updates stores directly
     useEffect(() => {
@@ -134,15 +135,17 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
             setVoiceActive(Math.random() > 0.3);
 
             // Location heading - only compass re-renders
-            if (Math.random() > 0.75) {
-                const currentHeading = useLocationStore.getState().heading ?? 0;
-                const change = Math.random() > 0.5 ? 45 : -45;
-                setLocation({ heading: (currentHeading + change + 360) % 360 });
+            if (heading != undefined) {
+                if (Math.random() > 0.75) {
+                    const currentHeading = useLocationStore.getState().heading ?? 0;
+                    const change = Math.random() > 0.5 ? 45 : -45;
+                    setLocation({ heading: (currentHeading + change + 360) % 360 });
+                }
             }
         }, 500);
 
         return () => clearInterval(interval);
-    }, [isDemoMode, setStatus, setVehicleState, setVoiceActive, setLocation]);
+    }, [isDemoMode, heading, setStatus, setVehicleState, setVoiceActive, setLocation]);
 
     // Demo: Random Chat messages
     useEffect(() => {

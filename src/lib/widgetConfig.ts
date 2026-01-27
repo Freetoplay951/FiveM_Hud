@@ -65,6 +65,8 @@ export interface LayoutOptions {
     locationOnlyInVehicle: boolean;
     inVehicle: boolean;
     isEditMode: boolean;
+    // Compass hidden state (heading === undefined && !editMode)
+    compassHidden: boolean;
 }
 
 export const DEFAULT_LAYOUT_OPTIONS: LayoutOptions = {
@@ -75,6 +77,7 @@ export const DEFAULT_LAYOUT_OPTIONS: LayoutOptions = {
     locationOnlyInVehicle: false,
     inVehicle: false,
     isEditMode: false,
+    compassHidden: false,
 };
 
 // ============= Widget Selection & Lock Config =============

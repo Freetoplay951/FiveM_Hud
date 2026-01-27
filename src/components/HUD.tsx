@@ -28,6 +28,8 @@ import { useIsDead, useDeathData } from "@/stores/deathStore";
 import { useChatStore } from "@/stores/chatStore";
 import { useUtilityStore } from "@/stores/utilityStore";
 import { useInVehicle } from "@/stores/vehicleStore";
+import { useHeading, useSetHeading } from "@/stores/locationStore";
+import { DEMO_LOCATION } from "@/components/hud/data/demoData";
 
 export const HUD = () => {
     const [editMenuOpen, setEditMenuOpen] = useState(false);
@@ -55,6 +57,10 @@ export const HUD = () => {
     const setMinimapOnlyInVehicle = useUtilityStore((s) => s.setMinimapOnlyInVehicle);
     const setLocationOnlyInVehicle = useUtilityStore((s) => s.setLocationOnlyInVehicle);
     const inVehicle = useInVehicle();
+
+    // Heading state for compass toggle
+    const heading = useHeading();
+    const setHeading = useSetHeading();
 
     // Layout management - pure layout, no widget data
     const {
@@ -221,6 +227,18 @@ export const HUD = () => {
     const handleLocationOnlyInVehicleChange = useCallback(
         (checked: boolean) => setLocationOnlyInVehicle(checked),
         [setLocationOnlyInVehicle],
+    );
+
+    // Toggle compass visibility by setting heading to undefined or demo value
+    const handleHideCompassChange = useCallback(
+        (checked: boolean) => {
+            if (checked) {
+                setHeading(undefined);
+            } else {
+                setHeading(DEMO_LOCATION.heading);
+            }
+        },
+        [setHeading],
     );
 
     // LAYOUT-ONLY props for HUDWidgetRenderers - NO widget data, NO notifications
@@ -484,6 +502,14 @@ export const HUD = () => {
                                     <Switch
                                         checked={locationOnlyInVehicle}
                                         onCheckedChange={handleLocationOnlyInVehicleChange}
+                                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-destructive-foreground/80">{t.demo.hideCompass}</span>
+                                    <Switch
+                                        checked={heading === undefined}
+                                        onCheckedChange={handleHideCompassChange}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />
                                 </div>

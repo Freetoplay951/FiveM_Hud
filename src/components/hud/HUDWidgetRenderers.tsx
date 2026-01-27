@@ -573,12 +573,14 @@ export const LocationWidgetRenderer = memo(LocationWidgetRendererComponent);
 
 // ==========================================
 // COMPASS WIDGET - Subscribes to location store
+// With auto-relayout when heading becomes undefined/defined
 // ==========================================
 const CompassWidgetRendererComponent = ({
     editMode,
     snapToGrid,
     gridSize,
     hasSignaledReady,
+    autoLayoutHiddenIds,
     getWidget,
     updateWidgetPosition,
     updateWidgetScale,
@@ -586,6 +588,8 @@ const CompassWidgetRendererComponent = ({
     resetWidget,
     isWidgetDisabled,
     getMultiSelectProps,
+    startMinimapRelayout,
+    runMinimapRelayout,
 }: LayoutOnlyProps) => {
     const widget = getWidget("compass");
     const isDead = useIsDead();
@@ -597,6 +601,52 @@ const CompassWidgetRendererComponent = ({
         (id: string) => resetWidget(id, isWidgetDisabled, false),
         [resetWidget, isWidgetDisabled],
     );
+
+    // Track previous state to detect visibility changes
+    const prevOptionsRef = useRef<{
+        headingDefined: boolean;
+        editMode: boolean;
+    } | null>(null);
+
+    useEffect(() => {
+        if (!widget) return;
+
+        const current = {
+            headingDefined: heading !== undefined,
+            editMode: !!editMode,
+        };
+
+        // First mount: just initialize
+        if (!prevOptionsRef.current) {
+            prevOptionsRef.current = current;
+            return;
+        }
+
+        const prev = prevOptionsRef.current;
+        const prevHidden = !prev.headingDefined && !prev.editMode;
+        const nextHidden = !current.headingDefined && !current.editMode;
+
+        // Only trigger relayout when the effective hidden state changes
+        if (prevHidden !== nextHidden) {
+            // Capture "before" defaults using the PREVIOUS options
+            startMinimapRelayout(isWidgetDisabled, hasSignaledReady, {
+                compassHidden: prevHidden,
+            });
+
+            // Apply relayout using current options
+            runMinimapRelayout(isWidgetDisabled, hasSignaledReady);
+        }
+
+        prevOptionsRef.current = current;
+    }, [
+        widget,
+        heading,
+        editMode,
+        isWidgetDisabled,
+        hasSignaledReady,
+        startMinimapRelayout,
+        runMinimapRelayout,
+    ]);
 
     if (!widget) return null;
 
@@ -610,6 +660,7 @@ const CompassWidgetRendererComponent = ({
             visible={baseVisible}
             scale={widget.scale}
             disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            suspended={autoLayoutHiddenIds.includes(widget.id)}
             editMode={editMode}
             snapToGrid={snapToGrid}
             gridSize={gridSize}

@@ -18,6 +18,7 @@ import { clampToViewport, updateWidgetInArray } from "@/lib/widgetHelpers";
 
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useUtilityStore } from "@/stores/utilityStore";
+import { useLocationStore } from "@/stores/locationStore";
 
 // Store default widget configs for position resolution
 const defaultWidgetConfigs = getDefaultWidgets();
@@ -105,6 +106,7 @@ export const useHUDLayout = () => {
         (override?: Partial<LayoutOptions>): LayoutOptions => {
             const vehicleState = useVehicleStore.getState();
             const utilityState = useUtilityStore.getState();
+            const locationState = useLocationStore.getState();
 
             const original: LayoutOptions = {
                 brandingPosition: state.brandingPosition,
@@ -114,6 +116,7 @@ export const useHUDLayout = () => {
                 inVehicle: vehicleState.inVehicle,
                 locationOnlyInVehicle: utilityState.locationOnlyInVehicle,
                 minimapOnlyInVehicle: utilityState.minimapOnlyInVehicle,
+                compassHidden: locationState.heading === undefined && !state.editMode,
             };
 
             return mapPartialState(original, override ?? {});

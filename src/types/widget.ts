@@ -909,9 +909,14 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "servername",
             type: "servername",
             position: (_id, _el, resolver) => {
-                const compassRect = resolver.getWidgetRect("compass");
-                const x = compassRect ? compassRect.right + GAP : MARGIN + 100;
-                return { x, y: MARGIN };
+                const { compassHidden } = resolver.options;
+                if (!compassHidden) {
+                    const compassRect = resolver.getWidgetRect("compass");
+                    const x = compassRect ? compassRect.right + GAP : MARGIN + 100;
+                    return { x, y: MARGIN };
+                } else {
+                    return { x: MARGIN, y: MARGIN };
+                }
             },
             visible: true,
             scale: 1,
@@ -939,6 +944,13 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 if (servernameRect) {
                     return { x: servernameRect.x, y: servernameRect.bottom + GAP / 2 };
                 }
+
+                // Fallback when servername not available
+                const { compassHidden } = resolver.options;
+                if (compassHidden) {
+                    return { x: MARGIN, y: MARGIN + 30 };
+                }
+
                 const compassRect = resolver.getWidgetRect("compass");
                 const x = compassRect ? compassRect.right + GAP : MARGIN;
                 return { x, y: MARGIN + 30 };
@@ -950,9 +962,23 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "notifications",
             type: "notifications",
             position: (_id, _el, resolver) => {
-                const compassRect = resolver.getWidgetRect("compass");
-                const y = compassRect ? compassRect.bottom + GAP * 4 : MARGIN;
-                return { x: MARGIN, y };
+                const { compassHidden } = resolver.options;
+
+                // Collect bottom edges of all relevant visible widgets
+                let maxBottom = MARGIN;
+
+                if (!compassHidden) {
+                    const compassRect = resolver.getWidgetRect("compass");
+                    if (compassRect) maxBottom = Math.max(maxBottom, compassRect.bottom);
+                }
+
+                const vehiclenameRect = resolver.getWidgetRect("vehiclename");
+                if (vehiclenameRect) maxBottom = Math.max(maxBottom, vehiclenameRect.bottom);
+
+                const servernameRect = resolver.getWidgetRect("servername");
+                if (servernameRect) maxBottom = Math.max(maxBottom, servernameRect.bottom);
+
+                return { x: MARGIN, y: maxBottom + GAP * 4 };
             },
             visible: true,
             scale: 1,
