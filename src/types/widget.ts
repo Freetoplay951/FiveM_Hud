@@ -211,7 +211,8 @@ const getStatusWidgetPosition = (
     const currentIndex = STATUS_WIDGET_IDS.indexOf(widgetId as (typeof STATUS_WIDGET_IDS)[number]);
     const { minimapOnlyInVehicle, inVehicle, isEditMode } = resolver.options;
 
-    const minimapEffectivelyHidden = minimapOnlyInVehicle && !inVehicle && !isEditMode;
+    const minimapEffectivelyHidden =
+        (minimapOnlyInVehicle && !inVehicle && !isEditMode) || resolver.isWidgetDisabled("minimap");
 
     let x: number;
     if (minimapEffectivelyHidden) {
@@ -1070,7 +1071,8 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
                 const { height, width } = resolver.getWidgetSize(id);
                 const { minimapOnlyInVehicle, inVehicle, isEditMode } = resolver.options;
 
-                const minimapEffectivelyHidden = minimapOnlyInVehicle && !inVehicle && !isEditMode;
+                const minimapEffectivelyHidden =
+                    (minimapOnlyInVehicle && !inVehicle && !isEditMode) || resolver.isWidgetDisabled("minimap");
                 if (minimapEffectivelyHidden) {
                     // Define a reference area where the location widget would be (bottom-left corner)
                     const referenceRect = {

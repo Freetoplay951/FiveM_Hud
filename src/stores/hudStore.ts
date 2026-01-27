@@ -6,7 +6,7 @@ import { isNuiEnvironment } from "@/lib/nuiUtils";
 /**
  * HUD Global Store - ONLY for cross-cutting concerns
  * Does NOT contain any widget-specific data
- * 
+ *
  * Async Widget Readiness Pattern:
  * 1. Widgets register themselves via registerAsyncWidget() on mount
  * 2. HUD seals registration after one render cycle via sealRegistration()
@@ -58,13 +58,13 @@ export const useHUDGlobalStore = create<HUDGlobalStore>((set, get) => ({
 
     registerAsyncWidget: (widgetId) => {
         const { pendingAsyncWidgets, readyAsyncWidgets, isRegistrationSealed } = get();
-        
+
         // Warn if trying to register after seal (programming error)
         if (isRegistrationSealed) {
             console.warn(`[HUD] Warning: Widget "${widgetId}" tried to register after registration was sealed`);
             return;
         }
-        
+
         if (!pendingAsyncWidgets.has(widgetId)) {
             console.log(`[HUD] Async widget "${widgetId}" registered`);
             const newPending = new Set([...pendingAsyncWidgets, widgetId]);
@@ -111,13 +111,13 @@ export const useHUDGlobalStore = create<HUDGlobalStore>((set, get) => ({
 
     areAllAsyncWidgetsReady: () => {
         const { isRegistrationSealed, pendingAsyncWidgets, readyAsyncWidgets } = get();
-        
+
         // Must be sealed first - prevents premature "ready" before widgets register
         if (!isRegistrationSealed) return false;
-        
+
         // If no async widgets registered, we're ready
         if (pendingAsyncWidgets.size === 0) return true;
-        
+
         // Check if all pending widgets are ready
         for (const widgetId of pendingAsyncWidgets) {
             if (!readyAsyncWidgets.has(widgetId)) {
