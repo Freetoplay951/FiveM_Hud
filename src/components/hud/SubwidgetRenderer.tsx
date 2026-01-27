@@ -210,6 +210,8 @@ const createVehicleSubwidgetRenderer = (
                         isWidgetDisabled: () => false,
                         hasSignaledReady: true,
                         options: DEFAULT_LAYOUT_OPTIONS,
+                        getAllWidgetIds: () => Array.from(resolvedRects.keys()),
+                        findNearbyWidgets: () => [],
                     };
 
                     subConfigs.forEach((config) => {

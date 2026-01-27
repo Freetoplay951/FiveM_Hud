@@ -36,6 +36,53 @@ export interface PositionResolver {
     hasSignaledReady: boolean;
     /** Layout options from the HUD state - use for conditional positioning */
     options: LayoutOptions;
+    /** Get all visible widget IDs from the DOM (dynamically) */
+    getAllWidgetIds: () => string[];
+    /** Find widgets within proximity of a given rect */
+    findNearbyWidgets: (
+        referenceRect: WidgetRect,
+        maxDistance: number,
+        excludeIds?: string[],
+    ) => Array<{ id: string; rect: WidgetRect; distance: number }>;
+}
+
+/**
+ * Get all visible widget elements from the DOM.
+ * Dynamically discovers widgets by their DOM prefix.
+ */
+export function getAllWidgetElements(): Array<{ id: string; element: HTMLElement }> {
+    const results: Array<{ id: string; element: HTMLElement }> = [];
+    const allElements = document.querySelectorAll(`[id^="${WIDGET_DOM_PREFIX}"]`);
+
+    for (const element of allElements) {
+        const htmlElement = element as HTMLElement;
+        const id = htmlElement.id.replace(WIDGET_DOM_PREFIX, "");
+
+        // Include all widget elements with size (no filtering by opacity/visibility/display)
+        const rect = htmlElement.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+            results.push({ id, element: htmlElement });
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Calculate the minimum distance between two rects.
+ * Returns 0 if they overlap.
+ */
+export function getRectsDistance(rectA: WidgetRect, rectB: WidgetRect): number {
+    // Horizontal gap
+    const gapX = Math.max(0, Math.max(rectA.x - rectB.right, rectB.x - rectA.right));
+    // Vertical gap
+    const gapY = Math.max(0, Math.max(rectA.y - rectB.bottom, rectB.y - rectA.bottom));
+
+    // If no gap in either direction, they overlap or touch
+    if (gapX === 0 && gapY === 0) return 0;
+
+    // Return Euclidean distance between closest edges
+    return Math.sqrt(gapX * gapX + gapY * gapY);
 }
 
 /**
@@ -125,6 +172,43 @@ export function resolveDefaultPositions(
         };
     };
 
+    // Get all visible widget IDs from DOM
+    const getAllWidgetIds = (): string[] => {
+        if (!hasSignaledReady) {
+            // Before ready, return already-resolved widget IDs
+            return Array.from(resolvedRects.keys());
+        }
+        return getAllWidgetElements().map((w) => w.id);
+    };
+
+    // Find widgets within proximity of a reference rect
+    const findNearbyWidgets = (
+        referenceRect: WidgetRect,
+        maxDistance: number,
+        excludeIds: string[] = [],
+    ): Array<{ id: string; rect: WidgetRect; distance: number }> => {
+        const excludeSet = new Set(excludeIds);
+        const results: Array<{ id: string; rect: WidgetRect; distance: number }> = [];
+
+        const widgetIds = getAllWidgetIds();
+
+        for (const widgetId of widgetIds) {
+            if (excludeSet.has(widgetId)) continue;
+            if (isWidgetDisabled?.(widgetId)) continue;
+
+            const rect = getWidgetCurrentRect(widgetId);
+            if (!rect) continue;
+
+            const distance = getRectsDistance(referenceRect, rect);
+            if (distance <= maxDistance) {
+                results.push({ id: widgetId, rect, distance });
+            }
+        }
+
+        // Sort by y-position (highest first = lowest y value)
+        return results;
+    };
+
     const resolver: PositionResolver = {
         getWidgetRect: (id: string) => resolvedRects.get(id) ?? null,
         getWidgetCurrentRect,
@@ -134,6 +218,8 @@ export function resolveDefaultPositions(
         isWidgetDisabled,
         hasSignaledReady,
         options: layoutOptions,
+        getAllWidgetIds,
+        findNearbyWidgets,
     };
 
     // Process widgets in order - earlier widgets are resolved first

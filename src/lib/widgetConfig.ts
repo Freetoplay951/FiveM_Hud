@@ -29,6 +29,9 @@ export const PROXIMITY_THRESHOLD = 100;
 /** Distance threshold for external widgets to be pulled along (2 * WIDGET_GAP) */
 export const EXTERNAL_PROXIMITY_THRESHOLD = WIDGET_GAP * 2;
 
+/** Default proximity threshold for finding nearby widgets */
+export const NEARBY_WIDGET_THRESHOLD = 100;
+
 // ============= Snap Visualization Config =============
 
 /** Duration in ms to show snap lines during keyboard navigation */
@@ -105,9 +108,7 @@ export const isWidgetLocked = (widgetId: string): boolean => LOCKED_WIDGETS.has(
  * All subwidgets derived from WIDGET_GROUPS - single source of truth.
  * This set is automatically updated when WIDGET_GROUPS changes.
  */
-export const ALL_SUBWIDGETS: ReadonlySet<WidgetType> = new Set(
-    WIDGET_GROUPS.flatMap((group) => group.subwidgets)
-);
+export const ALL_SUBWIDGETS: ReadonlySet<WidgetType> = new Set(WIDGET_GROUPS.flatMap((group) => group.subwidgets));
 
 /**
  * Check if a widget is a subwidget (non-base vehicle widget).

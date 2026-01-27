@@ -195,7 +195,12 @@ export interface HUDLayoutState {
     simpleMode: boolean;
 }
 
-import { WIDGET_MARGIN as MARGIN, WIDGET_GAP as GAP, STATUS_WIDGET_IDS } from "@/lib/widgetConfig";
+import {
+    WIDGET_MARGIN as MARGIN,
+    WIDGET_GAP as GAP,
+    STATUS_WIDGET_IDS,
+    NEARBY_WIDGET_THRESHOLD,
+} from "@/lib/widgetConfig";
 
 // Helper to calculate status widget positions in a chain
 const getStatusWidgetPosition = (
@@ -1062,36 +1067,76 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             id: "location",
             type: "location",
             position: (id, _el, resolver) => {
-                const { height } = resolver.getWidgetSize(id);
+                const { height, width } = resolver.getWidgetSize(id);
                 const { minimapOnlyInVehicle, inVehicle, isEditMode } = resolver.options;
 
                 const minimapEffectivelyHidden = minimapOnlyInVehicle && !inVehicle && !isEditMode;
                 if (minimapEffectivelyHidden) {
-                    const healthRect = resolver.getWidgetRect("health");
-                    if (healthRect) {
-                        return {
-                            x: healthRect.x,
-                            y: healthRect.y - GAP - height,
-                        };
-                    } else {
-                        return {
-                            x: MARGIN,
-                            y: resolver.screen.height - MARGIN - height - 60,
-                        };
+                    // Define a reference area where the location widget would be (bottom-left corner)
+                    const referenceRect = {
+                        x: MARGIN,
+                        y: resolver.screen.height - MARGIN - height,
+                        width: width,
+                        height: height,
+                        right: MARGIN + width,
+                        bottom: resolver.screen.height - MARGIN,
+                    };
+
+                    // Find all widgets within 100px of the reference position
+                    // Sort by y-position (highest first = lowest y value)
+                    const nearbyWidgets = resolver
+                        .findNearbyWidgets(
+                            referenceRect,
+                            NEARBY_WIDGET_THRESHOLD,
+                            [id, "minimap"], // Exclude location and minimap
+                        )
+                        .sort((a, b) => a.rect.y - b.rect.y);
+
+                    // Find the highest widget (lowest y value) among nearby widgets
+                    let highestY = resolver.screen.height - MARGIN;
+
+                    for (const { rect } of nearbyWidgets) {
+                        if (rect.y < highestY) {
+                            highestY = rect.y;
+                        }
                     }
+
+                    // Position above the highest nearby widget
+                    let targetY = highestY - GAP - height;
+
+                    // Upper bound: don't go higher than chat.bottom + GAP
+                    const chatRect = resolver.getWidgetCurrentRect("chat");
+                    if (chatRect) {
+                        const minY = chatRect.bottom + GAP;
+                        targetY = Math.max(targetY, minY);
+                    }
+
+                    // X is always left-aligned (at MARGIN)
+                    return {
+                        x: MARGIN,
+                        y: targetY,
+                    };
                 } else {
-                    const minimapRect = resolver.getWidgetRect("minimap");
+                    // Minimap visible - use actual DOM position
+                    const minimapRect = resolver.getWidgetCurrentRect("minimap");
                     if (minimapRect) {
                         return {
                             x: minimapRect.x,
                             y: minimapRect.y - GAP - height,
                         };
-                    } else {
+                    }
+                    // Fallback to default minimap rect
+                    const defaultMinimapRect = resolver.getWidgetRect("minimap");
+                    if (defaultMinimapRect) {
                         return {
-                            x: MARGIN,
-                            y: MARGIN + 50 + GAP,
+                            x: defaultMinimapRect.x,
+                            y: defaultMinimapRect.y - GAP - height,
                         };
                     }
+                    return {
+                        x: MARGIN,
+                        y: MARGIN + 50 + GAP,
+                    };
                 }
             },
             visible: true,

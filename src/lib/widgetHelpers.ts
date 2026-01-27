@@ -105,6 +105,8 @@ export const createMockResolver = (onWidgetAccess?: (id: string) => void): Posit
     isWidgetDisabled: () => false,
     hasSignaledReady: false,
     options: DEFAULT_LAYOUT_OPTIONS,
+    getAllWidgetIds: () => [],
+    findNearbyWidgets: () => [],
 });
 
 /**
