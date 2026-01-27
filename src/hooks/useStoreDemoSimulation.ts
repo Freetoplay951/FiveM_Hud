@@ -9,6 +9,7 @@ import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useUtilityStore } from "@/stores/utilityStore";
 import { useKeybindsStore } from "@/stores/keybindsStore";
+import { useProgressbarStore, ProgressbarColor } from "@/stores/progressbarStore";
 import { DEMO_CHAT_MESSAGES, DEMO_TEAM_MESSAGES } from "@/components/hud/data/demoData";
 import { VehicleHealthStatus, VoiceState } from "@/types/hud";
 
@@ -320,6 +321,32 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                 e.preventDefault();
                 const current = useVoiceStore.getState();
                 setIsVoiceMuted(!current.isVoiceMuted);
+            }
+
+            // Progressbar demo toggle (p key)
+            if (e.key === "p" && !editMode) {
+                e.preventDefault();
+                const progressStore = useProgressbarStore.getState();
+                if (progressStore.isActive) {
+                    progressStore.cancelProgressbar();
+                } else {
+                    // Cycle through colors
+                    const colors: ProgressbarColor[] = ["primary", "success", "warning", "critical", "info"];
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    progressStore.startProgressbar({
+                        label:
+                            randomColor === "critical"
+                                ? "Gefährliche Aktion..."
+                                : randomColor === "success"
+                                  ? "Download läuft..."
+                                  : randomColor === "warning"
+                                    ? "Bitte warten..."
+                                    : "Verarbeitung...",
+                        duration: 5000,
+                        canCancel: true,
+                        color: randomColor,
+                    });
+                }
             }
         };
 

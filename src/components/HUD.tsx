@@ -453,6 +453,7 @@ export const HUD = () => {
                                         <span>Notify: H︱J︱K︱L</span>
                                         <span>Chat: T</span>
                                         <span>TeamChat: Y</span>
+                                        <span>Progressbar: P</span>
                                     </span>
                                 </div>
                             </div>

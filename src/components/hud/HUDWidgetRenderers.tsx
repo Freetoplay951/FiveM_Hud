@@ -17,6 +17,7 @@ import { ChatWidget } from "./widgets/ChatWidget";
 import { TeamChatWidget } from "./widgets/TeamChatWidget";
 import { RadioWidget } from "./widgets/RadioWidget";
 import { MinimapWidget } from "./widgets/MinimapWidget";
+import { ProgressbarWidget } from "./widgets/ProgressbarWidget";
 import { StatusType } from "@/types/hud";
 import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
 import { DEMO_RADIO_ENABLED, EDIT_MODE_DEMO_NOTIFICATIONS } from "./data/demoData";
@@ -34,6 +35,7 @@ import { useVehicleStore } from "@/stores/vehicleStore";
 import { useTeamChatHasAccess } from "@/stores/chatStore";
 import { useNotifications, useRemoveNotification } from "@/stores/notificationStore";
 import { useWantedLevel, useIsEvading, useServerName, usePlayerCount, useMaxPlayers } from "@/stores/utilityStore";
+import { useProgressbarActive } from "@/stores/progressbarStore";
 
 export interface LayoutOnlyProps {
     // Layout settings
@@ -448,6 +450,66 @@ const VoiceWidgetRendererComponent = ({
 };
 
 export const VoiceWidgetRenderer = memo(VoiceWidgetRendererComponent);
+
+// ==========================================
+// PROGRESSBAR WIDGET - Subscribes to progressbar store
+// ==========================================
+const ProgressbarWidgetRendererComponent = ({
+    editMode,
+    snapToGrid,
+    gridSize,
+    hasSignaledReady,
+    autoLayoutHiddenIds,
+    getWidget,
+    updateWidgetPosition,
+    updateWidgetScale,
+    toggleWidgetVisibility,
+    resetWidget,
+    isWidgetDisabled,
+    getMultiSelectProps,
+}: LayoutOnlyProps) => {
+    const widget = getWidget("progressbar");
+    const isDead = useIsDead();
+
+    // Widget subscribes to its own data
+    const isProgressbarActive = useProgressbarActive();
+
+    const handleReset = useCallback(
+        (id: string) => resetWidget(id, isWidgetDisabled, false),
+        [resetWidget, isWidgetDisabled],
+    );
+
+    if (!widget) return null;
+
+    // Show progressbar only when active or in edit mode
+    const showProgressbar = isProgressbarActive || editMode;
+    const isVisibleWidget = widget.visible && showProgressbar;
+
+    const isDeadOverlay = isDead && !editMode;
+
+    return (
+        <HUDWidget
+            id={widget.id}
+            position={isDeadOverlay ? { x: window.innerWidth - 280 - 40, y: 40 } : widget.position}
+            visible={isVisibleWidget}
+            scale={widget.scale}
+            disabled={!hasSignaledReady || isWidgetDisabled(widget.id)}
+            suspended={autoLayoutHiddenIds.includes(widget.id)}
+            editMode={editMode}
+            snapToGrid={snapToGrid}
+            gridSize={gridSize}
+            onPositionChange={updateWidgetPosition}
+            onVisibilityToggle={toggleWidgetVisibility}
+            onScaleChange={updateWidgetScale}
+            onReset={handleReset}
+            className={isDeadOverlay ? "z-50" : ""}
+            {...getMultiSelectProps(widget.id)}>
+            <ProgressbarWidget isEditMode={editMode} />
+        </HUDWidget>
+    );
+};
+
+export const ProgressbarWidgetRenderer = memo(ProgressbarWidgetRendererComponent);
 
 // ==========================================
 // RADIO WIDGET - Subscribes to voice store
@@ -1162,6 +1224,7 @@ const HUDWidgetRenderersComponent = (props: LayoutOnlyProps) => {
             <WantedWidgetRenderer {...props} />
             <ServerInfoWidgetRenderer {...props} />
             <ServerNameWidgetRenderer {...props} />
+            <ProgressbarWidgetRenderer {...props} />
             <VoiceWidgetRenderer {...props} />
             <RadioWidgetRenderer {...props} />
             <LocationWidgetRenderer {...props} />

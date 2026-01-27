@@ -53,6 +53,18 @@ export {
     useVoiceData,
 } from "./voiceStore";
 
+// Progressbar store - event-driven
+export {
+    useProgressbarStore,
+    useProgressbarActive,
+    useProgressbarLabel,
+    useProgressbarProgress,
+    useProgressbarDuration,
+    useProgressbarStartTime,
+    useProgressbarCanCancel,
+    useProgressbarData,
+} from "./progressbarStore";
+
 // Location store - medium frequency updates
 export {
     useLocationStore,

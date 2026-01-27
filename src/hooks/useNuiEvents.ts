@@ -10,6 +10,7 @@ import { useHUDGlobalStore } from "@/stores/hudStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useUtilityStore } from "@/stores/utilityStore";
 import { useKeybindsStore, Keybind } from "@/stores/keybindsStore";
+import { useProgressbarStore } from "@/stores/progressbarStore";
 import { isNuiEnvironment, GetParentResourceName } from "@/lib/nuiUtils";
 import {
     StatusWidgetState,
@@ -67,6 +68,8 @@ interface NuiEventHandlers {
     onUpdateKeybinds?: (data: { keybinds: Keybind[] }) => void;
     onKeybindsUpdate?: (data: { isVisible?: boolean; keybinds?: Keybind[] }) => void;
     onUpdateCommands?: (data: { command: string; description: string }[]) => void;
+    onProgressbarStart?: (data: { label: string; duration: number; canCancel?: boolean; color?: string }) => void;
+    onProgressbarCancel?: () => void;
 }
 
 interface UseNuiEventsProps {
@@ -256,29 +259,40 @@ export const useNuiEvents = ({ editMode, toggleEditMode }: UseNuiEventsProps) =>
             onUpdateCommands: (data) => {
                 useChatStore.getState().setCommands(data);
             },
+            onProgressbarStart: (data) => {
+                useProgressbarStore.getState().startProgressbar({
+                    ...data,
+                    color: (data.color as "primary" | "success" | "warning" | "critical" | "info") ?? "primary",
+                });
+            },
+            onProgressbarCancel: () => {
+                useProgressbarStore.getState().cancelProgressbar();
+            },
         };
 
         const actionHandlerMap: Record<string, (data: unknown) => void> = {
-            updateHud: handlers.onUpdateHud as (data: unknown) => void,
-            updateVehicle: handlers.onUpdateVehicle as (data: unknown) => void,
-            updateMoney: handlers.onUpdateMoney as (data: unknown) => void,
-            updateVoice: handlers.onUpdateVoice as (data: unknown) => void,
-            updateRadio: handlers.onUpdateRadio as (data: unknown) => void,
-            updateLocation: handlers.onUpdateLocation as (data: unknown) => void,
-            updatePlayer: handlers.onUpdatePlayer as (data: unknown) => void,
-            updateUtility: handlers.onUpdateUtility as (data: unknown) => void,
-            notify: handlers.onNotify as (data: unknown) => void,
-            toggleEditMode: handlers.onToggleEditMode as (data: unknown) => void,
-            setVisible: handlers.onSetVisible as (data: unknown) => void,
-            updateDeath: handlers.onUpdateDeath as (data: unknown) => void,
-            setVoiceEnabled: handlers.onSetVoiceEnabled as (data: unknown) => void,
-            updateDisabledWidgets: handlers.onUpdateDisabledWidgets as (data: unknown) => void,
-            chatUpdate: handlers.onChatUpdate as (data: unknown) => void,
-            teamChatUpdate: handlers.onTeamChatUpdate as (data: unknown) => void,
-            toggleKeybinds: handlers.onToggleKeybinds as (data: unknown) => void,
-            updateKeybinds: handlers.onUpdateKeybinds as (data: unknown) => void,
-            keybindsUpdate: handlers.onKeybindsUpdate as (data: unknown) => void,
-            updateCommands: handlers.onUpdateCommands as (data: unknown) => void,
+            "updateHud": handlers.onUpdateHud as (data: unknown) => void,
+            "updateVehicle": handlers.onUpdateVehicle as (data: unknown) => void,
+            "updateMoney": handlers.onUpdateMoney as (data: unknown) => void,
+            "updateVoice": handlers.onUpdateVoice as (data: unknown) => void,
+            "updateRadio": handlers.onUpdateRadio as (data: unknown) => void,
+            "updateLocation": handlers.onUpdateLocation as (data: unknown) => void,
+            "updatePlayer": handlers.onUpdatePlayer as (data: unknown) => void,
+            "updateUtility": handlers.onUpdateUtility as (data: unknown) => void,
+            "notify": handlers.onNotify as (data: unknown) => void,
+            "toggleEditMode": handlers.onToggleEditMode as (data: unknown) => void,
+            "setVisible": handlers.onSetVisible as (data: unknown) => void,
+            "updateDeath": handlers.onUpdateDeath as (data: unknown) => void,
+            "setVoiceEnabled": handlers.onSetVoiceEnabled as (data: unknown) => void,
+            "updateDisabledWidgets": handlers.onUpdateDisabledWidgets as (data: unknown) => void,
+            "chatUpdate": handlers.onChatUpdate as (data: unknown) => void,
+            "teamChatUpdate": handlers.onTeamChatUpdate as (data: unknown) => void,
+            "toggleKeybinds": handlers.onToggleKeybinds as (data: unknown) => void,
+            "updateKeybinds": handlers.onUpdateKeybinds as (data: unknown) => void,
+            "keybindsUpdate": handlers.onKeybindsUpdate as (data: unknown) => void,
+            "updateCommands": handlers.onUpdateCommands as (data: unknown) => void,
+            "progressbar:start": handlers.onProgressbarStart as (data: unknown) => void,
+            "progressbar:cancel": handlers.onProgressbarCancel as (data: unknown) => void,
         };
 
         const handleMessage = (event: MessageEvent) => {

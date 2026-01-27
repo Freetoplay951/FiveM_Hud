@@ -75,6 +75,17 @@ export const DEMO_RADIO: RadioState = {
     members: [],
 };
 
+// Demo Progressbar State (for edit mode)
+export const DEMO_PROGRESSBAR = {
+    isActive: true,
+    label: "Demo Progressbar...",
+    progress: 65,
+    duration: 5000,
+    startTime: 0,
+    canCancel: true,
+    color: "primary" as const,
+};
+
 export const DEMO_RADIO_ENABLED: RadioState = {
     active: true,
     channel: "Kanal 1",
