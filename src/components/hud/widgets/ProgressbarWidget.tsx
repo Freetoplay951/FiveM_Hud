@@ -6,6 +6,7 @@ import { useRenderLogger } from "@/hooks/useRenderLogger";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
 import { DEMO_PROGRESSBAR } from "@/components/hud/data/demoData";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 // Color configuration
 const COLOR_CONFIG: Record<ProgressbarColor, { 
@@ -14,10 +15,10 @@ const COLOR_CONFIG: Record<ProgressbarColor, {
     glowIntensity: number;
 }> = {
     primary: { cssVar: "primary", icon: Loader2, glowIntensity: 0.6 },
-    success: { cssVar: "health", icon: CheckCircle2, glowIntensity: 0.7 },
+    success: { cssVar: "stamina", icon: CheckCircle2, glowIntensity: 0.7 },
     warning: { cssVar: "warning", icon: AlertTriangle, glowIntensity: 0.6 },
     critical: { cssVar: "critical", icon: AlertTriangle, glowIntensity: 0.8 },
-    info: { cssVar: "info", icon: Info, glowIntensity: 0.5 },
+    info: { cssVar: "neutral", icon: Info, glowIntensity: 0.5 },
 };
 
 // Static animation config
@@ -38,6 +39,7 @@ interface ProgressbarWidgetProps {
 }
 
 const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetProps) => {
+    const { t } = useTranslation();
     const storeData = useProgressbarStore();
     const updateProgress = useProgressbarStore((state) => state.updateProgress);
     const finishProgressbar = useProgressbarStore((state) => state.finishProgressbar);
@@ -122,7 +124,7 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
             {(isActive || isEditMode) && (
                 <motion.div
                     key="progressbar"
-                    className="glass-panel rounded-xl px-5 py-3 flex flex-col gap-2 min-w-[280px] max-w-[320px] backdrop-blur-xl border border-white/10"
+                    className="glass-panel rounded-xl px-5 py-3 flex flex-col gap-2 min-w-[280px] max-w-[320px] border border-white/10"
                     style={{
                         boxShadow: `
                             0 4px 30px hsl(var(--${colorConfig.cssVar}) / 0.15),
@@ -212,9 +214,7 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
                     {/* Percentage with animated counter */}
                     <div className="flex justify-between items-center">
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                            {color === "success" ? "Abgeschlossen" : 
-                             color === "critical" ? "Kritisch" : 
-                             color === "warning" ? "Warnung" : "Fortschritt"}
+                            {t?.progressbar?.[color] ?? t?.progressbar?.progress ?? "Progress"}
                         </span>
                         <motion.span
                             className="hud-number text-sm font-bold"

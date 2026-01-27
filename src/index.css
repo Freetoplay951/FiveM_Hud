@@ -49,6 +49,10 @@
         --critical: 0 90% 55%;
         --critical-glow: 0 100% 60%;
 
+        /* Info Color */
+        --neutral: 220 10% 50%;
+        --neutral-glow: 220 15% 60%;
+
         /* Money Colors */
         --cash: 145 70% 50%;
         --cash-glow: 145 80% 60%;
@@ -175,7 +179,9 @@
 
     /* Glow Text */
     .glow-text {
-        text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+        text-shadow:
+            0 0 10px currentColor,
+            0 0 20px currentColor;
     }
 
     /* Status Ring Base */
@@ -294,12 +300,15 @@
             box-shadow: 0 0 5px currentColor;
         }
         50% {
-            box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+            box-shadow:
+                0 0 20px currentColor,
+                0 0 30px currentColor;
         }
     }
 
     @keyframes shake-horizontal {
-        0%, 100% {
+        0%,
+        100% {
             transform: translateX(0);
         }
         20% {
@@ -317,7 +326,8 @@
     }
 
     @keyframes shake-vertical {
-        0%, 100% {
+        0%,
+        100% {
             transform: translateY(0);
         }
         20% {

@@ -70,7 +70,7 @@ export const KeybindsOverlay = memo(() => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-auto"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 pointer-events-auto"
                     onClick={handleBackdropClick}>
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}

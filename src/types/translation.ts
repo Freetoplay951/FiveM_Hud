@@ -160,4 +160,12 @@ export interface Translations {
         closeHint: string;
         action: string;
     };
+    progressbar: {
+        progress: string;
+        success: string;
+        warning: string;
+        critical: string;
+        info: string;
+        cancel: string;
+    };
 }

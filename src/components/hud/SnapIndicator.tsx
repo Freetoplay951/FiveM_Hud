@@ -20,7 +20,7 @@ const SnapIndicatorComponent = ({ isShiftPressed, hasActiveSnap }: SnapIndicator
                     <div
                         className={`
                             flex items-center gap-2 px-3 py-1.5 rounded-lg
-                            border backdrop-blur-sm
+                            border
                             ${
                                 hasActiveSnap
                                     ? "bg-primary/20 border-primary/60 text-primary"

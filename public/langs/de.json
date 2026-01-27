@@ -140,5 +140,13 @@
         "key": "Taste",
         "closeHint": "Drücke <esc>ESC</esc> oder <key>K</key> zum Schließen",
         "action": "Aktion"
+    },
+    "progressbar": {
+        "progress": "Fortschritt",
+        "success": "Abgeschlossen",
+        "warning": "Warnung",
+        "critical": "Kritisch",
+        "info": "Info",
+        "cancel": "Abbrechen"
     }
 }

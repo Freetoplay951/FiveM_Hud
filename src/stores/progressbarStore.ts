@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { isNuiEnvironment } from "@/lib/nuiUtils";
 
 export type ProgressbarColor = "primary" | "success" | "warning" | "critical" | "info";
 
@@ -15,13 +14,16 @@ export interface ProgressbarState {
 
 interface ProgressbarStoreState extends ProgressbarState {
     // Actions
-    startProgressbar: (data: { label: string; duration: number; canCancel?: boolean; color?: ProgressbarColor }) => void;
+    startProgressbar: (data: {
+        label: string;
+        duration: number;
+        canCancel?: boolean;
+        color?: ProgressbarColor;
+    }) => void;
     updateProgress: (progress: number) => void;
     cancelProgressbar: () => void;
     finishProgressbar: () => void;
 }
-
-const isDemoMode = !isNuiEnvironment();
 
 const initialState: ProgressbarState = {
     isActive: false,

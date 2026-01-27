@@ -140,5 +140,13 @@
         "key": "Key",
         "closeHint": "Press <esc>ESC</esc> or <key>K</key> to close",
         "action": "Action"
+    },
+    "progressbar": {
+        "progress": "Progress",
+        "success": "Completed",
+        "warning": "Warning",
+        "critical": "Critical",
+        "info": "Info",
+        "cancel": "Cancel"
     }
 }
