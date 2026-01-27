@@ -508,7 +508,7 @@ export const HUD = () => {
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-destructive-foreground/80">{t.demo.hideCompass}</span>
                                     <Switch
-                                        checked={heading === undefined}
+                                        checked={heading == undefined}
                                         onCheckedChange={handleHideCompassChange}
                                         className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50"
                                     />

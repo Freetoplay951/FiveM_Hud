@@ -116,7 +116,7 @@ export const useHUDLayout = () => {
                 inVehicle: vehicleState.inVehicle,
                 locationOnlyInVehicle: utilityState.locationOnlyInVehicle,
                 minimapOnlyInVehicle: utilityState.minimapOnlyInVehicle,
-                compassHidden: locationState.heading === undefined && !state.editMode,
+                compassHidden: locationState.heading == undefined && !state.editMode,
             };
 
             return mapPartialState(original, override ?? {});

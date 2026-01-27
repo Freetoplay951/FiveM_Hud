@@ -612,7 +612,7 @@ const CompassWidgetRendererComponent = ({
         if (!widget) return;
 
         const current = {
-            headingDefined: heading !== undefined,
+            headingDefined: heading != undefined,
             editMode: !!editMode,
         };
 
@@ -638,15 +638,7 @@ const CompassWidgetRendererComponent = ({
         }
 
         prevOptionsRef.current = current;
-    }, [
-        widget,
-        heading,
-        editMode,
-        isWidgetDisabled,
-        hasSignaledReady,
-        startMinimapRelayout,
-        runMinimapRelayout,
-    ]);
+    }, [widget, heading, editMode, isWidgetDisabled, hasSignaledReady, startMinimapRelayout, runMinimapRelayout]);
 
     if (!widget) return null;
 

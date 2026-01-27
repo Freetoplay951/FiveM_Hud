@@ -65,7 +65,7 @@ export interface LayoutOptions {
     locationOnlyInVehicle: boolean;
     inVehicle: boolean;
     isEditMode: boolean;
-    // Compass hidden state (heading === undefined && !editMode)
+    // Compass hidden state (heading == undefined && !editMode)
     compassHidden: boolean;
 }
 
