@@ -624,8 +624,20 @@ if Config.Debug then
     RegisterCommand('hud_head', function()
         if showHeading == true then
             showHeading = false
+            SendNUI('updateLocation', {
+                street = streetName,
+                crossing = crossingName,
+                area = area,
+                heading = json.null
+            })
         else
             showHeading = true
+            SendNUI('updateLocation', {
+                street = streetName,
+                crossing = crossingName,
+                area = area,
+                heading = 0
+            })
         end
         print(showHeading)
     end, false)
