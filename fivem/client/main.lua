@@ -12,6 +12,7 @@ local FrameworkObject = nil
 local isPlayerLoaded = false
 local isNuiLoaded = false
 local lastPauseState = false
+local showHeading = true
 
 -- ============================================================================
 -- UTILITY FUNCTIONS
@@ -387,12 +388,21 @@ CreateThread(function()
                 lastLocationData.area = area
                 lastLocationData.heading = heading
                 
-                SendNUI('updateLocation', {
-                    street = streetName,
-                    crossing = crossingName,
-                    area = area,
-                    heading = heading
-                })
+                if showHeading == true then
+                    SendNUI('updateLocation', {
+                        street = streetName,
+                        crossing = crossingName,
+                        area = area,
+                        heading = heading
+                    })
+                else 
+                    SendNUI('updateLocation', {
+                        street = streetName,
+                        crossing = crossingName,
+                        area = area,
+                        heading = json.null
+                    })
+                end
             end
         end
     end
@@ -611,6 +621,15 @@ end)
 -- ============================================================================
 
 if Config.Debug then
+    RegisterCommand('hud_head', function()
+        if showHeading == true then
+            showHeading = false
+        else
+            showHeading = true
+        end
+        print(showHeading)
+    end, false)
+    
     RegisterCommand('hud_toggle', function()
         local visible = exports[GetCurrentResourceName()]:toggleHud()
         print('[HUD Core] Visible: ' .. tostring(visible))
