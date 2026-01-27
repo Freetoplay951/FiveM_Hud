@@ -9,16 +9,21 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/contexts/LanguageContext";
 
 // Color configuration
-const COLOR_CONFIG: Record<ProgressbarColor, { 
-    cssVar: string; 
-    icon: typeof Loader2;
-    glowIntensity: number;
-}> = {
+const COLOR_CONFIG: Record<
+    ProgressbarColor,
+    {
+        cssVar: string;
+        icon: typeof Loader2;
+        glowIntensity: number;
+        pulse?: boolean;
+    }
+> = {
     primary: { cssVar: "primary", icon: Loader2, glowIntensity: 0.6 },
     success: { cssVar: "stamina", icon: CheckCircle2, glowIntensity: 0.7 },
     warning: { cssVar: "warning", icon: AlertTriangle, glowIntensity: 0.6 },
     critical: { cssVar: "critical", icon: AlertTriangle, glowIntensity: 0.8 },
     info: { cssVar: "neutral", icon: Info, glowIntensity: 0.5 },
+    danger: { cssVar: "critical", icon: Zap, glowIntensity: 1.0, pulse: true },
 };
 
 // Static animation config
@@ -26,9 +31,9 @@ const containerMotion = {
     initial: { opacity: 0, scale: 0.8, y: 20 },
     animate: { opacity: 1, scale: 1, y: 0 },
     exit: { opacity: 0, scale: 0.8, y: 20 },
-    transition: { 
-        type: "spring", 
-        stiffness: 400, 
+    transition: {
+        type: "spring",
+        stiffness: 400,
         damping: 25,
         mass: 0.8,
     },
@@ -47,10 +52,8 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
     const animationRef = useRef<number | null>(null);
 
     // Use demo data in edit mode when progressbar is not active
-    const { isActive, label, progress, duration, startTime, canCancel, color } = 
-        isEditMode && !storeData.isActive 
-            ? DEMO_PROGRESSBAR 
-            : storeData;
+    const { isActive, label, progress, duration, startTime, canCancel, color } =
+        isEditMode && !storeData.isActive ? DEMO_PROGRESSBAR : storeData;
 
     const colorConfig = COLOR_CONFIG[color];
     const Icon = colorConfig.icon;
@@ -58,28 +61,40 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
     useRenderLogger("ProgressbarWidget", { isActive, progress, label, color });
 
     // Memoized styles
-    const progressBarStyle = useMemo(() => ({
-        backgroundColor: `hsl(var(--${colorConfig.cssVar}))`,
-        boxShadow: `
+    const progressBarStyle = useMemo(
+        () => ({
+            backgroundColor: `hsl(var(--${colorConfig.cssVar}))`,
+            boxShadow: `
             0 0 20px hsl(var(--${colorConfig.cssVar}) / ${colorConfig.glowIntensity}),
             0 0 40px hsl(var(--${colorConfig.cssVar}) / ${colorConfig.glowIntensity * 0.5}),
             inset 0 1px 0 hsl(var(--${colorConfig.cssVar}) / 0.3)
         `,
-    }), [colorConfig]);
+        }),
+        [colorConfig],
+    );
 
-    const iconStyle = useMemo(() => ({
-        filter: `drop-shadow(0 0 8px hsl(var(--${colorConfig.cssVar}) / 0.8))`,
-        color: `hsl(var(--${colorConfig.cssVar}))`,
-    }), [colorConfig]);
+    const iconStyle = useMemo(
+        () => ({
+            filter: `drop-shadow(0 0 8px hsl(var(--${colorConfig.cssVar}) / 0.8))`,
+            color: `hsl(var(--${colorConfig.cssVar}))`,
+        }),
+        [colorConfig],
+    );
 
-    const labelStyle = useMemo(() => ({
-        textShadow: `0 0 10px hsl(var(--${colorConfig.cssVar}) / 0.4)`,
-    }), [colorConfig]);
+    const labelStyle = useMemo(
+        () => ({
+            textShadow: `0 0 10px hsl(var(--${colorConfig.cssVar}) / 0.4)`,
+        }),
+        [colorConfig],
+    );
 
-    const percentStyle = useMemo(() => ({
-        color: `hsl(var(--${colorConfig.cssVar}))`,
-        textShadow: `0 0 8px hsl(var(--${colorConfig.cssVar}) / 0.5)`,
-    }), [colorConfig]);
+    const percentStyle = useMemo(
+        () => ({
+            color: `hsl(var(--${colorConfig.cssVar}))`,
+            textShadow: `0 0 8px hsl(var(--${colorConfig.cssVar}) / 0.5)`,
+        }),
+        [colorConfig],
+    );
 
     // Animation loop using requestAnimationFrame - no Lua loops needed
     useEffect(() => {
@@ -90,7 +105,7 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
         const animate = () => {
             const elapsed = Date.now() - startTime;
             const newProgress = Math.min(100, (elapsed / duration) * 100);
-            
+
             updateProgress(newProgress);
 
             if (newProgress >= 100) {
@@ -124,35 +139,36 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
             {(isActive || isEditMode) && (
                 <motion.div
                     key="progressbar"
-                    className="glass-panel rounded-xl px-5 py-3 flex flex-col gap-2 min-w-[280px] max-w-[320px] border border-white/10"
+                    className={cn(
+                        "glass-panel rounded-xl px-5 py-3 flex flex-col gap-2 min-w-[280px] max-w-[320px] border border-white/10",
+                        colorConfig.pulse && "animate-pulse",
+                    )}
                     style={{
                         boxShadow: `
-                            0 4px 30px hsl(var(--${colorConfig.cssVar}) / 0.15),
-                            0 0 0 1px hsl(var(--${colorConfig.cssVar}) / 0.1),
+                            0 4px 30px hsl(var(--${colorConfig.cssVar}) / ${colorConfig.pulse ? 0.4 : 0.15}),
+                            0 0 0 1px hsl(var(--${colorConfig.cssVar}) / ${colorConfig.pulse ? 0.3 : 0.1}),
                             inset 0 1px 0 rgba(255,255,255,0.1)
                         `,
                     }}
                     {...containerMotion}>
-                    
                     {/* Header with label and cancel button */}
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5 flex-1 min-w-0">
                             <motion.div
-                                animate={{ 
+                                animate={{
                                     rotate: color === "primary" ? 360 : 0,
                                     scale: [1, 1.1, 1],
                                 }}
-                                transition={{ 
+                                transition={{
                                     rotate: { duration: 1.5, repeat: Infinity, ease: "linear" },
-                                    scale: { duration: 1, repeat: Infinity, ease: "easeInOut" },
+                                    scale: colorConfig.pulse
+                                        ? { duration: 0.4, repeat: Infinity, ease: "easeInOut" }
+                                        : { duration: 1, repeat: Infinity, ease: "easeInOut" },
                                 }}>
                                 <Icon
                                     size={18}
                                     style={iconStyle}
-                                    className={cn(
-                                        color === "critical" && "animate-pulse",
-                                        color === "warning" && "animate-pulse"
-                                    )}
+                                    className={cn(colorConfig.pulse && "animate-pulse")}
                                 />
                             </motion.div>
                             <span
@@ -161,7 +177,7 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
                                 {label}
                             </span>
                         </div>
-                        
+
                         {canCancel && (
                             <motion.button
                                 onClick={handleCancel}
@@ -169,9 +185,9 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 aria-label="Cancel">
-                                <X 
-                                    size={14} 
-                                    className="text-muted-foreground group-hover:text-critical transition-colors" 
+                                <X
+                                    size={14}
+                                    className="text-muted-foreground group-hover:text-critical transition-colors"
                                 />
                             </motion.button>
                         )}
@@ -188,7 +204,7 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
                             animate={{ x: ["-100%", "100%"] }}
                             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                         />
-                        
+
                         {/* Progress fill */}
                         <motion.div
                             className="absolute inset-y-0 left-0 rounded-full"
@@ -197,7 +213,7 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
                             transition={{ duration: 0.1, ease: "linear" }}
                             style={progressBarStyle}
                         />
-                        
+
                         {/* Glowing edge effect */}
                         <motion.div
                             className="absolute inset-y-0 w-4 rounded-full blur-sm"

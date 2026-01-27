@@ -323,28 +323,52 @@ export const useStoreDemoSimulation = ({ editMode, enterEditMode, exitEditMode }
                 setIsVoiceMuted(!current.isVoiceMuted);
             }
 
-            // Progressbar demo toggle (p key)
+            // Progressbar demo cycle (p key)
             if (e.key === "p" && !editMode) {
                 e.preventDefault();
                 const progressStore = useProgressbarStore.getState();
+                const colors: ProgressbarColor[] = ["primary", "success", "warning", "critical", "info", "danger"];
+
+                const getLabel = (c: ProgressbarColor) => {
+                    switch (c) {
+                        case "danger":
+                            return "GEFAHR! Kritische Aktion...";
+                        case "critical":
+                            return "Gefährliche Aktion...";
+                        case "success":
+                            return "Download läuft...";
+                        case "warning":
+                            return "Bitte warten...";
+                        case "info":
+                            return "Information wird geladen...";
+                        default:
+                            return "Verarbeitung...";
+                    }
+                };
+
                 if (progressStore.isActive) {
+                    // Get current color index and cycle to next
+                    const currentIndex = colors.indexOf(progressStore.color);
+                    const nextIndex = (currentIndex + 1) % colors.length;
+                    const nextColor = colors[nextIndex];
+
+                    // Cancel current and start with next color
                     progressStore.cancelProgressbar();
+                    setTimeout(() => {
+                        useProgressbarStore.getState().startProgressbar({
+                            label: getLabel(nextColor),
+                            duration: 5000,
+                            canCancel: true,
+                            color: nextColor,
+                        });
+                    }, 100);
                 } else {
-                    // Cycle through colors
-                    const colors: ProgressbarColor[] = ["primary", "success", "warning", "critical", "info"];
-                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    // Start with first color
                     progressStore.startProgressbar({
-                        label:
-                            randomColor === "critical"
-                                ? "Gefährliche Aktion..."
-                                : randomColor === "success"
-                                  ? "Download läuft..."
-                                  : randomColor === "warning"
-                                    ? "Bitte warten..."
-                                    : "Verarbeitung...",
+                        label: getLabel("primary"),
                         duration: 5000,
                         canCancel: true,
-                        color: randomColor,
+                        color: "primary",
                     });
                 }
             }

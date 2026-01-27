@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ProgressbarColor = "primary" | "success" | "warning" | "critical" | "info";
+export type ProgressbarColor = "primary" | "success" | "warning" | "critical" | "info" | "danger";
 
 export interface ProgressbarState {
     isActive: boolean;
