@@ -21,7 +21,7 @@ import { StatusType } from "@/types/hud";
 import { WidgetPosition, StatusDesign, MinimapShape, SpeedometerType, ResolvedWidgetConfig } from "@/types/widget";
 import { DEMO_RADIO_ENABLED, EDIT_MODE_DEMO_NOTIFICATIONS } from "./data/demoData";
 import { isNuiEnvironment } from "@/lib/nuiUtils";
-import { LayoutOptions, STATUS_WIDGET_IDS } from "@/lib/widgetConfig";
+import { LayoutOptions, STATUS_WIDGET_IDS, WidgetDisabledChecker } from "@/lib/widgetConfig";
 
 // Import stores - widgets subscribe to their own data
 import { useIsDemoMode } from "@/stores/hudStore";
@@ -52,15 +52,19 @@ export interface LayoutOnlyProps {
     inVehicle?: boolean;
 
     // Auto-relayout hooks (must come from the SAME useHUDLayout instance as the HUD)
-    startMinimapRelayout: (isWidgetDisabled?: (id: string) => boolean, override?: Partial<LayoutOptions>) => void;
-    runMinimapRelayout: (isWidgetDisabled?: (id: string) => boolean) => void;
+    startMinimapRelayout: (
+        isWidgetDisabled: WidgetDisabledChecker,
+        hasSignaledReady: boolean,
+        override?: Partial<LayoutOptions>,
+    ) => void;
+    runMinimapRelayout: (isWidgetDisabled: WidgetDisabledChecker, hasSignaledReady: boolean) => void;
 
     // Layout functions only
     getWidget: (id: string) => ResolvedWidgetConfig | undefined;
     updateWidgetPosition: (id: string, position: WidgetPosition) => void;
     updateWidgetScale: (id: string, scale: number) => void;
     toggleWidgetVisibility: (id: string) => void;
-    resetWidget: (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => void;
+    resetWidget: (id: string, isWidgetDisabled: WidgetDisabledChecker, hasSignaledReady: boolean) => void;
     isWidgetDisabled: (id: string) => boolean;
     getMultiSelectProps: (id: string) => Record<string, unknown>;
 
@@ -730,18 +734,27 @@ const MinimapWidgetRendererComponent = ({
         // Only trigger relayout when the effective hidden state changes
         if (prevHidden !== nextHidden) {
             // Capture "before" defaults using the PREVIOUS options (even though we're now after the store update)
-            startMinimapRelayout(isWidgetDisabled, {
+            startMinimapRelayout(isWidgetDisabled, hasSignaledReady, {
                 minimapOnlyInVehicle: prev.minimapOnlyInVehicle,
                 inVehicle: prev.inVehicle,
                 isEditMode: prev.editMode,
             });
 
             // Apply relayout using current options
-            runMinimapRelayout(isWidgetDisabled);
+            runMinimapRelayout(isWidgetDisabled, hasSignaledReady);
         }
 
         prevOptionsRef.current = current;
-    }, [widget, minimapOnlyInVehicle, inVehicle, editMode, isWidgetDisabled, startMinimapRelayout, runMinimapRelayout]);
+    }, [
+        widget,
+        minimapOnlyInVehicle,
+        inVehicle,
+        editMode,
+        isWidgetDisabled,
+        hasSignaledReady,
+        startMinimapRelayout,
+        runMinimapRelayout,
+    ]);
 
     if (!widget) return null;
 

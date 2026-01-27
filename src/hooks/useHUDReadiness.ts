@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useHUDGlobalStore, useAreAllAsyncWidgetsReady } from "@/stores/hudStore";
 import { sendNuiCallback } from "@/hooks/useNuiEvents";
+import { WidgetDisabledChecker } from "@/lib/widgetHelpers";
 
 type ReadinessPhase = "registering" | "waiting" | "ready";
 
@@ -9,17 +10,17 @@ interface UseHUDReadinessOptions {
     isLanguageLoaded: boolean;
     hasTranslations: boolean;
     widgetsDistributed: boolean;
-    distributeWidgets: (isWidgetDisabled: (id: string) => boolean, force: boolean) => void;
+    distributeWidgets: (isWidgetDisabled: WidgetDisabledChecker, hasSignaledReady: boolean) => void;
     isWidgetDisabled: (id: string) => boolean;
 }
 
 /**
  * Hook that manages HUD readiness with a clean phase-based approach:
- * 
+ *
  * Phase 1: "registering" - Widgets have time to register themselves (one RAF cycle)
  * Phase 2: "waiting" - Registration sealed, waiting for all widgets to signal ready
  * Phase 3: "ready" - All widgets ready, AllThingsLoaded can be fired
- * 
+ *
  * This pattern is similar to a "barrier" synchronization primitive.
  */
 export function useHUDReadiness({

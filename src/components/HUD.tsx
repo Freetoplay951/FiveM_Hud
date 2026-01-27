@@ -406,10 +406,10 @@ export const HUD = () => {
                         brandingPosition={brandingPosition}
                         simpleMode={simpleMode}
                         onSnapToGridChange={setSnapToGrid}
-                        onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled)}
+                        onStatusDesignChange={(design) => setStatusDesign(design, isWidgetDisabled, hasSignaledReady)}
                         onSpeedometerTypeChange={setSpeedometerType}
-                        onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled)}
-                        onBrandingPositionChange={(pos) => setBrandingPosition(pos, isWidgetDisabled)}
+                        onMinimapShapeChange={(shape) => setMinimapShape(shape, isWidgetDisabled, hasSignaledReady)}
+                        onBrandingPositionChange={(pos) => setBrandingPosition(pos, isWidgetDisabled, hasSignaledReady)}
                         onSimpleModeChange={handleSimpleModeChange}
                         onReset={() => resetLayout(false, isWidgetDisabled, hasSignaledReady)}
                         onExitEditMode={exitEditMode}

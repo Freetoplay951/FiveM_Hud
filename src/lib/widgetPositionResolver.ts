@@ -1,5 +1,5 @@
 import { WidgetPosition } from "@/types/widget";
-import { LayoutOptions, DEFAULT_LAYOUT_OPTIONS, getWidgetElementId } from "@/lib/widgetConfig";
+import { LayoutOptions, DEFAULT_LAYOUT_OPTIONS, getWidgetElementId, WIDGET_DOM_PREFIX } from "@/lib/widgetConfig";
 
 export interface WidgetSize {
     width: number;
@@ -67,8 +67,8 @@ export function resolveDefaultPositions(
         scale?: number;
         position: (id: string, element: HTMLElement | null, resolver: PositionResolver) => WidgetPosition;
     }>,
-    isWidgetDisabled?: (id: string) => boolean,
-    hasSignaledReady?: boolean,
+    isWidgetDisabled: (id: string) => boolean,
+    hasSignaledReady: boolean,
     layoutOptions: LayoutOptions = DEFAULT_LAYOUT_OPTIONS,
 ): Map<string, WidgetRect> {
     const resolvedRects = new Map<string, WidgetRect>();

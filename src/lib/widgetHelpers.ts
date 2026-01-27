@@ -19,8 +19,7 @@ export interface RelayoutContext {
 export const WIDGET_DOM_PREFIX = "hud-widget-";
 
 /** Get the DOM element ID for a widget */
-export const getWidgetElementId = (widgetId: string): string => 
-    `${WIDGET_DOM_PREFIX}${widgetId}`;
+export const getWidgetElementId = (widgetId: string): string => `${WIDGET_DOM_PREFIX}${widgetId}`;
 
 /** Get the DOM element for a widget */
 export const getWidgetDOMElement = (widgetId: string): HTMLElement | null =>
@@ -31,21 +30,21 @@ export const getWidgetDOMElement = (widgetId: string): HTMLElement | null =>
 /**
  * Update a single widget in the widgets array.
  * Generic helper to reduce repetitive map/spread patterns.
- * 
+ *
  * @example
  * updateWidgetInArray(widgets, "minimap", { position: { x: 100, y: 100 } })
  */
 export const updateWidgetInArray = <K extends keyof ResolvedWidgetConfig>(
     widgets: ResolvedWidgetConfig[],
     id: string,
-    updates: Pick<ResolvedWidgetConfig, K>
+    updates: Pick<ResolvedWidgetConfig, K>,
 ): ResolvedWidgetConfig[] => {
     return widgets.map((w) => (w.id === id ? { ...w, ...updates } : w));
 };
 
 /**
  * Update multiple widgets in the widgets array.
- * 
+ *
  * @example
  * updateMultipleWidgets(widgets, new Map([
  *   ["minimap", { position: { x: 100, y: 100 } }],
@@ -54,7 +53,7 @@ export const updateWidgetInArray = <K extends keyof ResolvedWidgetConfig>(
  */
 export const updateMultipleWidgets = (
     widgets: ResolvedWidgetConfig[],
-    updates: Map<string, Partial<ResolvedWidgetConfig>>
+    updates: Map<string, Partial<ResolvedWidgetConfig>>,
 ): ResolvedWidgetConfig[] => {
     return widgets.map((w) => {
         const update = updates.get(w.id);
@@ -65,13 +64,13 @@ export const updateMultipleWidgets = (
 // ============= Mock Resolver Factory =============
 
 /** Default mock rect for dependency detection */
-const MOCK_RECT: WidgetRect = { 
-    x: 0, 
-    y: 0, 
-    width: 100, 
-    height: 100, 
-    right: 100, 
-    bottom: 100 
+const MOCK_RECT: WidgetRect = {
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    right: 100,
+    bottom: 100,
 };
 
 /** Default mock bounding client rect */
@@ -89,12 +88,10 @@ const MOCK_BOUNDING_RECT = {
 /**
  * Create a mock resolver for dependency detection.
  * Used to trace which widgets a position function depends on.
- * 
+ *
  * @param onWidgetAccess - Callback invoked when a widget is accessed
  */
-export const createMockResolver = (
-    onWidgetAccess?: (id: string) => void
-): PositionResolver => ({
+export const createMockResolver = (onWidgetAccess?: (id: string) => void): PositionResolver => ({
     getWidgetRect: (id: string) => {
         onWidgetAccess?.(id);
         return MOCK_RECT;
@@ -113,11 +110,12 @@ export const createMockResolver = (
 /**
  * Create a mock HTML element for position function testing.
  */
-export const createMockElement = (): HTMLElement => ({
-    offsetWidth: 100,
-    offsetHeight: 100,
-    getBoundingClientRect: () => MOCK_BOUNDING_RECT,
-} as unknown as HTMLElement);
+export const createMockElement = (): HTMLElement =>
+    ({
+        offsetWidth: 100,
+        offsetHeight: 100,
+        getBoundingClientRect: () => MOCK_BOUNDING_RECT,
+    }) as unknown as HTMLElement;
 
 // ============= Position Utilities =============
 

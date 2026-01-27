@@ -39,7 +39,7 @@ import { BicycleBaseWidget, BicycleWarningWidget } from "./widgets/vehicles/bicy
 // Import stores - widgets subscribe to their own data
 import { useVehicleStore } from "@/stores/vehicleStore";
 import { useIsDead } from "@/stores/deathStore";
-import { DEFAULT_LAYOUT_OPTIONS } from "@/lib/widgetConfig";
+import { DEFAULT_LAYOUT_OPTIONS, WidgetDisabledChecker } from "@/lib/widgetConfig";
 
 export interface SubwidgetRendererProps {
     editMode: boolean;
@@ -52,8 +52,8 @@ export interface SubwidgetRendererProps {
     updateWidgetPosition: (id: string, position: WidgetPosition) => void;
     updateWidgetScale: (id: string, scale: number) => void;
     toggleWidgetVisibility: (id: string) => void;
-    resetWidget: (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => void;
-    reflowWidgetPosition: (id: string, isWidgetDisabled?: (id: string) => boolean, hasSignaledReady?: boolean) => void;
+    resetWidget: (id: string, isWidgetDisabled: WidgetDisabledChecker, hasSignaledReady: boolean) => void;
+    reflowWidgetPosition: (id: string, isWidgetDisabled: WidgetDisabledChecker, hasSignaledReady: boolean) => void;
     isWidgetDisabled: (id: string) => boolean;
     getMultiSelectProps: (id: string) => Record<string, unknown>;
 }
