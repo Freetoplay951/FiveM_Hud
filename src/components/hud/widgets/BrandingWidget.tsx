@@ -121,40 +121,61 @@ const SequentialLetterSegment = ({ text, color, letterSpacing, fontSize, duratio
     const gradient = resolveGradient(color);
     const solidColor = resolveColor(color);
     const effectColor = getEffectColor(color);
+
     const letters = text.split("");
-    const delayPerLetter = duration / letters.length;
+
+    // Regex: alle Whitespaces (Space, Tab, Newline etc.)
+    const animatedLetters = letters.filter((l) => !/\s/.test(l));
+    const delayPerLetter = animatedLetters.length ? duration / animatedLetters.length : 0;
+
+    let animatedIndex = 0;
 
     return (
         <span
-            className={`${fontSize} font-bold relative inline-flex`}
+            className={`${fontSize} font-bold relative inline-flex whitespace-pre`}
             style={{ letterSpacing }}>
-            {letters.map((letter, i) => (
-                <motion.span
-                    key={i}
-                    className="inline-block"
-                    style={{
-                        background: gradient,
-                        color: solidColor,
-                        WebkitBackgroundClip: gradient ? "text" : undefined,
-                        WebkitTextFillColor: gradient ? "transparent" : undefined,
-                    }}
-                    animate={{
-                        filter: [
-                            `brightness(1) drop-shadow(0 0 0px hsl(${effectColor}))`,
-                            `brightness(1.4) drop-shadow(0 0 12px hsl(${effectColor}))`,
-                            `brightness(1) drop-shadow(0 0 0px hsl(${effectColor}))`,
-                        ],
-                    }}
-                    transition={{
-                        duration: 0.6,
-                        repeat: Infinity,
-                        repeatDelay: duration - 0.6,
-                        delay: i * delayPerLetter,
-                        ease: "easeInOut",
-                    }}>
-                    {letter}
-                </motion.span>
-            ))}
+            {letters.map((letter, i) => {
+                const isWhitespace = /\s/.test(letter);
+                const delay = isWhitespace ? 0 : animatedIndex * delayPerLetter;
+
+                if (!isWhitespace) animatedIndex++;
+
+                return (
+                    <motion.span
+                        key={i}
+                        className="inline-block"
+                        style={{
+                            background: gradient,
+                            color: solidColor,
+                            WebkitBackgroundClip: gradient ? "text" : undefined,
+                            WebkitTextFillColor: gradient ? "transparent" : undefined,
+                        }}
+                        animate={
+                            isWhitespace
+                                ? {}
+                                : {
+                                      filter: [
+                                          `brightness(1) drop-shadow(0 0 0px hsl(${effectColor}))`,
+                                          `brightness(1.4) drop-shadow(0 0 12px hsl(${effectColor}))`,
+                                          `brightness(1) drop-shadow(0 0 0px hsl(${effectColor}))`,
+                                      ],
+                                  }
+                        }
+                        transition={
+                            isWhitespace
+                                ? {}
+                                : {
+                                      duration: 0.6,
+                                      repeat: Infinity,
+                                      repeatDelay: duration - 0.6,
+                                      delay,
+                                      ease: "easeInOut",
+                                  }
+                        }>
+                        {letter}
+                    </motion.span>
+                );
+            })}
         </span>
     );
 };
