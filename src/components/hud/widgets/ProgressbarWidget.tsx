@@ -26,19 +26,6 @@ const COLOR_CONFIG: Record<
     danger: { cssVar: "critical", icon: Zap, glowIntensity: 1.0, pulse: true },
 };
 
-// Static animation config
-const containerMotion = {
-    initial: { opacity: 0, scale: 0.8, y: 20 },
-    animate: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.8, y: 20 },
-    transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 25,
-        mass: 0.8,
-    },
-} as const;
-
 interface ProgressbarWidgetProps {
     isEditMode?: boolean;
 }
