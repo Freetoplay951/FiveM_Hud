@@ -1199,11 +1199,12 @@ export const getDefaultWidgets = (): WidgetConfig[] => {
             type: "progressbar",
             position: (_id, el, resolver) => {
                 const width = el?.offsetWidth ?? 0;
+                const height = el?.offsetHeight ?? 0;
                 const voiceRect = resolver.getWidgetRect("voice");
                 if (voiceRect) {
                     return {
                         x: resolver.screen.width / 2 - width / 2,
-                        y: voiceRect.y - GAP - (el?.offsetHeight ?? 0),
+                        y: voiceRect.y - GAP - height,
                     };
                 }
                 return {

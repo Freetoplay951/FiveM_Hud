@@ -314,6 +314,34 @@ export const BrandingWidget = () => {
             );
         }
 
+        if (decorations.type === "lines") {
+            return (
+                <div className="flex flex-col gap-1 items-end justify-center">
+                    {[0, 1, 2].map((i) => (
+                        <motion.div
+                            key={i}
+                            className="h-[2px] rounded-full"
+                            style={{
+                                width: `${16 + (2 - i) * 8}px`,
+                                background: `hsl(${firstColor})`,
+                                boxShadow: `0 0 8px hsl(${firstColor})`,
+                            }}
+                            animate={{ 
+                                opacity: [0.3, 1, 0.3],
+                                scaleX: [0.8, 1, 0.8],
+                            }}
+                            transition={{ 
+                                duration: 1.8, 
+                                repeat: Infinity, 
+                                delay: i * 0.15,
+                                ease: "easeInOut",
+                            }}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
         if (decorations.type === "brackets") {
             return (
                 <motion.div
@@ -348,6 +376,34 @@ export const BrandingWidget = () => {
                                 duration: 1.5,
                                 repeat: Infinity,
                                 delay: i * 0.2 + 0.3,
+                            }}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        if (decorations.type === "lines") {
+            return (
+                <div className="flex flex-col gap-1 items-start justify-center">
+                    {[0, 1, 2].map((i) => (
+                        <motion.div
+                            key={i}
+                            className="h-[2px] rounded-full"
+                            style={{
+                                width: `${16 + (2 - i) * 8}px`,
+                                background: `hsl(${lastColor})`,
+                                boxShadow: `0 0 8px hsl(${lastColor})`,
+                            }}
+                            animate={{ 
+                                opacity: [0.3, 1, 0.3],
+                                scaleX: [0.8, 1, 0.8],
+                            }}
+                            transition={{ 
+                                duration: 1.8, 
+                                repeat: Infinity, 
+                                delay: i * 0.15 + 0.3,
+                                ease: "easeInOut",
                             }}
                         />
                     ))}
