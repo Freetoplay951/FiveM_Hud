@@ -58,6 +58,9 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
     const colorConfig = COLOR_CONFIG[color];
     const Icon = colorConfig.icon;
 
+    // Determine if content should be visible
+    const shouldShowContent = isActive || isEditMode;
+
     useRenderLogger("ProgressbarWidget", { isActive, progress, label, color });
 
     // Memoized styles
@@ -132,119 +135,126 @@ const ProgressbarWidgetComponent = ({ isEditMode = false }: ProgressbarWidgetPro
         }
     }, [canCancel, cancelProgressbar, isEditMode]);
 
-    if (!isActive && !isEditMode) return null;
+    // Progressbar container height for sizing when empty
+    const PROGRESSBAR_HEIGHT = 96;
 
+    // Always render container for widget positioning - content animates in/out
     return (
-        <AnimatePresence mode="wait">
-            {(isActive || isEditMode) && (
-                <motion.div
-                    key="progressbar"
-                    className={cn(
-                        "glass-panel rounded-xl px-5 py-3 flex flex-col gap-2 min-w-[280px] max-w-[320px] border border-white/10",
-                        colorConfig.pulse && "animate-pulse",
-                    )}
-                    style={{
-                        boxShadow: `
+        <div
+            className="flex flex-col pointer-events-auto min-w-[280px] max-w-[320px]"
+            style={{ minHeight: shouldShowContent ? undefined : PROGRESSBAR_HEIGHT }}>
+            <AnimatePresence mode="wait">
+                {shouldShowContent && (
+                    <motion.div
+                        key="progressbar"
+                        className={cn(
+                            "glass-panel rounded-xl px-5 py-3 flex flex-col gap-2 border border-white/10",
+                            colorConfig.pulse && "animate-pulse",
+                        )}
+                        style={{
+                            boxShadow: `
                             0 4px 30px hsl(var(--${colorConfig.cssVar}) / ${colorConfig.pulse ? 0.4 : 0.15}),
                             0 0 0 1px hsl(var(--${colorConfig.cssVar}) / ${colorConfig.pulse ? 0.3 : 0.1}),
                             inset 0 1px 0 rgba(255,255,255,0.1)
                         `,
-                    }}
-                    {...containerMotion}>
-                    {/* Header with label and cancel button */}
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                            <motion.div
-                                animate={{
-                                    rotate: color === "primary" ? 360 : 0,
-                                    scale: [1, 1.1, 1],
-                                }}
-                                transition={{
-                                    rotate: { duration: 1.5, repeat: Infinity, ease: "linear" },
-                                    scale: colorConfig.pulse
-                                        ? { duration: 0.4, repeat: Infinity, ease: "easeInOut" }
-                                        : { duration: 1, repeat: Infinity, ease: "easeInOut" },
-                                }}>
-                                <Icon
-                                    size={18}
-                                    style={iconStyle}
-                                    className={cn(colorConfig.pulse && "animate-pulse")}
-                                />
-                            </motion.div>
-                            <span
-                                className="text-sm text-foreground font-medium truncate"
-                                style={labelStyle}>
-                                {label}
-                            </span>
+                        }}
+                        {...containerMotion}>
+                        {/* Header with label and cancel button */}
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                <motion.div
+                                    animate={{
+                                        rotate: color === "primary" ? 360 : 0,
+                                        scale: colorConfig.pulse ? [1, 1.1, 1] : 1,
+                                    }}
+                                    transition={
+                                        color === "primary"
+                                            ? { rotate: { duration: 1.5, repeat: Infinity, ease: "linear" } }
+                                            : colorConfig.pulse
+                                              ? { scale: { duration: 0.4, repeat: Infinity, ease: "easeInOut" } }
+                                              : {}
+                                    }>
+                                    <Icon
+                                        size={18}
+                                        style={iconStyle}
+                                        className={cn(colorConfig.pulse && "animate-pulse")}
+                                    />
+                                </motion.div>
+                                <span
+                                    className="text-sm text-foreground font-medium truncate"
+                                    style={labelStyle}>
+                                    {label}
+                                </span>
+                            </div>
+
+                            {canCancel && (
+                                <motion.button
+                                    onClick={handleCancel}
+                                    className="p-1 rounded-lg hover:bg-white/10 transition-all duration-200 group"
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    aria-label="Cancel">
+                                    <X
+                                        size={14}
+                                        className="text-muted-foreground group-hover:text-critical transition-colors"
+                                    />
+                                </motion.button>
+                            )}
                         </div>
 
-                        {canCancel && (
-                            <motion.button
-                                onClick={handleCancel}
-                                className="p-1 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                aria-label="Cancel">
-                                <X
-                                    size={14}
-                                    className="text-muted-foreground group-hover:text-critical transition-colors"
-                                />
-                            </motion.button>
-                        )}
-                    </div>
+                        {/* Progress bar container */}
+                        <div className="relative h-3 rounded-full bg-black/40 overflow-hidden border border-white/5">
+                            {/* Animated background shimmer */}
+                            <motion.div
+                                className="absolute inset-0 opacity-20"
+                                style={{
+                                    background: `linear-gradient(90deg, transparent, hsl(var(--${colorConfig.cssVar}) / 0.3), transparent)`,
+                                }}
+                                animate={{ x: ["-100%", "100%"] }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                            />
 
-                    {/* Progress bar container */}
-                    <div className="relative h-3 rounded-full bg-black/40 overflow-hidden border border-white/5">
-                        {/* Animated background shimmer */}
-                        <motion.div
-                            className="absolute inset-0 opacity-20"
-                            style={{
-                                background: `linear-gradient(90deg, transparent, hsl(var(--${colorConfig.cssVar}) / 0.3), transparent)`,
-                            }}
-                            animate={{ x: ["-100%", "100%"] }}
-                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                        />
+                            {/* Progress fill */}
+                            <motion.div
+                                className="absolute inset-y-0 left-0 rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                transition={{ duration: 0.1, ease: "linear" }}
+                                style={progressBarStyle}
+                            />
 
-                        {/* Progress fill */}
-                        <motion.div
-                            className="absolute inset-y-0 left-0 rounded-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 0.1, ease: "linear" }}
-                            style={progressBarStyle}
-                        />
+                            {/* Glowing edge effect */}
+                            <motion.div
+                                className="absolute inset-y-0 w-4 rounded-full blur-sm"
+                                style={{
+                                    left: `calc(${progress}% - 8px)`,
+                                    background: `hsl(var(--${colorConfig.cssVar}))`,
+                                    opacity: progress > 0 ? 0.8 : 0,
+                                }}
+                                animate={{ opacity: progress > 0 ? [0.5, 1, 0.5] : 0 }}
+                                transition={{ duration: 0.8, repeat: Infinity }}
+                            />
+                        </div>
 
-                        {/* Glowing edge effect */}
-                        <motion.div
-                            className="absolute inset-y-0 w-4 rounded-full blur-sm"
-                            style={{
-                                left: `calc(${progress}% - 8px)`,
-                                background: `hsl(var(--${colorConfig.cssVar}))`,
-                                opacity: progress > 0 ? 0.8 : 0,
-                            }}
-                            animate={{ opacity: progress > 0 ? [0.5, 1, 0.5] : 0 }}
-                            transition={{ duration: 0.8, repeat: Infinity }}
-                        />
-                    </div>
-
-                    {/* Percentage with animated counter */}
-                    <div className="flex justify-between items-center">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                            {t?.progressbar?.[color] ?? t?.progressbar?.progress ?? "Progress"}
-                        </span>
-                        <motion.span
-                            className="hud-number text-sm font-bold"
-                            style={percentStyle}
-                            key={Math.round(progress)}
-                            initial={{ scale: 1.2, opacity: 0.5 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ duration: 0.1 }}>
-                            {Math.round(progress)}%
-                        </motion.span>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                        {/* Percentage with animated counter */}
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                {t?.progressbar?.[color] ?? t?.progressbar?.progress ?? "Progress"}
+                            </span>
+                            <motion.span
+                                className="hud-number text-sm font-bold"
+                                style={percentStyle}
+                                key={Math.round(progress)}
+                                initial={{ scale: 1.2, opacity: 0.5 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.1 }}>
+                                {Math.round(progress)}%
+                            </motion.span>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 
