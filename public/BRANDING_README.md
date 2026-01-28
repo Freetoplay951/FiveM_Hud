@@ -76,10 +76,23 @@ Die Datei `branding.json` ermöglicht die vollständige Anpassung des Branding-W
 
 ## Decorations
 
-- dots
-- lines
-- brackets
-- none
+| Typ | Beschreibung |
+|-----|-------------|
+| `dots` | Drei pulsierende Punkte vertikal gestapelt |
+| `lines` | Drei horizontale Linien mit Breathing-Effekt |
+| `brackets` | Animierte Klammer-Symbole `‹ ›` |
+| `arrows` | Drei animierte Pfeil-Symbole mit Bewegung |
+| `diamonds` | Rotierende Diamant-Formen |
+| `squares` | Kleine Quadrate mit Rotations-Animation |
+| `circles` | Pulsierende Kreisringe |
+| `pulse-ring` | Expandierender Ring um einen Punkt |
+| `scan-line` | Vertikale Scan-Linie in einer Box |
+| `hexagons` | Zwei skalierenden Hexagon-Formen |
+| `triangles` | Drei animierte Dreiecke mit Bounce-Effekt |
+| `waves` | Audio-Wellen-Visualizer Style |
+| `stars` | Rotierende Stern-Symbole ✦ |
+| `lightning` | Blinkende Blitz-Symbole ⚡ |
+| `none` | Keine Dekorationen |
 
 ---
 
