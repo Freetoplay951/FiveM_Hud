@@ -1,7 +1,7 @@
 {
     "segments": [
         {
-            "text": "COMMUNITY",
+            "text": "COMMUNITY ",
             "color": {
                 "type": "gradient",
                 "from": "188 100% 50%",
@@ -26,7 +26,9 @@
     },
     "decorations": {
         "type": "dots",
-        "showDecorations": true
+        "showDecorations": true,
+        "speed": 1,
+        "mirrorAnimation": true
     },
     "animation": {
         "sequentialDuration": 3,

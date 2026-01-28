@@ -53,6 +53,10 @@ interface BrandingConfig {
             | "lightning"
             | "none";
         showDecorations: boolean;
+        /** Animation speed multiplier (default: 1, higher = faster) */
+        speed?: number;
+        /** Mirror animation direction for right side (default: false = synchronized) */
+        mirrorAnimation?: boolean;
     };
     /** Animation settings */
     animation?: {
@@ -311,8 +315,18 @@ export const BrandingWidget = () => {
     const renderDecoration = (color: string, side: "left" | "right") => {
         if (!decorations?.showDecorations) return null;
         const mirror = side === "right" ? { transform: "scaleX(-1)" } : {};
+        const speed = decorations.speed ?? 1;
+        const mirrorAnim = decorations.mirrorAnimation ?? false;
+        // When mirrorAnimation is enabled, right side gets a phase offset of half the duration
+        const getDelay = (baseDelay: number, duration: number) => {
+            if (side === "right" && mirrorAnim) {
+                return baseDelay + duration / 2;
+            }
+            return baseDelay;
+        };
 
         if (decorations.type === "dots") {
+            const dur = 1.5 / speed;
             return (
                 <div
                     className="flex flex-col gap-1.5 items-center justify-center"
@@ -326,7 +340,7 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 10px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.4, 1, 0.4] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.2) / speed, dur) }}
                         />
                     ))}
                 </div>
@@ -334,6 +348,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "lines") {
+            const dur = 1.8 / speed;
             return (
                 <div
                     className="flex flex-col gap-1 items-end justify-center"
@@ -348,7 +363,12 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 8px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.3, 1, 0.3], scaleX: [0.8, 1, 0.8] }}
-                            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                            transition={{
+                                duration: dur,
+                                repeat: Infinity,
+                                delay: getDelay((i * 0.15) / speed, dur),
+                                ease: "easeInOut",
+                            }}
                         />
                     ))}
                 </div>
@@ -356,18 +376,20 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "brackets") {
+            const dur = 2 / speed;
             return (
                 <motion.div
                     className="text-2xl flex items-center"
                     style={{ color: `hsl(${color})`, ...mirror }}
                     animate={{ opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 2, repeat: Infinity }}>
+                    transition={{ duration: dur, repeat: Infinity, delay: getDelay(0, dur) }}>
                     ‹
                 </motion.div>
             );
         }
 
         if (decorations.type === "arrows") {
+            const dur = 1 / speed;
             return (
                 <div
                     className="flex items-center gap-0.5"
@@ -378,7 +400,7 @@ export const BrandingWidget = () => {
                             className="text-xs"
                             style={{ color: `hsl(${color})`, textShadow: `0 0 8px hsl(${color})` }}
                             animate={{ opacity: [0.3, 1, 0.3], x: [0, 2, 0] }}
-                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}>
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.15) / speed, dur) }}>
                             ›
                         </motion.div>
                     ))}
@@ -387,6 +409,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "diamonds") {
+            const dur = 1.5 / speed;
             return (
                 <div
                     className="flex flex-col gap-1 items-center justify-center"
@@ -401,7 +424,7 @@ export const BrandingWidget = () => {
                                 transform: "rotate(45deg)",
                             }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1, 0.8] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.2) / speed, dur) }}
                         />
                     ))}
                 </div>
@@ -409,6 +432,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "squares") {
+            const dur = 2 / speed;
             return (
                 <div
                     className="flex flex-col gap-1.5 items-center justify-center"
@@ -422,7 +446,7 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 8px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.3, 1, 0.3], rotate: [0, 90, 0] }}
-                            transition={{ duration: 2, repeat: Infinity, delay: i * 0.25 }}
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.25) / speed, dur) }}
                         />
                     ))}
                 </div>
@@ -430,6 +454,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "circles") {
+            const dur = 1.8 / speed;
             return (
                 <div
                     className="flex items-center gap-1"
@@ -443,7 +468,7 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 6px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
-                            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.2 }}
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.2) / speed, dur) }}
                         />
                     ))}
                 </div>
@@ -451,6 +476,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "pulse-ring") {
+            const dur = 2 / speed;
             return (
                 <div
                     className="relative flex items-center justify-center w-6 h-6"
@@ -459,7 +485,7 @@ export const BrandingWidget = () => {
                         className="absolute w-4 h-4 rounded-full border-2"
                         style={{ borderColor: `hsl(${color})` }}
                         animate={{ scale: [1, 1.5, 1], opacity: [1, 0, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                        transition={{ duration: dur, repeat: Infinity, delay: getDelay(0, dur) }}
                     />
                     <div
                         className="w-2 h-2 rounded-full"
@@ -470,6 +496,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "scan-line") {
+            const dur = 2 / speed;
             return (
                 <div
                     className="relative w-6 h-6 overflow-hidden"
@@ -482,13 +509,14 @@ export const BrandingWidget = () => {
                         className="absolute left-0 right-0 h-[2px]"
                         style={{ background: `hsl(${color})`, boxShadow: `0 0 8px hsl(${color})` }}
                         animate={{ top: ["0%", "100%", "0%"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        transition={{ duration: dur, repeat: Infinity, ease: "easeInOut", delay: getDelay(0, dur) }}
                     />
                 </div>
             );
         }
 
         if (decorations.type === "hexagons") {
+            const dur = 1.5 / speed;
             return (
                 <div
                     className="flex flex-col gap-0.5 items-center justify-center"
@@ -501,7 +529,7 @@ export const BrandingWidget = () => {
                             viewBox="0 0 12 14"
                             style={{ filter: `drop-shadow(0 0 4px hsl(${color}))` }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1, 0.9] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}>
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.3) / speed, dur) }}>
                             <polygon
                                 points="6,0 12,3.5 12,10.5 6,14 0,10.5 0,3.5"
                                 fill={`hsl(${color})`}
@@ -513,6 +541,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "triangles") {
+            const dur = 1.2 / speed;
             return (
                 <div
                     className="flex flex-col gap-1 items-center justify-center"
@@ -529,7 +558,7 @@ export const BrandingWidget = () => {
                                 filter: `drop-shadow(0 0 4px hsl(${color}))`,
                             }}
                             animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
-                            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15 }}
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.15) / speed, dur) }}
                         />
                     ))}
                 </div>
@@ -537,6 +566,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "waves") {
+            const dur = 0.8 / speed;
             return (
                 <div
                     className="flex items-end gap-0.5 h-6"
@@ -547,7 +577,7 @@ export const BrandingWidget = () => {
                             className="w-1 rounded-full"
                             style={{ background: `hsl(${color})`, boxShadow: `0 0 4px hsl(${color})` }}
                             animate={{ height: ["8px", "20px", "8px"] }}
-                            transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.1) / speed, dur) }}
                         />
                     ))}
                 </div>
@@ -555,6 +585,7 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "stars") {
+            const dur = 3 / speed;
             return (
                 <div
                     className="flex flex-col gap-1 items-center justify-center"
@@ -565,7 +596,7 @@ export const BrandingWidget = () => {
                             className="text-sm"
                             style={{ color: `hsl(${color})`, textShadow: `0 0 8px hsl(${color})` }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8], rotate: [0, 180, 360] }}
-                            transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}>
+                            transition={{ duration: dur, repeat: Infinity, delay: getDelay((i * 0.5) / speed, dur) }}>
                             ✦
                         </motion.div>
                     ))}
@@ -574,6 +605,8 @@ export const BrandingWidget = () => {
         }
 
         if (decorations.type === "lightning") {
+            const dur = 0.5 / speed;
+            const repeatDelay = 2 / speed;
             return (
                 <div
                     className="flex items-center"
@@ -582,7 +615,12 @@ export const BrandingWidget = () => {
                         className="text-lg"
                         style={{ color: `hsl(${color})`, textShadow: `0 0 12px hsl(${color})` }}
                         animate={{ opacity: [0.3, 1, 0.3, 1, 0.3], scale: [1, 1.1, 1, 1.1, 1] }}
-                        transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}>
+                        transition={{
+                            duration: dur,
+                            repeat: Infinity,
+                            repeatDelay,
+                            delay: getDelay(0, dur + repeatDelay),
+                        }}>
                         ⚡
                     </motion.div>
                 </div>
@@ -657,7 +695,7 @@ export const BrandingWidget = () => {
                     {/* Text with inline decorations */}
                     <div className="relative flex gap-4 items-center">
                         {renderLeftDecoration()}
-                        <div className="flex gap-3 items-baseline">
+                        <div className="flex items-baseline whitespace-pre">
                             {segments.map((seg, i) => renderSegment(seg, i))}
                         </div>
                         {renderRightDecoration()}
