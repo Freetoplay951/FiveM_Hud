@@ -36,7 +36,22 @@ interface BrandingConfig {
         particleCount: number;
     };
     decorations: {
-        type: "dots" | "lines" | "brackets" | "arrows" | "diamonds" | "squares" | "circles" | "pulse-ring" | "scan-line" | "hexagons" | "triangles" | "waves" | "stars" | "lightning" | "none";
+        type:
+            | "dots"
+            | "lines"
+            | "brackets"
+            | "arrows"
+            | "diamonds"
+            | "squares"
+            | "circles"
+            | "pulse-ring"
+            | "scan-line"
+            | "hexagons"
+            | "triangles"
+            | "waves"
+            | "stars"
+            | "lightning"
+            | "none";
         showDecorations: boolean;
     };
     /** Animation settings */
@@ -295,12 +310,13 @@ export const BrandingWidget = () => {
     // Reusable decoration component - mirrors via CSS transform
     const renderDecoration = (color: string, side: "left" | "right") => {
         if (!decorations?.showDecorations) return null;
-        const delay = side === "right" ? 0.3 : 0;
         const mirror = side === "right" ? { transform: "scaleX(-1)" } : {};
 
         if (decorations.type === "dots") {
             return (
-                <div className="flex flex-col gap-1.5 items-center justify-center" style={mirror}>
+                <div
+                    className="flex flex-col gap-1.5 items-center justify-center"
+                    style={mirror}>
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
@@ -310,7 +326,7 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 10px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.4, 1, 0.4] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 + delay }}
+                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
                         />
                     ))}
                 </div>
@@ -319,7 +335,9 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "lines") {
             return (
-                <div className="flex flex-col gap-1 items-end justify-center" style={mirror}>
+                <div
+                    className="flex flex-col gap-1 items-end justify-center"
+                    style={mirror}>
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
@@ -330,7 +348,7 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 8px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.3, 1, 0.3], scaleX: [0.8, 1, 0.8] }}
-                            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.15 + delay, ease: "easeInOut" }}
+                            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
                         />
                     ))}
                 </div>
@@ -343,7 +361,7 @@ export const BrandingWidget = () => {
                     className="text-2xl flex items-center"
                     style={{ color: `hsl(${color})`, ...mirror }}
                     animate={{ opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 2, repeat: Infinity, delay }}>
+                    transition={{ duration: 2, repeat: Infinity }}>
                     ‹
                 </motion.div>
             );
@@ -351,15 +369,16 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "arrows") {
             return (
-                <div className="flex items-center gap-0.5" style={mirror}>
+                <div
+                    className="flex items-center gap-0.5"
+                    style={mirror}>
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
                             className="text-xs"
                             style={{ color: `hsl(${color})`, textShadow: `0 0 8px hsl(${color})` }}
                             animate={{ opacity: [0.3, 1, 0.3], x: [0, 2, 0] }}
-                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 + delay }}
-                        >
+                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}>
                             ›
                         </motion.div>
                     ))}
@@ -369,7 +388,9 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "diamonds") {
             return (
-                <div className="flex flex-col gap-1 items-center justify-center" style={mirror}>
+                <div
+                    className="flex flex-col gap-1 items-center justify-center"
+                    style={mirror}>
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
@@ -380,7 +401,7 @@ export const BrandingWidget = () => {
                                 transform: "rotate(45deg)",
                             }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1, 0.8] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 + delay }}
+                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
                         />
                     ))}
                 </div>
@@ -389,7 +410,9 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "squares") {
             return (
-                <div className="flex flex-col gap-1.5 items-center justify-center" style={mirror}>
+                <div
+                    className="flex flex-col gap-1.5 items-center justify-center"
+                    style={mirror}>
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
@@ -399,7 +422,7 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 8px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.3, 1, 0.3], rotate: [0, 90, 0] }}
-                            transition={{ duration: 2, repeat: Infinity, delay: i * 0.25 + delay }}
+                            transition={{ duration: 2, repeat: Infinity, delay: i * 0.25 }}
                         />
                     ))}
                 </div>
@@ -408,7 +431,9 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "circles") {
             return (
-                <div className="flex items-center gap-1" style={mirror}>
+                <div
+                    className="flex items-center gap-1"
+                    style={mirror}>
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
@@ -418,7 +443,7 @@ export const BrandingWidget = () => {
                                 boxShadow: `0 0 6px hsl(${color})`,
                             }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
-                            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.2 + delay }}
+                            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.2 }}
                         />
                     ))}
                 </div>
@@ -427,27 +452,37 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "pulse-ring") {
             return (
-                <div className="relative flex items-center justify-center w-6 h-6" style={mirror}>
+                <div
+                    className="relative flex items-center justify-center w-6 h-6"
+                    style={mirror}>
                     <motion.div
                         className="absolute w-4 h-4 rounded-full border-2"
                         style={{ borderColor: `hsl(${color})` }}
                         animate={{ scale: [1, 1.5, 1], opacity: [1, 0, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, delay }}
+                        transition={{ duration: 2, repeat: Infinity }}
                     />
-                    <div className="w-2 h-2 rounded-full" style={{ background: `hsl(${color})`, boxShadow: `0 0 10px hsl(${color})` }} />
+                    <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: `hsl(${color})`, boxShadow: `0 0 10px hsl(${color})` }}
+                    />
                 </div>
             );
         }
 
         if (decorations.type === "scan-line") {
             return (
-                <div className="relative w-6 h-6 overflow-hidden" style={mirror}>
-                    <div className="absolute inset-0 border border-opacity-30" style={{ borderColor: `hsl(${color} / 0.3)` }} />
+                <div
+                    className="relative w-6 h-6 overflow-hidden"
+                    style={mirror}>
+                    <div
+                        className="absolute inset-0 border border-opacity-30"
+                        style={{ borderColor: `hsl(${color} / 0.3)` }}
+                    />
                     <motion.div
                         className="absolute left-0 right-0 h-[2px]"
                         style={{ background: `hsl(${color})`, boxShadow: `0 0 8px hsl(${color})` }}
                         animate={{ top: ["0%", "100%", "0%"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
                 </div>
             );
@@ -455,7 +490,9 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "hexagons") {
             return (
-                <div className="flex flex-col gap-0.5 items-center justify-center" style={mirror}>
+                <div
+                    className="flex flex-col gap-0.5 items-center justify-center"
+                    style={mirror}>
                     {[0, 1].map((i) => (
                         <motion.svg
                             key={i}
@@ -464,9 +501,11 @@ export const BrandingWidget = () => {
                             viewBox="0 0 12 14"
                             style={{ filter: `drop-shadow(0 0 4px hsl(${color}))` }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1, 0.9] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 + delay }}
-                        >
-                            <polygon points="6,0 12,3.5 12,10.5 6,14 0,10.5 0,3.5" fill={`hsl(${color})`} />
+                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}>
+                            <polygon
+                                points="6,0 12,3.5 12,10.5 6,14 0,10.5 0,3.5"
+                                fill={`hsl(${color})`}
+                            />
                         </motion.svg>
                     ))}
                 </div>
@@ -475,7 +514,9 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "triangles") {
             return (
-                <div className="flex flex-col gap-1 items-center justify-center" style={mirror}>
+                <div
+                    className="flex flex-col gap-1 items-center justify-center"
+                    style={mirror}>
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
@@ -488,7 +529,7 @@ export const BrandingWidget = () => {
                                 filter: `drop-shadow(0 0 4px hsl(${color}))`,
                             }}
                             animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
-                            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15 + delay }}
+                            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15 }}
                         />
                     ))}
                 </div>
@@ -497,14 +538,16 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "waves") {
             return (
-                <div className="flex items-end gap-0.5 h-6" style={mirror}>
+                <div
+                    className="flex items-end gap-0.5 h-6"
+                    style={mirror}>
                     {[0, 1, 2, 3].map((i) => (
                         <motion.div
                             key={i}
                             className="w-1 rounded-full"
                             style={{ background: `hsl(${color})`, boxShadow: `0 0 4px hsl(${color})` }}
                             animate={{ height: ["8px", "20px", "8px"] }}
-                            transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 + delay }}
+                            transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
                         />
                     ))}
                 </div>
@@ -513,15 +556,16 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "stars") {
             return (
-                <div className="flex flex-col gap-1 items-center justify-center" style={mirror}>
+                <div
+                    className="flex flex-col gap-1 items-center justify-center"
+                    style={mirror}>
                     {[0, 1].map((i) => (
                         <motion.div
                             key={i}
                             className="text-sm"
                             style={{ color: `hsl(${color})`, textShadow: `0 0 8px hsl(${color})` }}
                             animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8], rotate: [0, 180, 360] }}
-                            transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 + delay }}
-                        >
+                            transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}>
                             ✦
                         </motion.div>
                     ))}
@@ -531,13 +575,14 @@ export const BrandingWidget = () => {
 
         if (decorations.type === "lightning") {
             return (
-                <div className="flex items-center" style={mirror}>
+                <div
+                    className="flex items-center"
+                    style={mirror}>
                     <motion.div
                         className="text-lg"
                         style={{ color: `hsl(${color})`, textShadow: `0 0 12px hsl(${color})` }}
                         animate={{ opacity: [0.3, 1, 0.3, 1, 0.3], scale: [1, 1.1, 1, 1.1, 1] }}
-                        transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2, delay }}
-                    >
+                        transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}>
                         ⚡
                     </motion.div>
                 </div>
